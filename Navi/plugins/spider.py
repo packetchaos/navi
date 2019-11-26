@@ -4,6 +4,7 @@ from .scanners import nessus_scanners
 from .error_msg import error_msg
 from .web_scan import webscan
 
+
 @click.command(help="Create a Web App scan from a CSV file")
 @click.argument('csv_input')
 def spider(csv_input):
@@ -47,5 +48,5 @@ def spider(csv_input):
 
             for app in web_apps:
                 webscan(app[0], scanner_id, template)
-    except:
-        error_msg()
+    except Exception as E:
+        error_msg(E)

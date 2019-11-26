@@ -3,6 +3,7 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection
 
+
 def find_by_plugin(plugin):
     try:
         database = r"navi.db"
@@ -16,9 +17,9 @@ def find_by_plugin(plugin):
             for row in rows:
                 print("\nIP Address: " + row[0])
                 print("UUID : " + row[1])
-                print("\n---Plugin " + plugin + " Output---\n")
+                print("\n--- Plugin " + plugin + " Output ---\n")
                 print(row[2])
-                print("---End plugin Ouput ---")
+                print("--- End plugin Output ---")
     except Error as e:
         print(e)
 
@@ -57,11 +58,11 @@ def find(plugin, docker, webapp, creds, time, ghost):
 
                 server = wsplit[1]
                 port = plugins[10]  # port number
-                proto = plugins[11]  # Portocol
+                proto = plugins[11]  # Protocol
                 asset = plugins[1]  # Ip address
 
                 print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", port,"/", proto)
+                print(server, "is running on: ", port ,"/", proto)
                 print()
 
     if creds:
@@ -82,7 +83,7 @@ def find(plugin, docker, webapp, creds, time, ghost):
 
                 output = vulns[6]
 
-                # split the output by carrage return
+                # split the output by return
                 parsed_output = output.split("\n")
 
                 # grab the length so we can grab the seconds

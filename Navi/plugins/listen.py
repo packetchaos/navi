@@ -1,6 +1,7 @@
 import click
 import os
 
+
 @click.command(help="Open up a Netcat listener to accept files over port 8000")
 def listen():
     try:

@@ -12,5 +12,5 @@ def send_email(from_email, to_email, msg, mail_server, password, port):
 
         print('Email sent!')
     except Exception as E:
+        print('\nSomething went wrong...Your email information may be incorrect\n')
         print(E)
-        print('Something went wrong...Your email information may be incorrect')

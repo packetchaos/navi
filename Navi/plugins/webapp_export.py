@@ -1,6 +1,7 @@
 import csv
 from .api_wrapper import request_data
 
+
 def webapp_export():
 
     # Crete a csv file object
@@ -11,7 +12,7 @@ def webapp_export():
         agent_writer.writerow(header_list)
 
         data = request_data('GET', '/scans')
-        #cycle through all of the scans and pull out the webapp scan IDs
+        # cycle through all of the scans and pull out the webapp scan IDs
 
         for scans in data['scans']:
             csv_list = []

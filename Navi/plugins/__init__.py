@@ -21,6 +21,7 @@ from .keys import keys
 from .smtp import smtp
 from .mail import mail
 
+
 def plugin_loader(group):
     group.add_command(ip)
     group.add_command(find)

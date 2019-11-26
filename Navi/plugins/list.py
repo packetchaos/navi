@@ -38,8 +38,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             for user in data["users"]:
                 print('\n', user["name"].ljust(10), " - ", user["username"], '\n')
 
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if exclusions:
         try:
@@ -62,8 +62,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             except:
                 pass
         except Exception as E:
-            error_msg()
-            print(E)
+            error_msg(E)
+
 
     if logs:
         try:
@@ -76,8 +76,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("Date : " + received)
                 print("-------------------")
                 print(action, '\n', actor, '\n')
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if running:
         try:
@@ -96,8 +96,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     print("-----------------\n")
             if run == 0:
                 print("No running scans")
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if scans:
         try:
@@ -113,8 +113,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("Current status : " + scan_status)
                 print("-----------------\n")
 
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if nnm:
         try:
@@ -141,8 +141,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                         print("check permissions to the scanner")
                 else:
                     pass
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if assets:
         try:
@@ -159,8 +159,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             for z in range(len(l)):
                 print(l[z])
             print()
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if policies:
         try:
@@ -184,12 +184,12 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     print("Last Sync Time", conn['last_sync_time'])
 
-                except:
+                except KeyError:
                     pass
                 print("Status Message: ",conn['status_message'])
                 print("------------------------------------------")
-        except :
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if agroup:
         try:
@@ -214,14 +214,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 for rule in details['rules']:
                     print(rule['type'], rule['operator'], rule['terms'])
                 print()
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if status:
         try:
             data = request_data('GET', "/server/properties")
             session_data = request_data('GET', "/session")
-            #pprint.pprint(data)
+
 
             print("\nTenable IO Information")
             print("-----------------------")
@@ -252,8 +252,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("Mode: ", data["license"]["apps"][key]["mode"])
                 print()
 
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if agents:
         try:
@@ -280,8 +280,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 except:
                     pass
                 print()
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if webapp:
         try:
@@ -298,8 +298,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     print("Current status : " + scan_status)
                     print("-----------------\n")
 
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if tgroup:
         data = request_data('GET', '/target-groups')
@@ -311,8 +311,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("Target Group ID : ", targets['id'])
                 print("Members : ", targets['members'])
                 print()
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if licensed:
         print("\nLicensed Count : ", get_licensed())

@@ -10,5 +10,6 @@ def api(url):
     try:
         data = request_data('GET', url)
         pprint.pprint(data)
-    except:
-        error_msg()
+
+    except Exception as E:
+        error_msg(E)

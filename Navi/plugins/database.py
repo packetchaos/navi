@@ -39,7 +39,7 @@ def drop_tables(conn, table):
         drop_table = '''DROP TABLE {}'''.format(table)
         cur = conn.cursor()
         cur.execute(drop_table)
-    except:
+    except Error:
         pass
 
 

@@ -54,5 +54,5 @@ def scan(targets):
         #print("A scan started with UUID: " + data2["scan_uuid"])
         #print("The scan ID is " + str(scan))
 
-    except:
-        error_msg()
+    except Exception as E:
+        error_msg(E)

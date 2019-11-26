@@ -2,6 +2,7 @@ import click
 import getpass
 from .database import new_db_connection, create_table, drop_tables
 
+
 @click.command(help="Enter or Overwrite your SMTP information")
 def smtp():
     print("Hey you don't have any SMTP information!")

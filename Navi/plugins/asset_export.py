@@ -3,6 +3,7 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection, create_table, insert_assets, insert_tags, drop_tables
 
+
 def asset_export():
     # Set the payload to the maximum number of assets to be pulled at once
     thirty_days = time.time() - 7776000#2660000
@@ -84,18 +85,18 @@ def asset_export():
 
                     #Try block to ignore assets without IPs
                     try:
-                        #Capture the first IP
+                        # Capture the first IP; This needs to be changed to capature all IPs and link to a new ip table
                         try:
                             ip = assets['ipv4s'][0]
                             csv_list.append(ip)
                         except:
                             csv_list.append(" ")
-                        #try block to skip if there isn't a hostname
+
                         try:
                             csv_list.append(assets['hostnames'][0])
 
                         except:
-                            # If there is no hostname add a space so columns still line up
+
                             csv_list.append(" ")
 
                         try:

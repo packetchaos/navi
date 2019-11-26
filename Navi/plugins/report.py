@@ -4,6 +4,7 @@ from .api_wrapper import request_data
 from .scan_details import scan_details
 from .error_msg import error_msg
 
+
 @click.command(help="Get the Latest Scan information")
 @click.option('-latest', is_flag=True, help="Report the Last Scan Details")
 @click.option('--container', default='', help='Report CVSS 7 or above by \'/repository/image/tag\'')
@@ -12,7 +13,7 @@ from .error_msg import error_msg
 @click.option('--details', default='', help='Report Scan Details including Vulnerability Counts by Scan ID')
 @click.option('--summary', default='', help="Report Scan Summary information by Scan ID")
 def report(latest, container, docker, comply, details, summary):
-    #get the latest Scan Details
+    # get the latest Scan Details
     if latest:
         try:
             data = request_data('GET', '/scans')
@@ -44,8 +45,8 @@ def report(latest, container, docker, comply, details, summary):
             epock_latest = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(grab_time))
             print("\nThe last Scan run was at " + epock_latest)
             scan_details(str(grab_uuid))
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if container:
         try:
@@ -54,49 +55,49 @@ def report(latest, container, docker, comply, details, summary):
                 for vulns in data['findings']:
                     if float(vulns['nvdFinding']['cvss_score']) >= 7:
                         print("CVE ID :", vulns['nvdFinding']['cve'])
-                        print("CVSS Score : ",vulns['nvdFinding']['cvss_score'])
+                        print("CVSS Score : ", vulns['nvdFinding']['cvss_score'])
                         print("----------------------")
                         print("\nDescription : \n\n", vulns['nvdFinding']['description'])
                         print("\nRemediation : \n\n", vulns['nvdFinding']['remediation'])
                         print("----------------------END-------------------------\n")
-            except(TypeError):
+            except TypeError:
                 print("This Container has no data or is not found")
-            except(ValueError):
+            except ValueError:
                 pass
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if docker:
         try:
-            data = request_data('GET', '/container-security/api/v1/reports/by_image?image_id='+str(docker))
+            data = request_data('GET', '/container-security/api/v1/reports/by_image?image_id=' + str(docker))
 
             try:
                 for vulns in data['findings']:
                     if float(vulns['nvdFinding']['cvss_score']) >= 7:
                         print("CVE ID :", vulns['nvdFinding']['cve'])
-                        print("CVSS Score : ",vulns['nvdFinding']['cvss_score'])
+                        print("CVSS Score : ", vulns['nvdFinding']['cvss_score'])
                         print("-----------------------")
                         print("\nDescription \n\n: ", vulns['nvdFinding']['description'])
                         print("\nRemediation : \n\n", vulns['nvdFinding']['remediation'])
                         print("----------------------END-------------------------\n")
-            except(TypeError):
+            except TypeError:
                 print("This Container has no data or is not found")
-            except(ValueError):
+            except ValueError:
                 pass
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if comply:
         try:
             data = request_data('GET', '/container-security/api/v1/policycompliance?image_id=' + str(comply))
-            #data = get_data('/conatiner-security/api/v2/reports/'+ str(comply))
+
             print("Status : ", data['status'])
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if details:
         try:
-            data = request_data('GET', '/scans/'+str(details))
+            data = request_data('GET', '/scans/' + str(details))
             try:
                 print()
                 print("Scan Details for Scan ID : "+details)
@@ -104,7 +105,7 @@ def report(latest, container, docker, comply, details, summary):
                 print("Notes: \b")
                 try:
                     print(data['notes'][0]['message'])
-                except:
+                except KeyError:
                     pass
                 print()
                 print("Vulnerability Counts")
@@ -116,7 +117,7 @@ def report(latest, container, docker, comply, details, summary):
                 try:
                     print("--------------")
                     print("Score : ", data['hosts'][0]['score'])
-                except:
+                except KeyError:
                     pass
                 print()
                 print("Vulnerability Details")
@@ -127,13 +128,13 @@ def report(latest, container, docker, comply, details, summary):
                         print(vulns['plugin_name'], " : ", vulns['count'])
             except:
                 print("Check the scan ID")
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if summary:
         try:
             print("\nHere is the Summary of your Scan :")
             print("----------------------------------")
             scan_details(str(summary))
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)

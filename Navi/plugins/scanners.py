@@ -1,4 +1,6 @@
 from .api_wrapper import request_data
+from .error_msg import error_msg
+
 
 def nessus_scanners():
     try:
@@ -6,5 +8,5 @@ def nessus_scanners():
 
         for scanners in data["scanners"]:
             print(str(scanners["name"]) + " : " + str(scanners["id"]))
-    except:
-        print("You may not have access...Check permissions...or Keys")
+    except Exception as E:
+        error_msg(E)

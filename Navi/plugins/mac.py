@@ -20,5 +20,5 @@ def mac(address):
 
         print("\nOrganization name:")
         print(data['data']['organization_name'])
-    except:
-        error_msg()
+    except ConnectionError as E:
+        error_msg(E)

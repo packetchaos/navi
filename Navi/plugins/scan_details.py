@@ -1,6 +1,7 @@
 import time
 from .api_wrapper import request_data
 
+
 def scan_details(uuid):
     # pull the scan data
     details = request_data('GET', '/scans/' + str(uuid))

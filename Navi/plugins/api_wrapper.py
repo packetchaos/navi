@@ -37,6 +37,7 @@ def request_data(method, url_mod, **kwargs):
         if r.status_code == 200:
             return r.json()
         if r.status_code == 202:
+            # This response is for some successful posts.
             print("Success!")
         elif r.status_code == 404:
             print('Check your query...', r)

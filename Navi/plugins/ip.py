@@ -175,10 +175,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     print("Exploitable Details for : " + ipaddr)
                     print()
                     V = request_data('GET', '/workbenches/assets/' + asset_id + '/vulnerabilities?filter.0.quality=eq&filter.0.filter=plugin.attributes.exploit_available&filter.0.value=True')
-                    #V = get_data('/workbenches/assets/' + asset_id + '/vulnerabilities?filter.0.quality=eq&filter.0.filter=plugin.attributes.exploit_available&filter.0.value=True')
+
                     for plugins in range(len(V['vulnerabilities'])):
                         plugin = V['vulnerabilities'][plugins]['plugin_id']
-                        # pprint.pprint(plugin)
+
 
                         P = request_data('GET', '/plugins/plugin/' + str(plugin))
                         # pprint.pprint(P['attributes'])
