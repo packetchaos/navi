@@ -1,0 +1,12 @@
+Metadata-Version: 1.2
+Name: navi
+Version: 4.0.0
+Summary: A command-line interface to Tenable's products
+Home-page: UNKNOWN
+Author: Casey Reid
+Author-email: itprofguru@gmail.com
+License: MIT
+Description: UNKNOWN
+Keywords: tenable tenable_io navi
+Platform: UNKNOWN
+Requires-Python: >=3.6

@@ -1,0 +1,15 @@
+setup.py
+Navi/__init__.py
+Navi/cli.py
+Navi/nessus.py
+Navi/plugins/__init__.py
+Navi/plugins/api_wrapper.py
+Navi/plugins/database.py
+Navi/plugins/find.py
+Navi/plugins/ip.py
+navi.egg-info/PKG-INFO
+navi.egg-info/SOURCES.txt
+navi.egg-info/dependency_links.txt
+navi.egg-info/entry_points.txt
+navi.egg-info/requires.txt
+navi.egg-info/top_level.txt
