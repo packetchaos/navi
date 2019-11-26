@@ -8,7 +8,7 @@ def csv_export():
 
         #Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Tags", "Info", "Low", "Medium", "High", "Critical"]
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date"]
         cur = conn.cursor()
         cur.execute("SELECT * from assets;")
 
@@ -23,5 +23,5 @@ def csv_export():
 
             #Loop through each asset
             for assets in data:
-
                 agent_writer.writerow(assets)
+                # Added Tags, and Vuln counts to this! (NAVI-17)

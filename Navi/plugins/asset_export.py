@@ -80,12 +80,11 @@ def asset_export():
                 chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
 
                 for assets in chunk_data:
-                    #create a blank list to append asset details
+                    # create a blank list to append asset details
                     csv_list = []
 
-                    #Try block to ignore assets without IPs
                     try:
-                        # Capture the first IP; This needs to be changed to capature all IPs and link to a new ip table
+                        # Capture the first IP
                         try:
                             ip = assets['ipv4s'][0]
                             csv_list.append(ip)
@@ -148,7 +147,7 @@ def asset_export():
 
                         for t in assets["tags"]:
                             tag_list = []
-                            tag_id = tag_id +1
+                            tag_id = tag_id + 1
                             tag_list.append(tag_id)
                             tag_list.append(id)
                             tag_list.append(ip)

@@ -1,6 +1,6 @@
 import click
 from .api_wrapper import request_data
-from.error_msg import error_msg
+from .error_msg import error_msg
 
 
 @click.command(help="Stop a Running Scan")
