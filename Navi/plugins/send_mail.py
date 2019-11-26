@@ -1,0 +1,16 @@
+import smtplib
+
+def send_email(from_email, to_email, msg, mail_server, password, port):
+    print(msg)
+    try:
+        server = smtplib.SMTP(mail_server, port)
+        server.ehlo()
+        server.starttls()
+        server.login(from_email, password)
+        server.sendmail(from_email, to_email, msg)
+        server.close()
+
+        print('Email sent!')
+    except Exception as E:
+        print(E)
+        print('Something went wrong...Your email information may be incorrect')
