@@ -9,7 +9,7 @@ def asset_export():
     pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(thirty_days)}}
     try:
         # request an export of the data
-        export = request_data('POST', '/assets/export"', payload=pay_load)
+        export = request_data('POST', '/assets/export', payload=pay_load)
 
         # grab the export UUID
         ex_uuid = export['export_uuid']
@@ -74,9 +74,9 @@ def asset_export():
         with conn:
 
             # loop through all of the chunks
-            for x in range(len(status['chunks_available'])):
-                print("Parsing Chunk {} ...Finished".format(x+1))
-                chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(x+1))
+            for chunk in status['chunks_available']:
+                print("Parsing Chunk {} ...Finished".format(chunk))
+                chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
 
                 for assets in chunk_data:
                     #create a blank list to append asset details

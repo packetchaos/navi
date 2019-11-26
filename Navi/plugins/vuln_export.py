@@ -73,9 +73,9 @@ def vuln_export():
             navi_id = 0
             # loop through all of the chunks
             for chunk in status['chunks_available']:
-                print("Parsing Chunk {} ...Finished".format(chunk+1))
+                print("Parsing Chunk {} ...Finished".format(chunk))
 
-                chunk_data = request_data('GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk+1))
+                chunk_data = request_data('GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk))
                 #print(chunk_data)
                 for vulns in chunk_data:
                     #create a blank list to append asset details
