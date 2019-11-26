@@ -1,3 +1,0 @@
-Click>=7.0
-requests
-pprint>=0.1
