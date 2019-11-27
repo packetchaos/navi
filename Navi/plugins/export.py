@@ -7,6 +7,7 @@ from .csv_export import csv_export
 from .lumin_export import lumin_export
 from .database import new_db_connection
 from .tag_export import tag_export
+from .tag_helper import tag_Checker
 
 @click.command(help="Export data into a CSV")
 @click.option('-assets', is_flag=True, help='Exports all Asset data into a CSV')
@@ -18,7 +19,9 @@ from .tag_export import tag_export
 @click.option('-bytag', is_flag=True, help="Export all assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default='', help="Export bytag with the following Category name")
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
-def export(assets, agents, webapp, consec, licensed, lumin, bytag, c, v):
+@click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
+@click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
+def export(assets, agents, webapp, consec, licensed, lumin, bytag, c, v, ec, ev):
     if assets:
         print("\nExporting your data now. Saving asset_data.csv now...\n")
         csv_export()
@@ -46,19 +49,23 @@ def export(assets, agents, webapp, consec, licensed, lumin, bytag, c, v):
 
     if bytag:
         if c == '':
-            print("Category is required.  Please use the --c command")
+            print("Tag Category is required.  Please use the --c command")
 
         if v == '':
-            print("Value is required. Please use the --v command")
+            print("Tag Value is required. Please use the --v command")
 
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
             new_list = []
             cur = conn.cursor()
-            cur.execute("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
+            cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
             assets = cur.fetchall()
+
             for asset in assets:
-                new_list.append(asset[0])
+                check_for_no = tag_Checker(asset[1], ec, ev)
+                if check_for_no == 'no':
+                    new_list.append(asset[0])
+
         tag_export(new_list)
