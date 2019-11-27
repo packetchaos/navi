@@ -3,24 +3,23 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection
 
-def plugin_by_ip(ipaddr,plugin):
+
+def plugin_by_ip(ipaddr, plugin):
     try:
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr,plugin))
-
+                cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
-
-
                 print(rows[0][0])
             except:
                 pass
 
     except Error as e:
         print(e)
+
 
 @click.command(help="Get IP specfic information")
 @click.argument('ipaddr')
@@ -41,7 +40,6 @@ def plugin_by_ip(ipaddr,plugin):
 @click.option('-details', is_flag=True, help="Details on an Asset: IP, UUID, Vulns, etc")
 @click.pass_context
 def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details):
-
     plugin_by_ip(ipaddr, plugin)
 
     if d:
@@ -49,7 +47,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         click.echo('\nScan Detail')
         click.echo('----------------\n')
         plugin_by_ip(ipaddr, str(19506))
-
 
     if n:
         click.echo("\nNetstat info")
@@ -60,25 +57,21 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         click.echo("----------------")
         plugin_by_ip(ipaddr, str(14272))
 
-
     if p:
         click.echo("\nPatch Information")
         click.echo("----------------\n")
         plugin_by_ip(ipaddr, str(66334))
-
 
     if t:
         click.echo("\nTrace Route Info")
         click.echo("----------------\n")
         plugin_by_ip(ipaddr, str(10287))
 
-
     if o:
         click.echo("\nProcess Info")
         click.echo("----------------\n")
         plugin_by_ip(ipaddr, str(70329))
         plugin_by_ip(ipaddr, str(110483))
-
 
     if patches:
         click.echo("\nMissing Patches")
@@ -90,12 +83,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         click.echo("----------------\n")
         plugin_by_ip(ipaddr, str(56468))
 
-
     if c:
         click.echo("\nConnection info")
         click.echo("----------------\n")
         plugin_by_ip(ipaddr, str(64582))
-
 
     if s:
         database = r"navi.db"
@@ -119,13 +110,11 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 print(server, "is running on: ", port,"/", proto)
                 print()
 
-
     if r:
         click.echo("Local Firewall Info")
         click.echo("----------------")
         plugin_by_ip(ipaddr, str(56310))
         plugin_by_ip(ipaddr, str(61797))
-
 
     if software:
         try:
@@ -133,7 +122,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             plugin_by_ip(ipaddr, str(20811))
         except IndexError:
                 print("No Software found")
-
 
     if outbound:
         database = r"navi.db"
@@ -156,7 +144,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 print(asset, " - ", port, "  - ", proto)
 
                 print()
-
 
     if exploit:
 
@@ -207,7 +194,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         except:
             print("No Exploit Details found for: ",ipaddr)
 
-
     if critical:
         try:
             database = r"navi.db"
@@ -241,7 +227,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                             print()
         except:
             print("No Critical Vulnerabilities found for : ", ipaddr)
-
 
     if details:
         database = r"navi.db"
@@ -304,6 +289,13 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     except:
                         pass
                     try:
+                        print("\nSources:")
+                        print("--------------")
+                        for source in asset_data['info']['sources']:
+                            print(source['name'])
+                    except:
+                        pass
+                    try:
                         print("\nTags:")
                         print("--------------")
                         for tags in asset_data['info']['tags']:
@@ -321,7 +313,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                             print(vuln["name"], " : ", vuln["count"])
 
                         try:
-                            print("\nExposure Score : ", asset_info['info']['exposure_score'])
+                            print("\nAsset Exposure Score : ", asset_info['info']['exposure_score'])
                             print("\nAsset Criticality Score :", asset_info['info']['acr_score'])
                         except:
                             pass
@@ -332,4 +324,3 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
                 except:
                     pass
-

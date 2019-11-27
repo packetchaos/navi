@@ -1,6 +1,7 @@
 import csv
 from .database import new_db_connection
 
+
 def csv_export():
     database = r"navi.db"
     conn = new_db_connection(database)
@@ -15,7 +16,7 @@ def csv_export():
         data = cur.fetchall()
 
         #Crete a csv file object
-        with open('asset_data_new.csv', mode='w') as csv_file:
+        with open('asset_data.csv', mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
             #write our Header information first
@@ -24,4 +25,3 @@ def csv_export():
             #Loop through each asset
             for assets in data:
                 agent_writer.writerow(assets)
-                # Added Tags, and Vuln counts to this! (NAVI-17)
