@@ -6,8 +6,8 @@ from .database import new_db_connection, create_table, insert_assets, insert_tag
 
 def asset_export():
     # Set the payload to the maximum number of assets to be pulled at once
-    thirty_days = time.time() - 7776000#2660000
-    pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(thirty_days)}}
+    ninty_days = time.time() - 7776000
+    pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(ninty_days)}}
     try:
         # request an export of the data
         export = request_data('POST', '/assets/export', payload=pay_load)
@@ -41,9 +41,7 @@ def asset_export():
             if status['status'] == 'ERROR':
                 print("Error occurred")
 
-
-
-        #Crete a new connection to our database
+        # Crete a new connection to our database
         database = r"navi.db"
         conn = new_db_connection(database)
         drop_tables(conn, 'assets')
@@ -60,7 +58,7 @@ def asset_export():
                             last_licensed_scan_date text
                             );"""
         create_table(conn, create_asset_table)
-        #create a table for tags
+        # create a table for tags
         create_tags_table = """CREATE TABLE IF NOT EXISTS tags (
                             tag_id integer PRIMARY KEY,
                             asset_uuid text,
@@ -143,7 +141,7 @@ def asset_export():
                         except Error as e:
                             print(e)
 
-                        #cycle through each tag and added it to its own table
+                        # cycle through each tag and added it to its own table
 
                         for t in assets["tags"]:
                             tag_list = []

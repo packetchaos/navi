@@ -35,7 +35,7 @@ def webapp_export():
                 except:
                     high = 0
                 try:
-                    medium  = scan_details['hosts'][0]['medium']
+                    medium = scan_details['hosts'][0]['medium']
                 except:
                     medium = 0
                 try:
@@ -49,6 +49,6 @@ def webapp_export():
                     csv_list.append(critical)
                     csv_list.append(high)
                     csv_list.append(medium)
-                    csv_list.append(low )
+                    csv_list.append(low)
                     csv_list.append(message)
                     agent_writer.writerow(csv_list)

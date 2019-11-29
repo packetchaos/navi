@@ -21,7 +21,7 @@ def scan_details(uuid):
 
         duration = (details["info"]["scan_end"] - details["info"]["scan_start"]) / 60
         print("Duration : " + str(duration) + " Minutes")
-    except:
+    except KeyError:
         print("This scan is still running")
     print("Scan Notes Below : ")
     for notes in details["notes"]:

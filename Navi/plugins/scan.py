@@ -4,6 +4,7 @@ from .start import start
 from .api_wrapper import request_data
 from .error_msg import error_msg
 
+
 @click.command(help="Quickly Scan a Target")
 @click.argument('targets')
 def scan(targets):
@@ -45,14 +46,10 @@ def scan(targets):
         data = request_data('POST', '/scans', payload=payload)
 
         # pull scan ID after Creation
-        scan = data["scan"]["id"]
+        scan_id = data["scan"]["id"]
 
         # launch Scan
-        start(str(scan))
-
-        # print Scan UUID
-        #print("A scan started with UUID: " + data2["scan_uuid"])
-        #print("The scan ID is " + str(scan))
+        start(str(scan_id))
 
     except Exception as E:
         error_msg(E)

@@ -6,6 +6,7 @@ from .database import new_db_connection
 from .error_msg import error_msg
 from .licensed_count import get_licensed
 
+
 @click.command(help="Display or Print information found in Tenable.io")
 @click.option('-scanners', is_flag=True, help="List all of the Scanners")
 @click.option('-users', is_flag=True, help="List all of the Users")
@@ -54,7 +55,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if containers:
         try:
             data = request_data('GET', '/container-security/api/v2/images?limit=1000')
-            print("Container Name".ljust(15) +" | " + "Repository ID".ljust(20) + " | " +"Tag".ljust(10) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
+            print("Container Name".ljust(15) + " | " + "Repository ID".ljust(20) + " | " + "Tag".ljust(10) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
             print("-----------------------------------------------------------------------------------")
             try:
                 for images in data["items"]:
@@ -63,7 +64,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 pass
         except Exception as E:
             error_msg(E)
-
 
     if logs:
         try:
@@ -101,7 +101,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
     if scans:
         try:
-            data = request_data('GET','/scans')
+            data = request_data('GET', '/scans')
 
             for scan in data['scans']:
                 name = scan['name']
@@ -123,7 +123,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
             for nnm in nnm_data["scans"]:
 
-                if (str(nnm["type"]) == 'pvs'):
+                if str(nnm["type"] == 'pvs'):
                     nnm_id = nnm["id"]
 
                     try:
@@ -221,7 +221,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         try:
             data = request_data('GET', "/server/properties")
             session_data = request_data('GET', "/session")
-
 
             print("\nTenable IO Information")
             print("-----------------------")
@@ -362,6 +361,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
             print(str(category_name).ljust(25), " : ", str(category_uuid).ljust(25))
         print()
+
     if smtp:
         database = r"navi.db"
         conn = new_db_connection(database)

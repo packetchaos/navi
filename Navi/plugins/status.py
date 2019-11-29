@@ -8,8 +8,6 @@ from .error_msg import error_msg
 def status(scan_id):
     try:
         data = request_data('GET', '/scans/'+str(scan_id) + '/latest-status')
-        print()
-        print("\bLast Status update : " + data['status'])
-        print()
+        print("\nLast Status update : " + data['status'] + "\n")
     except Exception as E:
         error_msg(E)

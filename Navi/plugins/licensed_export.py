@@ -1,6 +1,7 @@
 import csv
 from .database import new_db_connection
 
+
 def licensed_export():
     database = r"navi.db"
     conn = new_db_connection(database)

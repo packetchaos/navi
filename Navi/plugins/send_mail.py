@@ -1,5 +1,6 @@
 import smtplib
 
+
 def send_email(from_email, to_email, msg, mail_server, password, port):
     print(msg)
     try:

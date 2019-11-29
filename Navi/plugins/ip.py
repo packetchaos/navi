@@ -14,7 +14,7 @@ def plugin_by_ip(ipaddr, plugin):
                 cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
                 print(rows[0][0])
-            except:
+            except Error:
                 pass
 
     except Error as e:
@@ -98,16 +98,16 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             data = cur.fetchall()
 
             for plugins in data:
-                web = plugins[6]#output
+                web = plugins[6]  # output
                 wsplit = web.split("\n")
 
                 server = wsplit[0]
-                port = plugins[10]#port number
-                proto = plugins[11]#Portocol
-                asset = plugins[1]#Ip address
+                port = plugins[10]  # port number
+                proto = plugins[11]  # Portocol
+                asset = plugins[1]  # Ip address
 
                 print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", port,"/", proto)
+                print(server, "is running on: ", port, "/", proto)
                 print()
 
     if r:
@@ -121,7 +121,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             plugin_by_ip(ipaddr, str(22869))
             plugin_by_ip(ipaddr, str(20811))
         except IndexError:
-                print("No Software found")
+            print("No Software found")
 
     if outbound:
         database = r"navi.db"
@@ -134,19 +134,16 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             print("IP Address", " - ", "Port", " - ", "Protocol")
             print("-------------------------------")
             for plugins in data:
-                web = plugins[6]#output
+                web = plugins[6]  # output
                 wsplit = web.split("\n")
 
                 server = wsplit[0]
-                port = plugins[10]#port number
-                proto = plugins[11]#Portocol
-                asset = plugins[1]#Ip address
-                print(asset, " - ", port, "  - ", proto)
-
-                print()
+                port = plugins[10]  # port number
+                proto = plugins[11]  # Portocol
+                asset = plugins[1]  # Ip address
+                print(asset, " - ", port, "  - ", proto + "\n")
 
     if exploit:
-
         try:
             database = r"navi.db"
             conn = new_db_connection(database)
@@ -165,7 +162,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
                     for plugins in range(len(V['vulnerabilities'])):
                         plugin = V['vulnerabilities'][plugins]['plugin_id']
-
 
                         P = request_data('GET', '/plugins/plugin/' + str(plugin))
                         # pprint.pprint(P['attributes'])
@@ -192,7 +188,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                                 print(solution)
                                 print()
         except:
-            print("No Exploit Details found for: ",ipaddr)
+            print("No Exploit Details found for: ", ipaddr)
 
     if critical:
         try:
@@ -204,11 +200,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
                 data = cur.fetchall()
                 for assets in data:
-
                     asset_id = assets[0]
-
-                    print("Critical Vulns for Ip Address :" + ipaddr)
-                    print()
+                    print("Critical Vulns for Ip Address :" + ipaddr + "\n")
                     vulns = request_data('GET', "/workbenches/assets/" + asset_id + "/vulnerabilities?date_range=90")
                     for severities in range(len(vulns["vulnerabilities"])):
                         vuln_name = vulns["vulnerabilities"][severities]["plugin_name"]

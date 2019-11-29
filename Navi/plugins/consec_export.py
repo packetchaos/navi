@@ -1,6 +1,7 @@
 import csv
 from .api_wrapper import request_data
 
+
 def consec_export():
     data = request_data('GET', '/container-security/api/v2/images?limit=1000')
     with open('consec_data.csv', mode='w') as csv_file:

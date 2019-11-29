@@ -8,7 +8,7 @@ def tag_export(tag_list):
     conn = new_db_connection(database)
     with conn:
 
-        #Create our headers - We will Add these two our list in order
+        # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
                        "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
         cur = conn.cursor()
@@ -16,14 +16,14 @@ def tag_export(tag_list):
 
         data = cur.fetchall()
 
-        #Crete a csv file object
+        # Crete a csv file object
         with open('bytag_lumin.csv', mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
-            #write our Header information first
+            # write our Header information first
             agent_writer.writerow(header_list)
 
-            #Loop through each asset
+            # Loop through each asset
             for assets in data:
                 export_list = []
                 if assets[3] in tag_list:

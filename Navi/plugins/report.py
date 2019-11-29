@@ -126,7 +126,7 @@ def report(latest, container, docker, comply, details, summary):
                 for vulns in data['vulnerabilities']:
                     if vulns['severity'] != 0:
                         print(vulns['plugin_name'], " : ", vulns['count'])
-            except:
+            except KeyError:
                 print("Check the scan ID")
         except Exception as E:
             error_msg(E)

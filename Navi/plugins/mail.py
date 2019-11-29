@@ -28,14 +28,14 @@ def grab_smtp():
 @click.option('-webapp', is_flag=True, help="Email Web Application Scanning Summary Information")
 def mail(latest, consec, webapp):
     try:
-        #grab SMTP information
+        # grab SMTP information
         server, port, from_email, password = grab_smtp()
         to_email = input("Please enter the email you wish send this mail to: ")
         subject = input("Please enter the Subject of the email : ")
 
         subject += " - Emailed by Navi Pro"
 
-        #start the message with the proper heading
+        # start the message with the proper heading
         msg = "\r\n".join([
             "From: {}".format(from_email),
             "To: {}".format(to_email),

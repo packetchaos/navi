@@ -62,7 +62,7 @@ def find(plugin, docker, webapp, creds, time, ghost):
                 asset = plugins[1]  # Ip address
 
                 print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", port ,"/", proto)
+                print(server, "is running on: ", port, "/", proto)
                 print()
 
     if creds:
@@ -119,15 +119,15 @@ def find(plugin, docker, webapp, creds, time, ghost):
 
     if ghost:
         try:
-            query = {"date_range":"30","filter.0.filter":"sources","filter.0.quality":"set-hasonly","filter.0.value":"AWS"}
+            query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
             data = request_data('GET', '/workbenches/assets', params=query)
             print("\nSource", "IP", "FQDN", "First seen")
             print("----------------------------------\n")
             for assets in data['assets']:
 
                 for source in assets['sources']:
-                        if source['name'] == 'AWS':
-                            print(source['name'], assets['ipv4'][0], assets['fqdn'][0], source['first_seen'])
+                    if source['name'] == 'AWS':
+                        print(source['name'], assets['ipv4'][0], assets['fqdn'][0], source['first_seen'])
 
             print()
         except:
