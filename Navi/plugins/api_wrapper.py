@@ -38,13 +38,13 @@ def request_data(method, url_mod, **kwargs):
             return r.json()
         if r.status_code == 202:
             # This response is for some successful posts.
-            print("Success!")
+            print("\nSuccess!\n")
         elif r.status_code == 404:
-            print('Check your query...', r)
+            print('\nCheck your query...', r)
         elif r.status_code == 429:
-            print("Too many requests at a time...")
+            print("\nToo many requests at a time...\n")
         elif r.status_code == 400:
-            pass
+            print("\nThe object you tried to create already exists\n")
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:

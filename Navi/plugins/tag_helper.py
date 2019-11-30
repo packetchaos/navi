@@ -2,7 +2,7 @@ from .api_wrapper import request_data
 from .database import new_db_connection
 
 
-def update_tag(c, v, list):
+def update_tag(c, v, tag_list):
     print("Your tag is being updated")
     tag_data = request_data('GET', '/tags/values')
     try:
@@ -11,13 +11,12 @@ def update_tag(c, v, list):
                 if tag['value'] == str(v):
                     try:
                         tag_uuid = tag['uuid']
-                        payload = {"action": "add", "assets": list, "tags": [tag_uuid]}
+                        payload = {"action": "add", "assets": tag_list, "tags": [tag_uuid]}
                         data = request_data('POST', '/tags/assets/assignments', payload=payload)
                         print("Job UUID : ", data['job_uuid'])
                         print("\nTag should be update within a few minutes\n")
                     except:
                         pass
-
     except:
         pass
 
@@ -37,6 +36,20 @@ def tag_Checker(uuid, key, value):
             return 'yes'
         else:
             return 'no'
+
+
+def confirm_tag_exists(key , value):
+    tag_value_data = request_data('GET', '/tags/values')
+    try:
+        for tag in tag_value_data['values']:
+            if tag['category_name'] == str(key):
+                if tag['value'] == str(value):
+                    return 'yes'
+                else:
+                    return 'no'
+    except Exception as E:
+        print(E)
+
 
 
 def tag_msg():

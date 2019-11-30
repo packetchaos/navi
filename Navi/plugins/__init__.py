@@ -20,6 +20,7 @@ from .listen import listen
 from .keys import keys
 from .smtp import smtp
 from .mail import mail
+from .tag import tag
 
 
 def plugin_loader(group):
@@ -45,3 +46,4 @@ def plugin_loader(group):
     group.add_command(keys)
     group.add_command(smtp)
     group.add_command(mail)
+    group.add_command(tag)
