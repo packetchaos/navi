@@ -12,7 +12,8 @@ from sqlite3 import Error
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
-def tag(c, v, d, plugin, name, group):
+@click.option('--output', default='', help="Create a Tag based on the text in the output of a particular plugin")
+def tag(c, v, d, plugin, name, group, output):
 
     # start a blank list; IP list is due to a bug
     tag_list = []
@@ -30,7 +31,11 @@ def tag(c, v, d, plugin, name, group):
             conn = new_db_connection(database)
             with conn:
                 cur = conn.cursor()
-                cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id=%s;" % plugin)
+                # See if we want to refine our search by the output found in this plugin
+                if output != "":
+                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
+                else:
+                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id=%s;" % plugin)
 
                 plugin_data = cur.fetchall()
                 for x in plugin_data:
@@ -51,7 +56,7 @@ def tag(c, v, d, plugin, name, group):
             conn = new_db_connection(database)
             with conn:
                 cur = conn.cursor()
-                cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_name LIKE '%"+name+"%';")
+                cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_name LIKE '%" + name + "%';")
 
                 plugin_data = cur.fetchall()
                 for x in plugin_data:
@@ -66,9 +71,10 @@ def tag(c, v, d, plugin, name, group):
             pass
 
     if group != '':
+        # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
+        # Need to research a better solution for this problem.  Possibly just deleting the tag.
         try:
             group_data = request_data('GET', '/scanners/1/agent-groups')
-
             for agent_group in group_data['groups']:
                 group_name = agent_group['name']
                 group_id = agent_group['id']
@@ -82,7 +88,6 @@ def tag(c, v, d, plugin, name, group):
                         uuid = agent['uuid']
                         ip_list = ip_list + "," + ip_address
                         tag_list.append(uuid)
-
         except Error:
             print("You might not have agent groups, or you are using Nessus Manager.  ")
 
@@ -103,5 +108,6 @@ def tag(c, v, d, plugin, name, group):
                 print("The Value UUID is : {}\n".format(value_uuid))
                 print("The following IPs were added to the Tag:\n")
                 print(ip_list[1:])
-            except TypeError:
+            except Exception as E:
                 print("You're tag might already exists. Delete your tag first with the delete command\n")
+                print(E)

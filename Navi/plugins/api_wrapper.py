@@ -45,6 +45,8 @@ def request_data(method, url_mod, **kwargs):
             print("\nToo many requests at a time...\n")
         elif r.status_code == 400:
             print("\nThe object you tried to create already exists\n")
+            print("If you are Updating tags via groups it is not supported right now, "
+                  "delete your group using the delete command\n")
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:
