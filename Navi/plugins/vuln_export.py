@@ -4,10 +4,12 @@ from .api_wrapper import request_data
 from .database import new_db_connection, create_table, drop_tables, insert_vulns
 
 
-def vuln_export():
+def vuln_export(days):
     # Set the payload to the maximum number of assets to be pulled at once
-    thirty_days = time.time() - 2660000
-    pay_load = {"num_assets": 5000, "filters": {"last_found": int(thirty_days)}}
+    day = 86400
+    new_limit = day * int(days)
+    day_limit = time.time() - new_limit #2660000
+    pay_load = {"num_assets": 5000, "filters": {"last_found": int(day_limit)}}
     try:
         # request an export of the data
         export = request_data('POST', '/vulns/export', payload=pay_load)
@@ -40,7 +42,6 @@ def vuln_export():
             # Tell the user an error occured
             if status['status'] == 'ERROR':
                 print("Error occurred")
-
 
 
         #Crete a new connection to our database

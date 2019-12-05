@@ -12,7 +12,7 @@ from sqlite3 import Error
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
-@click.option('--output', default='', help="Create a Tag based on the text in the output of a particular plugin")
+@click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 def tag(c, v, d, plugin, name, group, output):
 
     # start a blank list; IP list is due to a bug

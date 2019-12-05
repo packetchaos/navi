@@ -4,10 +4,12 @@ from .api_wrapper import request_data
 from .database import new_db_connection, create_table, insert_assets, insert_tags, drop_tables
 
 
-def asset_export():
+def asset_export(days):
     # Set the payload to the maximum number of assets to be pulled at once
-    ninty_days = time.time() - 7776000
-    pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(ninty_days)}}
+    day = 86400
+    new_limit = day * int(days)
+    day_limit = time.time() - new_limit #2660000
+    pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(day_limit)}}
     try:
         # request an export of the data
         export = request_data('POST', '/assets/export', payload=pay_load)
