@@ -42,11 +42,9 @@ def confirm_tag_exists(key , value):
     tag_value_data = request_data('GET', '/tags/values')
     try:
         for tag in tag_value_data['values']:
-            if tag['category_name'] == str(key):
-                if tag['value'] == str(value):
+            if str(tag['category_name']).lower() == str(key).lower():
+                if str(tag['value']).lower() == str(value).lower():
                     return 'yes'
-                else:
-                    return 'no'
     except Exception as E:
         print(E)
 

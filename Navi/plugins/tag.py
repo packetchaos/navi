@@ -98,16 +98,23 @@ def tag(c, v, d, plugin, name, group, output):
         if answer == 'yes':
             update_tag(c, v, tag_list)
         else:
-            payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
-            data = request_data('POST', '/tags/values', payload=payload)
             try:
-                value_uuid = data["uuid"]
-                cat_uuid = data['category_uuid']
-                print("\nI've created your new Tag - {} : {}\n".format(c, v))
-                print("The Category UUID is : {}\n".format(cat_uuid))
-                print("The Value UUID is : {}\n".format(value_uuid))
-                print("The following IPs were added to the Tag:\n")
-                print(ip_list[1:])
-            except Exception as E:
-                print("You're tag might already exists. Delete your tag first with the delete command\n")
-                print(E)
+                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+                data = request_data('POST', '/tags/values', payload=payload)
+                print(payload)
+
+                try:
+                    value_uuid = data["uuid"]
+                    cat_uuid = data['category_uuid']
+                    print("\nI've created your new Tag - {} : {}\n".format(c, v))
+                    print("The Category UUID is : {}\n".format(cat_uuid))
+                    print("The Value UUID is : {}\n".format(value_uuid))
+                    print("The following IPs were added to the Tag:\n")
+                    print(ip_list[1:])
+                except Exception as E:
+                    print("Duplicate Tag Category: You may need to delete your tag first\n")
+                    print("We could not confirm your tag name, is it named weird?\n")
+                    print(E)
+            except:
+                print("Duplicate Category")
+

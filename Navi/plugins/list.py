@@ -199,21 +199,24 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("Access Group ID: ", group['id'])
                 try:
                     print("Created by: ", group['created_by_name'])
+
+                    print("---------")
+                    print("Created at: ", group['created_at'])
+                    print("Updated at: ", group['updated_at'])
+                    print("----------------------")
                 except:
                     pass
-                print("---------")
-                print("Created at: ", group['created_at'])
-                print("Updated at: ", group['updated_at'])
-                print("----------------------")
                 print("Current Status: ", group['status'])
                 print("Percent Complete: ", group['processing_percent_complete'])
                 print("---------------------------------")
                 print("Rules")
                 print("-----------------------------------------")
                 details = request_data('GET', '/access-groups/'+str(group['id']))
-                for rule in details['rules']:
-                    print(rule['type'], rule['operator'], rule['terms'])
-                print()
+                try:
+                    for rule in details['rules']:
+                        print(rule['type'], rule['operator'], rule['terms'])
+                except:
+                    pass
         except Exception as E:
             error_msg(E)
 
