@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='navi',
+    name='Navi Pro',
     version="5.0.0",
     description="A command-line interface to Tenable.io",
     author="Casey Reid",
