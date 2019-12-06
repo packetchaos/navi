@@ -8,7 +8,7 @@ ENV LANG en_US.utf8
 
 CMD mkdir /usr/src/app
 
-COPY Navi/ /usr/src/app 
+COPY . /usr/src/app
 
 RUN cd /usr/src/app && python3 setup.py install
 
