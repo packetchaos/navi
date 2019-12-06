@@ -46,7 +46,7 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db.
 ## Configure For Reporting
 Navi has a few reporting capabilities where a CSV is the output.  To extract this data from the container you will need to launch the container with port 8000 exposed and use the 'http' command to extract the reports.
 
-    docker run -it -p 8000:8000 silentninja/navi_pro:latest /bin/bash
+    docker run -it -p 8000:8000 silentninja/navi:latest /bin/bash
 
 ### Extract Data
 To extract data from the container you need to run an http server.  Use the below built in command.
