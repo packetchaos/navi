@@ -9,7 +9,7 @@ entered and the update command is used! To download Vuln and Asset data you have
 All Vulns and All Assets are downloaded into a SQLLITE database named navi.db.  
  
  Most of the API calls nessessary to make Navi work require access to
- your all of the available data.  Tenable.io has a 5000 record limit so Navi_pro.py utilizes the Export API.
+ your all of the available data.  Tenable.io has a 5000 record limit so Navi Pro utilizes the Export API.
  
  The data will not be updated until you run the update command.  Keep this in mind when adding elements to Tenable.io like Tags.
  
@@ -270,6 +270,18 @@ This is the order the information is parsed so getting it incorrect will cause e
     Navi export -assets
     
     Navi export -agents -assets -webapp -consec -licensed
+
+Export into a CSV, but include the ACR and AES of each asset.  This takes a bit of time.
+    
+    Navi export -lumin
+    
+Export into a CSV via a Tag
+    
+    Navi export -bytag --c "OS" --v "Linux"
+
+Export into a CSV via a Tag; but exclude a specific Tag.
+
+    Navi export -bytag --c "OS" --v "Linux" --ec "OS" --ev "AWS"
 
 ### Delete an Object by an ID
 * scan -      Delete a scan by ID
