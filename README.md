@@ -141,7 +141,6 @@ There are thirteen core commands:
 
 ### Examples
 
-![](images/Find.gif)
 
     Navi find --plugin 19506
     
