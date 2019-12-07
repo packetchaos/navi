@@ -5,6 +5,7 @@ from .scanners import nessus_scanners
 from .database import new_db_connection
 from .error_msg import error_msg
 from .licensed_count import get_licensed
+from sqlite3 import Error
 
 
 @click.command(help="Display or Print information found in Tenable.io")
@@ -366,13 +367,16 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if smtp:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT server, port, from_email from smtp;")
-            data = cur.fetchall()
-            for settings in data:
-                print("\nYour email server: {}".format(settings[0]))
-                print("The email port is: {}".format(settings[1]))
-                print("Your email is: {}\n".format(settings[2]))
+        try:
+            database = r"navi.db"
+            conn = new_db_connection(database)
+            with conn:
+                cur = conn.cursor()
+                cur.execute("SELECT server, port, from_email from smtp;")
+                data = cur.fetchall()
+                for settings in data:
+                    print("\nYour email server: {}".format(settings[0]))
+                    print("The email port is: {}".format(settings[1]))
+                    print("Your email is: {}\n".format(settings[2]))
+        except Error:
+            print("You have no SMTP information saved.")
