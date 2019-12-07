@@ -1,12 +1,14 @@
 # Navi Pro - The Tenable.io Swiss Army Knife
 A command-line tool which leverages the Tenable.io API to reduce the time it takes to get information that is common 
-in Cyber Exposure or Vulnerability Management. *** This is not Supported by Tenable ***
+in Cyber Exposure or Vulnerability Management. 
+
+    *** This is not Supported by Tenable ***
 
 ### Important Note
 Navi Pro will download the entire data-set(90 days) locally after API keys are 
 entered and the update command is used! To download Vuln and Asset data you have to be an Administrator in Tenable.io.
 
-All Vulns and All Assets are downloaded into a SQLLITE database named navi.db.  
+All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in the current directory.
  
  Most of the API calls nessessary to make Navi work require access to
  your all of the available data.  Tenable.io has a 5000 record limit so Navi Pro utilizes the Export API.
@@ -27,7 +29,7 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db.
  
 ## Download and Configure Navi in a Docker Container
 
-    docker pull silentninja/navi
+    docker pull silentninja/navi:latest
   
     docker run -it -p 8000:8000 silentninja/navi:latest /bin/bash 
 

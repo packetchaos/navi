@@ -378,5 +378,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     print("\nYour email server: {}".format(settings[0]))
                     print("The email port is: {}".format(settings[1]))
                     print("Your email is: {}\n".format(settings[2]))
-        except Error:
-            print("You have no SMTP information saved.")
+        except Error as E:
+            print("\nYou have no SMTP information saved.\n")
+            print("Error: ", E, "\n")

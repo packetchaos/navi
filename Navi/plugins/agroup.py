@@ -9,7 +9,6 @@ def check_agroup_exists(aname):
     for group in agroups['access_groups']:
         if str(group['name']).lower() == str(aname).lower():
             rvalue = group['id']
-
     return rvalue
 
 

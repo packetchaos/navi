@@ -8,14 +8,14 @@ setup(
     author_email="itprofguru@gmail.com",
     url="https://github.com/packetchaos/Navi",
     license="GNUv3",
-    keywords='tenable tenable_io navi tio, lumin',
+    keywords='tenable tenable_io navi tio, lumin, navi pro, tio cli, tenable io cli',
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=[
         'Click>=7.0',
         'requests',
         'pprint>=0.1'
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.0',
     extras_require={
     },
     entry_points={
