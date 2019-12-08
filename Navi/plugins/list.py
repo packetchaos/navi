@@ -124,24 +124,21 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
             for nnm in nnm_data["scans"]:
 
-                if str(nnm["type"] == 'pvs'):
+                if str(nnm["type"]) == "pvs":
                     nnm_id = nnm["id"]
-
                     try:
                         data = request_data('GET', '/scans/' + str(nnm_id) + '/')
-                        print("Here are the assets and their scores last found by Nessus Network Monitor")
-                        print("   IP Address     : Score")
-                        print("----------------")
+                        if len(data["hosts"]) != 0:
+                            print("Here are the assets and their scores last found by Nessus Network Monitor")
+                            print("   IP Address     : Score")
+                            print("----------------")
 
-                        for host in data["hosts"]:
-                            print(str(host["hostname"]) + " :  " + str(host["score"]))
+                            for host in data["hosts"]:
+                                print(str(host["hostname"]) + " :  " + str(host["score"]))
 
-                        print()
+                            print()
                     except:
-                        print("No Data found or no Nessus Monitor found")
-                        print("check permissions to the scanner")
-                else:
-                    pass
+                        pass
         except Exception as E:
             error_msg(E)
 

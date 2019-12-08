@@ -101,8 +101,6 @@ def tag(c, v, d, plugin, name, group, output):
             try:
                 payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
-                print(payload)
-
                 try:
                     value_uuid = data["uuid"]
                     cat_uuid = data['category_uuid']

@@ -20,6 +20,9 @@ def plugin_by_ip(ipaddr, plugin):
     except Error as e:
         print(e)
 
+    except IndexError:
+        print("No information found for this plugin")
+
 
 @click.command(help="Get IP specfic information")
 @click.argument('ipaddr')
@@ -89,26 +92,29 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         plugin_by_ip(ipaddr, str(64582))
 
     if s:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * from vulns where plugin_id='22964';")
+        try:
+            database = r"navi.db"
+            conn = new_db_connection(database)
+            with conn:
+                cur = conn.cursor()
+                cur.execute("SELECT * from vulns where plugin_id='22964';")
 
-            data = cur.fetchall()
+                data = cur.fetchall()
 
-            for plugins in data:
-                web = plugins[6]  # output
-                wsplit = web.split("\n")
+                for plugins in data:
+                    web = plugins[6]  # output
+                    wsplit = web.split("\n")
 
-                server = wsplit[0]
-                port = plugins[10]  # port number
-                proto = plugins[11]  # Portocol
-                asset = plugins[1]  # Ip address
+                    server = wsplit[0]
+                    port = plugins[10]  # port number
+                    proto = plugins[11]  # Portocol
+                    asset = plugins[1]  # Ip address
 
-                print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", port, "/", proto)
-                print()
+                    print(asset, ": Has a Web Server Running :")
+                    print(server, "is running on: ", port, "/", proto)
+                    print()
+        except:
+            print("No information for plugin 22964")
 
     if r:
         click.echo("Local Firewall Info")
@@ -124,24 +130,27 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             print("No Software found")
 
     if outbound:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT * from vulns where plugin_id='16';")
+        try:
+            database = r"navi.db"
+            conn = new_db_connection(database)
+            with conn:
+                cur = conn.cursor()
+                cur.execute("SELECT * from vulns where plugin_id='16';")
 
-            data = cur.fetchall()
-            print("IP Address", " - ", "Port", " - ", "Protocol")
-            print("-------------------------------")
-            for plugins in data:
-                web = plugins[6]  # output
-                wsplit = web.split("\n")
+                data = cur.fetchall()
+                print("IP Address", " - ", "Port", " - ", "Protocol")
+                print("-------------------------------")
+                for plugins in data:
+                    web = plugins[6]  # output
+                    wsplit = web.split("\n")
 
-                server = wsplit[0]
-                port = plugins[10]  # port number
-                proto = plugins[11]  # Portocol
-                asset = plugins[1]  # Ip address
-                print(asset, " - ", port, "  - ", proto + "\n")
+                    server = wsplit[0]
+                    port = plugins[10]  # port number
+                    proto = plugins[11]  # Portocol
+                    asset = plugins[1]  # Ip address
+                    print(asset, " - ", port, "  - ", proto + "\n")
+        except:
+            print("No information for plugin 16")
 
     if exploit:
         try:
