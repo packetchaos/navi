@@ -93,9 +93,7 @@ def asset_export(days):
 
                         try:
                             csv_list.append(assets['hostnames'][0])
-
                         except:
-
                             csv_list.append(" ")
 
                         try:
@@ -149,7 +147,7 @@ def asset_export(days):
                             tag_list = []
                             tag_id = tag_id + 1
                             tag_list.append(tag_id)
-                            tag_list.append(id)
+                            tag_list.append(asset_id)
                             tag_list.append(ip)
 
                             tag_key = t['key']
