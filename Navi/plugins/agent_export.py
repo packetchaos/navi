@@ -1,7 +1,7 @@
-from .api_wrapper import request_data
 import csv
 import time
 
+from .api_wrapper import request_data
 
 def agent_export():
     data = request_data('GET', '/scanners')

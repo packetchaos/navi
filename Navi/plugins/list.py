@@ -122,10 +122,10 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             # dynamically find the PVS sensor
             nnm_data = request_data('GET', '/scans')
 
-            for nnm in nnm_data["scans"]:
+            for scan in nnm_data["scans"]:
 
-                if str(nnm["type"]) == "pvs":
-                    nnm_id = nnm["id"]
+                if str(scan["type"]) == "pvs":
+                    nnm_id = scan["id"]
                     try:
                         data = request_data('GET', '/scans/' + str(nnm_id) + '/')
                         if len(data["hosts"]) != 0:
@@ -167,8 +167,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print(policy['name'])
                 print(policy['description'])
                 print('Template ID : ', policy['template_uuid'], '\n')
-        except:
-            error_msg()
+        except Exception as E:
+            error_msg(E)
 
     if connectors:
         try:
@@ -287,11 +287,11 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         try:
             data = request_data('GET', '/scans')
 
-            for scans in data['scans']:
-                if scans['type'] == 'webapp':
-                    name = scans['name']
-                    scan_id = scans['id']
-                    scan_status = scans['status']
+            for scan in data['scans']:
+                if scan['type'] == 'webapp':
+                    name = scan['name']
+                    scan_id = scan['id']
+                    scan_status = scan['status']
 
                     print("Scan Name : " + name)
                     print("Scan ID : " + str(scan_id))
@@ -325,7 +325,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             data = cur.fetchall()
 
             print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(50), "Licensed Date")
-            print("-".ljust(91,"-"))
+            print("-".ljust(91, "-"))
             print()
             for asset in data:
                 ipv4 = asset[0]
@@ -334,7 +334,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
                 licensed_date = asset[2]
 
-                print(str(ipv4).ljust(15), str(fqdn).ljust(50),licensed_date)
+                print(str(ipv4).ljust(15), str(fqdn).ljust(50), licensed_date)
         print()
 
     if tags:
@@ -354,7 +354,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if categories:
         data = request_data('GET', '/tags/categories')
         print("\nTag Categories".ljust(30), "Category UUID")
-        print('-'.rjust(50,'-'),"\n")
+        print('-'.rjust(50, '-'), "\n")
         for cats in data['categories']:
 
             category_name = cats['name']

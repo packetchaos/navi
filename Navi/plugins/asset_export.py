@@ -104,8 +104,8 @@ def asset_export(days):
                             csv_list.append(" ")
 
                         try:
-                            id = assets['id']
-                            csv_list.append(id)
+                            asset_id = assets['id']
+                            csv_list.append(asset_id)
                         except:
                             csv_list.append(" ")
                         try:

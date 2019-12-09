@@ -211,21 +211,23 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 for assets in data:
                     asset_id = assets[0]
                     print("Critical Vulns for Ip Address :" + ipaddr + "\n")
-                    vulns = request_data('GET', "/workbenches/assets/" + asset_id + "/vulnerabilities?date_range=90")
+                    vulns = request_data('GET',
+                                         "/workbenches/assets/"
+                                         + asset_id + "/vulnerabilities?date_range=90")
                     for severities in range(len(vulns["vulnerabilities"])):
                         vuln_name = vulns["vulnerabilities"][severities]["plugin_name"]
-                        id = vulns["vulnerabilities"][severities]["plugin_id"]
+                        plugin_id = vulns["vulnerabilities"][severities]["plugin_id"]
                         severity = vulns["vulnerabilities"][severities]["severity"]
                         state = vulns["vulnerabilities"][severities]["vulnerability_state"]
 
                         # only pull the critical vulns; critical = severity 4
                         if severity >= 4:
                             print("Plugin Name : " + vuln_name)
-                            print("ID : " + str(id))
+                            print("ID : " + str(plugin_id))
                             print("Severity : Critical")
                             print("State : " + state)
                             print("----------------\n")
-                            plugin_by_ip(str(ipaddr), str(id))
+                            plugin_by_ip(str(ipaddr), str(plugin_id))
                             print()
         except:
             print("No Critical Vulnerabilities found for : ", ipaddr)
@@ -242,11 +244,11 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 asset_data = request_data('GET', '/workbenches/assets/'+ assets[0] + '/info')
 
                 try:
-                    id = asset_data['info']['id']
+                    asset_id = asset_data['info']['id']
 
                     print("\nTenable ID")
                     print("--------------")
-                    print(asset_data['info']['id'])
+                    print(asset_id)
 
                     print("\nIdentities")
                     print("--------------")
@@ -308,7 +310,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     try:
                         print("\nVulnerability Counts")
                         print("--------------")
-                        asset_info = request_data('GET', '/workbenches/assets/' + id + '/info')
+                        asset_info = request_data('GET', '/workbenches/assets/' + asset_id + '/info')
 
 
                         for vuln in asset_info['info']['counts']['vulnerabilities']['severities']:

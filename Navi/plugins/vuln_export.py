@@ -76,120 +76,119 @@ def vuln_export(days):
             for chunk in status['chunks_available']:
                 print("Parsing Chunk {} ...Finished".format(chunk))
 
-                chunk_data = request_data('GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk))
-                #print(chunk_data)
+                chunk_data = request_data(
+                    'GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk))
                 for vulns in chunk_data:
                     #create a blank list to append asset details
-                    list = []
+                    vuln_list = []
                     navi_id = navi_id + 1
                     #Try block to ignore assets without IPs
                     try:
-                        list.append(navi_id)
+                        vuln_list.append(navi_id)
                         try:
                             ipv4 = vulns['asset']['ipv4']
-                            list.append(ipv4)
+                            vuln_list.append(ipv4)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             asset_uuid = vulns['asset']['uuid']
-                            list.append(asset_uuid)
+                            vuln_list.append(asset_uuid)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             hostname = vulns['asset']['hostname']
-                            list.append(hostname)
+                            vuln_list.append(hostname)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             first_found = vulns['first_found']
-                            list.append(first_found)
+                            vuln_list.append(first_found)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             last_found = vulns['last_found']
-                            list.append(last_found)
+                            vuln_list.append(last_found)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             output = vulns['output']
-                            list.append(output)
+                            vuln_list.append(output)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             plugin_id = vulns['plugin']['id']
-                            list.append(plugin_id)
+                            vuln_list.append(plugin_id)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             plugin_name = vulns['plugin']['name']
-                            list.append(plugin_name)
+                            vuln_list.append(plugin_name)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             plugin_family = vulns['plugin']['family']
-                            list.append(plugin_family)
+                            vuln_list.append(plugin_family)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
                         try:
                             port = vulns['port']['port']
-                            list.append(port)
+                            vuln_list.append(port)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
                         try:
                             protocol = vulns['port']['protocol']
-                            list.append(protocol)
+                            vuln_list.append(protocol)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             severity = vulns['severity']
-                            list.append(severity)
+                            vuln_list.append(severity)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
                         try:
                             scan_completed = vulns['scan']['completed_at']
-                            list.append(scan_completed)
+                            vuln_list.append(scan_completed)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             scan_started = vulns['scan']['started_at']
-                            list.append(scan_started)
+                            vuln_list.append(scan_started)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             scan_uuid = vulns['scan']['uuid']
-                            list.append(scan_uuid)
+                            vuln_list.append(scan_uuid)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             schedule_id = vulns['scan']['schedule_id']
-                            list.append(schedule_id)
+                            vuln_list.append(schedule_id)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
 
                         try:
                             state = vulns['state']
-                            list.append(state)
+                            vuln_list.append(state)
                         except:
-                            list.append(" ")
+                            vuln_list.append(" ")
                         try:
-                            insert_vulns(conn, list)
+                            insert_vulns(conn, vuln_list)
                         except Error as e:
                             print(e)
 
                     except:
                         print("skipped one")
-                        pass
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
