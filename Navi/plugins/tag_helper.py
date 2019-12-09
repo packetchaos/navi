@@ -34,8 +34,7 @@ def tag_Checker(uuid, key, value):
         length = len(rows)
         if length != 0:
             return 'yes'
-        else:
-            return 'no'
+        return 'no'
 
 
 def confirm_tag_exists(key , value):

@@ -53,9 +53,9 @@ def mail(latest, consec, webapp):
                 # get the scanner ID to display the name of the scanner
                 d = data["scans"][x]["id"]
                 # need to identify type to compare against pvs and agent scans
-                type = str(data["scans"][x]["type"])
+                scan_type = str(data["scans"][x]["type"])
                 # don't capture the PVS or Agent data in latest
-                while type not in ['pvs', 'agent', 'webapp', 'lce']:
+                while scan_type not in ['pvs', 'agent', 'webapp', 'lce']:
                     # put scans in a list to find the latest
                     l.append(epoch_time)
                     # put the time and id into a dictionary
@@ -75,8 +75,6 @@ def mail(latest, consec, webapp):
             # pull the scan data
             details = request_data('GET', '/scans/' + str(grab_uuid))
 
-            # pprint.pprint(details)
-
             scanner_name = details["info"]['scanner_name']
             name = details["info"]["name"]
             hostcount = details["info"]["hostcount"]
@@ -95,7 +93,7 @@ def mail(latest, consec, webapp):
 
             try:
                 stop = time.strftime("%a, %d %b %Y %H:%M:%S ", time.localtime(details["info"]["scan_end"]))
-                msg += "Scan finish : ".format(stop)
+                msg += "Scan finish : {}".format(stop)
 
                 duration = (details["info"]["scan_end"] - details["info"]["scan_start"]) / 60
                 msg += "Duration : {} Minutes".format(duration)
