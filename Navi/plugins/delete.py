@@ -1,9 +1,9 @@
 import click
-from .api_wrapper import request_data
+from .api_wrapper import request_delete
 
 
 @click.command(help="Delete an Object by it's ID")
-@click.argument('id')
+@click.argument('tid')
 @click.option('-scan', is_flag=True, help='Delete a Scan by Scan ID')
 @click.option('-agroup', is_flag=True, help='Delete an access group by access group ID')
 @click.option('-tgroup', is_flag=True, help='Delete a target-group by target-group ID')
@@ -15,33 +15,33 @@ from .api_wrapper import request_data
 def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category):
 
     if scan:
-        print("I'm deleting your Scan Now")
-        request_data('DELETE', '/scans/'+str(tid))
+        print("\nI'm deleting your Scan Now")
+        request_delete('DELETE', '/scans/' + str(tid))
 
     if agroup:
-        print("I'm deleting your Access Group Now")
-        request_data('DELETE', ('/access-groups/'+str(tid)))
+        print("\nI'm deleting your Access Group Now")
+        request_delete('DELETE', ('/access-groups/' + str(tid)))
 
     if tgroup:
-        print("I'm deleting your Target group Now")
-        request_data('DELETE', ('/target-groups/'+str(tid)))
+        print("\nI'm deleting your Target group Now")
+        request_delete('DELETE', ('/target-groups/'+ str(tid)))
 
     if policy:
-        print("I'm deleting your Policy Now")
-        request_data('DELETE', ('/policies/' + str(tid)))
+        print("\nI'm deleting your Policy Now")
+        request_delete('DELETE', ('/policies/' + str(tid)))
 
     if asset:
-        print("I'm deleting your asset Now")
-        request_data('DELETE', '/workbenches/assets/' + str(tid))
+        print("\nI'm deleting your asset Now")
+        request_delete('DELETE', '/workbenches/assets/' + str(tid))
 
     if container:
-        print("I'm deleting your container")
-        request_data('DELETE', '/container-security/api/v2/images' + str(tid))
+        print("\nI'm deleting your container")
+        request_delete('DELETE', '/container-security/api/v2/images/' + str(tid))
 
     if tag:
-        print("I'm deleting your Tag Value")
-        request_data('DELETE', '/tags/values/' + str(tid))
+        print("\nI'm deleting your Tag Value")
+        request_delete('DELETE', '/tags/values/' + str(tid))
 
     if category:
-        print("I'm Deleting your Category")
-        request_data('DELETE', '/tags/categories/'+str(tid))
+        print("\nI'm Deleting your Category")
+        request_delete('delete', '/tags/categories/'+str(tid))
