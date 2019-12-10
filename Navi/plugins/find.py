@@ -114,7 +114,7 @@ def find(plugin, docker, webapp, creds, time, ghost):
                         print("Scan completed at: ", vulns[13])
                         print("Scan UUID: ", vulns[15])
                         print()
-                    except:
+                    except IndexError:
                         pass
 
     if ghost:
@@ -124,11 +124,10 @@ def find(plugin, docker, webapp, creds, time, ghost):
             print("\nSource", "IP", "FQDN", "First seen")
             print("----------------------------------\n")
             for assets in data['assets']:
-
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
                         print(source['name'], assets['ipv4'][0], assets['fqdn'][0], source['first_seen'])
 
             print()
-        except:
-            print("Check your API keys or your internet connection")
+        except Exception as e:
+            print("Check your API keys or your internet connection", e)

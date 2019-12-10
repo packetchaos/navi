@@ -27,10 +27,11 @@ def tag_Checker(uuid, key, value):
     with conn:
         cur = conn.cursor()
         # This needs to be changed to UUID when the api gets fixed
-        cur.execute("SELECT * from tags where asset_ip='" + uuid + "' and tag_key='" + key + "' and tag_value='" + value + "';")
+        cur.execute("SELECT * from tags where asset_ip='"
+                    + uuid + "' and tag_key='" + key
+                    + "' and tag_value='" + value + "';")
 
         rows = cur.fetchall()
-
         length = len(rows)
         if length != 0:
             return 'yes'

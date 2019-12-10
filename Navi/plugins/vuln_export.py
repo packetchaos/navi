@@ -88,100 +88,100 @@ def vuln_export(days):
                         try:
                             ipv4 = vulns['asset']['ipv4']
                             vuln_list.append(ipv4)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             asset_uuid = vulns['asset']['uuid']
                             vuln_list.append(asset_uuid)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             hostname = vulns['asset']['hostname']
                             vuln_list.append(hostname)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             first_found = vulns['first_found']
                             vuln_list.append(first_found)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             last_found = vulns['last_found']
                             vuln_list.append(last_found)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             output = vulns['output']
                             vuln_list.append(output)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             plugin_id = vulns['plugin']['id']
                             vuln_list.append(plugin_id)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             plugin_name = vulns['plugin']['name']
                             vuln_list.append(plugin_name)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             plugin_family = vulns['plugin']['family']
                             vuln_list.append(plugin_family)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
                         try:
                             port = vulns['port']['port']
                             vuln_list.append(port)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
                         try:
                             protocol = vulns['port']['protocol']
                             vuln_list.append(protocol)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             severity = vulns['severity']
                             vuln_list.append(severity)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
                         try:
                             scan_completed = vulns['scan']['completed_at']
                             vuln_list.append(scan_completed)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             scan_started = vulns['scan']['started_at']
                             vuln_list.append(scan_started)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             scan_uuid = vulns['scan']['uuid']
                             vuln_list.append(scan_uuid)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             schedule_id = vulns['scan']['schedule_id']
                             vuln_list.append(schedule_id)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
 
                         try:
                             state = vulns['state']
                             vuln_list.append(state)
-                        except:
+                        except KeyError:
                             vuln_list.append(" ")
                         try:
                             insert_vulns(conn, vuln_list)

@@ -3,7 +3,6 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection, create_table, insert_assets, insert_tags, drop_tables
 
-
 def asset_export(days):
     # Set the payload to the maximum number of assets to be pulled at once
     day = 86400
@@ -88,52 +87,53 @@ def asset_export(days):
                         try:
                             ip = assets['ipv4s'][0]
                             csv_list.append(ip)
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['hostnames'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['fqdns'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             asset_id = assets['id']
                             csv_list.append(asset_id)
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
-                        try:
 
+                        try:
                             csv_list.append(assets['first_seen'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
-                        try:
 
+                        try:
                             csv_list.append(assets['last_seen'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
+
                         try:
                             csv_list.append(assets['operating_systems'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['mac_addresses'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['agent_uuid'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets["last_licensed_scan_date"])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
@@ -170,6 +170,5 @@ def asset_export(days):
                     except IndexError:
                         pass
 
-
     except KeyError:
-        print("Well this is a bummer; you don't have permissions to download Asset data :( ")
+        print("Well this is a bummer; you don't have permissions to download Asset data :(")

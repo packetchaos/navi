@@ -1,4 +1,4 @@
-import click,time
+import click, time
 from .database import new_db_connection
 from .api_wrapper import request_data
 from .send_mail import send_email
@@ -132,27 +132,27 @@ def mail(latest, consec, webapp):
                     scan_details = request_data('GET', '/scans/' + str(scans['id']))
                     try:
                         hostname = scan_details['hosts'][0]['hostname']
-                    except:
+                    except KeyError:
                         hostname = " "
                     try:
                         message = scan_details['notes'][0]['message']
-                    except:
+                    except KeyError:
                         message = " "
                     try:
                         critical = scan_details['hosts'][0]['critical']
-                    except:
+                    except KeyError:
                         critical = 0
                     try:
                         high = scan_details['hosts'][0]['high']
-                    except:
+                    except KeyError:
                         high = 0
                     try:
                         medium = scan_details['hosts'][0]['medium']
-                    except:
+                    except KeyError:
                         medium = 0
                     try:
                         low = scan_details['hosts'][0]['low']
-                    except:
+                    except KeyError:
                         low = 0
 
                     if message != "Job expired while pending status.":

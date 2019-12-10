@@ -17,11 +17,11 @@ def plugin_by_ip(ipaddr, plugin):
             except Error:
                 pass
 
-    except Error as e:
-        print(e)
-
     except IndexError:
         print("No information found for this plugin")
+    except Exception as e:
+        print(e)
+
 
 
 @click.command(help="Get IP specfic information")
@@ -113,8 +113,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     print(asset, ": Has a Web Server Running :")
                     print(server, "is running on: ", port, "/", proto)
                     print()
-        except:
-            print("No information for plugin 22964")
+        except Error as e:
+            print("No information for plugin 22964", e)
 
     if r:
         click.echo("Local Firewall Info")
@@ -149,8 +149,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     proto = plugins[11]  # Portocol
                     asset = plugins[1]  # Ip address
                     print(asset, " - ", port, "  - ", proto + "\n")
-        except:
-            print("No information for plugin 16")
+        except Error as e:
+            print("No information for plugin 16", e)
 
     if exploit:
         try:
@@ -171,14 +171,11 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
                     for plugins in range(len(V['vulnerabilities'])):
                         plugin = V['vulnerabilities'][plugins]['plugin_id']
-
                         P = request_data('GET', '/plugins/plugin/' + str(plugin))
-                        # pprint.pprint(P['attributes'])
                         print("\n----Exploit Info----")
                         print(P['name'])
                         print()
                         for attribute in range(len(P['attributes'])):
-
                             if P['attributes'][attribute]['attribute_name'] == 'cve':
                                 cve = P['attributes'][attribute]['attribute_value']
                                 print("CVE ID : " + cve)
@@ -196,8 +193,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                                 print("------------\n")
                                 print(solution)
                                 print()
-        except:
-            print("No Exploit Details found for: ", ipaddr)
+        except Error as e:
+            print("No Exploit Details found for: ", ipaddr, e)
 
     if critical:
         try:
@@ -229,8 +226,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                             print("----------------\n")
                             plugin_by_ip(str(ipaddr), str(plugin_id))
                             print()
-        except:
-            print("No Critical Vulnerabilities found for : ", ipaddr)
+        except Error as e:
+            print("No Critical Vulnerabilities found for : ", ipaddr, e)
 
     if details:
         database = r"navi.db"
@@ -238,11 +235,9 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         with conn:
             cur = conn.cursor()
             cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
-
             data = cur.fetchall()
             for assets in data:
                 asset_data = request_data('GET', '/workbenches/assets/'+ assets[0] + '/info')
-
                 try:
                     asset_id = asset_data['info']['id']
 
@@ -255,18 +250,18 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     try:
                         for netbioss in asset_data['info']['netbios_name']:
                             print("Netbios - ", netbioss)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for fqdns in asset_data['info']['fqdns']:
                             print("FQDN - ", fqdns)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for hosts in asset_data['info']['hostname']:
                             print("Host Name -", hosts)
-                    except:
+                    except KeyError:
                         pass
 
                     print("\nOperating Systems")
@@ -274,7 +269,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     try:
                         for oss in asset_data['info']['operating_system']:
                             print(oss)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
@@ -282,7 +277,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for ips in asset_data['info']['ipv4']:
                             print(ips)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
@@ -290,41 +285,39 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for macs in asset_data['info']['mac_address']:
                             print(macs)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         print("\nSources:")
                         print("--------------")
                         for source in asset_data['info']['sources']:
                             print(source['name'])
-                    except:
+                    except KeyError:
                         pass
                     try:
                         print("\nTags:")
                         print("--------------")
                         for tags in asset_data['info']['tags']:
                             print(tags["tag_key"], ':', tags['tag_value'])
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         print("\nVulnerability Counts")
                         print("--------------")
                         asset_info = request_data('GET', '/workbenches/assets/' + asset_id + '/info')
-
-
                         for vuln in asset_info['info']['counts']['vulnerabilities']['severities']:
                             print(vuln["name"], " : ", vuln["count"])
 
                         try:
                             print("\nAsset Exposure Score : ", asset_info['info']['exposure_score'])
                             print("\nAsset Criticality Score :", asset_info['info']['acr_score'])
-                        except:
+                        except KeyError:
                             pass
-                    except:
+                    except KeyError:
                         print("Check your API keys or your internet connection")
 
                     print("\nLast Authenticated Scan Date - ", asset_data['info']['last_authenticated_scan_date'])
 
-                except:
+                except KeyError:
                     pass

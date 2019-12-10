@@ -50,7 +50,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("\nExclusion Name : ", x["name"], '\n')
                 print(x["members"], '\n')
 
-        except:
+        except KeyError:
             print("No Exclusions Set, or there could be an issue with your API keys")
 
     if containers:
@@ -61,7 +61,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             try:
                 for images in data["items"]:
                     print(str(images["name"]).ljust(15) + " | " + str(images["repoName"]).ljust(20) + " | " + str(images["tag"]).ljust(10) + " | " + str(images["imageHash"]).ljust(15) + " | " + str(images["numberOfVulns"]).ljust(25))
-            except:
+            except KeyError:
                 pass
         except Exception as E:
             error_msg(E)
@@ -121,9 +121,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         try:
             # dynamically find the PVS sensor
             nnm_data = request_data('GET', '/scans')
-
             for scan in nnm_data["scans"]:
-
                 if str(scan["type"]) == "pvs":
                     nnm_id = scan["id"]
                     try:
@@ -132,7 +130,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                             print("Here are the assets and their scores last found by Nessus Network Monitor")
                             print("   IP Address     : Score")
                             print("----------------")
-
                             for host in data["hosts"]:
                                 print(str(host["hostname"]) + " :  " + str(host["score"]))
 
@@ -202,7 +199,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     print("Created at: ", group['created_at'])
                     print("Updated at: ", group['updated_at'])
                     print("----------------------")
-                except:
+                except KeyError:
                     pass
                 print("Current Status: ", group['status'])
                 print("Percent Complete: ", group['processing_percent_complete'])
@@ -213,7 +210,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     for rule in details['rules']:
                         print(rule['type'], rule['operator'], rule['terms'])
-                except:
+                except KeyError:
                     pass
         except Exception as E:
             error_msg(E)
@@ -247,7 +244,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     print("Expiration: ", data["license"]["apps"][key]["expiration_date"])
 
-                except:
+                except KeyError:
                     pass
                 print("Mode: ", data["license"]["apps"][key]["mode"])
                 print()
@@ -277,7 +274,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     for group in agent['groups']:
                         print(group['name'])
-                except:
+                except KeyError:
                     pass
                 print()
         except Exception as E:
@@ -323,18 +320,15 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             cur = conn.cursor()
             cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where last_licensed_scan_date !=' ';")
             data = cur.fetchall()
-
             print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(50), "Licensed Date")
             print("-".ljust(91, "-"))
             print()
             for asset in data:
                 ipv4 = asset[0]
-
                 fqdn = asset[1]
-
                 licensed_date = asset[2]
-
                 print(str(ipv4).ljust(15), str(fqdn).ljust(50), licensed_date)
+                
         print()
 
     if tags:
@@ -345,7 +339,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             try:
                 tag_value = tag_values['value']
                 uuid = tag_values['uuid']
-            except:
+            except KeyError:
                 tag_value = "Value Not Set Yet"
                 uuid = "NO Value set"
             print(str(tag_values['category_name']).ljust(25), " : ", str(tag_value).ljust(25), str(uuid).ljust(25))
