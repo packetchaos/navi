@@ -7,7 +7,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='Navi Pro',
-    version="5.0.4",
+    version="5.0.5",
     description="A command-line interface to Tenable.io",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -19,8 +19,7 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=[
         'Click>=7.0',
-        'requests',
-        'pprint>=0.1'
+        'requests'
     ],
     python_requires='>=3.0',
     extras_require={
