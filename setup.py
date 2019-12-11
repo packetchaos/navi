@@ -6,7 +6,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='navi Pro',
+    name='Navi Pro',
     version="5.0.5",
     description="A command-line interface to Tenable.io",
     long_description=long_description,
@@ -26,7 +26,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'navi=navi.cli:cli',
+            'Navi=Navi.cli:cli',
         ],
     },
 )

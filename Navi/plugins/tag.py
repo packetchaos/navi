@@ -8,7 +8,7 @@ from sqlite3 import Error
 @click.command(help="Create a Tag Category/Value Pair")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
-@click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
+@click.option('--d', default='This Tag was created/updated by Navi', help="Description for your Tag")
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")

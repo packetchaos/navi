@@ -50,4 +50,4 @@ def confirm_tag_exists(key , value):
 
 
 def tag_msg():
-    print("Remember to run the update command if you want to use your new tag in navi")
+    print("Remember to run the update command if you want to use your new tag in Navi")

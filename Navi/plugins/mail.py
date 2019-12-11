@@ -33,7 +33,7 @@ def mail(latest, consec, webapp):
         to_email = input("Please enter the email you wish send this mail to: ")
         subject = input("Please enter the Subject of the email : ")
 
-        subject += " - Emailed by navi Pro"
+        subject += " - Emailed by Navi Pro"
 
         # start the message with the proper heading
         msg = "\r\n".join([

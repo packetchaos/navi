@@ -37,7 +37,7 @@ def scan(targets):
 
         print("creating your scan of : " + targets + "  Now...")
 
-        payload = dict(uuid=template, settings={"name": "navi-Pro Created Scan of " + targets,
+        payload = dict(uuid=template, settings={"name": "Navi-Pro Created Scan of " + targets,
                                                 "enabled": "true",
                                                 "scanner_id": scanner_id,
                                                 "text_targets": targets})

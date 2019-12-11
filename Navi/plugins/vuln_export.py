@@ -2,16 +2,9 @@ import time
 from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection, create_table, drop_tables, insert_vulns
-from .dbconfig import create_vulns_table
+
 
 def vuln_export(days):
-    #Crete a new connection to our database
-    database = r"navi.db"
-    drop_conn = new_db_connection(database)
-
-    #Right now we just drop the table.  Eventually I will actually update the database
-    drop_tables(drop_conn, 'vulns')
-
     # Set the payload to the maximum number of assets to be pulled at once
     day = 86400
     new_limit = day * int(days)
@@ -50,9 +43,32 @@ def vuln_export(days):
             if status['status'] == 'ERROR':
                 print("Error occurred")
 
-        create_vulns_table()
-        #Open a fresh connection to import data
+
+        #Crete a new connection to our database
+        database = r"navi.db"
         conn = new_db_connection(database)
+        drop_tables(conn, 'vulns')
+        create_vuln_table = """CREATE TABLE IF NOT EXISTS vulns (
+                            navi_id integer PRIMARY KEY,
+                            asset_ip text, 
+                            asset_uuid text, 
+                            asset_hostname text, 
+                            first_found text, 
+                            last_found text, 
+                            output text, 
+                            plugin_id text, 
+                            plugin_name text, 
+                            plugin_family text, 
+                            port text, 
+                            protocol text, 
+                            severity text, 
+                            scan_completed text, 
+                            scan_started text, 
+                            scan_uuid text, 
+                            schedule_id text, 
+                            state text
+                            );"""
+        create_table(conn, create_vuln_table)
 
         with conn:
             navi_id = 0
