@@ -14,7 +14,7 @@ from .error_msg import error_msg
 @click.option('--fqdn', default='', help='FQDN of new asset')
 @click.option('--hostname', default='', help="Hostname of new asset")
 @click.option('--file', default='', help="Provide a CSV file in this order: IP, MAC, FQDN, Hostname. Leave fields blank if N/A")
-@click.option('--source', default='Navi', help="Provide the source of the information")
+@click.option('--source', default='navi', help="Provide the source of the information")
 def add(ip, mac, netbios, fqdn, hostname, file, source):
     try:
         asset = {}

@@ -1,14 +1,20 @@
 import time
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import new_db_connection, create_table, insert_assets, insert_tags, drop_tables
-
+from .database import new_db_connection, insert_assets, insert_tags, drop_tables
+from .dbconfig import create_assets_table, create_tag_table
 
 def asset_export(days):
+    # Crete a new connection to our database
+    database = r"navi.db"
+    drop_conn = new_db_connection(database)
+    drop_tables(drop_conn, 'assets')
+    drop_tables(drop_conn, 'tags')
+
     # Set the payload to the maximum number of assets to be pulled at once
     day = 86400
     new_limit = day * int(days)
-    day_limit = time.time() - new_limit #2660000
+    day_limit = time.time() - new_limit
     pay_load = {"chunk_size": 100, "filters": {"last_assessed": int(day_limit)}}
     try:
         # request an export of the data
@@ -43,37 +49,13 @@ def asset_export(days):
             if status['status'] == 'ERROR':
                 print("Error occurred")
 
-        # Crete a new connection to our database
-        database = r"navi.db"
+        create_assets_table()
+        create_tag_table()
+
+        #create a fresh connection to import data
         conn = new_db_connection(database)
-        drop_tables(conn, 'assets')
-        create_asset_table = """CREATE TABLE IF NOT EXISTS assets (
-                            ip_address text,
-                            hostname text,
-                            fqdn text,
-                            uuid text PRIMARY KEY,
-                            first_found text,
-                            last_found text, 
-                            operating_system text,
-                            mac_address text, 
-                            agent_uuid text,
-                            last_licensed_scan_date text
-                            );"""
-        create_table(conn, create_asset_table)
-        # create a table for tags
-        create_tags_table = """CREATE TABLE IF NOT EXISTS tags (
-                            tag_id integer PRIMARY KEY,
-                            asset_uuid text,
-                            asset_ip,
-                            tag_key text,
-                            tag_uuid text,
-                            tag_value text,
-                            tag_added_date text
-                            );"""
-        create_table(conn, create_tags_table)
         tag_id = 0
         with conn:
-
             # loop through all of the chunks
             for chunk in status['chunks_available']:
                 print("Parsing Chunk {} ...Finished".format(chunk))
