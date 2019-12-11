@@ -4,6 +4,7 @@ from .api_wrapper import request_data
 from .database import new_db_connection, insert_assets, insert_tags, drop_tables
 from .dbconfig import create_assets_table, create_tag_table
 
+
 def asset_export(days):
     # Crete a new connection to our database
     database = r"navi.db"
@@ -37,7 +38,7 @@ def asset_export(days):
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
             if status['status'] == 'PROCESSING' or 'QUEUED':
-                time.sleep(5)
+                time.sleep(15)
                 status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
                 print("Status : " + str(status["status"]))
 
@@ -52,13 +53,13 @@ def asset_export(days):
         create_assets_table()
         create_tag_table()
 
-        #create a fresh connection to import data
+        # create a fresh connection to import data
         conn = new_db_connection(database)
         tag_id = 0
         with conn:
             # loop through all of the chunks
             for chunk in status['chunks_available']:
-                print("Parsing Chunk {} ...Finished".format(chunk))
+                print("Parsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
                 chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
 
                 for assets in chunk_data:
@@ -70,52 +71,52 @@ def asset_export(days):
                         try:
                             ip = assets['ipv4s'][0]
                             csv_list.append(ip)
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['hostnames'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['fqdns'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             asset_id = assets['id']
                             csv_list.append(asset_id)
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
                         try:
 
                             csv_list.append(assets['first_seen'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
                         try:
 
                             csv_list.append(assets['last_seen'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
                         try:
                             csv_list.append(assets['operating_systems'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['mac_addresses'][0])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets['agent_uuid'])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
                             csv_list.append(assets["last_licensed_scan_date"])
-                        except:
+                        except KeyError:
                             csv_list.append(" ")
 
                         try:
@@ -151,7 +152,6 @@ def asset_export(days):
 
                     except IndexError:
                         pass
-
 
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
