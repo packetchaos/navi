@@ -8,7 +8,7 @@ from .api_wrapper import request_data
 @click.option('--acr', default='', help='Set the ACR')
 @click.option('--c', default='', help="Category to use")
 @click.option('--v', default='', help="Value to use")
-@click.option('--note', default="Navi Generated", help="Enter a Note to your ACR Rule")
+@click.option('--note', default="navi Generated", help="Enter a Note to your ACR Rule")
 # @click.option('--uuid', default='', help="A Value UUID to use")
 def lumin(acr, v, c, note):
     if c == '':
@@ -80,7 +80,7 @@ def lumin(acr, v, c, note):
                 if "6" in string_choice:
                     choice.append(other)
 
-                note = note + " - Navi Generated"
+                note = note + " - navi Generated"
                 # this needs to be changed to ID once the api is fixed
                 lumin_payload = [{"acr_score": int(acr), "reason": choice, "note": note, "asset": [{"ipv4": lumin_list}]}]
                 request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
