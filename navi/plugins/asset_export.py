@@ -52,106 +52,113 @@ def asset_export(days):
 
         create_assets_table()
         create_tag_table()
-
-        # create a fresh connection to import data
-        conn = new_db_connection(database)
         tag_id = 0
-        with conn:
-            # loop through all of the chunks
-            for chunk in status['chunks_available']:
-                print("Parsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
-                chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
 
-                for assets in chunk_data:
-                    # create a blank list to append asset details
-                    csv_list = []
+        for chunk in status['chunks_available']:
+            print("Parsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
+            chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
+
+            # Collect and Post Assets Data
+            for assets in chunk_data:
+                # create a blank list to append asset details
+                csv_list = []
+
+                try:
+                    # Capture the first IP
+                    try:
+                        ip = assets['ipv4s'][0]
+                        csv_list.append(ip)
+                    except KeyError:
+                        csv_list.append(" ")
 
                     try:
-                        # Capture the first IP
-                        try:
-                            ip = assets['ipv4s'][0]
-                            csv_list.append(ip)
-                        except KeyError:
-                            csv_list.append(" ")
+                        csv_list.append(assets['hostnames'][0])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        csv_list.append(assets['fqdns'][0])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        asset_id = assets['id']
+                        csv_list.append(asset_id)
+                    except KeyError:
+                        csv_list.append(" ")
+                    try:
+
+                        csv_list.append(assets['first_seen'])
+                    except KeyError:
+                        csv_list.append(" ")
+                    try:
+
+                        csv_list.append(assets['last_seen'])
+                    except KeyError:
+                        csv_list.append(" ")
+                    try:
+                        csv_list.append(assets['operating_systems'][0])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        csv_list.append(assets['mac_addresses'][0])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        csv_list.append(assets['agent_uuid'])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        csv_list.append(assets["last_licensed_scan_date"])
+                    except KeyError:
+                        csv_list.append(" ")
+
+                    try:
+                        asset_conn = new_db_connection(database)
+                        with asset_conn:
+                            insert_assets(asset_conn, csv_list)
+                    except Error as e:
+                        print(e)
+
+                except IndexError:
+                    pass
+
+            # Collect and save Tag Data
+            for tag_assets in chunk_data:
+                try:
+
+                    tag_ip = tag_assets['ipv4s'][0]
+                    tag_asset_id = tag_assets['id']
+                    for t in tag_assets["tags"]:
+                        tag_list = []
+                        tag_id = tag_id + 1
+                        tag_list.append(tag_id)
+                        tag_list.append(tag_asset_id)
+                        tag_list.append(tag_ip)
+
+                        tag_key = t['key']
+                        tag_list.append(tag_key)
+
+                        tag_uuid = t['uuid']
+                        tag_list.append(tag_uuid)
+
+                        tag_value = t['value']
+                        tag_list.append(tag_value)
+
+                        tag_added_date = t['added_at']
+                        tag_list.append(tag_added_date)
 
                         try:
-                            csv_list.append(assets['hostnames'][0])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            csv_list.append(assets['fqdns'][0])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            asset_id = assets['id']
-                            csv_list.append(asset_id)
-                        except KeyError:
-                            csv_list.append(" ")
-                        try:
-
-                            csv_list.append(assets['first_seen'])
-                        except KeyError:
-                            csv_list.append(" ")
-                        try:
-
-                            csv_list.append(assets['last_seen'])
-                        except KeyError:
-                            csv_list.append(" ")
-                        try:
-                            csv_list.append(assets['operating_systems'][0])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            csv_list.append(assets['mac_addresses'][0])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            csv_list.append(assets['agent_uuid'])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            csv_list.append(assets["last_licensed_scan_date"])
-                        except KeyError:
-                            csv_list.append(" ")
-
-                        try:
-                            insert_assets(conn, csv_list)
+                            tag_conn = new_db_connection(database)
+                            with tag_conn:
+                                insert_tags(tag_conn, tag_list)
                         except Error as e:
                             print(e)
-
-                        # cycle through each tag and added it to its own table
-
-                        for t in assets["tags"]:
-                            tag_list = []
-                            tag_id = tag_id + 1
-                            tag_list.append(tag_id)
-                            tag_list.append(asset_id)
-                            tag_list.append(ip)
-
-                            tag_key = t['key']
-                            tag_list.append(tag_key)
-
-                            tag_uuid = t['uuid']
-                            tag_list.append(tag_uuid)
-
-                            tag_value = t['value']
-                            tag_list.append(tag_value)
-
-                            tag_added_date = t['added_at']
-                            tag_list.append(tag_added_date)
-
-                            try:
-                                insert_tags(conn, tag_list)
-                            except Error as e:
-                                print(e)
-
-                    except IndexError:
-                        pass
+                except IndexError:
+                    pass
 
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")

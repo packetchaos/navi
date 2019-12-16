@@ -1,6 +1,6 @@
 import click
 from .database import new_db_connection
-from .tag_helper import tag_Checker
+from .tag_helper import tag_checker
 from .api_wrapper import request_data
 
 
@@ -33,9 +33,9 @@ def lumin(acr, v, c, note):
             for asset in data:
                 # grab the first record, in this case the uuid
                 uuid = asset[0]
-                check_for_no = tag_Checker(uuid, "NO", "UPDATE")
+                check_for_no = tag_checker(uuid, "NO", "UPDATE")
                 if check_for_no == 'no':
-                    check_match = tag_Checker(uuid, c, v)
+                    check_match = tag_checker(uuid, c, v)
                     if check_match == 'yes':
                         lumin_list.append(uuid)
                 else:

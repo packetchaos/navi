@@ -1,7 +1,7 @@
 import click
 import getpass
 from .database import new_db_connection
-from .dbconfig import create_vulns_table, create_keys_table
+from .dbconfig import create_keys_table
 
 
 @click.command(help="Enter or Reset your Keys")

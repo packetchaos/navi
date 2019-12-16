@@ -1,10 +1,11 @@
-import click,time
+import click, time
 from .database import new_db_connection
 from .api_wrapper import request_data
 from .send_mail import send_email
 
+
 def grab_smtp():
-    #grab SMTP information
+    # grab SMTP information
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
@@ -40,11 +41,11 @@ def mail(latest, consec, webapp):
             "From: {}".format(from_email),
             "To: {}".format(to_email),
             "Subject: {}".format(subject),
-            "",])
+            "", ])
 
         if latest:
             data = request_data('GET', '/scans')
-            l = []
+            time_list = []
             e = {}
             for x in range(len(data["scans"])):
                 # keep UUID and Time together
@@ -57,13 +58,13 @@ def mail(latest, consec, webapp):
                 # don't capture the PVS or Agent data in latest
                 while scan_type not in ['pvs', 'agent', 'webapp', 'lce']:
                     # put scans in a list to find the latest
-                    l.append(epoch_time)
+                    time_list.append(epoch_time)
                     # put the time and id into a dictionary
                     e[epoch_time] = d
                     break
 
             # find the latest time
-            grab_time = max(l)
+            grab_time = max(time_list)
 
             # get the scan with the corresponding ID
             grab_uuid = e[grab_time]
@@ -132,27 +133,27 @@ def mail(latest, consec, webapp):
                     scan_details = request_data('GET', '/scans/' + str(scans['id']))
                     try:
                         hostname = scan_details['hosts'][0]['hostname']
-                    except:
+                    except KeyError:
                         hostname = " "
                     try:
                         message = scan_details['notes'][0]['message']
-                    except:
+                    except KeyError:
                         message = " "
                     try:
                         critical = scan_details['hosts'][0]['critical']
-                    except:
+                    except KeyError:
                         critical = 0
                     try:
                         high = scan_details['hosts'][0]['high']
-                    except:
+                    except KeyError:
                         high = 0
                     try:
                         medium = scan_details['hosts'][0]['medium']
-                    except:
+                    except KeyError:
                         medium = 0
                     try:
                         low = scan_details['hosts'][0]['low']
-                    except:
+                    except KeyError:
                         low = 0
 
                     if message != "Job expired while pending status.":
