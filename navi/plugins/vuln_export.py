@@ -6,6 +6,9 @@ from .dbconfig import create_vulns_table
 
 
 def vuln_export(days):
+    start = time.time()
+    ptime = 0
+    dbtime = 0
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
@@ -24,7 +27,7 @@ def vuln_export(days):
 
         # grab the export UUID
         ex_uuid = export['export_uuid']
-        print('Requesting Vulnerability Export with ID : ' + ex_uuid)
+        print('\nRequesting Vulnerability Export with ID : ' + ex_uuid)
 
         # now check the status
         status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
@@ -45,6 +48,8 @@ def vuln_export(days):
 
             # Exit Loop once confirmed finished
             if status['status'] == 'FINISHED':
+                ptime = time.time()
+                print("\nProcessing Time took : " + str(ptime - start))
                 not_ready = False
 
             # Tell the user an error occured
@@ -57,10 +62,14 @@ def vuln_export(days):
         navi_id = 0
         # loop through all of the chunks
         for chunk in status['chunks_available']:
-            print("Parsing Chunk {} of {} ...Finished".format(chunk, status['total_chunks']))
+            print("\nParsing Chunk {} of {} ...Finished".format(chunk, status['total_chunks']))
 
             chunk_data = request_data(
                 'GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk))
+
+            dbtime = time.time()
+            print("This chunk took : " + str(dbtime - ptime) + " To Download")
+
             for vulns in chunk_data:
                 # create a blank list to append asset details
                 vuln_list = []
@@ -170,9 +179,13 @@ def vuln_export(days):
                         vuln_conn = new_db_connection(database)
                         with vuln_conn:
                             insert_vulns(vuln_conn, vuln_list)
+                        vuln_conn.close()
                     except Error as e:
                         print(e)
                 except IndexError:
                     print("skipped one")
+        end = time.time()
+        print("\nSaving the data took : " + str(end - dbtime))
+
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")

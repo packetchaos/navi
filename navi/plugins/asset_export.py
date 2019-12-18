@@ -6,6 +6,9 @@ from .dbconfig import create_assets_table, create_tag_table
 
 
 def asset_export(days):
+    start = time.time()
+    ptime = 0
+    dbtime = 0
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
@@ -23,7 +26,7 @@ def asset_export(days):
 
         # grab the export UUID
         ex_uuid = export['export_uuid']
-        print('Requesting Asset Export with ID : ' + ex_uuid)
+        print('\nRequesting Asset Export with ID : ' + ex_uuid)
 
         # now check the status
         status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
@@ -44,6 +47,8 @@ def asset_export(days):
 
             # Exit Loop once confirmed finished
             if status['status'] == 'FINISHED':
+                ptime = time.time()
+                print("\nProcessing Time took : " + str(ptime - start))
                 not_ready = False
 
             # Tell the user an error occured
@@ -55,9 +60,10 @@ def asset_export(days):
         tag_id = 0
 
         for chunk in status['chunks_available']:
-            print("Parsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
+            print("\nParsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
             chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
-
+            dbtime = time.time()
+            print("This chunk took : " + str(dbtime - ptime) + " To Download")
             # Collect and Post Assets Data
             for assets in chunk_data:
                 # create a blank list to append asset details
@@ -120,6 +126,7 @@ def asset_export(days):
                         asset_conn = new_db_connection(database)
                         with asset_conn:
                             insert_assets(asset_conn, csv_list)
+                        asset_conn.close()
                     except Error as e:
                         print(e)
 
@@ -155,10 +162,12 @@ def asset_export(days):
                             tag_conn = new_db_connection(database)
                             with tag_conn:
                                 insert_tags(tag_conn, tag_list)
+                            tag_conn.close()
                         except Error as e:
                             print(e)
                 except IndexError:
                     pass
-
+        end = time.time()
+        print("\nSaving the data took : " + str(end - dbtime))
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
