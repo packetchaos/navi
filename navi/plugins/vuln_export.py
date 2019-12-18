@@ -63,12 +63,12 @@ def vuln_export(days):
         # loop through all of the chunks
         for chunk in status['chunks_available']:
             print("\nParsing Chunk {} of {} ...Finished".format(chunk, status['total_chunks']))
-
+            cstart = time.time()
             chunk_data = request_data(
                 'GET', '/vulns/export/' + ex_uuid + '/chunks/' + str(chunk))
 
             dbtime = time.time()
-            print("This chunk took : " + str(dbtime - ptime) + " To Download")
+            print("This chunk took : " + str(dbtime - cstart) + " To Download")
 
             for vulns in chunk_data:
                 # create a blank list to append asset details
@@ -185,7 +185,7 @@ def vuln_export(days):
                 except IndexError:
                     print("skipped one")
         end = time.time()
-        print("\nSaving the data took : " + str(end - dbtime))
+        print("\nParsing and Saving the data took : " + str(end - dbtime))
 
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")

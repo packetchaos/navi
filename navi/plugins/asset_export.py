@@ -61,9 +61,10 @@ def asset_export(days):
 
         for chunk in status['chunks_available']:
             print("\nParsing Chunk {} of {} ...Finished".format(chunk, len(status['chunks_available'])))
+            cstart = time.time()
             chunk_data = request_data('GET', '/assets/export/' + ex_uuid + '/chunks/' + str(chunk))
             dbtime = time.time()
-            print("This chunk took : " + str(dbtime - ptime) + " To Download")
+            print("This chunk took : " + str(dbtime - cstart) + " To Download")
             # Collect and Post Assets Data
             for assets in chunk_data:
                 # create a blank list to append asset details
@@ -168,6 +169,6 @@ def asset_export(days):
                 except IndexError:
                     pass
         end = time.time()
-        print("\nSaving the data took : " + str(end - dbtime))
+        print("\n Parsing and Saving the data took : " + str(end - dbtime))
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
