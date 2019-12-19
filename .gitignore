@@ -107,3 +107,9 @@ venv.bak/
 /test.py
 /Navi/test.py
 /Testing.py
+
+# Virtualenv and vscode
+.venv
+.vscode
+
+settings.ini

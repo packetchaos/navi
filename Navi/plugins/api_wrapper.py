@@ -1,20 +1,17 @@
 import requests
 from .database import new_db_connection
+from .utils import get_keys_from_config
 
 
 def grab_headers():
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * from keys;")
-        rows = cur.fetchall()
-        for row in rows:
-            access_key = row[0]
-            secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.0.0', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    keys = get_keys_from_config()
+    return {
+        'Content-type': 'application/json', 
+        'user-agent': 'navi-5.0.0', 
+        'X-ApiKeys': 'accessKey={};secretKey={}'.format(keys['access_key'], keys['secret_key'])
+    }
 
-
+# TODO: Refactor code to include a session object to make requests
 def request_delete(method, url_mod):
 
     # set the Base URL
