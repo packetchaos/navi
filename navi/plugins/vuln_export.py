@@ -7,8 +7,6 @@ from .dbconfig import create_vulns_table
 
 def vuln_export(days):
     start = time.time()
-    ptime = 0
-    dbtime = 0
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
