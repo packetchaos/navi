@@ -1,6 +1,6 @@
 import click
 from .database import new_db_connection
-from .tag_helper import tag_Checker
+from .tag_helper import tag_checker
 from .api_wrapper import request_data
 
 
@@ -8,7 +8,7 @@ from .api_wrapper import request_data
 @click.option('--acr', default='', help='Set the ACR')
 @click.option('--c', default='', help="Category to use")
 @click.option('--v', default='', help="Value to use")
-@click.option('--note', default="Navi Generated", help="Enter a Note to your ACR Rule")
+@click.option('--note', default="navi Generated", help="Enter a Note to your ACR Rule")
 # @click.option('--uuid', default='', help="A Value UUID to use")
 def lumin(acr, v, c, note):
     if c == '':
@@ -33,9 +33,9 @@ def lumin(acr, v, c, note):
             for asset in data:
                 # grab the first record, in this case the uuid
                 uuid = asset[0]
-                check_for_no = tag_Checker(uuid, "NO", "UPDATE")
+                check_for_no = tag_checker(uuid, "NO", "UPDATE")
                 if check_for_no == 'no':
-                    check_match = tag_Checker(uuid, c, v)
+                    check_match = tag_checker(uuid, c, v)
                     if check_match == 'yes':
                         lumin_list.append(uuid)
                 else:
@@ -80,7 +80,7 @@ def lumin(acr, v, c, note):
                 if "6" in string_choice:
                     choice.append(other)
 
-                note = note + " - Navi Generated"
+                note = note + " - navi Generated"
                 # this needs to be changed to ID once the api is fixed
                 lumin_payload = [{"acr_score": int(acr), "reason": choice, "note": note, "asset": [{"ipv4": lumin_list}]}]
                 request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)

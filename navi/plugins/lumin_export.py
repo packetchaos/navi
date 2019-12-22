@@ -41,10 +41,10 @@ def lumin_export():
                     try:
                         export_list.append(asset_info['info']['exposure_score'])  # add the exposure score
                         export_list.append(asset_info['info']['acr_score'])  # add the ACR
-                    except:
+                    except KeyError:
                         pass
 
-                except:
+                except ConnectionError:
                     print("Check your API keys or your internet connection")
                 # write to the CSV
                 agent_writer.writerow(export_list)

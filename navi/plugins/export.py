@@ -7,7 +7,7 @@ from .csv_export import csv_export
 from .lumin_export import lumin_export
 from .database import new_db_connection
 from .tag_export import tag_export
-from .tag_helper import tag_Checker
+from .tag_helper import tag_checker
 
 
 @click.command(help="Export data into a CSV")
@@ -66,7 +66,7 @@ def export(assets, agents, webapp, consec, licensed, lumin, bytag, c, v, ec, ev)
 
             for asset in assets:
                 # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
-                check_for_no = tag_Checker(asset[1], ec, ev)
+                check_for_no = tag_checker(asset[1], ec, ev)
                 if check_for_no == 'no':
                     new_list.append(asset[0])
 

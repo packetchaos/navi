@@ -17,7 +17,7 @@ def report(latest, container, docker, comply, details, summary):
     if latest:
         try:
             data = request_data('GET', '/scans')
-            l = []
+            time_list = []
             e = {}
             for x in data["scans"]:
                 # keep UUID and Time together
@@ -30,13 +30,13 @@ def report(latest, container, docker, comply, details, summary):
                 # don't capture the PVS or Agent data in latest
                 while scan_type not in ['pvs', 'agent', 'webapp', 'lce']:
                     # put scans in a list to find the latest
-                    l.append(epoch_time)
+                    time_list.append(epoch_time)
                     # put the time and id into a dictionary
                     e[epoch_time] = d
                     break
 
             # find the latest time
-            grab_time = max(l)
+            grab_time = max(time_list)
 
             # get the scan with the corresponding ID
             grab_uuid = e[grab_time]
@@ -100,7 +100,7 @@ def report(latest, container, docker, comply, details, summary):
             data = request_data('GET', '/scans/' + str(details))
             try:
                 print()
-                print("Scan Details for Scan ID : "+details)
+                print("Scan Details for Scan ID : " + details)
                 print()
                 print("Notes: \b")
                 try:
