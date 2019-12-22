@@ -10,32 +10,32 @@ entered and the update command is used! To download Vuln and Asset data you have
 
 All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in the current directory.
  
- Most of the API calls nessessary to make Navi work require access to
+ Most of the API calls nessessary to make navi work require access to
  your all of the available data.  Tenable.io has a 5000 record limit so Navi Pro utilizes the Export API.
  
  The data will not be updated until you run the update command.  Keep this in mind when adding elements to Tenable.io like Tags.
  
-    Navi update
+    navi update
     
  Alternatively you can select which export you want to update:
  
-    Navi update -assets
+    navi update -assets
     
-    Navi update -vulns
+    navi update -vulns
  
  Furthermore, you can limit how much data is downloaded by using the --days command
  
-    Navi update -assets --days 2
+    navi update -assets --days 2
  
-## Download and Configure Navi in a Docker Container
+## Download and Configure navi in a Docker Container
 
     docker pull silentninja/navi:latest
   
     docker run -it -p 8000:8000 silentninja/navi:latest /bin/bash 
 
-    Navi keys
+    navi keys
     
-    Navi update
+    navi update
   
 ## Detach from Container
     CTR+Q+P - CTR+Q+P
@@ -53,7 +53,7 @@ Navi has a few reporting capabilities where a CSV is the output.  To extract thi
 ### Extract Data
 To extract data from the container you need to run an http server.  Use the below built in command.
 
-    Navi http
+    navi http
 
  * Navigate to the website: http://0.0.0.0:8000
  * Simply download the item you want by clicking on it.
@@ -61,7 +61,7 @@ To extract data from the container you need to run an http server.  Use the belo
 ## Usage
 Before you begin you need the Keys! The program will continue to error out without valid API keys
 
-    Navi keys
+    navi keys
 
 Each command has two parts: the Command and the Option/Request. Double-Dash(--), commands expect a text value. Single-Dash commands do not have an expected input.  
 
@@ -106,9 +106,9 @@ There are thirteen core commands:
 
 ### Examples
 
-    Navi api /scans
+    navi api /scans
 
-    Navi api /scanners
+    navi api /scanners
   
 ### IP address queries - 'ip'
   * --plugin TEXT --> Find Details on a particular plugin ID
@@ -129,9 +129,9 @@ There are thirteen core commands:
 
 ### Examples
 
-    Navi ip 192.168.1.1 --plugin 19506
+    navi ip 192.168.1.1 --plugin 19506
 
-    Navi ip 192.168.1.1 -details -software
+    navi ip 192.168.1.1 -details -software
 
 ### Find information - 'find'
   * --plugin TEXT --> Find Assets where this plugin fired
@@ -144,11 +144,11 @@ There are thirteen core commands:
 ### Examples
 
 
-    Navi find --plugin 19506
+    navi find --plugin 19506
     
-    Navi find -docker
+    navi find -docker
 
-    Navi find --time 10
+    navi find --time 10
 
 ### Reports - Information - 'report'
   * -latest -->          Report the Last Scan Details
@@ -159,15 +159,15 @@ There are thirteen core commands:
   * --summary TEXT -->   Report Scan Summary by Scan ID
 
 ### Examples
-    Navi report -latest
+    navi report -latest
 
-    Navi report --container 48b5124b2768
+    navi report --container 48b5124b2768
 
-    Navi report --docker 48b5124b2768
+    navi report --docker 48b5124b2768
 
-    Navi report --comply 48b5124b2768
+    navi report --comply 48b5124b2768
 
-    Navi report --summary 13
+    navi report --summary 13
 
 ### Display - Common Information - 'display'
   * -scanners -->   List all of the Scanners
@@ -191,11 +191,11 @@ There are thirteen core commands:
   * -categories --> Displays Tag Categories and the Category UUID
   
 ### Examples
-    Navi display -scanners
+    navi display -scanners
 
-    Navi display -running
+    navi display -running
 
-    Navi display -nnm
+    navi display -nnm
 
 ### Add assets manually or via a CSV file - 'add'
 To add an asset you need an IP address; Everything else is optional.
@@ -221,9 +221,9 @@ This is the order the information is parsed so getting it incorrect will cause e
 
    
 ### Examples
-    Navi tag --c "My Category" --v "My Value" --d "My description" --plugin 93561
-    Navi tag --c "Application Vulns" --v "Java vulns" --name java
-    Navi tag --c "Agent Group" --v "Linux Agents" --group "Linux"
+    navi tag --c "My Category" --v "My Value" --d "My description" --plugin 93561
+    navi tag --c "Application Vulns" --v "Java vulns" --name java
+    navi tag --c "Agent Group" --v "Linux Agents" --group "Linux"
 
 
 ### Create Access Groups by Tags or Agent Groups - 'agroup'
@@ -235,9 +235,9 @@ This is the order the information is parsed so getting it incorrect will cause e
    
 ### Examples
 
-    Navi agroup --name "My New Group" -tag --c "OS" --v "Linux"
+    navi agroup --name "My New Group" -tag --c "OS" --v "Linux"
     
-    Navi agroup --name "My Other Group" --group "Linux
+    navi agroup --name "My Other Group" --group "Linux
     
 ### Bulk Adjust ACRs based on a Tag - 'lumin'
    * --acr -->  The new ACR value (1-10)
@@ -251,7 +251,7 @@ This is the order the information is parsed so getting it incorrect will cause e
     Value = UPDATE
    
 ### Examples
-    Navi lumin --acr 10 --c "Applications" --v "Core Business" --note "Main application"
+    navi lumin --acr 10 --c "Applications" --v "Core Business" --note "Main application"
 
 ### Export Asset, Agent, Consec, or Webapp Data - 'export'
 
@@ -269,21 +269,21 @@ This is the order the information is parsed so getting it incorrect will cause e
    
 ### Examples
 
-    Navi export -assets
+    navi export -assets
     
-    Navi export -agents -assets -webapp -consec -licensed
+    navi export -agents -assets -webapp -consec -licensed
 
 Export into a CSV, but include the ACR and AES of each asset.  This takes a bit of time.
     
-    Navi export -lumin
+    navi export -lumin
     
 Export into a CSV via a Tag
     
-    Navi export -bytag --c "OS" --v "Linux"
+    navi export -bytag --c "OS" --v "Linux"
 
 Export into a CSV via a Tag; but exclude a specific Tag.
 
-    Navi export -bytag --c "OS" --v "Linux" --ec "OS" --ev "AWS"
+    navi export -bytag --c "OS" --v "Linux" --ec "OS" --ev "AWS"
 
 ### Delete an Object by an ID
 * scan -      Delete a scan by ID
@@ -298,15 +298,15 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 ### Examples
 
 
-    Navi delete 1234 -scan
+    navi delete 1234 -scan
 
-    Navi delete 4567 -agroup
+    navi delete 4567 -agroup
 
-    Navi delete 8910 -tgroup
+    navi delete 8910 -tgroup
 
-    Navi delete 12345 -asset
+    navi delete 12345 -asset
 
-    Navi delete 6789 -policy
+    navi delete 6789 -policy
 
 ### Mail a Report
 * latest - Mail a report of the latest scan: Same output as "report -latest"
@@ -317,39 +317,39 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 ## Use Cases
 
 ### What was last scanned?
-    Navi report -latest
+    navi report -latest
 
 ### What scans are running right now?
-    Navi list -running
+    navi list -running
 
 ### Find a Scan id by Scan Name
-    Navi list -scan | grep -b2 <ScanName>
+    navi list -scan | grep -b2 <ScanName>
 
 ### Create a Scan
-    Navi.py scan 192.168.128.1
+    navi.py scan 192.168.128.1
     
-    Navi.py scan 192.168.128.0/24
+    navi.py scan 192.168.128.0/24
     
   * Choose your scan type: Basic or Discovery
   * Pick your scanner by ID: scanners will be displayed
   * Scan will immediately kick off
 
 ### Control your scans
-    Navi pause 13
+    navi pause 13
 
-    Navi resume 13
+    navi resume 13
 
-    Navi stop 13
+    navi stop 13
 
-    Navi start 13
+    navi start 13
 
 ### Find Available scanners
-    Navi list -scanners
+    navi list -scanners
 
 ### Create 100s of Webapp Scans from a CSV File
 To Receive a file for Navi Pro to use you must push the file to the container.  Netcat is installed on the container to do this, or you can use the 'listen' command to accomplish this.
   
-    Navi spider <your_csv_file.csv>
+    navi spider <your_csv_file.csv>
     
     
 * Choose your Scan type : Webapp Overview or Webapp Scan
@@ -361,7 +361,7 @@ To Receive a file for Navi Pro to use you must push the file to the container.  
 
 From the container - Prepare your container to receive a file
 
-    Navi listen
+    navi listen
 
     or
 
