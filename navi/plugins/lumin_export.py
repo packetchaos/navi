@@ -10,7 +10,8 @@ def lumin_export():
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score', 'ACR Driver Name',
+                       "ACR Driver Value", "ACR Driver Name", "ACR Driver Value", "ACR Driver Name", "ACR Driver Value"]
         cur = conn.cursor()
         cur.execute("SELECT * from assets;")
 
@@ -31,7 +32,6 @@ def lumin_export():
                     export_list.append(atr)
 
                 asset_id = assets[3]  # Grab the UUID to make API calls
-
                 try:
                     asset_info = request_data('GET', '/workbenches/assets/' + asset_id + '/info')
 
@@ -41,6 +41,14 @@ def lumin_export():
                     try:
                         export_list.append(asset_info['info']['exposure_score'])  # add the exposure score
                         export_list.append(asset_info['info']['acr_score'])  # add the ACR
+
+                        for driver in range(3):
+                            try:
+                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_name']) # add the ACR drivers
+                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_value'][0])
+                            except:
+                                export_list.append(" ")
+                                export_list.append(" ")
                     except KeyError:
                         pass
 

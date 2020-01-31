@@ -67,6 +67,8 @@ def request_data(method, url_mod, **kwargs):
             print("\nThe object you tried to create already exists\n")
             print("If you are Updating tags via groups it is not supported right now, "
                   "delete your group using the delete command\n")
+        elif r.status_code == 403:
+            print("You are not authorized! You need to be an admin")
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:
