@@ -12,12 +12,14 @@ q = Queue()
 
 tag_id = 0
 
+
 def worker():
-# The worker thread pulls an item from the queue and processes it
+    # The worker thread pulls an item from the queue and processes it
     while True:
         item = q.get()
         parse_data(request_data('GET', item))
         q.task_done()
+
 
 def parse_data(chunk_data):
     database = r"navi.db"
@@ -178,7 +180,6 @@ def asset_export(days):
         create_assets_table()
         create_tag_table()
 
-
         # grab all of the chunks and craft the URLS for threading
         for y in range(len(status['chunks_available'])):
             urls.append('/assets/export/' + ex_uuid + '/chunks/' + str(y+1))
@@ -189,7 +190,7 @@ def asset_export(days):
             t.start()
 
         # stuff work items on the queue (in this case, just a number).
-        #start = time.perf_counter()
+        # start = time.perf_counter()
         for item in range(len(urls)):
             q.put(urls[item])
 
@@ -197,11 +198,7 @@ def asset_export(days):
         end = time.time()
         print(end - start)
 
-
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
     except TypeError:
         print("You may not be authorized or your keys are invalid")
-
-
-

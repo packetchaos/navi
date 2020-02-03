@@ -13,7 +13,8 @@ from sqlite3 import Error
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
-def tag(c, v, d, plugin, name, group, output):
+@click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
+def tag(c, v, d, plugin, name, group, output, port):
 
     # start a blank list; IP list is due to a bug
     tag_list = []
@@ -43,12 +44,28 @@ def tag(c, v, d, plugin, name, group, output):
                     uuid = x[1]
                     # ensure the ip isn't already in the list
                     if ip not in tag_list:
-                        tag_list.append(uuid) # update functionality requires uuid.  Only using IP until API bug gets fixed
+                        tag_list.append(uuid)  # update functionality requires uuid.  Only using IP until API bug gets fixed
                         ip_list = ip_list + "," + ip
                     else:
                         pass
         except Error:
             pass
+
+    if port != '':
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
+
+            data = cur.fetchall()
+
+            try:
+                for vulns in data:
+                    ip = vulns[1]
+                    ip_list = ip_list + "," + ip
+            except ValueError:
+                pass
 
     if name != '':
         try:
@@ -115,4 +132,3 @@ def tag(c, v, d, plugin, name, group, output):
                     print(E)
             except:
                 print("Duplicate Category")
-

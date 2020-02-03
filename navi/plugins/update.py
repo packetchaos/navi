@@ -5,6 +5,7 @@ from .th_vuln_export import vuln_export
 # from .vuln_export import vuln_export
 from sqlite3 import Error
 
+
 @click.command(help="Update local repository")
 @click.option('-assets', is_flag=True, help="Update the Agent data")
 @click.option('-vulns', is_flag=True, help="Update the Vulnerability Data data")

@@ -12,19 +12,21 @@ q = Queue()
 
 navi_id = 0
 
+
 def worker():
-# The worker thread pulls an item from the queue and processes it
+    # The worker thread pulls an item from the queue and processes it
     while True:
         item = q.get()
         parse_data(request_data('GET', item))
         q.task_done()
+
 
 def parse_data(chunk_data):
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_conn.execute('pragma journal_mode=wal;')
     with vuln_conn:
-    # loop through all of the vulns in this chunk
+        # loop through all of the vulns in this chunk
         for vulns in chunk_data:
             # create a blank list to append asset details
             vuln_list = []
@@ -206,14 +208,13 @@ def vuln_export(days):
             t.start()
 
         # stuff work items on the queue (in this case, just a number).
-        #start = time.perf_counter()
+        # start = time.perf_counter()
         for item in range(len(urls)):
             q.put(urls[item])
 
         q.join()
         end = time.time()
         print(end - start)
-
 
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")

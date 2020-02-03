@@ -31,7 +31,8 @@ def find_by_plugin(plugin):
 @click.option('-creds', is_flag=True, help="Find Credential failures")
 @click.option('--time', default='', help='Find Assets where the scan duration is over X mins')
 @click.option('-ghost', is_flag=True, help='Find Assets that were discovered by a AWS Connector but not scanned')
-def find(plugin, docker, webapp, creds, time, ghost):
+@click.option('--port', default='', help='Find assets with an open port')
+def find(plugin, docker, webapp, creds, time, ghost, port):
 
     if plugin != '':
         if not str.isdigit(plugin):
@@ -78,44 +79,45 @@ def find(plugin, docker, webapp, creds, time, ghost):
             cur.execute("SELECT * from vulns where plugin_id='19506';")
 
             data = cur.fetchall()
+            try:
+                for vulns in data:
 
-            for vulns in data:
+                    output = vulns[6]
 
-                output = vulns[6]
+                    # split the output by return
+                    parsed_output = output.split("\n")
 
-                # split the output by return
-                parsed_output = output.split("\n")
+                    # grab the length so we can grab the seconds
+                    length = len(parsed_output)
 
-                # grab the length so we can grab the seconds
-                length = len(parsed_output)
+                    # grab the scan duration- second to the last variable
+                    duration = parsed_output[length - 2]
 
-                # grab the scan duration- second to the last variable
-                duration = parsed_output[length - 2]
+                    # Split at the colon to grab the numerical value
+                    seconds = duration.split(" : ")
 
-                # Split at the colon to grab the numerical value
-                seconds = duration.split(" : ")
+                    # split to remove "secs"
+                    number = seconds[1].split(" ")
 
-                # split to remove "secs"
-                number = seconds[1].split(" ")
+                    # grab the number for our minute calculation
+                    final_number = number[0]
 
-                # grab the number for our minute calculation
-                final_number = number[0]
+                    # convert seconds into minutes
+                    minutes = int(final_number) / 60
 
-                # convert seconds into minutes
-                minutes = int(final_number) / 60
-
-                # grab assets that match the criteria
-                if minutes > int(time):
-
-                    try:
-                        print("Asset IP: ", vulns[1])
-                        print("Asset UUID: ", vulns[2])
-                        print("Scan started at: ", vulns[14])
-                        print("Scan completed at: ", vulns[13])
-                        print("Scan UUID: ", vulns[15])
-                        print()
-                    except:
-                        pass
+                    # grab assets that match the criteria
+                    if minutes > int(time):
+                        try:
+                            print("Asset IP: ", vulns[1])
+                            print("Asset UUID: ", vulns[2])
+                            print("Scan started at: ", vulns[14])
+                            print("Scan completed at: ", vulns[13])
+                            print("Scan UUID: ", vulns[15])
+                            print()
+                        except ValueError:
+                            pass
+            except ValueError:
+                pass
 
     if ghost:
         try:
@@ -132,3 +134,21 @@ def find(plugin, docker, webapp, creds, time, ghost):
             print()
         except:
             print("Check your API keys or your internet connection")
+
+    if port != '':
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
+
+            data = cur.fetchall()
+
+            try:
+                print("\nThe Following assets had Open ports found by various plugins")
+                print("\nIP address".ljust(15), " UUID".ljust(36), " Plugins")
+                print("-------------------------------------------------------------\n")
+                for vulns in data:
+                    print(vulns[1].ljust(15), vulns[2], vulns[7])
+            except ValueError:
+                pass
