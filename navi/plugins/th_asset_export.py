@@ -31,66 +31,63 @@ def parse_data(chunk_data):
             # create a blank list to append asset details
             csv_list = []
 
+
+            # Capture the first IP
             try:
-                # Capture the first IP
-                try:
-                    ip = assets['ipv4s'][0]
-                    csv_list.append(ip)
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(assets['hostnames'][0])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(assets['fqdns'][0])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    asset_id = assets['id']
-                    csv_list.append(asset_id)
-                except KeyError:
-                    csv_list.append(" ")
-                try:
-
-                    csv_list.append(assets['first_seen'])
-                except KeyError:
-                    csv_list.append(" ")
-                try:
-
-                    csv_list.append(assets['last_seen'])
-                except KeyError:
-                    csv_list.append(" ")
-                try:
-                    csv_list.append(assets['operating_systems'][0])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(assets['mac_addresses'][0])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(assets['agent_uuid'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(assets["last_licensed_scan_date"])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    insert_assets(asset_conn, csv_list)
-                except Error as e:
-                    print(e)
-
+                ip = assets['ipv4s'][0]
+                csv_list.append(ip)
             except IndexError:
-                pass
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['hostnames'][0])
+            except IndexError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['fqdns'][0])
+            except IndexError:
+                csv_list.append(" ")
+
+            try:
+                asset_id = assets['id']
+                csv_list.append(asset_id)
+            except KeyError:
+                csv_list.append(" ")
+            try:
+
+                csv_list.append(assets['first_seen'])
+            except KeyError:
+                csv_list.append(" ")
+            try:
+
+                csv_list.append(assets['last_seen'])
+            except KeyError:
+                csv_list.append(" ")
+            try:
+                csv_list.append(assets['operating_systems'][0])
+            except IndexError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['mac_addresses'][0])
+            except IndexError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['agent_uuid'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets["last_licensed_scan_date"])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                insert_assets(asset_conn, csv_list)
+            except Error as e:
+                print(e)
 
         # Collect and save Tag Data
         for tag_assets in chunk_data:
@@ -204,7 +201,7 @@ def asset_export(days, ex_uuid):
         end = time.time()
         print(end - start)
 
-    except KeyError:
+    except IndexError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
     except TypeError:
         print("You may not be authorized or your keys are invalid")

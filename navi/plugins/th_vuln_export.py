@@ -38,31 +38,31 @@ def parse_data(chunk_data):
                 try:
                     ipv4 = vulns['asset']['ipv4']
                     vuln_list.append(ipv4)
-                except KeyError:
+                except IndexError:
                     vuln_list.append(" ")
 
                 try:
                     asset_uuid = vulns['asset']['uuid']
                     vuln_list.append(asset_uuid)
-                except KeyError:
+                except IndexError:
                     vuln_list.append(" ")
 
                 try:
                     hostname = vulns['asset']['hostname']
                     vuln_list.append(hostname)
-                except KeyError:
+                except IndexError:
                     vuln_list.append(" ")
 
                 try:
                     first_found = vulns['first_found']
                     vuln_list.append(first_found)
-                except KeyError:
+                except IndexError:
                     vuln_list.append(" ")
 
                 try:
                     last_found = vulns['last_found']
                     vuln_list.append(last_found)
-                except KeyError:
+                except IndexError:
                     vuln_list.append(" ")
 
                 try:
