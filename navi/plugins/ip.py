@@ -241,7 +241,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
             data = cur.fetchall()
             for assets in data:
-                asset_data = request_data('GET', '/workbenches/assets/'+ assets[0] + '/info')
+                asset_data = request_data('GET', '/workbenches/assets/' + assets[0] + '/info?date_range=90')
 
                 try:
                     asset_id = asset_data['info']['id']
@@ -269,6 +269,30 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     except:
                         pass
 
+                    try:
+                        for agentname in asset_data['info']['agent_name']:
+                            print("Agent Name -", agentname)
+                    except:
+                        pass
+
+                    try:
+                        for awsid in asset_data['info']['aws_ec2_instance_id']:
+                            print("AWS EC2 Instance ID - ", awsid)
+                    except:
+                        pass
+
+                    try:
+                        for awsamiid in asset_data['info']['aws_ec2_ami_id']:
+                            print("AWS EC2 AMI ID - ", awsamiid)
+                    except:
+                        pass
+
+                    try:
+                        for awsname in asset_data['info']['aws_ec2_name']:
+                            print("AWS EC2 Name - ", awsname)
+                    except:
+                        pass
+
                     print("\nOperating Systems")
                     print("--------------")
                     try:
@@ -290,6 +314,78 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for macs in asset_data['info']['mac_address']:
                             print(macs)
+                    except:
+                        pass
+
+                    try:
+                        print("\nCloud Information:")
+                        print("--------------")
+                        for zone in asset_data['info']['aws_availability_zone']:
+                            print("AWS Availability Zone - ", zone)
+                    except:
+                        pass
+
+                    try:
+                        for groupname in asset_data['info']['aws_ec2_instance_group_name']:
+                            print("AWS Instance group Name - ", groupname)
+                    except:
+                        pass
+
+                    try:
+                        for zone in asset_data['info']['aws_availability_zone']:
+                            print("AWS Availability Zone - ", zone)
+                    except:
+                        pass
+                    try:
+                        for statename in asset_data['info']['aws_ec2_instance_state_name']:
+                            print("AWS Instance State - ", statename)
+                    except:
+                        pass
+                    try:
+                        for instatncetype in asset_data['info']['aws_ec2_instance_type']:
+                            print("AWS Instance Type - ", instatncetype)
+                    except:
+                        pass
+                    try:
+                        for region in asset_data['info']['aws_region']:
+                            print("AWS Region - ", region)
+                    except:
+                        pass
+
+                    try:
+                        for subnet in asset_data['info']['aws_subnet_id']:
+                            print("AWS Subnet ID - ", subnet)
+                    except:
+                        pass
+                    try:
+                        for vpc in asset_data['info']['aws_vpc_id']:
+                            print("AWS VPC ID - ", vpc)
+                    except:
+                        pass
+                    try:
+                        for azureid in asset_data['info']['azure_resource_id']:
+                            print("Azure Resource ID - ", azureid)
+                    except:
+                        pass
+                    try:
+                        for vmid in asset_data['info']['azure_vm_id']:
+                            print("Azure VM ID - ", vmid)
+                    except:
+                        pass
+
+                    try:
+                        for gcpid in asset_data['info']['gcp_instance_id']:
+                            print("GCP Instance ID - ", gcpid)
+                    except:
+                        pass
+                    try:
+                        for projectid in asset_data['info']['gcp_project_id']:
+                            print("GCP Project ID- ", projectid)
+                    except:
+                        pass
+                    try:
+                        for gcpzone in asset_data['info']['gcp_zone']:
+                            print("GCP Zone - ", gcpzone)
                     except:
                         pass
                     try:

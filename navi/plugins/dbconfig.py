@@ -1,7 +1,8 @@
 from .database import new_db_connection, create_table
 
+
 def create_keys_table():
-    ##Create Tables
+    # Create Tables
     database = r"navi.db"
     key_conn = new_db_connection(database)
     key_table = """CREATE TABLE IF NOT EXISTS keys (
@@ -9,6 +10,7 @@ def create_keys_table():
                             secret_key text
                             );"""
     create_table(key_conn, key_table)
+
 
 def create_vulns_table():
     database = r"navi.db"
@@ -34,6 +36,7 @@ def create_vulns_table():
                             state text
                             );"""
     create_table(vuln_conn, vuln_table)
+
 
 def create_assets_table():
     database = r"navi.db"

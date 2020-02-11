@@ -25,6 +25,7 @@ def parse_data(chunk_data):
     database = r"navi.db"
     asset_conn = new_db_connection(database)
     asset_conn.execute('pragma journal_mode=wal;')
+
     with asset_conn:
         for assets in chunk_data:
             # create a blank list to append asset details
@@ -126,7 +127,7 @@ def parse_data(chunk_data):
     asset_conn.close()
 
 
-def asset_export(days):
+def asset_export(days, ex_uuid):
     start = time.time()
     # Crete a new connection to our database
     database = r"navi.db"
@@ -141,23 +142,28 @@ def asset_export(days):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"chunk_size": 10000, "filters": {"last_assessed": int(day_limit)}}
+    pay_load = {"chunk_size": 10000, "filters": {"updated_at": int(day_limit)}}
     try:
-        # request an export of the data
-        export = request_data('POST', '/assets/export', payload=pay_load)
 
-        # grab the export UUID
-        ex_uuid = export['export_uuid']
-        print('\nRequesting Asset Export with ID : ' + ex_uuid)
+        if ex_uuid == '0':
+            # request an export of the data
+            export = request_data('POST', '/assets/export', payload=pay_load)
+
+            # grab the export UUID
+            ex_uuid = export['export_uuid']
+            print('\nRequesting Asset Export with ID : ' + ex_uuid)
+
+            # set a variable to True for our While loop
+            not_ready = True
+        else:
+            print("\nUsing your Export UUID\n")
+            not_ready = False
 
         # now check the status
         status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
 
         # status = get_data('/vulns/export/89ac18d9-d6bc-4cef-9615-2d138f1ffsdf/status')
         print("Status : " + str(status["status"]))
-
-        # set a variable to True for our While loop
-        not_ready = True
 
         # loop to check status until finished
         while not_ready is True:

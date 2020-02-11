@@ -143,7 +143,7 @@ def parse_data(chunk_data):
     vuln_conn.close()
 
 
-def vuln_export(days):
+def vuln_export(days, ex_uuid):
     start = time.time()
     # Crete a new connection to our database
     database = r"navi.db"
@@ -161,21 +161,26 @@ def vuln_export(days):
     day_limit = time.time() - new_limit
     pay_load = {"num_assets": 5000, "filters": {"last_found": int(day_limit)}}
     try:
-        # request an export of the data
-        export = request_data('POST', '/vulns/export', payload=pay_load)
 
-        # grab the export UUID
-        ex_uuid = export['export_uuid']
-        print('\nRequesting Vulnerability Export with ID : ' + ex_uuid)
+        if ex_uuid == '0':
+            # request an export of the data
+            export = request_data('POST', '/vulns/export', payload=pay_load)
+
+            # grab the export UUID
+            ex_uuid = export['export_uuid']
+            print('\nRequesting Vulnerability Export with ID : ' + ex_uuid)
+
+            # set a variable to True for our While loop
+            not_ready = True
+        else:
+            print("\nUsing your Export UUID\n")
+            not_ready = False
 
         # now check the status
         status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
 
         # status = get_data('/vulns/export/89ac18d9-d6bc-4cef-9615-2d138f1ff6d2/status')
         print("Status : " + str(status["status"]))
-
-        # set a variable to True for our While loop
-        not_ready = True
 
         # loop to check status until finished
         while not_ready is True:
