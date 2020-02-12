@@ -37,8 +37,11 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if users:
         try:
             data = request_data('GET', '/users')
+            print("\nUser Name".ljust(35), "Login email")
+            print("----------".ljust(34), "----------")
             for user in data["users"]:
-                print('\n', user["name"].ljust(10), " - ", user["username"], '\n')
+                print(user["name"].ljust(30), " - ", user["username"])
+            print()
 
         except Exception as E:
             error_msg(E)
@@ -50,18 +53,18 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print("\nExclusion Name : ", x["name"], '\n')
                 print(x["members"], '\n')
 
-        except:
+        except KeyError:
             print("No Exclusions Set, or there could be an issue with your API keys")
 
     if containers:
         try:
             data = request_data('GET', '/container-security/api/v2/images?limit=1000')
-            print("Container Name".ljust(15) + " | " + "Repository ID".ljust(20) + " | " + "Tag".ljust(10) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
+            print("Container Name".ljust(35) + " | " + "Repository ID".ljust(35) + " | " + "Tag".ljust(15) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
             print("-----------------------------------------------------------------------------------")
             try:
                 for images in data["items"]:
-                    print(str(images["name"]).ljust(15) + " | " + str(images["repoName"]).ljust(20) + " | " + str(images["tag"]).ljust(10) + " | " + str(images["imageHash"]).ljust(15) + " | " + str(images["numberOfVulns"]).ljust(25))
-            except:
+                    print(str(images["name"]).ljust(35) + " | " + str(images["repoName"]).ljust(35) + " | " + str(images["tag"]).ljust(15) + " | " + str(images["imageHash"]).ljust(15) + " | " + str(images["numberOfVulns"]).ljust(25))
+            except KeyError:
                 pass
         except Exception as E:
             error_msg(E)
@@ -135,9 +138,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
                             for host in data["hosts"]:
                                 print(str(host["hostname"]) + " :  " + str(host["score"]))
-
                             print()
-                    except:
+                    except KeyError:
                         pass
         except Exception as E:
             error_msg(E)
@@ -145,17 +147,17 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if assets:
         try:
             data = request_data('GET', '/workbenches/assets/?date_range=30')
-            l = []
+            asset_list = []
             for x in range(len(data["assets"])):
                 for y in range(len(data["assets"][x]["ipv4"])):
                     ip = data["assets"][x]["ipv4"][y]
 
-                    while ip not in l:
-                        l.append(ip)
-            l.sort()
-            print("\nIn the last 30 days, I found " + str(len(l)) + " IP Addresess. See below:\n")
-            for z in range(len(l)):
-                print(l[z])
+                    while ip not in asset_list:
+                        asset_list.append(ip)
+            asset_list.sort()
+            print("\nIn the last 30 days, I found " + str(len(asset_list)) + " IP Addresess. See below:\n")
+            for z in range(len(asset_list)):
+                print(asset_list[z])
             print()
         except Exception as E:
             error_msg(E)
@@ -163,6 +165,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if policies:
         try:
             data = request_data('GET', '/policies')
+            print()
             for policy in data['policies']:
                 print(policy['name'])
                 print(policy['description'])
@@ -184,7 +187,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
                 except KeyError:
                     pass
-                print("Status Message: ",conn['status_message'])
+                print("Status Message: ", conn['status_message'])
                 print("------------------------------------------")
         except Exception as E:
             error_msg(E)
@@ -202,7 +205,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     print("Created at: ", group['created_at'])
                     print("Updated at: ", group['updated_at'])
                     print("----------------------")
-                except:
+                except KeyError:
                     pass
                 print("Current Status: ", group['status'])
                 print("Percent Complete: ", group['processing_percent_complete'])
@@ -213,7 +216,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     for rule in details['rules']:
                         print(rule['type'], rule['operator'], rule['terms'])
-                except:
+                except KeyError:
                     pass
         except Exception as E:
             error_msg(E)
@@ -247,7 +250,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     print("Expiration: ", data["license"]["apps"][key]["expiration_date"])
 
-                except:
+                except KeyError:
                     pass
                 print("Mode: ", data["license"]["apps"][key]["mode"])
                 print()
@@ -277,7 +280,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 try:
                     for group in agent['groups']:
                         print(group['name'])
-                except:
+                except KeyError:
                     pass
                 print()
         except Exception as E:
@@ -324,43 +327,40 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where last_licensed_scan_date !=' ';")
             data = cur.fetchall()
 
-            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(50), "Licensed Date")
+            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(65), "Licensed Date")
             print("-".ljust(91, "-"))
             print()
             for asset in data:
                 ipv4 = asset[0]
-
                 fqdn = asset[1]
-
                 licensed_date = asset[2]
-
-                print(str(ipv4).ljust(15), str(fqdn).ljust(50), licensed_date)
+                print(str(ipv4).ljust(15), str(fqdn).ljust(65), licensed_date)
         print()
 
     if tags:
         data = request_data('GET', '/tags/values')
-        print("\nTags".ljust(30), "Value".ljust(25), "Value UUID")
-        print('-'.rjust(92,'-'),"\n")
+        print("\nTags".ljust(35), "Value".ljust(35), "Value UUID")
+        print('-'.rjust(92, '-'), "\n")
         for tag_values in data['values']:
             try:
                 tag_value = tag_values['value']
                 uuid = tag_values['uuid']
-            except:
+            except KeyError:
                 tag_value = "Value Not Set Yet"
                 uuid = "NO Value set"
-            print(str(tag_values['category_name']).ljust(25), " : ", str(tag_value).ljust(25), str(uuid).ljust(25))
+            print(str(tag_values['category_name']).ljust(30), " : ", str(tag_value).ljust(35), str(uuid).ljust(25))
         print()
 
     if categories:
         data = request_data('GET', '/tags/categories')
-        print("\nTag Categories".ljust(30), "Category UUID")
+        print("\nTag Categories".ljust(35), "Category UUID")
         print('-'.rjust(50, '-'), "\n")
         for cats in data['categories']:
 
             category_name = cats['name']
             category_uuid = cats['uuid']
 
-            print(str(category_name).ljust(25), " : ", str(category_uuid).ljust(25))
+            print(str(category_name).ljust(30), " : ", str(category_uuid).ljust(25))
         print()
 
     if smtp:
