@@ -58,13 +58,12 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
                 wsplit = web.split("\n")
 
                 server = wsplit[1]
-                port = plugins[10]  # port number
+                web_port = plugins[10]  # port number
                 proto = plugins[11]  # Protocol
                 asset = plugins[1]  # Ip address
 
                 print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", port, "/", proto)
-                print()
+                print(server, "is running on: ", web_port, "/", proto)
 
     if creds:
         print("I'm looking for credential issues...Please hang tight")
@@ -130,10 +129,10 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
                         print(source['name'], assets['ipv4'][0], assets['fqdn'][0], source['first_seen'])
-
             print()
-        except:
+        except Exception as E:
             print("Check your API keys or your internet connection")
+            print(E)
 
     if port != '':
         database = r"navi.db"

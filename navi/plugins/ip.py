@@ -14,7 +14,7 @@ def plugin_by_ip(ipaddr, plugin):
                 cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
                 print(rows[0][0])
-            except Error:
+            except:
                 pass
 
     except Error as e:
@@ -46,7 +46,6 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
     plugin_by_ip(ipaddr, plugin)
 
     if d:
-        print("Test")
         click.echo('\nScan Detail')
         click.echo('----------------\n')
         plugin_by_ip(ipaddr, str(19506))
@@ -97,23 +96,13 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             conn = new_db_connection(database)
             with conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * from vulns where plugin_id='22964';")
-
+                cur.execute("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
                 data = cur.fetchall()
 
                 for plugins in data:
-                    web = plugins[6]  # output
-                    wsplit = web.split("\n")
-
-                    server = wsplit[0]
-                    port = plugins[10]  # port number
-                    proto = plugins[11]  # Portocol
-                    asset = plugins[1]  # Ip address
-
-                    print(asset, ": Has a Web Server Running :")
-                    print(server, "is running on: ", port, "/", proto)
-                    print()
-        except:
+                    print("\n", plugins[0], plugins[1])
+                print()
+        except IndexError:
             print("No information for plugin 22964")
 
     if r:
@@ -135,20 +124,14 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             conn = new_db_connection(database)
             with conn:
                 cur = conn.cursor()
-                cur.execute("SELECT * from vulns where plugin_id='16';")
+                cur.execute("SELECT output, port, protocol from vulns where asset_ip=\"%s\" and plugin_id='16'" % ipaddr)
 
                 data = cur.fetchall()
-                print("IP Address", " - ", "Port", " - ", "Protocol")
+                print("\nIP Address", " - ", "Port", " - ", "Protocol")
                 print("-------------------------------")
                 for plugins in data:
-                    web = plugins[6]  # output
-                    wsplit = web.split("\n")
-
-                    server = wsplit[0]
-                    port = plugins[10]  # port number
-                    proto = plugins[11]  # Portocol
-                    asset = plugins[1]  # Ip address
-                    print(asset, " - ", port, "  - ", proto + "\n")
+                    print("\n", plugins[0].ljust(13), plugins[1].ljust(10), plugins[2])
+                print()
         except:
             print("No information for plugin 16")
 
@@ -255,42 +238,42 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     try:
                         for netbioss in asset_data['info']['netbios_name']:
                             print("Netbios - ", netbioss)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for fqdns in asset_data['info']['fqdns']:
                             print("FQDN - ", fqdns)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for hosts in asset_data['info']['hostname']:
                             print("Host Name -", hosts)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for agentname in asset_data['info']['agent_name']:
                             print("Agent Name -", agentname)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for awsid in asset_data['info']['aws_ec2_instance_id']:
                             print("AWS EC2 Instance ID - ", awsid)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for awsamiid in asset_data['info']['aws_ec2_ami_id']:
                             print("AWS EC2 AMI ID - ", awsamiid)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for awsname in asset_data['info']['aws_ec2_name']:
                             print("AWS EC2 Name - ", awsname)
-                    except:
+                    except KeyError:
                         pass
 
                     print("\nOperating Systems")
@@ -298,7 +281,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     try:
                         for oss in asset_data['info']['operating_system']:
                             print(oss)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
@@ -306,7 +289,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for ips in asset_data['info']['ipv4']:
                             print(ips)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
@@ -314,7 +297,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for macs in asset_data['info']['mac_address']:
                             print(macs)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
@@ -322,92 +305,91 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         print("--------------")
                         for zone in asset_data['info']['aws_availability_zone']:
                             print("AWS Availability Zone - ", zone)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for groupname in asset_data['info']['aws_ec2_instance_group_name']:
                             print("AWS Instance group Name - ", groupname)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for zone in asset_data['info']['aws_availability_zone']:
                             print("AWS Availability Zone - ", zone)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for statename in asset_data['info']['aws_ec2_instance_state_name']:
                             print("AWS Instance State - ", statename)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for instatncetype in asset_data['info']['aws_ec2_instance_type']:
                             print("AWS Instance Type - ", instatncetype)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for region in asset_data['info']['aws_region']:
                             print("AWS Region - ", region)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for subnet in asset_data['info']['aws_subnet_id']:
                             print("AWS Subnet ID - ", subnet)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for vpc in asset_data['info']['aws_vpc_id']:
                             print("AWS VPC ID - ", vpc)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for azureid in asset_data['info']['azure_resource_id']:
                             print("Azure Resource ID - ", azureid)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for vmid in asset_data['info']['azure_vm_id']:
                             print("Azure VM ID - ", vmid)
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         for gcpid in asset_data['info']['gcp_instance_id']:
                             print("GCP Instance ID - ", gcpid)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for projectid in asset_data['info']['gcp_project_id']:
                             print("GCP Project ID- ", projectid)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         for gcpzone in asset_data['info']['gcp_zone']:
                             print("GCP Zone - ", gcpzone)
-                    except:
+                    except KeyError:
                         pass
                     try:
                         print("\nSources:")
                         print("--------------")
                         for source in asset_data['info']['sources']:
                             print(source['name'])
-                    except:
+                    except KeyError:
                         pass
                     try:
                         print("\nTags:")
                         print("--------------")
                         for tags in asset_data['info']['tags']:
                             print(tags["tag_key"], ':', tags['tag_value'])
-                    except:
+                    except KeyError:
                         pass
 
                     try:
                         print("\nVulnerability Counts")
                         print("--------------")
                         asset_info = request_data('GET', '/workbenches/assets/' + asset_id + '/info')
-
 
                         for vuln in asset_info['info']['counts']['vulnerabilities']['severities']:
                             print(vuln["name"], " : ", vuln["count"])
