@@ -105,7 +105,7 @@ def report(latest, container, docker, comply, details, summary):
                 print("Notes: \b")
                 try:
                     print(data['notes'][0]['message'])
-                except KeyError:
+                except IndexError:
                     pass
                 print()
                 print("Vulnerability Counts")
@@ -117,7 +117,7 @@ def report(latest, container, docker, comply, details, summary):
                 try:
                     print("--------------")
                     print("Score : ", data['hosts'][0]['score'])
-                except KeyError:
+                except IndexError:
                     pass
                 print()
                 print("Vulnerability Details")
@@ -126,7 +126,7 @@ def report(latest, container, docker, comply, details, summary):
                 for vulns in data['vulnerabilities']:
                     if vulns['severity'] != 0:
                         print(vulns['plugin_name'], " : ", vulns['count'])
-            except KeyError:
+            except TypeError:
                 print("Check the scan ID")
         except Exception as E:
             error_msg(E)

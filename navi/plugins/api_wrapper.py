@@ -60,7 +60,7 @@ def request_data(method, url_mod, **kwargs):
             # This response is for some successful posts.
             print("\nSuccess!\n")
         elif r.status_code == 404:
-            print('\nCheck your query...', r)
+            print('\nCheck your query...I can\'t find what you\'re looking for', r)
         elif r.status_code == 429:
             print("\nToo many requests at a time...\n")
         elif r.status_code == 400:
@@ -68,7 +68,9 @@ def request_data(method, url_mod, **kwargs):
             print("If you are Updating tags via groups it is not supported right now, "
                   "delete your group using the delete command\n")
         elif r.status_code == 403:
-            print("You are not authorized! You need to be an admin")
+            print("\nYou are not authorized! You need to be an admin\n")
+        elif r.status_code == 409:
+            print("\nScan is not Active\n")
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:

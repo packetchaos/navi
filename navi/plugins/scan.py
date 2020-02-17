@@ -38,7 +38,7 @@ def scan(targets):
         print("creating your scan of : " + targets + "  Now...")
 
         payload = dict(uuid=template, settings={"name": "navi-Pro Created Scan of " + targets,
-                                                "enabled": "true",
+                                                "enabled": "True",
                                                 "scanner_id": scanner_id,
                                                 "text_targets": targets})
 
@@ -46,10 +46,12 @@ def scan(targets):
         data = request_data('POST', '/scans', payload=payload)
 
         # pull scan ID after Creation
-        scan_id = data["scan"]["id"]
+        scan_id = str(data["scan"]["id"])
 
         # launch Scan
-        start(str(scan_id))
+        request_data('POST', '/scans/' + scan_id + '/launch')
+
+        print("I started your scan, your scan ID is: ", scan_id)
 
     except Exception as E:
         error_msg(E)
