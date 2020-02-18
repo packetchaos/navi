@@ -266,8 +266,11 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 last_connect = agent['last_connect']
                 last_connect_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_connect))
 
-                last_scanned = agent['last_scanned']
-                last_scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_scanned))
+                try:
+                    last_scanned = agent['last_scanned']
+                    last_scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_scanned))
+                except KeyError:
+                    last_scanned_time = "Agent has not Been Scanned"
                 print("Agent Name : ", agent['name'])
                 print("-----------------------------")
                 print("Agent IP : ", agent['ip'])
