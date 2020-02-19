@@ -52,7 +52,8 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
             cur.execute("SELECT * from vulns where plugin_id='1442';")
 
             data = cur.fetchall()
-
+            print("\nWeb Servers found by plugin 1442")
+            print("-------------------------------")
             for plugins in data:
                 web = plugins[6]  # output
                 wsplit = web.split("\n")
@@ -61,9 +62,23 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
                 web_port = plugins[10]  # port number
                 proto = plugins[11]  # Protocol
                 asset = plugins[1]  # Ip address
+                print()
+                #print(asset, ": Has a Web Server Running")
+                print(server, "is running on: ", web_port, "/", proto, "On :", asset)
+        try:
+            print("\n\nWeb Servers/SSH Servers found by plugin '22964';")
+            print("-------------------------------\n")
+            conn2 = new_db_connection(database)
+            with conn2:
+                cur2 = conn.cursor()
+                cur2.execute("SELECT output, port, asset_ip from vulns where plugin_id='22964'")
+                data = cur2.fetchall()
 
-                print(asset, ": Has a Web Server Running :")
-                print(server, "is running on: ", web_port, "/", proto)
+                for plugins in data:
+                    print("\n", plugins[0][:-1], plugins[1], "On :", plugins[2])
+                print()
+        except IndexError:
+            print("No information for plugin 22964")
 
     if creds:
         print("I'm looking for credential issues...Please hang tight")
