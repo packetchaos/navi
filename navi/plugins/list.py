@@ -29,7 +29,8 @@ from sqlite3 import Error
 @click.option('-tags', is_flag=True, help='Print Tag Categories and values')
 @click.option('-categories', is_flag=True, help='Print all of the Tag Categories and their UUIDs')
 @click.option('-smtp', is_flag=True, help="Print your smtp information")
-def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp):
+@click.option('-cloud', is_flag=True, help="Print Cloud assets found in the last 30 days by the connectors")
+def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud):
 
     if scanners:
         nessus_scanners()
@@ -383,3 +384,23 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         except Error as E:
             print("\nYou have no SMTP information saved.\n")
             print("Error: ", E, "\n")
+
+    if cloud:
+        query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-has", "filter.0.value": "AWS",
+                 "filter.1.filter": "sources", "filter.1.quality": "set-has", "filter.1.value": "AZURE",
+                 "filter.2.filter": "sources", "filter.2.quality": "set-has", "filter.2.value": "GCP", "filter.search_type":"or"}
+        data = request_data('GET', '/workbenches/assets', params=query)
+        print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(40), "UUID".ljust(40), "First seen")
+        print("-------------------------------------------------------------------------------------------------------------------------------------\n")
+        for assets in data['assets']:
+            for source in assets['sources']:
+                if source['name'] != 'NESSUS_SCAN':
+                    asset_ip = assets['ipv4'][0]
+                    uuid = assets['id']
+                    try:
+                        asset_fqdn = assets['fqdn'][0]
+                    except IndexError:
+                        asset_fqdn = "NO FQDN found"
+
+                    print(source['name'].ljust(10), asset_ip.ljust(15), asset_fqdn.ljust(40),uuid.ljust(40), source['first_seen'])
+        print()
