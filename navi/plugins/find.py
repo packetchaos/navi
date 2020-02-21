@@ -63,7 +63,6 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
                 proto = plugins[11]  # Protocol
                 asset = plugins[1]  # Ip address
                 print()
-                #print(asset, ": Has a Web Server Running")
                 print(server, "is running on: ", web_port, "/", proto, "On :", asset)
         try:
             print("\n\nWeb Servers/SSH Servers found by plugin '22964';")
@@ -135,16 +134,52 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
 
     if ghost:
         try:
+
             query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
             data = request_data('GET', '/workbenches/assets', params=query)
-            print("\nSource", "IP", "FQDN", "First seen")
+            print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(40), "First seen")
             print("----------------------------------\n")
             for assets in data['assets']:
-
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
-                        print(source['name'], assets['ipv4'][0], assets['fqdn'][0], source['first_seen'])
+                        aws_ip = assets['ipv4'][0]
+                        try:
+                            aws_fqdn =  assets['fqdn'][0]
+                        except IndexError:
+                            aws_fqdn = assets['fqdn'][0]
+
+                        print(source['name'], aws_ip, aws_fqdn, source['first_seen'])
             print()
+
+            gcp_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "GCP"}
+            gcp_data = request_data('GET', '/workbenches/assets', params=gcp_query)
+            for gcp_assets in gcp_data['assets']:
+                for gcp_source in gcp_assets['sources']:
+                    if gcp_source['name'] == 'GCP':
+                        gcp_ip = gcp_assets['ipv4'][0]
+                        try:
+                            gcp_fqdn = gcp_assets['fqdn'][0]
+                        except IndexError:
+                            gcp_fqdn = "NO FQDN FOUND"
+                            
+                        print(gcp_source['name'].ljust(10), gcp_ip.ljust(15), gcp_fqdn.ljust(40), gcp_source['first_seen'])
+            print()
+
+            az_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AZURE"}
+            az_data = request_data('GET', '/workbenches/assets', params=az_query)
+            for az_assets in az_data['assets']:
+                for az_source in az_assets['sources']:
+                    if az_source['name'] == 'AZURE':
+
+                        az_ip = az_assets['ipv4'][0]
+                        try:
+                            az_fqdn = az_assets['fqdn'][0]
+                        except IndexError:
+                            az_fqdn = "NO FQDN Found"
+
+                        print(az_source['name'].ljust(10), az_ip.ljust(15), az_fqdn.ljust(40), az_source['first_seen'])
+            print()
+                
         except Exception as E:
             print("Check your API keys or your internet connection")
             print(E)
