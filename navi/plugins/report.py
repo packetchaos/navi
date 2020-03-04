@@ -3,7 +3,7 @@ import time
 from .api_wrapper import request_data
 from .scan_details import scan_details
 from .error_msg import error_msg
-
+from .database import new_db_connection
 
 @click.command(help="Get the Latest Scan information")
 @click.option('-latest', is_flag=True, help="Report the Last Scan Details")
@@ -12,7 +12,8 @@ from .error_msg import error_msg
 @click.option('--comply', default='', help='Check to see if your container complies with your Corporate Policy')
 @click.option('--details', default='', help='Report Scan Details including Vulnerability Counts by Scan ID')
 @click.option('--summary', default='', help="Report Scan Summary information by Scan ID")
-def report(latest, container, docker, comply, details, summary):
+@click.option('--network', default='', help="Report assets that belong to a certain network ID")
+def report(latest, container, docker, comply, details, summary, network):
     # get the latest Scan Details
     if latest:
         try:
@@ -138,3 +139,22 @@ def report(latest, container, docker, comply, details, summary):
             scan_details(str(summary))
         except Exception as E:
             error_msg(E)
+
+    if network:
+        database = r"navi.db"
+
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where network == '" + network + "';")
+            data = cur.fetchall()
+
+            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(65), "Network ID")
+            print("-".ljust(91, "-"))
+            print()
+            for asset in data:
+                ipv4 = asset[0]
+                fqdn = asset[1]
+                network = asset[2]
+                print(str(ipv4).ljust(15), str(fqdn).ljust(65), network)
+        print()

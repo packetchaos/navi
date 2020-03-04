@@ -85,6 +85,11 @@ def parse_data(chunk_data):
                 csv_list.append(" ")
 
             try:
+                csv_list.append(assets["network_id"])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
                 insert_assets(asset_conn, csv_list)
             except Error as e:
                 print(e)
@@ -139,7 +144,7 @@ def asset_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"chunk_size": 10000, "filters": {"updated_at": int(day_limit)}}
+    pay_load = {"chunk_size": 10000, "filters": {"last_assessed": int(day_limit)}}
     try:
 
         if ex_uuid == '0':

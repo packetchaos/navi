@@ -51,7 +51,8 @@ def create_assets_table():
                             operating_system text,
                             mac_address text, 
                             agent_uuid text,
-                            last_licensed_scan_date text
+                            last_licensed_scan_date text,
+                            network text
                             );"""
     create_table(asset_conn, create_asset_table)
 

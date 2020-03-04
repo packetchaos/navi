@@ -119,7 +119,7 @@ def asset_export(days):
                             csv_list.append(" ")
 
                         try:
-                            csv_list.append(assets["last_licensed_scan_date"])
+                            csv_list.append(assets['last_licensed_scan_date'])
                         except KeyError:
                             csv_list.append(" ")
 
