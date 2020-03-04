@@ -31,7 +31,7 @@ def find_by_plugin(plugin):
 @click.option('-creds', is_flag=True, help="Find Credential failures")
 @click.option('--time', default='', help='Find Assets where the scan duration is over X mins')
 @click.option('-ghost', is_flag=True, help='Find Assets that were discovered by a AWS Connector but not scanned')
-@click.option('--port', default='', help='Find assets with an open port')
+@click.option('--port', default='', help='Find assets with a open port provided')
 def find(plugin, docker, webapp, creds, time, ghost, port):
 
     if plugin != '':

@@ -30,7 +30,7 @@ from sqlite3 import Error
 @click.option('-categories', is_flag=True, help='Print all of the Tag Categories and their UUIDs')
 @click.option('-smtp', is_flag=True, help="Print your smtp information")
 @click.option('-cloud', is_flag=True, help="Print Cloud assets found in the last 30 days by the connectors")
-@click.option('-networks', is_flag=True, help="Print Tenable.io Network Information")
+@click.option('-networks', is_flag=True, help="Print Network IDs")
 def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud, networks):
 
     if scanners:

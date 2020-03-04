@@ -12,7 +12,7 @@ from .database import new_db_connection
 @click.option('--comply', default='', help='Check to see if your container complies with your Corporate Policy')
 @click.option('--details', default='', help='Report Scan Details including Vulnerability Counts by Scan ID')
 @click.option('--summary', default='', help="Report Scan Summary information by Scan ID")
-@click.option('--network', default='', help="Report assets that belong to a certain network ID")
+@click.option('--network', default='', help="Report assets of a given network")
 def report(latest, container, docker, comply, details, summary, network):
     # get the latest Scan Details
     if latest:
@@ -149,12 +149,12 @@ def report(latest, container, docker, comply, details, summary, network):
             cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where network == '" + network + "';")
             data = cur.fetchall()
 
-            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(65), "Network ID")
+            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(65), "Licensed Scan Date")
             print("-".ljust(91, "-"))
             print()
             for asset in data:
                 ipv4 = asset[0]
                 fqdn = asset[1]
-                network = asset[2]
-                print(str(ipv4).ljust(15), str(fqdn).ljust(65), network)
+                licensed_date = asset[2]
+                print(str(ipv4).ljust(15), str(fqdn).ljust(65), licensed_date)
         print()

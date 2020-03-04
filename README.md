@@ -140,6 +140,7 @@ There are thirteen core commands:
   * -creds  -->       Find Credential failures
   * --time TEXT -->   Find Assets where the scan duration is over X mins
   * -ghost -->        Find Assets found by a Connector and not scanned by Nessus(AWS ONLY)
+  * --port TEXT --->  Find assets with an the open port provided
 
 ### Examples
 
@@ -157,6 +158,7 @@ There are thirteen core commands:
   * --comply TEXT -->    Check to see if your container complies with your Policy
   * --details TEXT -->   Report Scan Details including Vulnerability Counts by Scan ID
   * --summary TEXT -->   Report Scan Summary by Scan ID
+  * --network TEXT -->   Report Assets of a given Network
 
 ### Examples
     navi report -latest
@@ -189,6 +191,8 @@ There are thirteen core commands:
   * -licensed -->   Displays All of your Licensed assets
   * -tags -->       Displays Tag Categories, Values and Value UUID
   * -categories --> Displays Tag Categories and the Category UUID
+  * -cloud -->      Displays Cloud assets found in the last 30 days
+  * -networks -->   Displays Network IDs
   
 ### Examples
     navi display -scanners
@@ -260,7 +264,8 @@ This is the order the information is parsed so getting it incorrect will cause e
    * -webapp -->   Export Web applications into a CSV: FQDN, Critical, High, Medium, Low
    * -consec -->   Export Container Security summary info into a CSV.
    * -licensed --> Export a List of all Licensed Assets into a CSV.
-   * -lumin     Export all Asset data including ACR and AES into a CSV. This will take some time
+   * -lumin -->    Export all Asset data including ACR and AES into a CSV. This will take some time
+   * --network --> Export all Assets of a given network
    * -bytag     Export all assets by tag; Include ACR and AES into a CSV
    * --c TEXT   Export bytag with the following Category name
    * --v TEXT   Export bytag with the Tag Value; requires --c and Category Name
@@ -272,6 +277,8 @@ This is the order the information is parsed so getting it incorrect will cause e
     navi export -assets
     
     navi export -agents -assets -webapp -consec -licensed
+    
+    navi export --network 00000000-0000-0000-0000-000000000000
 
 Export into a CSV, but include the ACR and AES of each asset.  This takes a bit of time.
     
