@@ -70,7 +70,7 @@ There are thirteen core commands:
  * ip - find details on Specific IPs
  * find - Find information: credential failures, containers, etc
  * report - Report on Information: Latest scan information, Container vulns
- * list - List details: users, logs, etc
+ * display - List details: users, logs, etc
  * group - Create Target groups based off of Plugin ID, Plugin Name or Plugin Output
  * export - Export Agent or Asset data into a CSV
  * delete - Delete an object by it's ID
@@ -327,10 +327,10 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi report -latest
 
 ### What scans are running right now?
-    navi list -running
+    navi display -running
 
 ### Find a Scan id by Scan Name
-    navi list -scan | grep -b2 <ScanName>
+    navi display -scan | grep -b2 <ScanName>
 
 ### Create a Scan
     navi.py scan 192.168.128.1
@@ -351,7 +351,7 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi start 13
 
 ### Find Available scanners
-    navi list -scanners
+    navi display -scanners
 
 ### Create 100s of Webapp Scans from a CSV File
 To Receive a file for Navi Pro to use you must push the file to the container.  Netcat is installed on the container to do this, or you can use the 'listen' command to accomplish this.
