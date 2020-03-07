@@ -261,8 +261,9 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             error_msg(E)
 
     if agents:
+        querystring = {"limit": "5000"}
         try:
-            data = request_data('GET', '/scanners/104490/agents')
+            data = request_data('GET', '/scanners/1/agents', params=querystring)
             print("\b Agent information is pulled from the US Cloud Scanner\b")
             for agent in data['agents']:
                 last_connect = agent['last_connect']

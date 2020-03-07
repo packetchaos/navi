@@ -45,14 +45,14 @@ def agroup(name, tag, c, v, group):
                 new_list.append(asset[1])
 
     if group:
-
+        querystring = {"limit": "5000"}
         group_data = request_data('GET', '/scanners/1/agent-groups')
         for agent_group in group_data['groups']:
             group_name = agent_group['name']
             group_id = agent_group['id']
 
             if group_name == group:
-                data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents')
+                data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
 
                 for agent in data['agents']:
                     ip_address = agent['name']
