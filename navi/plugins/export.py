@@ -18,7 +18,7 @@ from .network_export import network_export
 @click.option('-consec', is_flag=True, help="Export Container Security Summary into a CSV")
 @click.option('-licensed', is_flag=True, help="Export a List of all the Licensed Assets")
 @click.option('-lumin', is_flag=True, help="Export all Asset data including ACR and AES into a CSV. This will take some time")
-@click.option('--network', default='00000000-0000-0000-0000-000000000000', help="Export All assets of a given network")
+@click.option('--network', default='', help="Export All assets of a given network")
 @click.option('-bytag', is_flag=True, help="Export all assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default='', help="Export bytag with the following Category name")
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")

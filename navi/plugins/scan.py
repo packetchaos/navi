@@ -1,6 +1,5 @@
 import click
 from .scanners import nessus_scanners
-from .start import start
 from .api_wrapper import request_data
 from .error_msg import error_msg
 

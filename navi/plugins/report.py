@@ -5,6 +5,7 @@ from .scan_details import scan_details
 from .error_msg import error_msg
 from .database import new_db_connection
 
+
 @click.command(help="Get the Latest Scan information")
 @click.option('-latest', is_flag=True, help="Report the Last Scan Details")
 @click.option('--container', default='', help='Report CVSS 7 or above by \'/repository/image/tag\'')

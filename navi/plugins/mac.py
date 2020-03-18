@@ -22,3 +22,5 @@ def mac(address):
         print(data['data']['organization_name'])
     except ConnectionError as E:
         error_msg(E)
+    except KeyError:
+        print("Mac Address information Not found")

@@ -44,7 +44,7 @@ def lumin_export():
 
                         for driver in range(3):
                             try:
-                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_name']) # add the ACR drivers
+                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_name'])  # add the ACR drivers
                                 export_list.append(asset_info['info']['acr_drivers'][driver]['driver_value'][0])
                             except:
                                 export_list.append(" ")

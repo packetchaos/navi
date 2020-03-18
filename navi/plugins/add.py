@@ -1,7 +1,5 @@
 from sqlite3 import Error
-
 import click
-
 from .add_helper import add_helper
 from .api_wrapper import request_data
 from .error_msg import error_msg

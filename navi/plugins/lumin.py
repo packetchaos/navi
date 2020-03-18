@@ -9,7 +9,6 @@ from .api_wrapper import request_data
 @click.option('--c', default='', help="Category to use")
 @click.option('--v', default='', help="Value to use")
 @click.option('--note', default="navi Generated", help="Enter a Note to your ACR Rule")
-# @click.option('--uuid', default='', help="A Value UUID to use")
 def lumin(acr, v, c, note):
     if c == '':
         print("We require a Tag Category to update the ACR by Tag")
