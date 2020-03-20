@@ -27,7 +27,7 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  
     navi update -assets --days 2
  
-## Download and Configure navi in a Docker Container
+# Download and Configure navi in a Docker Container
 
     docker pull silentninja/navi:latest
   
@@ -57,13 +57,37 @@ To extract data from the container you need to run an http server.  Use the belo
 
  * Navigate to the website: http://0.0.0.0:8000
  * Simply download the item you want by clicking on it.
+ 
+# Download and Configure Navi using Python3 Setup file
+## Prepare your Machine
+ * Install [Python3](https://realpython.com/installing-python/)
+ * Install [Setuptools](https://pypi.org/project/setuptools/2.0/)
+ * Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+ 
+## Clone the Repo
+Create a new Directory
 
+    mkdir tenable
+
+Change into your new directory
+
+    cd tenable
+    
+Clone the repo
+
+    git clone https://github.com/packetchaos/Navi.git
+
+Install Navi
+    
+    cd Navi
+    python3 setup.py install
+    
 ## Usage
 Before you begin you need the Keys! The program will continue to error out without valid API keys
 
     navi keys
 
-Each command has two parts: the Command and the Option/Request. Double-Dash(--), commands expect a text value. Single-Dash commands do not have an expected input.  
+Each command has two parts: the Command and the Option/Request. Double-Dash(--) commands expect a text value. Single-Dash commands do not have an expected input.  
 
 There are thirteen core commands: 
  * api - query api endpoints
