@@ -6,7 +6,7 @@ from .api_wrapper import request_data
 from .database import new_db_connection, drop_tables, insert_vulns
 from .dbconfig import create_vulns_table
 
-ock = threading.Lock()
+lock = threading.Lock()
 
 q = Queue()
 
@@ -159,7 +159,7 @@ def vuln_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 5000, "filters": {"last_found": int(day_limit)}}
+    pay_load = {"num_assets": 500, "filters": {"last_found": int(day_limit)}}
     try:
 
         if ex_uuid == '0':
@@ -212,8 +212,6 @@ def vuln_export(days, ex_uuid):
             t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
             t.start()
 
-        # stuff work items on the queue (in this case, just a number).
-        # start = time.perf_counter()
         for item in range(len(urls)):
             q.put(urls[item])
 
