@@ -4,7 +4,7 @@ in Cyber Exposure or Vulnerability Management.
 
     *** This is not Supported by Tenable ***
 
-### Important Note
+### Important Notes
 Navi Pro will download the entire data-set(90 days) locally after API keys are 
 entered and the update command is used! To download Vuln and Asset data you have to be an Administrator in Tenable.io.
 
@@ -27,6 +27,23 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  
     navi update -assets --days 2
  
+ You can even specify your export id.
+ 
+    navi update -vulns --exid 123456-987654-asdfgh-jklopi-ididis
+ 
+### My container keeps getting "Killed"
+To speed up downloads navi uses threading. It pulls 500 asset chunks on 10 threads and since the vulnerabilities per asset
+fluctuate this can spike the memory above 2G.  If this happens increase your memeory to 4G.
+
+[Directions for Mac](https://docs.docker.com/docker-for-mac/#memory)
+
+[Directions for Windows](https://docs.docker.com/docker-for-windows/#advanced)
+ 
+ 
+### What is the biggest Tenable.io instance Navi has been tested on?
+Navi 5.1.2 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
+It took 2.5 hours to download all 54GB of data and process it down to 6.9GB into navi.db.   
+
 # Download and Configure navi in a Docker Container
 
     docker pull silentninja/navi:latest
@@ -77,12 +94,12 @@ Clone the repo
 
     git clone https://github.com/packetchaos/Navi.git
 
-Install Navi
+## Install Navi
     
     cd Navi
     python3 setup.py install
     
-## Usage
+# Usage
 Before you begin you need the Keys! The program will continue to error out without valid API keys
 
     navi keys

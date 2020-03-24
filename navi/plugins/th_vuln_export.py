@@ -148,7 +148,7 @@ def vuln_export(days, ex_uuid):
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
-
+    drop_conn.execute('pragma journal_mode=wal;')
     # Right now we just drop the table.  Eventually I will actually update the database
     drop_tables(drop_conn, 'vulns')
 
