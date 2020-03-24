@@ -9,6 +9,7 @@ def create_keys_table():
                             access_key text,
                             secret_key text
                             );"""
+    key_conn.execute('pragma journal_mode=wal;')
     create_table(key_conn, key_table)
 
 
@@ -35,6 +36,7 @@ def create_vulns_table():
                             schedule_id text, 
                             state text
                             );"""
+    vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)
 
 
@@ -54,6 +56,7 @@ def create_assets_table():
                             last_licensed_scan_date text,
                             network text
                             );"""
+    asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)
 
 
@@ -69,4 +72,5 @@ def create_tag_table():
                         tag_value text,
                         tag_added_date text
                         );"""
+    tag_conn.execute('pragma journal_mode=wal;')
     create_table(tag_conn, create_tags_table)
