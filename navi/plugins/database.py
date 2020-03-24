@@ -16,6 +16,7 @@ def new_db_connection(db_file):
 def create_table(conn, table_information):
     try:
         c = conn.cursor()
+        c.execute('pragma journal_mode=wal;')
         c.execute(table_information)
     except Error as e:
         print(e)
@@ -40,6 +41,7 @@ def drop_tables(conn, table):
     try:
         drop_table = '''DROP TABLE {}'''.format(table)
         cur = conn.cursor()
+        cur.execute('pragma journal_mode=wal;')
         cur.execute(drop_table)
     except Error:
         pass
@@ -68,4 +70,5 @@ def insert_vulns(conn, vulns):
     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, vulns)
