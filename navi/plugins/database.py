@@ -25,12 +25,14 @@ def insert_assets(conn, assets):
     sql = '''INSERT or IGNORE into assets(ip_address, hostname, fqdn, uuid, first_found, last_found, operating_system,
                        mac_address, agent_uuid, last_licensed_scan_date, network) VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, assets)
 
 
 def insert_tags(conn, tags):
     sql = '''INSERT or IGNORE into tags(tag_id, asset_uuid, asset_ip, tag_key, tag_uuid, tag_value, tag_added_date) VALUES(?,?,?,?,?,?,?)'''
     cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, tags)
 
 

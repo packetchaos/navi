@@ -41,8 +41,10 @@ fluctuate this can spike the memory above 2G.  If this happens increase your mem
  
  
 ### What is the biggest Tenable.io instance Navi has been tested on?
-Navi 5.1.2 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
-It took 2.5 hours to download all 54GB of data and process it down to 6.9GB into navi.db.   
+Navi 5.1.4 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
+It took 30 mins for t.io to prepare the download and 30 mins to download and parse the data
+ into navi.db.  On another internet connection the entire process too 2.5 hours.
+    
 
 # Download and Configure navi in a Docker Container
 
