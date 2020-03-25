@@ -124,7 +124,6 @@ def tag(c, v, d, plugin, name, group, output, port):
                     print("\nI've created your new Tag - {} : {}\n".format(c, v))
                     print("The Category UUID is : {}\n".format(cat_uuid))
                     print("The Value UUID is : {}\n".format(value_uuid))
-                    print("The following IPs were added to the Tag:\n")
                     print(str(len(tag_list)) + " IPs added to the Tag")
                 except Exception as E:
                     print("Duplicate Tag Category: You may need to delete your tag first\n")

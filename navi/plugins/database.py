@@ -7,7 +7,7 @@ def new_db_connection(db_file):
     conn = None
     try:
         # A database file will be created if one doesn't exist
-        conn = sqlite3.connect(db_file, timeout=15)
+        conn = sqlite3.connect(db_file, timeout=30.0)
     except Error as E:
         print(E)
     return conn
