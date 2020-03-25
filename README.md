@@ -272,7 +272,12 @@ This is the order the information is parsed so getting it incorrect will cause e
     navi tag --c "Application Vulns" --v "Java vulns" --name java
     navi tag --c "Agent Group" --v "Linux Agents" --group "Linux"
 
+### Note on Tagging assets
+If you created a new Tag you will need to run an update on the assets to download the new Tag relationships.
+This is especially important if you want to export using your newly created tag.
 
+    navi update -assets
+ 
 ### Create Access Groups by Tags or Agent Groups - 'agroup'
    * --name TEXT   Create an Access group with the following Name
    * -tag          Create a Access Group by a Tag
@@ -376,9 +381,9 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi display -scan | grep -b2 <ScanName>
 
 ### Create a Scan
-    navi.py scan 192.168.128.1
+    navi scan 192.168.128.1
     
-    navi.py scan 192.168.128.0/24
+    navi scan 192.168.128.0/24
     
   * Choose your scan type: Basic or Discovery
   * Pick your scanner by ID: scanners will be displayed

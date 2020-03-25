@@ -204,8 +204,8 @@ def vuln_export(days, ex_uuid):
         # Open a fresh connection to import data
 
         # grab all of the chunks and craft the URLS for threading
-        for y in range(len(status['chunks_available'])):
-            urls.append('/vulns/export/' + ex_uuid + '/chunks/' + str(y+1))
+        for y in status['chunks_available']:
+            urls.append('/vulns/export/' + ex_uuid + '/chunks/' + str(y))
 
         for i in range(10):
             t = threading.Thread(target=worker)
