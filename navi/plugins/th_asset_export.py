@@ -189,8 +189,7 @@ def asset_export(days, ex_uuid):
         create_tag_table()
 
         # grab all of the chunks and craft the URLS for threading
-        # Need to check for the chunk numbers and grab those instead
-        # make a check to see if there are less chunks and report it to the user
+
         for y in status['chunks_available']:
             urls.append('/assets/export/' + ex_uuid + '/chunks/' + str(y))
 
