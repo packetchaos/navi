@@ -32,7 +32,8 @@ def find_by_plugin(plugin):
 @click.option('--time', default='', help='Find Assets where the scan duration is over X mins')
 @click.option('-ghost', is_flag=True, help='Find Assets that were discovered by a AWS Connector but not scanned')
 @click.option('--port', default='', help='Find assets with a open port provided')
-def find(plugin, docker, webapp, creds, time, ghost, port):
+@click.option('--query', default='', help='Query the db directly and display the output')
+def find(plugin, docker, webapp, creds, time, ghost, port, query):
 
     if plugin != '':
         if not str.isdigit(plugin):
@@ -201,3 +202,14 @@ def find(plugin, docker, webapp, creds, time, ghost, port):
                     print(vulns[1].ljust(15), vulns[2], vulns[7])
             except ValueError:
                 pass
+
+    if query != '':
+        database = r"navi.db"
+        query_conn = new_db_connection(database)
+        with query_conn:
+
+            cur = query_conn.cursor()
+            cur.execute(query)
+
+            data = cur.fetchall()
+            print(data)
