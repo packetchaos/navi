@@ -9,8 +9,8 @@ your queries.
     
     navi export --query "<your query>"
 
-## Navi Databases and Tables
-Vulns Database - 'vulns'
+## Navi Tables
+Vulns table - 'vulns'
 
     navi_id integer PRIMARY KEY
     asset_ip text
@@ -31,7 +31,7 @@ Vulns Database - 'vulns'
     schedule_id text
     state text
     
-Assets Database - 'assets'
+Assets Table - 'assets'
 
     ip_address text
     hostname text
