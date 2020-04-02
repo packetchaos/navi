@@ -152,6 +152,8 @@ def vuln_export(days, ex_uuid):
     # Right now we just drop the table.  Eventually I will actually update the database
     drop_tables(drop_conn, 'vulns')
 
+    create_vulns_table()
+
     # Set URLS for threading
     urls = []
 
@@ -159,7 +161,7 @@ def vuln_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 500, "filters": {"last_found": int(day_limit)}}
+    pay_load = {"num_assets": 50, "filters": {"last_found": int(day_limit)}}
     try:
 
         if ex_uuid == '0':
@@ -174,7 +176,7 @@ def vuln_export(days, ex_uuid):
             not_ready = True
         else:
             print("\nUsing your Export UUID\n")
-            not_ready = False
+            not_ready = True
 
         # now check the status
         status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
@@ -200,14 +202,11 @@ def vuln_export(days, ex_uuid):
             if status['status'] == 'ERROR':
                 print("Error occurred")
 
-        create_vulns_table()
-        # Open a fresh connection to import data
-
         # grab all of the chunks and craft the URLS for threading
         for y in status['chunks_available']:
             urls.append('/vulns/export/' + ex_uuid + '/chunks/' + str(y))
 
-        for i in range(10):
+        for i in range(50):
             t = threading.Thread(target=worker)
             t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
             t.start()

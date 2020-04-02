@@ -160,7 +160,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             print("\nIn the last 30 days, I found " + str(len(asset_list)) + " IP Addresess. See below:\n")
             for z in range(len(asset_list)):
                 print(asset_list[z])
-            print()
+            print(len(asset_list), "Assets found in the last 30 days")
         except Exception as E:
             error_msg(E)
 

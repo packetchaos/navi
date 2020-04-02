@@ -1,5 +1,6 @@
 import click
 from sqlite3 import Error
+import pprint
 from .api_wrapper import request_data
 from .database import new_db_connection
 
@@ -145,7 +146,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                     if source['name'] == 'AWS':
                         aws_ip = assets['ipv4'][0]
                         try:
-                            aws_fqdn =  assets['fqdn'][0]
+                            aws_fqdn = assets['fqdn'][0]
                         except IndexError:
                             aws_fqdn = assets['fqdn'][0]
 
@@ -212,4 +213,4 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
             cur.execute(query)
 
             data = cur.fetchall()
-            print(data)
+            pprint.pprint(data)
