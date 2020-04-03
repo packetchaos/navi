@@ -18,7 +18,7 @@ def vuln_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 5000, "filters": {"last_found": int(day_limit)}}
+    pay_load = {"num_assets": 500, "filters": {"last_found": int(day_limit)}}
     try:
 
         if ex_uuid == '0':
