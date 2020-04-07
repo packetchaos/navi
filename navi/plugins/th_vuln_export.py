@@ -12,12 +12,13 @@ q = Queue()
 
 navi_id = 0
 
-
 def worker():
     # The worker thread pulls an item from the queue and processes it
     while True:
         item = q.get()
-        parse_data(request_data('GET', item))
+        #parse_data(request_data('GET', item))
+        data = request_data('GET', item)
+        parse_data(data)
         q.task_done()
 
 
@@ -26,119 +27,122 @@ def parse_data(chunk_data):
     vuln_conn = new_db_connection(database)
     vuln_conn.execute('pragma journal_mode=wal;')
     with vuln_conn:
-        # loop through all of the vulns in this chunk
-        for vulns in chunk_data:
-            # create a blank list to append asset details
-            vuln_list = []
-            global navi_id
-            navi_id = navi_id + 1
-            # Try block to ignore assets without IPs
-            try:
-                vuln_list.append(navi_id)
+        try:
+            # loop through all of the vulns in this chunk
+            for vulns in chunk_data:
+                # create a blank list to append asset details
+                vuln_list = []
+                global navi_id
+                navi_id = navi_id + 1
+                # Try block to ignore assets without IPs
                 try:
-                    ipv4 = vulns['asset']['ipv4']
-                    vuln_list.append(ipv4)
+                    vuln_list.append(navi_id)
+                    try:
+                        ipv4 = vulns['asset']['ipv4']
+                        vuln_list.append(ipv4)
+                    except IndexError:
+                        vuln_list.append(" ")
+
+                    try:
+                        asset_uuid = vulns['asset']['uuid']
+                        vuln_list.append(asset_uuid)
+                    except IndexError:
+                        vuln_list.append(" ")
+
+                    try:
+                        hostname = vulns['asset']['hostname']
+                        vuln_list.append(hostname)
+                    except IndexError:
+                        vuln_list.append(" ")
+
+                    try:
+                        first_found = vulns['first_found']
+                        vuln_list.append(first_found)
+                    except IndexError:
+                        vuln_list.append(" ")
+
+                    try:
+                        last_found = vulns['last_found']
+                        vuln_list.append(last_found)
+                    except IndexError:
+                        vuln_list.append(" ")
+
+                    try:
+                        output = vulns['output']
+                        vuln_list.append(output)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        plugin_id = vulns['plugin']['id']
+                        vuln_list.append(plugin_id)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        plugin_name = vulns['plugin']['name']
+                        vuln_list.append(plugin_name)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        plugin_family = vulns['plugin']['family']
+                        vuln_list.append(plugin_family)
+                    except KeyError:
+                        vuln_list.append(" ")
+                    try:
+                        port = vulns['port']['port']
+                        vuln_list.append(port)
+                    except KeyError:
+                        vuln_list.append(" ")
+                    try:
+                        protocol = vulns['port']['protocol']
+                        vuln_list.append(protocol)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        severity = vulns['severity']
+                        vuln_list.append(severity)
+                    except KeyError:
+                        vuln_list.append(" ")
+                    try:
+                        scan_completed = vulns['scan']['completed_at']
+                        vuln_list.append(scan_completed)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        scan_started = vulns['scan']['started_at']
+                        vuln_list.append(scan_started)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        scan_uuid = vulns['scan']['uuid']
+                        vuln_list.append(scan_uuid)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        schedule_id = vulns['scan']['schedule_id']
+                        vuln_list.append(schedule_id)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        state = vulns['state']
+                        vuln_list.append(state)
+                    except KeyError:
+                        vuln_list.append(" ")
+                    try:
+                        insert_vulns(vuln_conn, vuln_list)
+                    except Error as e:
+                        print(e)
                 except IndexError:
-                    vuln_list.append(" ")
-
-                try:
-                    asset_uuid = vulns['asset']['uuid']
-                    vuln_list.append(asset_uuid)
-                except IndexError:
-                    vuln_list.append(" ")
-
-                try:
-                    hostname = vulns['asset']['hostname']
-                    vuln_list.append(hostname)
-                except IndexError:
-                    vuln_list.append(" ")
-
-                try:
-                    first_found = vulns['first_found']
-                    vuln_list.append(first_found)
-                except IndexError:
-                    vuln_list.append(" ")
-
-                try:
-                    last_found = vulns['last_found']
-                    vuln_list.append(last_found)
-                except IndexError:
-                    vuln_list.append(" ")
-
-                try:
-                    output = vulns['output']
-                    vuln_list.append(output)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    plugin_id = vulns['plugin']['id']
-                    vuln_list.append(plugin_id)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    plugin_name = vulns['plugin']['name']
-                    vuln_list.append(plugin_name)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    plugin_family = vulns['plugin']['family']
-                    vuln_list.append(plugin_family)
-                except KeyError:
-                    vuln_list.append(" ")
-                try:
-                    port = vulns['port']['port']
-                    vuln_list.append(port)
-                except KeyError:
-                    vuln_list.append(" ")
-                try:
-                    protocol = vulns['port']['protocol']
-                    vuln_list.append(protocol)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    severity = vulns['severity']
-                    vuln_list.append(severity)
-                except KeyError:
-                    vuln_list.append(" ")
-                try:
-                    scan_completed = vulns['scan']['completed_at']
-                    vuln_list.append(scan_completed)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    scan_started = vulns['scan']['started_at']
-                    vuln_list.append(scan_started)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    scan_uuid = vulns['scan']['uuid']
-                    vuln_list.append(scan_uuid)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    schedule_id = vulns['scan']['schedule_id']
-                    vuln_list.append(schedule_id)
-                except KeyError:
-                    vuln_list.append(" ")
-
-                try:
-                    state = vulns['state']
-                    vuln_list.append(state)
-                except KeyError:
-                    vuln_list.append(" ")
-                try:
-                    insert_vulns(vuln_conn, vuln_list)
-                except Error as e:
-                    print(e)
-            except IndexError:
-                print("skipped one")
+                    print("skipped one")
+        except TypeError:
+            print("Your Export has no data.  It may have expired")
 
     vuln_conn.close()
 
@@ -161,7 +165,7 @@ def vuln_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 50, "filters": {"last_found": int(day_limit)}}
+    pay_load = {"num_assets": 500, "filters": {"last_found": int(day_limit)}}
     try:
 
         if ex_uuid == '0':
@@ -206,7 +210,7 @@ def vuln_export(days, ex_uuid):
         for y in status['chunks_available']:
             urls.append('/vulns/export/' + ex_uuid + '/chunks/' + str(y))
 
-        for i in range(50):
+        for i in range(10):
             t = threading.Thread(target=worker)
             t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
             t.start()

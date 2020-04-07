@@ -1,7 +1,7 @@
 import click
 from .th_asset_export import asset_export
-#from .th_vuln_export import vuln_export
-from .vuln_export import vuln_export
+from .th_vuln_export import vuln_export
+#from .vuln_export import vuln_export
 from sqlite3 import Error
 
 
