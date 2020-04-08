@@ -1,7 +1,7 @@
 import csv
 import time
-
 from .api_wrapper import request_data
+
 
 def agent_export():
     data = request_data('GET', '/scanners')
@@ -10,9 +10,9 @@ def agent_export():
     for scanner in range(len(data['scanners'])):
         if data['scanners'][scanner]['name'] == 'US Cloud Scanner':
             scan_id = data['scanners'][scanner]['id']
-
+            querystring = {"limit": "5000"}
             # pull agent data from the US cloud Scanner
-            agents = request_data('GET', '/scanners/' + str(scan_id) + '/agents')
+            agents = request_data('GET', '/scanners/' + str(scan_id) + '/agents', params=querystring)
 
             with open('agent_data.csv', mode='w') as csv_file:
                 agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
