@@ -24,7 +24,7 @@ def plugin_by_ip(ipaddr, plugin):
         print("No information found for this plugin")
 
 
-@click.command(help="Get IP specfic information")
+@click.command(help="Get IP specific information")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
 @click.option('-n', is_flag=True, help='Netstat Established(58561) and Listening and Open Ports(14272)')

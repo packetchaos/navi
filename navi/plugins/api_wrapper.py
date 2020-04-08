@@ -1,6 +1,5 @@
 import requests
 from json import JSONDecodeError
-import time
 from .database import new_db_connection
 
 
@@ -14,7 +13,7 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.12', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.13', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
 def request_delete(method, url_mod):
@@ -29,7 +28,7 @@ def request_delete(method, url_mod):
         elif r.status_code == 404:
             print('\nCheck your query...', r)
         elif r.status_code == 429:
-            print("\nToo many requests at a time...\n")
+            print("\nToo many requests at a time...\n", r)
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:
@@ -68,18 +67,21 @@ def request_data(method, url_mod, **kwargs):
                 print('\nCheck your query...I can\'t find what you\'re looking for', r)
                 break
             elif r.status_code == 429:
-                print("\nToo many requests at a time...\n")
+                print("\nToo many requests at a time...\n", r)
                 break
             elif r.status_code == 400:
                 print("\nThe object you tried to create already exists\n")
                 print("If you are Updating tags via groups it is not supported right now, "
-                      "delete your group using the delete command\n")
+                      "delete your group using the delete command\n", r)
                 break
             elif r.status_code == 403:
-                print("\nYou are not authorized! You need to be an admin\n")
+                print("\nYou are not authorized! You need to be an admin\n", r)
                 break
             elif r.status_code == 409:
-                print("\nScan is not Active\n")
+                print("\nScan is not Active\n", r)
+                break
+            elif r.status_code == 504:
+                print("\nOne of the Threads and an issue during download...Retrying...\n", r)
                 break
             else:
                 print("Something went wrong...Don't be trying to hack me now", r)

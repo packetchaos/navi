@@ -97,13 +97,14 @@ def tag(c, v, d, plugin, name, group, output, port):
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
         # Need to research a better solution for this problem.  Possibly just deleting the tag.
         try:
+            querystring = {"limit": "5000"}
             group_data = request_data('GET', '/scanners/1/agent-groups')
             for agent_group in group_data['groups']:
                 group_name = agent_group['name']
                 group_id = agent_group['id']
 
                 if group_name == group:
-                    data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents')
+                    data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
                     ip_list = ''
 
                     for agent in data['agents']:
