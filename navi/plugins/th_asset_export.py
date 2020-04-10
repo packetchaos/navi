@@ -31,7 +31,6 @@ def parse_data(chunk_data):
             # create a blank list to append asset details
             csv_list = []
 
-
             # Capture the first IP
             try:
                 ip = assets['ipv4s'][0]

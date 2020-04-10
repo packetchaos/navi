@@ -8,7 +8,6 @@ def add_helper(file, source):
 
         with open(file, 'r', newline='') as new_file:
             add_assets = csv.reader(new_file)
-            print(add_assets)
 
             for row in add_assets:
                 asset = {}

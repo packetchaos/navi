@@ -69,16 +69,19 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
-            new_list = []
-            cur = conn.cursor()
-            cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
+            try:
+                new_list = []
+                cur = conn.cursor()
+                cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
-            assets = cur.fetchall()
+                assets = cur.fetchall()
 
-            for asset in assets:
-                # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
-                check_for_no = tag_checker(asset[1], ec, ev)
-                if check_for_no == 'no':
-                    new_list.append(asset[0])
+                for asset in assets:
+                    # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
+                    check_for_no = tag_checker(asset[1], ec, ev)
+                    if check_for_no == 'no':
+                        new_list.append(asset[0])
+            except conn.OperationalError:
+                print('Sorry Right now, Navi doesn\'t support \' in a tag')
 
         tag_export(new_list)

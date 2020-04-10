@@ -12,17 +12,19 @@ q = Queue()
 
 navi_id = 0
 
+
 def worker():
     # The worker thread pulls an item from the queue and processes it
     while True:
         item = q.get()
-        #parse_data(request_data('GET', item))
+        chunk_num = item[58:]
+        # parse_data(request_data('GET', item))
         data = request_data('GET', item)
-        parse_data(data)
+        parse_data(data, chunk_num)
         q.task_done()
 
 
-def parse_data(chunk_data):
+def parse_data(chunk_data, chunk_number):
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_conn.execute('pragma journal_mode=wal;')
@@ -143,7 +145,9 @@ def parse_data(chunk_data):
                     print("skipped one")
         except TypeError:
             print("Your Export has no data.  It may have expired")
+            print("Error on Chunk " + chunk_number)
 
+    print("Chunk " + chunk_number + " Finished")
     vuln_conn.close()
 
 
@@ -200,6 +204,11 @@ def vuln_export(days, ex_uuid):
             if status['status'] == 'FINISHED':
                 ptime = time.time()
                 print("\nProcessing Time took : " + str(ptime - start))
+
+                # Display how many chunks there are
+                avail = status['total_chunks']
+                print("\nChunks Available - ", avail)
+                print("Downloading chunks now...hold tight...This can take some time\n")
                 not_ready = False
 
             # Tell the user an error occured
@@ -224,5 +233,6 @@ def vuln_export(days, ex_uuid):
 
     except KeyError:
         print("Well this is a bummer; you don't have permissions to download Asset data :( ")
+
     except TypeError:
         print("You may not be authorized or your keys are invalid")
