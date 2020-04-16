@@ -148,7 +148,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
     if assets:
         try:
-            data = request_data('GET', '/workbenches/assets/?date_range=30')
+            asset_limit = {"filter.0.filter": "sources", "filter.0.quality": "set-has", "filter.0.value": "NESSUS_SCAN"}
+            data = request_data('GET', '/workbenches/assets/?date_range=30', params=asset_limit)
             asset_list = []
             for x in range(len(data["assets"])):
                 for y in range(len(data["assets"][x]["ipv4"])):

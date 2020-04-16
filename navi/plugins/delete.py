@@ -1,5 +1,6 @@
 import click
 from .api_wrapper import request_delete
+from .api_wrapper import request_data
 
 
 @click.command(help="Delete an Object by it's ID")
@@ -12,7 +13,12 @@ from .api_wrapper import request_delete
 @click.option('-container', is_flag=True, help='Delete a container by \'/repository/image/tag\'')
 @click.option('-tag', is_flag=True, help="Delete a Tag by Value UUID")
 @click.option('-category', is_flag=True, help="Delete a Tag Category by UUID")
-def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category):
+@click.option('--bytag', default='', help="Delete assets by Tag.  Use tag.category  So OS:Linux would be tag.OS.")
+def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category, bytag):
+
+    if bytag != '':
+        payload = {'query': {'field': str(bytag), 'operator': 'set-has', 'value': str(tid)}}
+        request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
 
     if scan:
         print("\nI'm deleting your Scan Now")
