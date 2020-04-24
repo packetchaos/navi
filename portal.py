@@ -5,7 +5,7 @@ import locale
 import time
 
 
-locale.setlocale(locale.LC_ALL, 'en_US')
+#locale.setlocale(locale.LC_ALL, 'en_US')
 
 starttime = time.time()
 
