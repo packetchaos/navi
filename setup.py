@@ -19,7 +19,7 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
     install_requires=[
         'Click>=7.0',
-        'requests'
+        'requests', 'flask'
     ],
     python_requires='>=3.0',
     extras_require={
