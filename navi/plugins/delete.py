@@ -13,10 +13,11 @@ from .api_wrapper import request_data
 @click.option('-container', is_flag=True, help='Delete a container by \'/repository/image/tag\'')
 @click.option('-tag', is_flag=True, help="Delete a Tag by Value UUID")
 @click.option('-category', is_flag=True, help="Delete a Tag Category by UUID")
-@click.option('--bytag', default='', help="Delete assets by Tag.  Use tag.category  So OS:Linux would be tag.OS.")
+@click.option('--bytag', default='', help="Delete assets by Tag. Ex: OS:Linux -- navi delete Linux --bytag tag.OS")
 def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category, bytag):
 
     if bytag != '':
+        print("\nI'm deleting all of the assets associated with your Tag\n")
         payload = {'query': {'field': str(bytag), 'operator': 'set-has', 'value': str(tid)}}
         request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
 

@@ -23,6 +23,7 @@ from .mail import mail
 #from .tag import tag
 from .new_tag import tag
 from .agroup import agroup
+from .spider import spider
 
 
 def plugin_loader(group):
@@ -50,3 +51,4 @@ def plugin_loader(group):
     group.add_command(mail)
     group.add_command(tag)
     group.add_command(agroup)
+    group.add_command(spider)
