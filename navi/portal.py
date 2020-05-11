@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import sqlite3
 from sqlite3 import Error
-import locale
+from Navi.plugins.api_wrapper import request_data
 import time
 
 
@@ -39,7 +39,7 @@ def get_info():
         print(e)
 
 
-@app.route('/sqlquery/', methods=["POST"])
+@app.route('/sqlquery/', methods=["GET"])
 def get_info_by_query():
     database = r"navi.db"
     conn = new_db_connection(database)
@@ -56,6 +56,23 @@ def get_info_by_query():
 
     return render_template('sqlquery.html', query_info=query_info)
 
+@app.route('/containers/', methods=["GET"])
+def get_container_info():
+    cs_info = []
+    data = request_data('GET', '/container-security/api/v2/images?limit=1000')
+
+    for images in data["items"]:
+        image_list = []
+        image_list.append(images["name"])
+        image_list.append(images["repoName"])
+        image_list.append(images["tag"])
+        image_list.append(images["imageHash"])
+        image_list.append(images["numberOfVulns"])
+        cs_info.append(image_list)
+
+
+
+    return render_template('containers.html', cs_info=cs_info)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)

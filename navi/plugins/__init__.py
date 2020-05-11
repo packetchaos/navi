@@ -25,6 +25,7 @@ from .new_tag import tag
 from .agroup import agroup
 from .spider import spider
 from .navi_portal import portal
+from .was import was
 
 
 def plugin_loader(group):
@@ -54,3 +55,4 @@ def plugin_loader(group):
     group.add_command(agroup)
     group.add_command(spider)
     group.add_command(portal)
+    group.add_command(was)

@@ -10,7 +10,7 @@ def lumin_export():
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score', 'ACR Driver Name',
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score',' ACR', 'ACR Driver Name',
                        "ACR Driver Value", "ACR Driver Name", "ACR Driver Value", "ACR Driver Name", "ACR Driver Value"]
         cur = conn.cursor()
         cur.execute("SELECT * from assets;")
@@ -41,16 +41,16 @@ def lumin_export():
                     try:
                         export_list.append(asset_info['info']['exposure_score'])  # add the exposure score
                         export_list.append(asset_info['info']['acr_score'])  # add the ACR
-
-                        for driver in range(3):
-                            try:
-                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_name'])  # add the ACR drivers
-                                export_list.append(asset_info['info']['acr_drivers'][driver]['driver_value'][0])
-                            except:
-                                export_list.append(" ")
-                                export_list.append(" ")
                     except KeyError:
                         pass
+
+                    for driver in range(3):
+                        try:
+                            export_list.append(asset_info['info']['acr_drivers'][driver]['driver_name'])  # add the ACR drivers
+                            export_list.append(asset_info['info']['acr_drivers'][driver]['driver_value'][0])
+                        except:
+                            export_list.append(" ")
+                            export_list.append(" ")
 
                 except ConnectionError:
                     print("Check your API keys or your internet connection")
