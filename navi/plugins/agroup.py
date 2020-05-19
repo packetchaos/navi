@@ -55,7 +55,7 @@ def agroup(name, tag, c, v, group):
                 data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
 
                 for agent in data['agents']:
-                    ip_address = agent['ip'] #needs to change to IP
+                    ip_address = agent['ip']
                     new_list.append(ip_address)
 
     payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS", "all-users": True, "rules": [{"type": "ipv4", "operator": "eq", "terms": new_list}]}
@@ -63,11 +63,11 @@ def agroup(name, tag, c, v, group):
     answer = check_agroup_exists(str(name))
 
     if answer == 'no':
-        new_access_group = request_data('POST', '/access-groups', payload=payload)
+        new_access_group = request_data('POST', '/v2/access-groups', payload=payload)
         print("\nYour Access group {} is being created now \n".format(new_access_group['name']))
         print("The UUID is {} \n".format(new_access_group['id']))
     else:
-        update_group = request_data('PUT', '/access-groups/' + str(answer), payload=payload)
+        update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
         print("\nYour Access group {} is being updated now \n".format(update_group['name']))
         print("The UUID is {} \n".format(update_group['id']))
 
