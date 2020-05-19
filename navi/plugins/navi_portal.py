@@ -6,7 +6,7 @@ from .api_wrapper import request_data
 import time
 
 
-@click.command(help="A web interface to explore the Navi DB")
+@click.command(help="A web interface to explore the Navi DB [BETA- Doesn't work in Docker]")
 def portal():
     app = Flask(__name__)
 

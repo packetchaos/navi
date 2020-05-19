@@ -4,13 +4,14 @@ from .api_wrapper import request_data
 
 
 def tag_export(tag_list):
+    print("This export can take some time.  ~300 assets per minute.")
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network','Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
         cur = conn.cursor()
         cur.execute("SELECT * from assets;")
 
@@ -49,3 +50,4 @@ def tag_export(tag_list):
                         print("Check your API keys or your internet connection")
                     # write to the CSV
                     agent_writer.writerow(export_list)
+        print("Export success! - bytag_lumin.csv")
