@@ -39,7 +39,7 @@ def get_info():
         print(e)
 
 
-@app.route('/sqlquery/', methods=["GET"])
+@app.route('/sqlquery/', methods=["POST"])
 def get_info_by_query():
     database = r"navi.db"
     conn = new_db_connection(database)
@@ -56,6 +56,7 @@ def get_info_by_query():
 
     return render_template('sqlquery.html', query_info=query_info)
 
+
 @app.route('/containers/', methods=["GET"])
 def get_container_info():
     cs_info = []
@@ -70,9 +71,8 @@ def get_container_info():
         image_list.append(images["numberOfVulns"])
         cs_info.append(image_list)
 
-
-
     return render_template('containers.html', cs_info=cs_info)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)

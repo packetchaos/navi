@@ -2,7 +2,7 @@ import click
 from flask import Flask, render_template, request
 import sqlite3
 from sqlite3 import Error
-from Navi.plugins.api_wrapper import request_data
+from .api_wrapper import request_data
 import time
 
 
