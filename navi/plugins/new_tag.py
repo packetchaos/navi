@@ -5,8 +5,6 @@ from .tag_helper import update_tag, confirm_tag_exists
 from sqlite3 import Error
 
 
-
-
 @click.command(help="Create a Tag Category/Value Pair")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
@@ -28,9 +26,15 @@ def tag(c, v, d, plugin, name, group, output, port):
 
     if c == '':
         print("Category is required.  Please use the --c command")
+        exit()
 
     if v == '':
         print("Value is required. Please use the --v command")
+        exit()
+
+    if output != '' and plugin == '':
+        print("You must supply a plugin")
+        exit()
 
     if plugin:
         try:
@@ -39,6 +43,7 @@ def tag(c, v, d, plugin, name, group, output, port):
             with conn:
                 cur = conn.cursor()
                 # See if we want to refine our search by the output found in this plugin
+                # this needs to have a JOIN statement to reduce the amount
                 if output != "":
                     cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
                 else:
@@ -48,8 +53,8 @@ def tag(c, v, d, plugin, name, group, output, port):
                 for x in plugin_data:
                     ip = x[0]
                     uuid = x[1]
-                    # ensure the ip isn't already in the list
-                    if ip not in tag_list:
+                    # Check to make sure the UUID isn't already present, if it isn't add it to the list
+                    if uuid not in tag_list:
                         tag_list.append(uuid)  # update functionality requires uuid.  Only using IP until API bug gets fixed
                         ip_list = ip_list + "," + ip
                     else:
@@ -69,7 +74,10 @@ def tag(c, v, d, plugin, name, group, output, port):
             try:
                 for vulns in data:
                     ip = vulns[1]
-                    ip_list = ip_list + "," + ip
+                    uuid = vulns[2]
+                    if uuid not in tag_list:
+                        tag_list.append(uuid)
+                        ip_list = ip_list + "," + ip
             except ValueError:
                 pass
 
@@ -85,7 +93,7 @@ def tag(c, v, d, plugin, name, group, output, port):
                 for x in plugin_data:
                     ip = x[0]
                     uuid = x[1]
-                    if ip not in tag_list:
+                    if uuid not in tag_list:
                         tag_list.append(uuid)
                         ip_list = ip_list + "," + ip
                     else:
@@ -118,7 +126,9 @@ def tag(c, v, d, plugin, name, group, output, port):
     if ip_list == '':
         print("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
     else:
+        # Before updating confirm if the tag exists
         answer = confirm_tag_exists(c, v)
+
         if answer == 'yes':
             # check to see if the list is over 2000
             if len(tag_list) > 1999:

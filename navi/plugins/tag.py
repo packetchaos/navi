@@ -68,6 +68,7 @@ def tag(c, v, d, plugin, name, group, output, port):
                 pass
 
     if name != '':
+        print("here")
         try:
             database = r"navi.db"
             conn = new_db_connection(database)
@@ -79,7 +80,7 @@ def tag(c, v, d, plugin, name, group, output, port):
                 for x in plugin_data:
                     ip = x[0]
                     uuid = x[1]
-                    if ip not in tag_list:
+                    if uuid not in tag_list:
                         tag_list.append(uuid)
                         ip_list = ip_list + "," + ip
                     else:
@@ -117,7 +118,7 @@ def tag(c, v, d, plugin, name, group, output, port):
             update_tag(c, v, tag_list)
         else:
             try:
-                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "uuid", "operator": "eq", "value": str(tag_list)}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
                 try:
                     value_uuid = data["uuid"]
@@ -125,7 +126,7 @@ def tag(c, v, d, plugin, name, group, output, port):
                     print("\nI've created your new Tag - {} : {}\n".format(c, v))
                     print("The Category UUID is : {}\n".format(cat_uuid))
                     print("The Value UUID is : {}\n".format(value_uuid))
-                    print(str(len(tag_list)) + " IPs added to the Tag")
+                    print(str(len(ip_list)) + " IPs added to the Tag") # need to change to tag_list once bug is fixed
                 except Exception as E:
                     print("Duplicate Tag Category: You may need to delete your tag first\n")
                     print("We could not confirm your tag name, is it named weird?\n")
