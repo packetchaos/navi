@@ -6,6 +6,7 @@ from .dbconfig import create_assets_table, create_tag_table
 
 
 def asset_export(days):
+    '''OLD EXPORT CODE - Not in Navi any longer  '''
     start = time.time()
     # Crete a new connection to our database
     database = r"navi.db"

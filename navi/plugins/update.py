@@ -1,7 +1,7 @@
 import click
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
-#from .vuln_export import vuln_export
+# from .vuln_export import vuln_export
 from sqlite3 import Error
 
 
@@ -16,7 +16,7 @@ def update(assets, vulns, days, exid):
             exid = '0'
 
         if assets:
-            asset_export(days,exid)
+            asset_export(days, exid)
 
         if vulns:
             vuln_export(days, exid)

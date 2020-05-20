@@ -43,7 +43,7 @@ def tag_export(tag_list):
                         try:
                             export_list.append(asset_info['info']['exposure_score'])  # add the exposure score
                             export_list.append(asset_info['info']['acr_score'])  # add the ACR
-                        except KeyError:
+                        except KeyError:  # Non Lumin users may not have these values
                             pass
 
                     except ConnectionError:

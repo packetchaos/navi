@@ -6,6 +6,7 @@ from .dbconfig import create_vulns_table
 
 
 def vuln_export(days, ex_uuid):
+    '''OLD CODE - NOT in Navi anylonger'''
     start = time.time()
     # Crete a new connection to our database
     database = r"navi.db"

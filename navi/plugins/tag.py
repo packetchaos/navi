@@ -15,7 +15,7 @@ from sqlite3 import Error
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 @click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
 def tag(c, v, d, plugin, name, group, output, port):
-
+    '''OLD CODE, not in NAVI'''
     # start a blank list; IP list is due to a bug
     tag_list = []
     ip_list = ""

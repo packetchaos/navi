@@ -74,14 +74,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if logs:
         try:
             data = request_data('GET', '/audit-log/v1/events')
+            print("Event Date".ljust(24), "Action Taken".ljust(30), "User".ljust(30))
+            print("-" * 60)
             for log in data['events']:
                 received = log['received']
                 action = log['action']
                 actor = log['actor']['name']
+                print(str(received).ljust(24), str(action).ljust(30), str(actor))
 
-                print("Date : " + received)
-                print("-------------------")
-                print(action, '\n', actor, '\n')
         except Exception as E:
             error_msg(E)
 
@@ -89,6 +89,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         try:
             data = request_data('GET', '/scans')
             run = 0
+            print("\nScan Name".ljust(61), "Scan ID".ljust(10), "Status".ljust(30))
+            print("-" * 100)
             for scan in data['scans']:
                 if scan['status'] == "running":
                     run = run + 1
@@ -96,10 +98,9 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     scan_id = scan['id']
                     current_status = scan['status']
 
-                    click.echo("\nScan Name : " + name)
-                    print("Scan ID : " + str(scan_id))
-                    print("Current status : " + current_status)
-                    print("-----------------\n")
+                    print(str(name).ljust(60), str(scan_id).ljust(10), str(current_status))
+            print()
+
             if run == 0:
                 print("No running scans")
         except Exception as E:
@@ -108,16 +109,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if scans:
         try:
             data = request_data('GET', '/scans')
-
+            print("\nScan Name".ljust(61), "Scan ID".ljust(10), "Status".ljust(30))
+            print("-" * 100)
             for scan in data['scans']:
                 name = scan['name']
                 scan_id = scan['id']
                 scan_status = scan['status']
-
-                print("Scan Name : " + name)
-                print("Scan ID : " + str(scan_id))
-                print("Current status : " + scan_status)
-                print("-----------------\n")
+                print(str(name).ljust(60), str(scan_id).ljust(10), str(scan_status))
+            print()
 
         except Exception as E:
             error_msg(E)
@@ -161,18 +160,19 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             print("\nIn the last 30 days, I found " + str(len(asset_list)) + " IP Addresess. See below:\n")
             for z in range(len(asset_list)):
                 print(asset_list[z])
-            print(len(asset_list), "Assets found in the last 30 days")
+            print("-" * 20)
+            print(len(asset_list), "Assets found in the last 30 days\n")
         except Exception as E:
             error_msg(E)
 
     if policies:
         try:
             data = request_data('GET', '/policies')
-            print()
+            print("\nPolicy Name".ljust(41), "Description".ljust(61), "Template ID")
+            print("-" * 100)
             for policy in data['policies']:
-                print(policy['name'])
-                print(policy['description'])
-                print('Template ID : ', policy['template_uuid'], '\n')
+                print(str(policy['name']).ljust(40), str(policy['description']).ljust(60), policy['template_uuid'] )
+            print()
         except Exception as E:
             error_msg(E)
 
@@ -265,7 +265,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         querystring = {"limit": "5000"}
         try:
             data = request_data('GET', '/scanners/1/agents', params=querystring)
-            print("\b Agent information is pulled from the US Cloud Scanner\b")
+            print("\nAgent Name".ljust(26), "IP Address".ljust(21), "Last Connect Time".ljust(36), "Last Scanned Time".ljust(33), "Status")
+            print("-" * 140)
             for agent in data['agents']:
                 last_connect = agent['last_connect']
                 last_connect_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_connect))
@@ -277,20 +278,15 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     # I assume if we can't pull as scanned time, it doesn't exist
                     last_scanned_time = "Agent has not Been Scanned"
 
-                print("Agent Name : ", agent['name'])
-                print("-----------------------------")
-                print("Agent IP : ", agent['ip'])
-                print("Last Connected :", last_connect_time)
-                print("Last Scanned : ", last_scanned_time)
-                print("Agent Status : ", agent['status'], '\n')
-                print("Groups")
-                print("-------------")
-
+                print(str(agent['name']).ljust(25), str(agent['ip']).ljust(20), str(last_connect_time).ljust(35),
+                      str(last_scanned_time).ljust(35), str(agent['status']))
+                '''
                 try:
                     for group in agent['groups']:
                         print(group['name'])
                 except KeyError:
                     pass
+                '''
                 print()
         except Exception as E:
             error_msg(E)

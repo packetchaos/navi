@@ -13,6 +13,7 @@ def scan(targets):
         print("2.   Discovery Scan")
         print("3.   Web App Overview")
         print("4.   Web App Scan")
+        print("5.   WAS SSL SCAN")
         option = input("Please enter option #.... ")
         if option == '1':
             template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"

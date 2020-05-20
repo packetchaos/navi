@@ -11,10 +11,11 @@ from .api_wrapper import request_data
 @click.option('-policy', is_flag=True, help='Delete a Policy by Policy ID')
 @click.option('-asset', is_flag=True, help='Delete an Asset by Asset UUID')
 @click.option('-container', is_flag=True, help='Delete a container by \'/repository/image/tag\'')
+@click.option('-repository', is_flag=True, help='Delete Repository from Container Security')
 @click.option('-tag', is_flag=True, help="Delete a Tag by Value UUID")
 @click.option('-category', is_flag=True, help="Delete a Tag Category by UUID")
 @click.option('--bytag', default='', help="Delete assets by Tag. Ex: OS:Linux -- navi delete Linux --bytag tag.OS")
-def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category, bytag):
+def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, tag, category, bytag):
 
     if bytag != '':
         print("\nI'm deleting all of the assets associated with your Tag\n")
@@ -31,7 +32,7 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category, b
 
     if tgroup:
         print("\nI'm deleting your Target group Now")
-        request_delete('DELETE', ('/target-groups/'+ str(tid)))
+        request_delete('DELETE', ('/target-groups/' + str(tid)))
 
     if policy:
         print("\nI'm deleting your Policy Now")
@@ -51,4 +52,8 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, tag, category, b
 
     if category:
         print("\nI'm Deleting your Category")
-        request_delete('delete', '/tags/categories/'+str(tid))
+        request_delete('delete', '/tags/categories/' + str(tid))
+
+    if repository:
+        print("\nI'm Deleting your Repository")
+        request_delete('delete', '/container-security/api/v2/' + str(repository))
