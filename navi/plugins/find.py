@@ -89,12 +89,14 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
-            print("Below are the assets that took longer than " + str(time) + " minutes to scan")
+            print("\n*** Below are the assets that took longer than " + str(time) + " minutes to scan ***")
             cur = conn.cursor()
             cur.execute("SELECT * from vulns where plugin_id='19506';")
 
             data = cur.fetchall()
             try:
+                print("\nAsset IP".ljust(16), "Asset UUID".ljust(40), "Started".ljust(25), "Finished".ljust(25), "Scan UUID")
+                print("-" * 150)
                 for vulns in data:
 
                     output = vulns[6]
@@ -123,24 +125,26 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                     # grab assets that match the criteria
                     if minutes > int(time):
                         try:
-                            print("Asset IP: ", vulns[1])
-                            print("Asset UUID: ", vulns[2])
-                            print("Scan started at: ", vulns[14])
-                            print("Scan completed at: ", vulns[13])
-                            print("Scan UUID: ", vulns[15])
-                            print()
+                            #print("Asset IP: ", vulns[1])
+                            #print("Asset UUID: ", vulns[2])
+                            #print("Scan started at: ", vulns[14])
+                            #print("Scan completed at: ", vulns[13])
+                            #print("Scan UUID: ", vulns[15])
+                            print(str(vulns[1]).ljust(15), str(vulns[2]).ljust(40), str(vulns[14]).ljust(25), str(vulns[13]).ljust(25), str(vulns[15]))
+                            #print()
                         except ValueError:
                             pass
+                print()
             except ValueError:
                 pass
 
     if ghost:
         try:
 
-            query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
-            data = request_data('GET', '/workbenches/assets', params=query)
-            print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(40), "First seen")
-            print("----------------------------------\n")
+            ghost_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
+            data = request_data('GET', '/workbenches/assets', params=ghost_query)
+            print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(45), "First seen")
+            print("-" * 150)
             for assets in data['assets']:
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
@@ -150,7 +154,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                         except IndexError:
                             aws_fqdn = assets['fqdn'][0]
 
-                        print(source['name'], aws_ip, aws_fqdn, source['first_seen'])
+                        print(str(source['name']).ljust(10), str(aws_ip).ljust(15), str(aws_fqdn).ljust(45), source['first_seen'])
             print()
 
             gcp_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "GCP"}
@@ -164,7 +168,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                         except IndexError:
                             gcp_fqdn = "NO FQDN FOUND"
                             
-                        print(gcp_source['name'].ljust(10), gcp_ip.ljust(15), gcp_fqdn.ljust(40), gcp_source['first_seen'])
+                        print(gcp_source['name'].ljust(10), gcp_ip.ljust(15), gcp_fqdn.ljust(45), gcp_source['first_seen'])
             print()
 
             az_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AZURE"}
@@ -179,7 +183,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                         except IndexError:
                             az_fqdn = "NO FQDN Found"
 
-                        print(az_source['name'].ljust(10), az_ip.ljust(15), az_fqdn.ljust(40), az_source['first_seen'])
+                        print(az_source['name'].ljust(10), az_ip.ljust(15), az_fqdn.ljust(45), az_source['first_seen'])
             print()
                 
         except Exception as E:
@@ -197,10 +201,10 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
 
             try:
                 print("\nThe Following assets had Open ports found by various plugins")
-                print("\nIP address".ljust(15), " UUID".ljust(36), " Plugins")
-                print("-------------------------------------------------------------\n")
+                print("\nIP address".ljust(20), " UUID".ljust(45), " Plugins")
+                print("-" * 80)
                 for vulns in data:
-                    print(vulns[1].ljust(15), vulns[2], vulns[7])
+                    print(vulns[1].ljust(20), str(vulns[2]).ljust(45), vulns[7])
             except ValueError:
                 pass
 

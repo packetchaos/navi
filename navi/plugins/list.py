@@ -6,6 +6,7 @@ from .database import new_db_connection
 from .error_msg import error_msg
 from .licensed_count import get_licensed
 from sqlite3 import Error
+import textwrap
 
 
 @click.command(help="Display or Print information found in Tenable.io")
@@ -62,7 +63,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         try:
             data = request_data('GET', '/container-security/api/v2/images?limit=1000')
             print("Container Name".ljust(35) + " | " + "Repository ID".ljust(35) + " | " + "Tag".ljust(15) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
-            print("-----------------------------------------------------------------------------------")
+            print("-" * 125)
             try:
                 for images in data["items"]:
                     print(str(images["name"]).ljust(35) + " | " + str(images["repoName"]).ljust(35) + " | " + str(images["tag"]).ljust(15) + " | " + str(images["imageHash"]).ljust(15) + " | " + str(images["numberOfVulns"]).ljust(25))
@@ -179,48 +180,44 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if connectors:
         try:
             data = request_data('GET', '/settings/connectors')
+            print("\nType".ljust(11), "Connector Name".ljust(40), "Connnector ID".ljust(40), "Last Sync".ljust(30), "Schedule ")
+            print("-" * 150)
             for conn in data["connectors"]:
-                print("\nConnector Type: ", conn['type'])
-                print("Connector Name: ", conn['name'])
-                print("Connector ID: ", conn['id'])
-                print("----------------------------")
-                print("Schedule: ", conn['schedule']['value'], conn['schedule']['units'])
+                #print("\nConnector Type: ", conn['type'])
+                #print("Connector Name: ", conn['name'])
+                #print("Connector ID: ", conn['id'])
+                #print("----------------------------")
+                schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
                 try:
-                    print("Last Sync Time", conn['last_sync_time'])
+                    last_sync = conn['last_sync_time']
 
                 except KeyError:
-                    pass
-                print("Status Message: ", conn['status_message'])
-                print("------------------------------------------")
+                    last_sync = "Hasn't synced"
+                #print("Status Message: ", conn['status_message'])
+                print(str(conn['type']).ljust(10), str(conn['name']).ljust(40), str(conn['id']).ljust(40), last_sync.ljust(30), schedule)
         except Exception as E:
             error_msg(E)
 
     if agroup:
         try:
             data = request_data('GET', '/access-groups')
+            print("\nGroup Name".ljust(26), "Group ID".ljust(40), "Last Updated".ljust(25), "Rules")
+            print("-" * 120)
             for group in data["access_groups"]:
-                print("\nAccess Group Name: ", group['name'])
-                print("Access Group ID: ", group['id'])
-                try:
-                    print("Created by: ", group['created_by_name'])
 
-                    print("---------")
-                    print("Created at: ", group['created_at'])
-                    print("Updated at: ", group['updated_at'])
-                    print("----------------------")
+                try:
+                    updated = group['updated_at']
                 except KeyError:
-                    pass
-                print("Current Status: ", group['status'])
-                print("Percent Complete: ", group['processing_percent_complete'])
-                print("---------------------------------")
-                print("Rules")
-                print("-----------------------------------------")
+                    updated = "Not Updated"
                 details = request_data('GET', '/access-groups/'+str(group['id']))
+
                 try:
                     for rule in details['rules']:
-                        print(rule['type'], rule['operator'], rule['terms'])
+                        rules = str(rule['terms'])
                 except KeyError:
-                    pass
+                    rules = "Not Rule based"
+                print(str(group['name']).ljust(25), str(group['id']).ljust(40), str(updated).ljust(25), textwrap.shorten(rules, width=60))
+            print()
         except Exception as E:
             error_msg(E)
 
@@ -265,28 +262,26 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         querystring = {"limit": "5000"}
         try:
             data = request_data('GET', '/scanners/1/agents', params=querystring)
-            print("\nAgent Name".ljust(26), "IP Address".ljust(21), "Last Connect Time".ljust(36), "Last Scanned Time".ljust(33), "Status")
+            print("\nAgent Name".ljust(46), "IP Address".ljust(20), "Last Connect Time".ljust(20), "Last Scanned Time".ljust(20), "Status".ljust(10), "Groups")
             print("-" * 140)
             for agent in data['agents']:
                 last_connect = agent['last_connect']
-                last_connect_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_connect))
+                last_connect_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_connect))
 
                 try:
                     last_scanned = agent['last_scanned']
-                    last_scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_scanned))
+                    last_scanned_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_scanned))
                 except KeyError:
                     # I assume if we can't pull as scanned time, it doesn't exist
-                    last_scanned_time = "Agent has not Been Scanned"
-
-                print(str(agent['name']).ljust(25), str(agent['ip']).ljust(20), str(last_connect_time).ljust(35),
-                      str(last_scanned_time).ljust(35), str(agent['status']))
-                '''
+                    last_scanned_time = "Not Scanned"
+                groups = ''
                 try:
                     for group in agent['groups']:
-                        print(group['name'])
+                        groups = groups + ", " + group['name']
                 except KeyError:
                     pass
-                '''
+                print(str(agent['name']).ljust(45), str(agent['ip']).ljust(20), str(last_connect_time).ljust(20),
+                      str(last_scanned_time).ljust(20), str(agent['status']).ljust(10), str(groups[1:]))
                 print()
         except Exception as E:
             error_msg(E)
@@ -294,31 +289,28 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if webapp:
         try:
             data = request_data('GET', '/scans')
-
+            print("\nScan Name".ljust(61), "Scan ID".ljust(10), "Status".ljust(30))
+            print("-" * 100)
             for scan in data['scans']:
                 if scan['type'] == 'webapp':
                     name = scan['name']
                     scan_id = scan['id']
                     scan_status = scan['status']
-
-                    print("Scan Name : " + name)
-                    print("Scan ID : " + str(scan_id))
-                    print("Current status : " + scan_status)
-                    print("-----------------\n")
+                    print(str(name).ljust(60), str(scan_id).ljust(10), str(scan_status))
+            print()
 
         except Exception as E:
             error_msg(E)
 
     if tgroup:
         data = request_data('GET', '/target-groups')
+        print("\nTarge Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
+        print("-" * 100)
         try:
             for targets in data['target_groups']:
-                print()
-                print("Name : ", targets['name'])
-                print("Owner : ", targets['owner'])
-                print("Target Group ID : ", targets['id'])
-                print("Members : ", targets['members'])
-                print()
+                mem = targets['members']
+                print(str(targets['name']).ljust(40), str(targets['id']).ljust(10), str(targets['owner']).ljust(30), textwrap.shorten(mem, width=60))
+            print()
         except Exception as E:
             error_msg(E)
 
@@ -389,8 +381,8 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                  "filter.1.filter": "sources", "filter.1.quality": "set-has", "filter.1.value": "AZURE",
                  "filter.2.filter": "sources", "filter.2.quality": "set-has", "filter.2.value": "GCP", "filter.search_type":"or"}
         data = request_data('GET', '/workbenches/assets', params=query)
-        print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(40), "UUID".ljust(40), "First seen")
-        print("-------------------------------------------------------------------------------------------------------------------------------------\n")
+        print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(45), "UUID".ljust(40), "First seen")
+        print("-" * 120)
         for assets in data['assets']:
             for source in assets['sources']:
                 if source['name'] != 'NESSUS_SCAN':
@@ -401,7 +393,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     except IndexError:
                         asset_fqdn = "NO FQDN found"
 
-                    print(source['name'].ljust(10), asset_ip.ljust(15), asset_fqdn.ljust(40),uuid.ljust(40), source['first_seen'])
+                    print(source['name'].ljust(10), asset_ip.ljust(15), asset_fqdn.ljust(45),uuid.ljust(40), source['first_seen'])
         print()
 
     if networks:
