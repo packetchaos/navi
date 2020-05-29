@@ -62,9 +62,11 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
     if bytag:
         if c == '':
             print("Tag Category is required.  Please use the --c command")
+            exit()
 
         if v == '':
             print("Tag Value is required. Please use the --v command")
+            exit()
 
         database = r"navi.db"
         conn = new_db_connection(database)

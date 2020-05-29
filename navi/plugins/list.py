@@ -183,17 +183,12 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             print("\nType".ljust(11), "Connector Name".ljust(40), "Connnector ID".ljust(40), "Last Sync".ljust(30), "Schedule ")
             print("-" * 150)
             for conn in data["connectors"]:
-                #print("\nConnector Type: ", conn['type'])
-                #print("Connector Name: ", conn['name'])
-                #print("Connector ID: ", conn['id'])
-                #print("----------------------------")
                 schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
                 try:
                     last_sync = conn['last_sync_time']
 
                 except KeyError:
                     last_sync = "Hasn't synced"
-                #print("Status Message: ", conn['status_message'])
                 print(str(conn['type']).ljust(10), str(conn['name']).ljust(40), str(conn['id']).ljust(40), last_sync.ljust(30), schedule)
         except Exception as E:
             error_msg(E)
@@ -282,7 +277,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     pass
                 print(str(agent['name']).ljust(45), str(agent['ip']).ljust(20), str(last_connect_time).ljust(20),
                       str(last_scanned_time).ljust(20), str(agent['status']).ljust(10), str(groups[1:]))
-                print()
         except Exception as E:
             error_msg(E)
 

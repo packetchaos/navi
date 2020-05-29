@@ -125,13 +125,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                     # grab assets that match the criteria
                     if minutes > int(time):
                         try:
-                            #print("Asset IP: ", vulns[1])
-                            #print("Asset UUID: ", vulns[2])
-                            #print("Scan started at: ", vulns[14])
-                            #print("Scan completed at: ", vulns[13])
-                            #print("Scan UUID: ", vulns[15])
                             print(str(vulns[1]).ljust(15), str(vulns[2]).ljust(40), str(vulns[14]).ljust(25), str(vulns[13]).ljust(25), str(vulns[15]))
-                            #print()
                         except ValueError:
                             pass
                 print()

@@ -4,6 +4,7 @@ from .api_wrapper import request_data
 from .scan_details import scan_details
 from .error_msg import error_msg
 from .database import new_db_connection
+import textwrap
 
 
 @click.command(help="Get the Latest Scan information")
@@ -122,12 +123,12 @@ def report(latest, container, docker, comply, details, summary, network):
                 except IndexError:
                     pass
                 print()
-                print("Vulnerability Details")
-                print("---------------------")
+                print("Vulnerability Details".ljust(80), "Vuln Count")
+                print("-" * 100)
 
                 for vulns in data['vulnerabilities']:
                     if vulns['severity'] != 0:
-                        print(vulns['plugin_name'], " : ", vulns['count'])
+                        print(textwrap.shorten(str(vulns['plugin_name']), 80).ljust(80), vulns['count'])
             except TypeError:
                 print("Check the scan ID")
         except Exception as E:

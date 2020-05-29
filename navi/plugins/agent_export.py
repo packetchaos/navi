@@ -27,10 +27,10 @@ def agent_export():
                     platform = a['platform']
 
                     last_connect = a['last_connect']
-                    connect_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_connect))
+                    connect_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_connect))
                     try:
                         last_scanned = a['last_scanned']
-                        scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(last_scanned))
+                        scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_scanned))
                     except KeyError:
                         scanned_time = "Not Yet Scanned"
                     status = a['status']

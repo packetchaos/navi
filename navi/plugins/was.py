@@ -1,53 +1,107 @@
 import click
 from .api_wrapper import request_data
 from .error_msg import error_msg
-import pprint
+import time
+import uuid
+import csv
+
+
+def web_app_scanners():
+    print("\nHere are the available scanners")
+    print("Remember, don't pick a Cloud scanner for an internal Site\n")
+    scanners = request_data('GET', '/scanners')
+
+    print("Scanner Name".ljust(30), "Scanner UUID")
+    print("-" * 50)
+    for scanner in scanners['scanners']:
+
+        if str(scanner['supports_webapp']) == 'True':
+            print(str(scanner['name']).ljust(29), str(scanner['uuid']))
+    print()
+
+
+def display_users():
+    users = request_data('GET', '/users')
+    print("\nUser Name".ljust(40), "User UUID")
+    print("-" * 50)
+    for user in users['users']:
+        print(str(user['user_name'].ljust(39)), str(user['uuid']))
+    print()
+
+
+def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
+    # use time to ensure UUID is correct
+    uuid_offset = int(time.time())
+
+    # create a new WAS UUID
+    was_uuid = uuid.uuid1(uuid_offset)
+
+    payload = dict({
+        "name": str(name),
+        "owner_id": str(owner_id),
+        "template_id": str(temp_id),
+        "scanner_instance": {
+            "scanner_instance_id": str(scanner_uuid),
+            "type": "local"
+        },
+        "settings": {
+            "target": str(target),
+            "plugin": {
+                "families": [],
+                "ids": [],
+                "mode": "disable"
+            }
+        }
+    })
+
+    data = request_data('PUT', '/was/v2/configs/' + str(was_uuid), payload=payload)
 
 
 @click.command(help="Interact with WAS V2 API")
 @click.option('-scans', is_flag=True, help="Displays WAS Scans")
 @click.option('--start', default='', help="Start Scan with Provided Scan ID")
 @click.option('--sd', default='', help="Get Scan Details with Provided Scan ID")
-def was(scans, start, sd):
+@click.option('--scan', default='', help="Create a scan via URI or CSV name; use -csv option for bulk scan creation")
+@click.option('-file', is_flag=True, help="CSV of Web Apps for bulk scan creation")
+@click.option('-configs', is_flag=True, help="Show config UUIDs to start or stop scans")
+def was(scans, start, sd, scan, file, configs):
     if scans:
         data = request_data('GET', '/was/v2/scans')
+        print("\nTarget URI".ljust(50), "Scan UUID".ljust(40), "Scan Status".ljust(14), "Last Update")
+        print("-" * 120)
         try:
-            for scan in data['data']:
-                    app_url = scan['application_uri']
-                    try:
-                        scanner_used = scan['scanner']['group_name']
-                    except:
-                        scanner_used = scan['scanner']['name']
+            for scan_data in data['data']:
+                app_url = scan_data['application_uri']
+                try:
+                    scanner_used = scan_data['scanner']['group_name']
+                except:
+                    scanner_used = scan_data['scanner']['name']
 
-                    was_scan_id = scan['scan_id']
-                    status = scan['status']
-                    started = scan['started_at']
-                    updated = scan['updated_at']
+                was_scan_id = scan_data['scan_id']
+                status = scan_data['status']
+                started = scan_data['started_at']
+                updated = scan_data['updated_at']
 
-                    print("\n---Target URL/URI/Domain---")
-                    print(app_url)
-                    print("\nCurrent Status: " + status)
-                    print("Scan ID : " + was_scan_id)
-                    print("Scanner : " + scanner_used)
-                    print("\nStarted: " + started)
-                    print("Last Update: " + updated)
-                    print("\n---Scan Data Available---\n")
-                    try:
-                        for i in scan['metadata']:
-                            print(i, scan['metadata'][i])
-                    except TypeError:
-                        print("None Available")
-                    print()
-                    print("-" * 40)
-                    print("-" * 40)
-
+                print(str(app_url).ljust(50), str(was_scan_id).ljust(40), str(status).ljust(14), str(updated))
         except Exception as E:
             error_msg(E)
 
     if start != '':
         print("\n Your Scan is starting")
+        request_data('POST', '/was/v2/configs/' + start + '/scans')
 
     if sd != '':
+        scan_metadata = request_data('GET', '/was/v2/scans/' + str(sd))
+        print("\n---Scan Data Available---\n")
+
+        try:
+            for i in scan_metadata['metadata']:
+                print(i, scan_metadata['metadata'][i])
+        except TypeError:
+            print("None Available")
+        print()
+        print("-" * 40)
+        print("-" * 40)
         querystring = {'size': 1000}
         data = request_data('GET', '/was/v2/scans/' + str(sd) + '/vulnerabilities', params=querystring)
         print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS3 Base Score".ljust(10))
@@ -57,3 +111,59 @@ def was(scans, start, sd):
             plugin_details = request_data('GET', '/was/v2/plugins/' + str(plugin_id))
 
             print(str(plugin_id).ljust(10), str(plugin_details['name']).ljust(60), str(plugin_details['risk_factor']).ljust(10), plugin_details['cvss3_base_score'])
+
+    if scan:
+        print("\nChoose your Scan Template")
+        print("1.   Web App Overview")
+        print("2.   Web App Scan")
+        print("3.   WAS SSL SCAN")
+        print("4.   WAS Config Scan")
+        option = input("Please enter option #.... ")
+        if option == '1':
+            template = "b223f18e-5a94-4e02-b560-77a4a8246cd3"
+        elif option == '2':
+            template = "112f3e7f-d83a-4bba-b2c8-df2d22e2fa4c"
+        elif option == '3':
+            template = "072f4d6b-1dd7-4049-b279-78a56d1c778e"
+        elif option == '4':
+            template = "3078d0c6-6e81-44de-b585-6921b69ff0ef"
+        elif len(option) == 52:
+            template = str(option)
+        else:
+            print("Using Basic scan since you can't follow directions")
+            template = "b223f18e-5a94-4e02-b560-77a4a8246cd3"
+
+        # Display scanners
+        web_app_scanners()
+
+        # Capture Scanner selection
+        scanner_uuid = input("What scanner do you want to scan with ?.... ")
+
+        # Display Users UUID
+        display_users()
+        # Capture User UUID selection
+        user_uuid = input("Select an Scan owner using the UUID ?.... ")
+
+        scan_name = "Navi Created Scan of : " + str(scan)
+
+        if file:
+            with open(scan, 'r', newline='') as csv_file:
+                web_apps = csv.reader(csv_file)
+                for apps in web_apps:
+                    for app in apps:
+                        scan_name = "Navi Created Scan of : " + str(app)
+                        create_was_scan(owner_id=user_uuid, scanner_uuid=scanner_uuid, name=scan_name, temp_id=template, target=str(app))
+                        time.sleep(5)
+        else:
+            print("\nCreating your scan now for site: " + str(scan))
+            create_was_scan(owner_id=user_uuid, scanner_uuid=scanner_uuid, name=scan_name, temp_id=template, target=scan)
+
+    if configs:
+        config_info = request_data('GET', '/was/v2/configs')
+        print("Name".ljust(50), "Config ID".ljust(40), "Last Run")
+        for config in config_info['data']:
+            try:
+                updated = config['last_scan']['updated_at']
+            except TypeError:
+                updated = "Not Run yet"
+            print(str(config['name']).ljust(50), str(config['config_id']).ljust(40), str(updated))
