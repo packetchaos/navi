@@ -40,10 +40,10 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if users:
         try:
             data = request_data('GET', '/users')
-            print("\nUser Name".ljust(35), "Login email")
-            print("----------".ljust(34), "----------")
+            print("\nUser Name".ljust(35), "Login email".ljust(40), "User UUID")
+            print("-" * 100)
             for user in data["users"]:
-                print(user["name"].ljust(30), " - ", user["username"])
+                print(str(user["name"]).ljust(34), str(user["username"]).ljust(40), user['uuid'])
             print()
 
         except Exception as E:
@@ -62,21 +62,22 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if containers:
         try:
             data = request_data('GET', '/container-security/api/v2/images?limit=1000')
-            print("Container Name".ljust(35) + " | " + "Repository ID".ljust(35) + " | " + "Tag".ljust(15) + " | " + "Docker ID".ljust(15) + " | " + "# of Vulns".ljust(10))
+            print("\nContainer Name".ljust(35), "Repository ID".ljust(35), "Tag".ljust(15), "Docker ID".ljust(15), "# of Vulns".ljust(10))
             print("-" * 125)
             try:
                 for images in data["items"]:
-                    print(str(images["name"]).ljust(35) + " | " + str(images["repoName"]).ljust(35) + " | " + str(images["tag"]).ljust(15) + " | " + str(images["imageHash"]).ljust(15) + " | " + str(images["numberOfVulns"]).ljust(25))
+                    print(str(images["name"]).ljust(35), str(images["repoName"]).ljust(35), str(images["tag"]).ljust(15), str(images["imageHash"]).ljust(15), str(images["numberOfVulns"]).ljust(25))
             except KeyError:
                 pass
+            print()
         except Exception as E:
             error_msg(E)
 
     if logs:
         try:
             data = request_data('GET', '/audit-log/v1/events')
-            print("Event Date".ljust(24), "Action Taken".ljust(30), "User".ljust(30))
-            print("-" * 60)
+            print("\nEvent Date".ljust(24), "Action Taken".ljust(30), "User".ljust(30))
+            print("-" * 100)
             for log in data['events']:
                 received = log['received']
                 action = log['action']
@@ -85,6 +86,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
         except Exception as E:
             error_msg(E)
+        print()
 
     if running:
         try:
@@ -108,6 +110,11 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             error_msg(E)
 
     if scans:
+        print()
+        print("*" * 40)
+        print("This endpoint is extremely limited. 1 to 2 calls per min")
+        print("If you get a 429 error, wait a minute and try again")
+        print("*" * 40)
         try:
             data = request_data('GET', '/scans')
             print("\nScan Name".ljust(61), "Scan ID".ljust(10), "Status".ljust(30))
@@ -192,6 +199,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 print(str(conn['type']).ljust(10), str(conn['name']).ljust(40), str(conn['id']).ljust(40), last_sync.ljust(30), schedule)
         except Exception as E:
             error_msg(E)
+        print()
 
     if agroup:
         try:
@@ -279,8 +287,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                       str(last_scanned_time).ljust(20), str(agent['status']).ljust(10), str(groups[1:]))
         except Exception as E:
             error_msg(E)
+        print()
 
     if webapp:
+        print()
+        print("*" * 40)
+        print("This is using the V1 and Was 1.0 endpoints")
+        print("use the 'navi was --help' to see what is available for v2")
+        print("*" * 40)
         try:
             data = request_data('GET', '/scans')
             print("\nScan Name".ljust(61), "Scan ID".ljust(10), "Status".ljust(30))
@@ -297,6 +311,11 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             error_msg(E)
 
     if tgroup:
+        print()
+        print("*" * 40)
+        print("Target Groups are going to be retired use the Migration script to covert them to tags")
+        print("https://github.com/packetchaos/tio_automation/blob/master/migrate_target_groups.py")
+        print("*" * 40)
         data = request_data('GET', '/target-groups')
         print("\nTarge Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
         print("-" * 100)
@@ -318,14 +337,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where last_licensed_scan_date !=' ';")
             data = cur.fetchall()
 
-            print("IP Address".ljust(15), "Full Qualified Domain Name".ljust(65), "Licensed Date")
-            print("-".ljust(91, "-"))
+            print("IP Address".ljust(20), "Full Qualified Domain Name".ljust(65), "Licensed Date")
+            print("-" * 120)
             print()
             for asset in data:
                 ipv4 = asset[0]
                 fqdn = asset[1]
                 licensed_date = asset[2]
-                print(str(ipv4).ljust(15), str(fqdn).ljust(65), licensed_date)
+                print(str(ipv4).ljust(20), str(fqdn).ljust(65), licensed_date)
         print()
 
     if tags:
@@ -344,14 +363,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
     if categories:
         data = request_data('GET', '/tags/categories')
-        print("\nTag Categories".ljust(35), "Category UUID")
+        print("\nTag Categories".ljust(31), "Category UUID")
         print('-'.rjust(50, '-'), "\n")
         for cats in data['categories']:
 
             category_name = cats['name']
             category_uuid = cats['uuid']
 
-            print(str(category_name).ljust(30), " : ", str(category_uuid).ljust(25))
+            print(str(category_name).ljust(30), str(category_uuid).ljust(25))
         print()
 
     if smtp:
@@ -393,9 +412,10 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if networks:
         try:
             data = request_data('GET', '/networks')
-            print("\nNetwork Name".ljust(25), "# of Scanners".ljust(16), "UUID")
-            print("---------------------------------------------------\n")
+            print("\nNetwork Name".ljust(26), "# of Scanners".ljust(16), "UUID")
+            print("-" * 100)
             for network in data['networks']:
                 print(network['name'].ljust(25), str(network['scanner_count']).ljust(15), network['uuid'])
         except Exception as E:
             error_msg(E)
+        print()

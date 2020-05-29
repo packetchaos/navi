@@ -36,6 +36,7 @@ def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
     # create a new WAS UUID
     was_uuid = uuid.uuid1(uuid_offset)
 
+    # Construct the payload
     payload = dict({
         "name": str(name),
         "owner_id": str(owner_id),
@@ -54,35 +55,35 @@ def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
         }
     })
 
-    data = request_data('PUT', '/was/v2/configs/' + str(was_uuid), payload=payload)
+    request_data('PUT', '/was/v2/configs/' + str(was_uuid), payload=payload)
 
 
 @click.command(help="Interact with WAS V2 API")
 @click.option('-scans', is_flag=True, help="Displays WAS Scans")
 @click.option('--start', default='', help="Start Scan with Provided Scan ID")
 @click.option('--sd', default='', help="Get Scan Details with Provided Scan ID")
-@click.option('--scan', default='', help="Create a scan via URI or CSV name; use -csv option for bulk scan creation")
-@click.option('-file', is_flag=True, help="CSV of Web Apps for bulk scan creation")
+@click.option('--scan', default='', help="Create a scan via FQDN or CSV file name; use -file option for bulk scan creation via CSV file")
+@click.option('-file', is_flag=True, help="File name of the CSV containing Web Apps for bulk scan creation")
 @click.option('-configs', is_flag=True, help="Show config UUIDs to start or stop scans")
 def was(scans, start, sd, scan, file, configs):
     if scans:
         data = request_data('GET', '/was/v2/scans')
-        print("\nTarget URI".ljust(50), "Scan UUID".ljust(40), "Scan Status".ljust(14), "Last Update")
+        print("\nTarget FQDN".ljust(51), "Scan UUID".ljust(40), "Status".ljust(14), "Last Update")
         print("-" * 120)
         try:
             for scan_data in data['data']:
                 app_url = scan_data['application_uri']
                 try:
                     scanner_used = scan_data['scanner']['group_name']
-                except:
+                except KeyError:
                     scanner_used = scan_data['scanner']['name']
 
                 was_scan_id = scan_data['scan_id']
                 status = scan_data['status']
-                started = scan_data['started_at']
                 updated = scan_data['updated_at']
 
                 print(str(app_url).ljust(50), str(was_scan_id).ljust(40), str(status).ljust(14), str(updated))
+            print()
         except Exception as E:
             error_msg(E)
 
@@ -92,7 +93,8 @@ def was(scans, start, sd, scan, file, configs):
 
     if sd != '':
         scan_metadata = request_data('GET', '/was/v2/scans/' + str(sd))
-        print("\n---Scan Data Available---\n")
+        print("\nScan Data Available")
+        print("-" * 40)
 
         try:
             for i in scan_metadata['metadata']:
@@ -102,6 +104,7 @@ def was(scans, start, sd, scan, file, configs):
         print()
         print("-" * 40)
         print("-" * 40)
+        print()
         querystring = {'size': 1000}
         data = request_data('GET', '/was/v2/scans/' + str(sd) + '/vulnerabilities', params=querystring)
         print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS3 Base Score".ljust(10))
@@ -161,9 +164,11 @@ def was(scans, start, sd, scan, file, configs):
     if configs:
         config_info = request_data('GET', '/was/v2/configs')
         print("Name".ljust(50), "Config ID".ljust(40), "Last Run")
+        print("-" * 120)
         for config in config_info['data']:
             try:
                 updated = config['last_scan']['updated_at']
             except TypeError:
                 updated = "Not Run yet"
             print(str(config['name']).ljust(50), str(config['config_id']).ljust(40), str(updated))
+        print()

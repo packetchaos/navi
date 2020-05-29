@@ -3,7 +3,6 @@ from flask import Flask, render_template, request
 import sqlite3
 from sqlite3 import Error
 from .api_wrapper import request_data
-import time
 
 
 @click.command(help="A web interface to explore the Navi DB [BETA- Doesn't work in Docker]")
@@ -59,12 +58,8 @@ def portal():
         data = request_data('GET', '/container-security/api/v2/images?limit=1000')
 
         for images in data["items"]:
-            image_list = []
-            image_list.append(images["name"])
-            image_list.append(images["repoName"])
-            image_list.append(images["tag"])
-            image_list.append(images["imageHash"])
-            image_list.append(images["numberOfVulns"])
+            image_list = [images["name"], images["repoName"], images["tag"], images["imageHash"],
+                          images["numberOfVulns"]]
             cs_info.append(image_list)
 
         return render_template('containers.html', cs_info=cs_info)
