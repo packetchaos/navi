@@ -65,7 +65,9 @@ def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
 @click.option('--scan', default='', help="Create a scan via FQDN or CSV file name; use -file option for bulk scan creation via CSV file")
 @click.option('-file', is_flag=True, help="File name of the CSV containing Web Apps for bulk scan creation")
 @click.option('-configs', is_flag=True, help="Show config UUIDs to start or stop scans")
-def was(scans, start, sd, scan, file, configs):
+@click.option('--stats', default='', help="Show scan stats")
+@click.option('-summary', is_flag=True, help="Summary of all of the Web Apps")
+def was(scans, start, sd, scan, file, configs, stats, summary):
     if scans:
         data = request_data('GET', '/was/v2/scans')
         print("\nTarget FQDN".ljust(51), "Scan UUID".ljust(40), "Status".ljust(14), "Last Update")
@@ -92,28 +94,39 @@ def was(scans, start, sd, scan, file, configs):
         request_data('POST', '/was/v2/configs/' + start + '/scans')
 
     if sd != '':
-        scan_metadata = request_data('GET', '/was/v2/scans/' + str(sd))
-        print("\nScan Data Available")
-        print("-" * 40)
-
-        try:
-            for i in scan_metadata['metadata']:
-                print(i, scan_metadata['metadata'][i])
-        except TypeError:
-            print("None Available")
+        report = request_data('GET', '/was/v2/scans/' + str(sd) + '/report')
+        high = []
+        meduim = []
+        low = []
+        name = report['config']['name']
+        target = report['config']['settings']['target']
         print()
-        print("-" * 40)
+        print(name)
+        print(target)
         print("-" * 40)
         print()
-        querystring = {'size': 1000}
-        data = request_data('GET', '/was/v2/scans/' + str(sd) + '/vulnerabilities', params=querystring)
         print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS3 Base Score".ljust(10))
         print("-" * 100)
-        for i in data['data']:
-            plugin_id = i['plugin_id']
-            plugin_details = request_data('GET', '/was/v2/plugins/' + str(plugin_id))
+        for finding in report['findings']:
+            risk = finding['risk_factor']
+            plugin_id = finding['plugin_id']
+            plugin_name = finding['name']
 
-            print(str(plugin_id).ljust(10), str(plugin_details['name']).ljust(60), str(plugin_details['risk_factor']).ljust(10), plugin_details['cvss3_base_score'])
+            if risk == 'high':
+                high.append(plugin_id)
+            elif risk == 'medium':
+                meduim.append(plugin_id)
+            elif risk == 'low':
+                low.append(plugin_id)
+
+            print(str(plugin_id).ljust(10), str(plugin_name).ljust(60), str(risk).ljust(10), str(finding['cvss3']))
+
+        print("\nSeverity Counts")
+        print("-" * 20)
+        print("High: ", len(high))
+        print("Medium: ", len(meduim))
+        print("Low: ", len(low))
+        print()
 
     if scan:
         print("\nChoose your Scan Template")
@@ -171,4 +184,92 @@ def was(scans, start, sd, scan, file, configs):
             except TypeError:
                 updated = "Not Run yet"
             print(str(config['name']).ljust(50), str(config['config_id']).ljust(40), str(updated))
+        print()
+
+    if stats:
+        scan_metadata = request_data('GET', '/was/v2/scans/' + str(stats))
+        report = request_data('GET', '/was/v2/scans/' + str(stats) + '/report')
+        high = []
+        medium = []
+        low = []
+        name = report['config']['name']
+        target = report['config']['settings']['target']
+        output = ''
+        print()
+        print(name)
+        print(target)
+        print("-" * 60)
+        print("\nNotes:")
+        print("-" * 60)
+        for note in report['notes']:
+            print(note['title'])
+            print("\t- ", note['message'])
+
+        print("\nScan Data Available")
+        print("-" * 40)
+
+        try:
+            for i in scan_metadata['metadata']:
+                print(i, scan_metadata['metadata'][i])
+        except TypeError:
+            print("None Available")
+
+        for finding in report['findings']:
+            risk = finding['risk_factor']
+            plugin_id = finding['plugin_id']
+
+            if plugin_id == 98000:
+                output = finding['output']
+
+            if risk == 'high':
+                high.append(plugin_id)
+            elif risk == 'medium':
+                medium.append(plugin_id)
+            elif risk == 'low':
+                low.append(plugin_id)
+
+        print("\nSeverity Counts")
+        print("-"*20)
+        print("High: ", len(high))
+        print("Medium: ", len(medium))
+        print("Low: ", len(low))
+        print("\nScan Statistics")
+        print("-" * 20)
+        print(output)
+        print()
+
+    if summary:
+        # Grab all of the Scans
+        data = request_data('GET', '/was/v2/scans')
+        print("\nScan Name".ljust(26), "Target".ljust(40), "High".ljust(6), "Mid".ljust(6), "Low".ljust(6), "Scan Started".ljust(25), "Scan Finished".ljust(20))
+        print("-" * 120)
+        for scan_data in data['data']:
+            was_scan_id = scan_data['scan_id']
+            status = scan_data['status']
+            start = scan_data['started_at']
+            finish = scan_data['finalized_at']
+
+            # Ignore all scans that have not completed
+            if status == 'completed':
+                report = request_data('GET', '/was/v2/scans/' + was_scan_id + '/report')
+                high = []
+                medium = []
+                low = []
+                try:
+                    name = report['config']['name']
+                    target = report['config']['settings']['target']
+
+                    for finding in report['findings']:
+                        risk = finding['risk_factor']
+                        plugin_id = finding['plugin_id']
+                        if risk == 'high':
+                            high.append(plugin_id)
+                        elif risk == 'medium':
+                            medium.append(plugin_id)
+                        elif risk == 'low':
+                            low.append(plugin_id)
+
+                    print(str(name).ljust(25), str(target).ljust(40), str(len(high)).ljust(6), str(len(medium)).ljust(6), str(len(low)).ljust(6), str(start).ljust(25), str(finish))
+                except TypeError:
+                    pass
         print()

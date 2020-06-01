@@ -10,12 +10,14 @@ from .tag_export import tag_export
 from .tag_helper import tag_checker
 from .network_export import network_export
 from .query_export import query_export
+from .was_v2_export import was_export
 
 
 @click.command(help="Export data into a CSV")
 @click.option('-assets', is_flag=True, help='Exports all Asset data into a CSV')
 @click.option('-agents', is_flag=True, help="Export all Agent data into a CSV")
 @click.option('-webapp', is_flag=True, help="Export Webapp Scan Summary into a CSV")
+@click.option('-was', is_flag=True, help="Export Webapp Scan Summary into a CSV - WAS V2")
 @click.option('-consec', is_flag=True, help="Export Container Security Summary into a CSV")
 @click.option('-licensed', is_flag=True, help="Export a List of all the Licensed Assets")
 @click.option('-lumin', is_flag=True, help="Export all Asset data including ACR and AES into a CSV. This will take some time")
@@ -26,7 +28,7 @@ from .query_export import query_export
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
 @click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
 @click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
-def export(assets, agents, webapp, consec, licensed, lumin, network, query, bytag, c, v, ec, ev):
+def export(assets, agents, webapp, consec, licensed, lumin, network, query, bytag, c, v, ec, ev, was):
     if assets:
         print("\nExporting your data now. Saving asset_data.csv now...\n")
         csv_export()
@@ -53,7 +55,7 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
         lumin_export()
 
     if network:
-        print("\nExporting your data now. Saving network_data.csv now.")
+        print("\nExporting your data now. Saving network_data.csv now...")
         network_export(network)
 
     if query != '':
@@ -87,3 +89,7 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
                 print('Sorry Right now, Navi doesn\'t support \' in a tag')
 
         tag_export(new_list)
+
+    if was:
+        print("\nExporting your data now. Saving was_v2_data.csv now...")
+        was_export()
