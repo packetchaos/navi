@@ -123,6 +123,7 @@ There are thirteen core commands:
  * add - Manually Add an asset to Tenable.io or a list of assets via CSV
  * delete - Delete a scan by Scan ID
  * agroup - Create an Access Group by Tag or Agent Group
+ * was - Interact with the WAS 2.0 V2 API
  
  There are thirteen single use commands: 
  * scan - Create and launch a scan
@@ -305,11 +306,35 @@ This is especially important if you want to export using your newly created tag.
 ### Examples
     navi lumin --acr 10 --c "Applications" --v "Core Business" --note "Main application"
 
+
+### WAS V2 API - Interact with 2.0 APIs
+   * -scans -->    Displays WAS Scans
+   * --start -->   Start Scan with Provided Scan ID
+   * --sd -->      Get Scan Details with Provided Scan ID
+   * --scan -->    Create a scan via FQDN or CSV file name; use -file option for bulk scan creation via CSV file
+   * -file -->     File name of the CSV containing Web Apps for bulk scan creation
+   * -configs -->  Show config UUIDs to start or stop scans
+   * --stats -->   Show scan stats
+   * -summary -->  Summary of all of the Web Apps
+   
+    navi was -scans
+    
+    navi was -configs
+    
+    navi was --sd 123456789-aedd-45dc-9c0d-fc87a9a5a1c9
+    
+    navi was --scan http://myscan.com
+    
+    navi was --scan mycsvfile.csv -file
+    
+    navi was --stats 123456789-aedd-45dc-9c0d-fc87a9a5a1c9  
+   
 ### Export Asset, Agent, Consec, or Webapp Data - 'export'
 
    * -assets -->   Export Assets data into CSV: IP, Hostname, FQDN, UUID, exposure, etc
    * -agents -->   Export Asset data into CSV: IP, Last Connect, Last scanned, Status
-   * -webapp -->   Export Web applications into a CSV: FQDN, Critical, High, Medium, Low
+   * -webapp -->   Export Webapp Scan Summary into a CSV
+   * -was -->      Export Webapp Scan Summary into a CSV - WAS V2
    * -consec -->   Export Container Security summary info into a CSV.
    * -licensed --> Export a List of all Licensed Assets into a CSV.
    * -lumin -->    Export all Asset data including ACR and AES into a CSV. This will take some time
