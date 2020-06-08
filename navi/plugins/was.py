@@ -16,7 +16,7 @@ def web_app_scanners():
     for scanner in scanners['scanners']:
 
         if str(scanner['supports_webapp']) == 'True':
-            print(str(scanner['name']).ljust(29), str(scanner['uuid']))
+            print(str(scanner['name']).ljust(29), str(scanner['id']))
     print()
 
 
@@ -29,7 +29,7 @@ def display_users():
     print()
 
 
-def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
+def create_was_scan(owner_id, temp_id, scanner_id, target, name):
     # use time to ensure UUID is correct
     uuid_offset = int(time.time())
 
@@ -41,19 +41,12 @@ def create_was_scan(owner_id, temp_id, scanner_uuid, target, name):
         "name": str(name),
         "owner_id": str(owner_id),
         "template_id": str(temp_id),
-        "scanner_instance": {
-            "scanner_instance_id": str(scanner_uuid),
-            "type": "local"
-        },
+        "scanner_id": str(scanner_id),
         "settings": {
-            "target": str(target),
-            "plugin": {
-                "families": [],
-                "ids": [],
-                "mode": "disable"
+            "target": str(target)
             }
         }
-    })
+    )
 
     request_data('PUT', '/was/v2/configs/' + str(was_uuid), payload=payload)
 
@@ -153,7 +146,7 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
         web_app_scanners()
 
         # Capture Scanner selection
-        scanner_uuid = input("What scanner do you want to scan with ?.... ")
+        scanner_id = input("What scanner do you want to scan with ?.... ")
 
         # Display Users UUID
         display_users()
@@ -168,11 +161,11 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
                 for apps in web_apps:
                     for app in apps:
                         scan_name = "Navi Created Scan of : " + str(app)
-                        create_was_scan(owner_id=user_uuid, scanner_uuid=scanner_uuid, name=scan_name, temp_id=template, target=str(app))
+                        create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=str(app))
                         time.sleep(5)
         else:
             print("\nCreating your scan now for site: " + str(scan))
-            create_was_scan(owner_id=user_uuid, scanner_uuid=scanner_uuid, name=scan_name, temp_id=template, target=scan)
+            create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=scan)
 
     if configs:
         config_info = request_data('GET', '/was/v2/configs')
