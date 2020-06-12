@@ -143,7 +143,7 @@ def asset_export(days, ex_uuid):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"chunk_size": 5000, "filters": {"last_assessed": int(day_limit)}}
+    pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
     try:
 
         if ex_uuid == '0':

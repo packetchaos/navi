@@ -62,17 +62,13 @@ def create_was_scan(owner_id, temp_id, scanner_id, target, name):
 @click.option('-summary', is_flag=True, help="Summary of all of the Web Apps")
 def was(scans, start, sd, scan, file, configs, stats, summary):
     if scans:
-        data = request_data('GET', '/was/v2/scans')
+        params = {"size": "1000"}
+        data = request_data('GET', '/was/v2/scans', params=params)
         print("\nTarget FQDN".ljust(51), "Scan UUID".ljust(40), "Status".ljust(14), "Last Update")
         print("-" * 120)
         try:
             for scan_data in data['data']:
                 app_url = scan_data['application_uri']
-                try:
-                    scanner_used = scan_data['scanner']['group_name']
-                except KeyError:
-                    scanner_used = scan_data['scanner']['name']
-
                 was_scan_id = scan_data['scan_id']
                 status = scan_data['status']
                 updated = scan_data['updated_at']
@@ -168,7 +164,8 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
             create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=scan)
 
     if configs:
-        config_info = request_data('GET', '/was/v2/configs')
+        params = {"size": "1000"}
+        config_info = request_data('GET', '/was/v2/configs', params=params)
         print("Name".ljust(50), "Config ID".ljust(40), "Last Run")
         print("-" * 120)
         for config in config_info['data']:
@@ -233,7 +230,9 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
 
     if summary:
         # Grab all of the Scans
-        data = request_data('GET', '/was/v2/scans')
+        params = {"size": "1000"}
+
+        data = request_data('GET', '/was/v2/scans', params=params)
         print("\nScan Name".ljust(26), "Target".ljust(40), "High".ljust(6), "Mid".ljust(6), "Low".ljust(6), "Scan Started".ljust(25), "Scan Finished".ljust(20))
         print("-" * 120)
         for scan_data in data['data']:

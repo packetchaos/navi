@@ -10,8 +10,9 @@ def was_export():
         header_list = ["Scan Name", "Target", "High", "Medium", "Low", "Scan Start", "Scan Finish", "Note Title", "Note Message"]
         agent_writer.writerow(header_list)
 
+        params = {"size": "1000"}
         # Grab all of the Scans
-        data = request_data('GET', '/was/v2/scans')
+        data = request_data('GET', '/was/v2/scans', params=params)
 
         for scan_data in data['data']:
             csv_list = []
