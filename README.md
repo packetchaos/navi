@@ -74,37 +74,29 @@ To extract data from the container you need to run an http server.  Use the belo
 
     navi http
 
- * Navigate to the website: http://0.0.0.0:8000
+ * Navigate to the website: http://127.0.0.1:8000
  * Simply download the item you want by clicking on it.
  
-# Download and Configure Navi using Python3 Setup file
+# Download Navi Pro from PyPI - 
 ## Prepare your Machine
  * Install [Python3](https://realpython.com/installing-python/)
- * Install [Setuptools](https://pypi.org/project/setuptools/2.0/)
- * Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
  
-## Clone the Repo
-Create a new Directory
+## Install Navi Pro using pip
 
-    mkdir tenable
-
-Change into your new directory
-
-    cd tenable
-    
-Clone the repo
-
-    git clone https://github.com/packetchaos/Navi.git
-
-## Install Navi
-    
-    cd Navi
-    python3 setup.py install
+    pip3 install navi-pro
     
 # Usage
-Before you begin you need the Keys! The program will continue to error out without valid API keys
+Before you begin you need the Keys! The program will continue to error out without valid API keys.
+Note: The keys will not show up on the screen; similar to a password prompt.
 
     navi keys
+## Are my Keys inputted correctly?
+In different terminals it can be a challenge to copy the keys to navi since you can not be sure it copied correctly.  
+
+Use the below commands to check your keys
+    
+    navi find --query "select * from keys;"
+    
 
 Each command has two parts: the Command and the Option/Request. Double-Dash(--) commands expect a text value. Single-Dash commands do not have an expected input.  
 
@@ -156,13 +148,13 @@ There are thirteen core commands:
   
 ### IP address queries - 'ip'
   * --plugin TEXT --> Find Details on a particular plugin ID
-  * -n -->            Netstat Established and Listening and Open Ports
+  * -n -->            Netstat Established and Listening and Open Ports(requires verbosity)
   * -p -->            Patch Information
   * -t -->            Trace Route
   * -o -->            Process Information
   * -c -->            Connection Information
-  * -s -->            Services Running
-  * -r -->            Local Firewall Rules
+  * -s -->            Services Running(requires verbosity)
+  * -r -->            Local Firewall Rules(requires verbosity)
   * -d -->            Scan Detail: 19506 plugin output
   * -patches -->      Missing Patches
   * -software -->     Find software installed on Unix of windows hosts
@@ -374,7 +366,7 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 * container - Delete a container by container ID
 * tag -       Delete a Tag value by Value UUID
 * category -  Delete a Tag category by the Category UUID
-
+* bytag -     Delete All assets that have a certain tag  - specify Value and tag.category
 ### Examples
 
 
@@ -387,6 +379,8 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi delete 12345 -asset
 
     navi delete 6789 -policy
+    
+    navi delete Linux --bytag tag.OS
 
 ### Mail a Report
 * latest - Mail a report of the latest scan: Same output as "report -latest"
@@ -429,15 +423,15 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 ### Create 100s of Webapp Scans from a CSV File
 To Receive a file for Navi Pro to use you must push the file to the container.  Netcat is installed on the container to do this, or you can use the 'listen' command to accomplish this.
   
-    navi spider <your_csv_file.csv>
+    navi was --scan <your_csv_file.csv> -file
     
     
-* Choose your Scan type : Webapp Overview or Webapp Scan
+* Choose your Scan type : Webapp Overview/Webapp Scan/SSL Scan/Config Scan
 * Choose your scanner: A list will be displayed
+* Choose The Owner of your Scan: A list of owners will be displayed
 * Scans will be created but not started.
-* An output of the Webapp URL and Scan ID will be displayed on completion
 
-### Getting Data into the Container
+### Getting Data into the Docker Container
 
 From the container - Prepare your container to receive a file
 
