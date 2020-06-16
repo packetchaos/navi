@@ -4,6 +4,7 @@ from .error_msg import error_msg
 import time
 import uuid
 import csv
+import textwrap
 
 
 def web_app_scanners():
@@ -64,8 +65,8 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
     if scans:
         params = {"size": "1000"}
         data = request_data('GET', '/was/v2/scans', params=params)
-        print("\nTarget FQDN".ljust(51), "Scan UUID".ljust(40), "Status".ljust(14), "Last Update")
-        print("-" * 120)
+        print("\nTarget FQDN".ljust(70), "Scan UUID".ljust(40), "Status".ljust(14), "Last Update")
+        print("-" * 150)
         try:
             for scan_data in data['data']:
                 app_url = scan_data['application_uri']
@@ -73,7 +74,7 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
                 status = scan_data['status']
                 updated = scan_data['updated_at']
 
-                print(str(app_url).ljust(50), str(was_scan_id).ljust(40), str(status).ljust(14), str(updated))
+                print(textwrap.shorten(str(app_url), width=69).ljust(69), str(was_scan_id).ljust(40), str(status).ljust(14), str(updated))
             print()
         except Exception as E:
             error_msg(E)
@@ -166,14 +167,14 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
     if configs:
         params = {"size": "1000"}
         config_info = request_data('GET', '/was/v2/configs', params=params)
-        print("Name".ljust(50), "Config ID".ljust(40), "Last Run")
-        print("-" * 120)
+        print("Name".ljust(80), "Config ID".ljust(40), "Last Run")
+        print("-" * 150)
         for config in config_info['data']:
             try:
                 updated = config['last_scan']['updated_at']
             except TypeError:
                 updated = "Not Run yet"
-            print(str(config['name']).ljust(50), str(config['config_id']).ljust(40), str(updated))
+            print(textwrap.shorten(str(config['name']), width=80).ljust(80), str(config['config_id']).ljust(40), str(updated))
         print()
 
     if stats:
@@ -233,8 +234,8 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
         params = {"size": "1000"}
 
         data = request_data('GET', '/was/v2/scans', params=params)
-        print("\nScan Name".ljust(26), "Target".ljust(40), "High".ljust(6), "Mid".ljust(6), "Low".ljust(6), "Scan Started".ljust(25), "Scan Finished".ljust(20))
-        print("-" * 120)
+        print("\nScan Name".ljust(38), "Target".ljust(40), "High".ljust(6), "Mid".ljust(6), "Low".ljust(6), "Scan Started".ljust(25), "Scan Finished".ljust(20))
+        print("-" * 150)
         for scan_data in data['data']:
             was_scan_id = scan_data['scan_id']
             status = scan_data['status']
@@ -261,7 +262,7 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
                         elif risk == 'low':
                             low.append(plugin_id)
 
-                    print(str(name).ljust(25), str(target).ljust(40), str(len(high)).ljust(6), str(len(medium)).ljust(6), str(len(low)).ljust(6), str(start).ljust(25), str(finish))
+                    print(textwrap.shorten(str(name), width=37).ljust(37), textwrap.shorten(str(target), width=40).ljust(40), str(len(high)).ljust(6), str(len(medium)).ljust(6), str(len(low)).ljust(6), str(start).ljust(25), str(finish))
                 except TypeError:
                     pass
         print()

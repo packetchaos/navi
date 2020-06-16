@@ -30,8 +30,13 @@ def was_export():
                 try:
                     name = report['config']['name']
                     target = report['config']['settings']['target']
-                    title = report['notes'][0]['title']
-                    message = report['notes'][0]['message']
+                    try:
+                        title = report['notes'][0]['title']
+                        message = report['notes'][0]['message']
+                    except IndexError:
+                        # There may not be any Notes set the vars to ""
+                        title = ""
+                        message = ""
 
                     for finding in report['findings']:
                         risk = finding['risk_factor']
