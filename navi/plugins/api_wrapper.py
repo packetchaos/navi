@@ -13,7 +13,7 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.30', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.31', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
 def request_delete(method, url_mod):
