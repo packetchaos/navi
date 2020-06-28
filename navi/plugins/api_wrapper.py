@@ -13,7 +13,7 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.31', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': 'navi-5.1.32', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
 def request_delete(method, url_mod):
@@ -70,9 +70,10 @@ def request_data(method, url_mod, **kwargs):
                 print("\nToo many requests at a time...\n", r)
                 break
             elif r.status_code == 400:
-                print("\nThe object you tried to create already exists\n")
+                print("\nThe object you tried to create may already exist\n")
                 print("If you are Updating tags via groups it is not supported right now, "
                       "delete your group using the delete command\n", r)
+                print("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
                 break
             elif r.status_code == 403:
                 print("\nYou are not authorized! You need to be an admin\n", r)

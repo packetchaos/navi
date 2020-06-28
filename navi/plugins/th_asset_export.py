@@ -128,7 +128,7 @@ def parse_data(chunk_data):
     asset_conn.close()
 
 
-def asset_export(days, ex_uuid):
+def asset_export(days, ex_uuid, threads):
     start = time.time()
     # Crete a new connection to our database
     database = r"navi.db"
@@ -192,7 +192,7 @@ def asset_export(days, ex_uuid):
         for y in status['chunks_available']:
             urls.append('/assets/export/' + ex_uuid + '/chunks/' + str(y))
 
-        for i in range(4):
+        for i in range(threads):
             t = threading.Thread(target=worker)
             t.daemon = True  # thread dies when main thread (only non-daemon thread) exits.
             t.start()

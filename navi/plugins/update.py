@@ -10,22 +10,27 @@ from sqlite3 import Error
 @click.option('-vulns', is_flag=True, help="Update the Vulnerability Data data")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default=' ', help="Download using a specified Export ID")
-def update(assets, vulns, days, exid):
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+def update(assets, vulns, days, exid, threads):
+    # Limit the amount of threads to avoid issues
+    if threads not in range(1, 10):
+        print("Enter a value between 1 and 10")
+        exit()
     try:
         if exid == ' ':
             exid = '0'
 
         if assets:
-            asset_export(days, exid)
+            asset_export(days, exid, threads)
 
         if vulns:
-            vuln_export(days, exid)
+            vuln_export(days, exid, threads)
 
         if not assets and not vulns:
-            vuln_export(days, exid)
+            vuln_export(days, exid, threads)
 
             # default for assets should be 90 days to support licensing exports
-            asset_export(90, exid)
+            asset_export(90, exid, threads)
     except Error as E:
         print("\n Have you entered your keys?\n")
         print("Error: ", E, "\n")

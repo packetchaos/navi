@@ -30,6 +30,11 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  You can even specify your export id.
  
     navi update -vulns --exid 123456-987654-asdfgh-jklopi-ididis
+    
+ You can also control the amount of threads used for downlaods (1-10)
+ The Default thread value is 10.
+ 
+    navi update -vulns --threads 4
  
 ### My container keeps getting "Killed"
 To speed up downloads navi uses threading. It pulls 500 asset chunks on 10 threads and since the vulnerabilities per asset
@@ -39,6 +44,10 @@ fluctuate this can spike the memory above 2G.  If this happens increase your mem
 
 [Directions for Windows](https://docs.docker.com/docker-for-windows/#advanced)
  
+### I keep getting DB locks
+I'm still working on a fix for large accounts, those over 100K assets.  For now use the thread option to avoid DB locks by reducing it to 1.
+
+    navi update --threads 1
  
 ### What is the biggest Tenable.io instance Navi has been tested on?
 Navi 5.1.4 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
@@ -116,6 +125,7 @@ There are thirteen core commands:
  * delete - Delete a scan by Scan ID
  * agroup - Create an Access Group by Tag or Agent Group
  * was - Interact with the WAS 2.0 V2 API
+ * change - Change Scan Ownership
  
  There are thirteen single use commands: 
  * scan - Create and launch a scan
@@ -387,7 +397,16 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 * consec - Mail a report of the ConSec Summary: Same output as "list -containers"
 * webapp - Mail a report of the WebApp Summary
 
+### Change Scanner Ownership
 
+First See what scans a user owns
+
+    navi change --who "admin@your.login"
+
+Then tansfer the scans owned by User A to User B
+
+    navi change --owner "userA@your.login" --new "userB@your.login"
+    
 ## Use Cases
 
 ### What was last scanned?
