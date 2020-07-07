@@ -1,4 +1,5 @@
 import click
+import csv
 from .database import new_db_connection
 from .api_wrapper import request_data
 from .tag_helper import update_tag, confirm_tag_exists
@@ -14,7 +15,8 @@ from sqlite3 import Error
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 @click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
-def tag(c, v, d, plugin, name, group, output, port):
+@click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
+def tag(c, v, d, plugin, name, group, output, port, file):
     # Generator to split IPs into 2000 IP chunks
     def chunks(l, n):
         for i in range(0, len(l), n):
@@ -122,6 +124,16 @@ def tag(c, v, d, plugin, name, group, output, port):
                         tag_list.append(uuid)
         except Error:
             print("You might not have agent groups, or you are using Nessus Manager.  ")
+
+    if file != '':
+        with open(file, 'r', newline='') as new_file:
+            add_ips = csv.reader(new_file)
+
+            for row in add_ips:
+                for ips in row:
+                    # need to look grab UUIDS per IP for the ablity to update Tags
+                    tag_list.append(ips)
+                    ip_list = ip_list + "," + ips
 
     if ip_list == '':
         print("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
