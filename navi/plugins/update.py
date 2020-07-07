@@ -13,9 +13,11 @@ from sqlite3 import Error
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
 def update(assets, vulns, days, exid, threads):
     # Limit the amount of threads to avoid issues
-    if threads not in range(1, 10):
-        print("Enter a value between 1 and 10")
-        exit()
+    if threads != 10:
+        print("\nUsing {} threads at your request".format(threads))
+        if threads not in range(1, 11):
+            print("Enter a value between 1 and 10")
+            exit()
     try:
         if exid == ' ':
             exid = '0'
