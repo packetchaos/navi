@@ -39,6 +39,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
     if plugin != '':
         if not str.isdigit(plugin):
             print("You didn't enter a number")
+            exit()
         else:
             find_by_plugin(plugin)
 

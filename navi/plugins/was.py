@@ -150,14 +150,14 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
         # Capture User UUID selection
         user_uuid = input("Select an Scan owner using the UUID ?.... ")
 
-        scan_name = "Navi Created Scan of : " + str(scan)
+        scan_name = "navi Created Scan of : " + str(scan)
 
         if file:
             with open(scan, 'r', newline='') as csv_file:
                 web_apps = csv.reader(csv_file)
                 for apps in web_apps:
                     for app in apps:
-                        scan_name = "Navi Created Scan of : " + str(app)
+                        scan_name = "navi Created Scan of : " + str(app)
                         create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=str(app))
                         time.sleep(5)
         else:

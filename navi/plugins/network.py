@@ -9,7 +9,7 @@ def network(net, age):
     network_data = request_data('GET', '/networks/' + net)
     name = network_data['name']
 
-    payload = {"assets_ttl_days": age, "description": "TTL adjusted by Navi", "name": name}
+    payload = {"assets_ttl_days": age, "description": "TTL adjusted by navi", "name": name}
     if age != '':
         data = request_data('PUT', '/networks/' + net, payload=payload)
         print(data)

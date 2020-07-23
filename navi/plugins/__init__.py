@@ -22,7 +22,6 @@ from .smtp import smtp
 from .mail import mail
 from .new_tag import tag
 from .agroup import agroup
-from .spider import spider
 from .navi_portal import portal
 from .was import was
 from .change import change
@@ -54,7 +53,6 @@ def plugin_loader(group):
     group.add_command(mail)
     group.add_command(tag)
     group.add_command(agroup)
-    group.add_command(spider)
     group.add_command(portal)
     group.add_command(was)
     group.add_command(change)

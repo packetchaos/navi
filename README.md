@@ -49,6 +49,22 @@ I'm still working on a fix for large accounts, those over 100K assets.  For now 
 
     navi update --threads 1
  
+### What is my Navi Version
+Versions older than 5.1.36 do not have this feature.
+
+    navi display -version
+
+### Are my Keys inputted correctly?
+In different terminals it can be a challenge to copy the keys to navi since you can not be sure it copied correctly.  
+
+Use the below commands to check your keys
+    
+    navi find --query "select * from keys;"
+
+Alternatively, you could try entering your keys again using the '-clear' command to see what is being copied to the screen.
+
+    navi keys -clear
+
 ### What is the biggest Tenable.io instance Navi has been tested on?
 Navi 5.1.4 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
 It took 30 mins for t.io to prepare the download and 30 mins to download and parse the data
@@ -99,13 +115,6 @@ Before you begin you need the Keys! The program will continue to error out witho
 Note: The keys will not show up on the screen; similar to a password prompt.
 
     navi keys
-## Are my Keys inputted correctly?
-In different terminals it can be a challenge to copy the keys to navi since you can not be sure it copied correctly.  
-
-Use the below commands to check your keys
-    
-    navi find --query "select * from keys;"
-    
 
 Each command has two parts: the Command and the Option/Request. Double-Dash(--) commands expect a text value. Single-Dash commands do not have an expected input.  
 
@@ -114,7 +123,7 @@ There are thirteen core commands:
  * ip - find details on Specific IPs
  * find - Find information: credential failures, containers, etc
  * report - Report on Information: Latest scan information, Container vulns
- * display - List details: users, logs, etc
+ * display - List details: users, logs, navi version, etc
  * group - Create Target groups based off of Plugin ID, Plugin Name or Plugin Output
  * export - Export Agent or Asset data into a CSV
  * delete - Delete an object by it's ID
@@ -133,7 +142,6 @@ There are thirteen core commands:
  * pause - Pause a scan by Scan-ID
  * resume - Resume a scan by Scan-ID
  * stop - Stop a scan by Scan-ID
- * spider - Create a WebApp scan for every URL in a CSV
  * update - Update local Export Vuln and Asset data.
  * status - Get the latest status by Scan ID
  * mac - Get the manufacture by Mac Address

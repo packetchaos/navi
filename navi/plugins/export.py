@@ -86,7 +86,7 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
                     if check_for_no == 'no':
                         new_list.append(asset[0])
             except conn.OperationalError:
-                print('Sorry Right now, Navi doesn\'t support \' in a tag')
+                print('Sorry Right now, navi doesn\'t support \' in a tag')
 
         tag_export(new_list)
 

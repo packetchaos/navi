@@ -32,7 +32,8 @@ import textwrap
 @click.option('-smtp', is_flag=True, help="Print your smtp information")
 @click.option('-cloud', is_flag=True, help="Print Cloud assets found in the last 30 days by the connectors")
 @click.option('-networks', is_flag=True, help="Print Network IDs")
-def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud, networks):
+@click.option('-version', is_flag=True, help="Display current version of Navi")
+def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud, networks, version):
 
     if scanners:
         nessus_scanners()
@@ -155,21 +156,18 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
 
     if assets:
         try:
-            asset_limit = {"filter.0.filter": "sources", "filter.0.quality": "set-has", "filter.0.value": "NESSUS_SCAN"}
-            data = request_data('GET', '/workbenches/assets/?date_range=30', params=asset_limit)
-            asset_list = []
-            for x in range(len(data["assets"])):
-                for y in range(len(data["assets"][x]["ipv4"])):
-                    ip = data["assets"][x]["ipv4"][y]
+            data = request_data('GET', '/workbenches/assets/?date_range=30') #, params=asset_limit)
 
-                    while ip not in asset_list:
-                        asset_list.append(ip)
-            asset_list.sort()
-            print("\nIn the last 30 days, I found " + str(len(asset_list)) + " IP Addresess. See below:\n")
-            for z in range(len(asset_list)):
-                print(asset_list[z])
-            print("-" * 20)
-            print(len(asset_list), "Assets found in the last 30 days\n")
+            print("\nBelow are the assets found in the last 30 days")
+            print("\nIP Address(es)".ljust(35), "FQDN(s)".ljust(65), "Exposure Score".ljust(15), "Sources")
+            print("-" * 120)
+            for asset in data["assets"]:
+                sources = []
+                for source in asset["sources"]:
+                    sources.append(source['name'])
+
+                print(str(asset["ipv4"]).ljust(36), str(asset["fqdn"]).ljust(64), str(asset["exposure_score"]).ljust(15), sources)
+
         except Exception as E:
             error_msg(E)
 
@@ -207,7 +205,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             print("\nGroup Name".ljust(26), "Group ID".ljust(40), "Last Updated".ljust(25), "Rules")
             print("-" * 120)
             for group in data["access_groups"]:
-
                 try:
                     updated = group['updated_at']
                 except KeyError:
@@ -233,7 +230,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             print("-----------------------")
             print("Container ID : ", session_data["container_id"])
             print("Container UUID :", session_data["container_uuid"])
-            print("Contianer Name : ", session_data["container_name"])
+            print("Container Name : ", session_data["container_name"])
             print("Site ID :", data["analytics"]["site_id"])
             print("Region : ", data["region"])
 
@@ -344,12 +341,14 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                 ipv4 = asset[0]
                 fqdn = asset[1]
                 licensed_date = asset[2]
-                print(str(ipv4).ljust(20), str(fqdn).ljust(65), licensed_date)
+                # Don't display Web applications in this output
+                if ipv4 != " ":
+                    print(str(ipv4).ljust(20), str(fqdn).ljust(65), licensed_date)
         print()
 
     if tags:
         data = request_data('GET', '/tags/values')
-        print("\nTags".ljust(35), "Value".ljust(35), "Value UUID")
+        print("\nTags".ljust(33), "Value".ljust(35), "Value UUID")
         print('-'.rjust(92, '-'), "\n")
         for tag_values in data['values']:
             try:
@@ -358,7 +357,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
             except KeyError:
                 tag_value = "Value Not Set Yet"
                 uuid = "NO Value set"
-            print(str(tag_values['category_name']).ljust(30), " : ", str(tag_value).ljust(35), str(uuid).ljust(25))
+            print(str(tag_values['category_name']).rjust(30), ":", str(tag_value).ljust(35), str(uuid).ljust(25))
         print()
 
     if categories:
@@ -395,7 +394,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                  "filter.2.filter": "sources", "filter.2.quality": "set-has", "filter.2.value": "GCP", "filter.search_type":"or"}
         data = request_data('GET', '/workbenches/assets', params=query)
         print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(45), "UUID".ljust(40), "First seen")
-        print("-" * 120)
+        print("-" * 150)
         for assets in data['assets']:
             for source in assets['sources']:
                 if source['name'] != 'NESSUS_SCAN':
@@ -419,3 +418,6 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         except Exception as E:
             error_msg(E)
         print()
+
+    if version:
+        print("\nNavi Version 5.1.36\n")

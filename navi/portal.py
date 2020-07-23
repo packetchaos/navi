@@ -1,11 +1,10 @@
 from flask import Flask, render_template, request
 import sqlite3
 from sqlite3 import Error
-from Navi.plugins.api_wrapper import request_data
+from navi.plugins.api_wrapper import request_data
 import time
 
-
-#locale.setlocale(locale.LC_ALL, 'en_US')
+# locale.setlocale(locale.LC_ALL, 'en_US')
 
 starttime = time.time()
 
@@ -63,12 +62,7 @@ def get_container_info():
     data = request_data('GET', '/container-security/api/v2/images?limit=1000')
 
     for images in data["items"]:
-        image_list = []
-        image_list.append(images["name"])
-        image_list.append(images["repoName"])
-        image_list.append(images["tag"])
-        image_list.append(images["imageHash"])
-        image_list.append(images["numberOfVulns"])
+        image_list = [images["name"], images["repoName"], images["tag"], images["imageHash"], images["numberOfVulns"]]
         cs_info.append(image_list)
 
     return render_template('containers.html', cs_info=cs_info)
@@ -76,4 +70,3 @@ def get_container_info():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8000)
-

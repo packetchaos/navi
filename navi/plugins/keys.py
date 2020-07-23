@@ -5,12 +5,18 @@ from .dbconfig import create_keys_table
 
 
 @click.command(help="Enter or Reset your Keys")
-def keys():
+@click.option("-clear", is_flag=True, help="Show my Keys on the screen")
+def keys(clear):
     create_keys_table()
     # assumption is that the user keys didn't work or don't exist
     print("Hey you don't have any Keys!")
-    access_key = getpass.getpass("Please provide your Access Key : ")
-    secret_key = getpass.getpass("Please provide your Secret Key : ")
+    if clear:
+        access_key = input("Please provide your Access Key : ")
+        secret_key = input("Please provide your Secret Key : ")
+    else:
+        access_key = getpass.getpass("Please provide your Access Key : ")
+        secret_key = getpass.getpass("Please provide your Secret Key : ")
+
     key_dict = (access_key, secret_key)
 
     database = r"navi.db"

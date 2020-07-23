@@ -102,7 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-/Navi/navi.db
+/navi/navi.db
 /navi/plugins/navi.db
 /test.py
 /navi/test.py

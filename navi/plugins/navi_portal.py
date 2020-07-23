@@ -5,7 +5,7 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 
 
-@click.command(help="A web interface to explore the Navi DB [BETA- Doesn't work in Docker]")
+@click.command(help="A web interface to explore the navi DB [BETA- Doesn't work in Docker]")
 def portal():
     app = Flask(__name__)
 

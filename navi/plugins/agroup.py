@@ -17,7 +17,7 @@ def check_agroup_exists(aname):
 @click.option('-tag', is_flag=True, help="Create a Access Group by a Tag")
 @click.option('--c', default='', help="Category name to use")
 @click.option('--v', default='', help="Tag Value to use; requires --c and Category Name")
-@click.option('--group', default='', help="Create a Tag based on a Agent Group")
+@click.option('--group', default='', help="Create a Access Group based on a Agent Group")
 def agroup(name, tag, c, v, group):
     new_list = []
 
@@ -47,6 +47,10 @@ def agroup(name, tag, c, v, group):
                 new_list.append(asset[1])
 
     if group:
+        print()
+        print("*" * 50)
+        print("API limits agent groups to 5000")
+        print("*" * 50)
         querystring = {"limit": "5000"}
         group_data = request_data('GET', '/scanners/1/agent-groups')
         for agent_group in group_data['groups']:
@@ -69,7 +73,10 @@ def agroup(name, tag, c, v, group):
         print("\nYour Access group {} is being created now \n".format(new_access_group['name']))
         print("The UUID is {} \n".format(new_access_group['id']))
     else:
-        update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
-        print("\nYour Access group {} is being updated now \n".format(update_group['name']))
-        print("The UUID is {} \n".format(update_group['id']))
-
+        # Check to see if the list has any IPs in it.
+        if new_list:
+            update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
+            print("\nYour Access group {} is being updated now \n".format(update_group['name']))
+            print("The UUID is {} \n".format(update_group['id']))
+        else:
+            print("Your list was empty so nothing happened")

@@ -47,5 +47,17 @@ def confirm_tag_exists(key, value):
         print(E)
 
 
+def return_tag_uuid(key, value):
+    tag_value_data = request_data('GET', '/tags/values')
+    try:
+        for tag in tag_value_data['values']:
+            if str(tag['category_name']).lower() == str(key).lower():
+                if str(tag['value']).lower() == str(value).lower():
+                    return str(tag['uuid'])
+                else:
+                    return 'none'
+    except Exception as E:
+        print(E)
+
 def tag_msg():
     print("Remember to run the update command if you want to use your new tag in navi")

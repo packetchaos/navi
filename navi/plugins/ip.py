@@ -233,6 +233,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                     print("--------------")
                     print(asset_id)
 
+                    print("\nNetwork Name")
+                    print("--------------")
+                    print(asset_data['info']['network_name'])
+
                     print("\nIdentities")
                     print("--------------")
                     try:
@@ -399,10 +403,12 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                             print("\nAsset Criticality Score :", asset_info['info']['acr_score'])
                         except:
                             pass
+
                     except:
                         print("Check your API keys or your internet connection")
 
                     print("\nLast Authenticated Scan Date - ", asset_data['info']['last_authenticated_scan_date'])
-
+                    print("-" * 50)
+                    print("-" * 50)
                 except:
                     pass
