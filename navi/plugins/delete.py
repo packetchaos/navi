@@ -12,15 +12,29 @@ from .api_wrapper import request_data
 @click.option('-asset', is_flag=True, help='Delete an Asset by Asset UUID')
 @click.option('-container', is_flag=True, help='Delete a container by \'/repository/image/tag\'')
 @click.option('-repository', is_flag=True, help='Delete Repository from Container Security')
-@click.option('-tag', is_flag=True, help="Delete a Tag by Value UUID")
+@click.option('-value', is_flag=True, help="Delete a Tag by Value UUID")
 @click.option('-category', is_flag=True, help="Delete a Tag Category by UUID")
+@click.option('--c', default='', help="Delete a tag by Category / Value pair. Requires --v")
+@click.option('--v', default='', help="Delete a tag by Category / Value pair. Requires --c")
 @click.option('--bytag', default='', help="Delete assets by Tag. Ex: OS:Linux -- navi delete Linux --bytag tag.OS")
-def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, tag, category, bytag):
+def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, value, category, bytag, c, v):
 
     if bytag != '':
         print("\nI'm deleting all of the assets associated with your Tag\n")
         payload = {'query': {'field': str(bytag), 'operator': 'set-has', 'value': str(tid)}}
         request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
+
+    if c != '':
+        if v == '':
+            print("value is required.  Please use --v option when deleting tab by value pair")
+            exit()
+        else:
+            tagdata = request_data('GET', '/tags/values')
+            for tags in tagdata['values']:
+                if c == tags['category_name']:
+                    if v == tags['value']:
+                        value_uuid = tags['uuid']
+                        request_delete('DELETE', '/tags/values/' + str(value_uuid))
 
     if scan:
         print("\nI'm deleting your Scan Now")
@@ -46,7 +60,7 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, tag,
         print("\nI'm deleting your container")
         request_delete('DELETE', '/container-security/api/v2/images/' + str(tid))
 
-    if tag:
+    if value:
         print("\nI'm deleting your Tag Value")
         request_delete('DELETE', '/tags/values/' + str(tid))
 

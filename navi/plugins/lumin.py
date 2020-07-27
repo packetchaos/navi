@@ -9,7 +9,12 @@ from .api_wrapper import request_data
 @click.option('--c', default='', help="Category to use")
 @click.option('--v', default='', help="Value to use")
 @click.option('--note', default="navi Generated", help="Enter a Note to your ACR Rule")
-def lumin(acr, v, c, note):
+@click.option('-business', '-b', is_flag=True, help="Add Business Critical To ACR Change Reason(s)")
+@click.option('-compliance', '-c', is_flag=True, help="Add Compliance To ACR Change Reason(s)")
+@click.option('-mitigation', '-m', is_flag=True, help="Add Mitigation Controls To ACR Change Reason(s)")
+@click.option('-development', '-d', is_flag=True, help="Add Development To ACR Change Reason(s)")
+def lumin(acr, v, c, note, business,  compliance, mitigation, development):
+    choice = []
     if c == '':
         print("We require a Tag Category to update the ACR by Tag")
         exit()
@@ -17,6 +22,24 @@ def lumin(acr, v, c, note):
     if v == '':
         print("We require a Tag value to update the ACR by Tag")
         exit()
+
+    if business:
+        choice.append("Business Critical")
+
+    if compliance:
+        choice.append("In Scope For Compliance")
+
+    if mitigation:
+        choice.append("Existing Mitigation Control")
+
+    if development:
+        choice.append("Dev Only")
+
+    if not business and not mitigation and not compliance and not development:
+        choice.append("Key Drivers does not match")
+
+    if note != 'navi Generated':
+        choice.append("Other")
 
     if int(acr) in range(1, 11):
         database = r"navi.db"
@@ -40,49 +63,16 @@ def lumin(acr, v, c, note):
                 else:
                     pass
 
-            if lumin_list == []:
+            if not lumin_list:
                 print("We did not find a Tag with that Category or Value\n")
                 print("If you think this is an error, surround your category and value in \"\"")
                 exit()
             else:
-                choice = []
-                print("\n1. Business Critical")
-                biz = "Business Critical"
-
-                print("2. In Scope For Compliance")
-                comp = "In Scope For Compliance"
-
-                print("3. Existing Mitigation Control")
-                control = "Existing Mitigation Control"
-
-                print("4. Dev Only")
-                dev = "Dev Only"
-
-                print("5. Key Drivers does not match")
-                driver = "Key Drivers does not match"
-
-                print("6. other\n")
-                other = "Other"
-
-                string_choice = input("Please Choose the Reasons for the Asset criticality.\nSeparate multiple choices by a comma: e.g: 1,2,4\n")
-
-                if "1" in string_choice:
-                    choice.append(biz)
-                if "2" in string_choice:
-                    choice.append(comp)
-                if "3" in string_choice:
-                    choice.append(control)
-                if "4" in string_choice:
-                    choice.append(dev)
-                if "5" in string_choice:
-                    choice.append(driver)
-                if "6" in string_choice:
-                    choice.append(other)
-
-                note = note + " - navi Generated"
+                note = note + " - navi"
                 # this needs to be changed to ID once the api is fixed
                 lumin_payload = [{"acr_score": int(acr), "reason": choice, "note": note, "asset": [{"ipv4": lumin_list}]}]
                 request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
+
 
     else:
         print("You can't have a score below 1 or higher than 10")

@@ -82,6 +82,7 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
 
                 for asset in assets:
                     # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
+                    # for Each IP check to see if it exists in the exclude tag pair.  If it doesn't add it to the list.
                     check_for_no = tag_checker(asset[1], ec, ev)
                     if check_for_no == 'no':
                         new_list.append(asset[0])

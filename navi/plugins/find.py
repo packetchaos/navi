@@ -30,18 +30,44 @@ def find_by_plugin(plugin):
 @click.option('-docker', is_flag=True, help="Find Running Docker Containers")
 @click.option('-webapp', is_flag=True, help="Find Web Servers running")
 @click.option('-creds', is_flag=True, help="Find Credential failures")
-@click.option('--time', default='', help='Find Assets where the scan duration is over X mins')
+@click.option('--scantime', default='', help='Find Assets where the scan duration is over X mins')
 @click.option('-ghost', is_flag=True, help='Find Assets that were discovered by a AWS Connector but not scanned')
 @click.option('--port', default='', help='Find assets with a open port provided')
 @click.option('--query', default='', help='Query the db directly and display the output')
-def find(plugin, docker, webapp, creds, time, ghost, port, query):
+@click.option('--output', default='', help='Find Assets based on the text in the output. Requires --plugin"')
+@click.option('--name', default='', help="Find Assets based on Text in a plugin Name")
+def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, name):
+
+    if output != '' and plugin == '':
+        print("You must supply a plugin")
+        exit()
 
     if plugin != '':
         if not str.isdigit(plugin):
             print("You didn't enter a number")
             exit()
         else:
-            find_by_plugin(plugin)
+            try:
+                plugin_db = r"navi.db"
+                plugin_conn = new_db_connection(plugin_db)
+                with plugin_conn:
+                    plugin_cur = plugin_conn.cursor()
+                    # See if we want to refine our search by the output found in this plugin
+                    # this needs to have a JOIN statement to reduce the amount of IPs
+                    if output != "":
+                        plugin_cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
+                    else:
+                        find_by_plugin(plugin)
+
+                    plugin_data = plugin_cur.fetchall()
+                    for x in plugin_data:
+                        print(x[0])
+                        print('*' * 20)
+                        print(x[2])
+                        print('*' * 150)
+                        print('*' * 150)
+            except Error:
+                pass
 
     if docker:
         print("Searching for RUNNING docker containers...")
@@ -86,11 +112,11 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
         print("I'm looking for credential issues...Please hang tight")
         find_by_plugin(str(104410))
 
-    if time != '':
+    if scantime != '':
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
-            print("\n*** Below are the assets that took longer than " + str(time) + " minutes to scan ***")
+            print("\n*** Below are the assets that took longer than " + str(scantime) + " minutes to scan ***")
             cur = conn.cursor()
             cur.execute("SELECT * from vulns where plugin_id='19506';")
 
@@ -124,7 +150,7 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
                     minutes = int(final_number) / 60
 
                     # grab assets that match the criteria
-                    if minutes > int(time):
+                    if minutes > int(scantime):
                         try:
                             print(str(vulns[1]).ljust(15), str(vulns[2]).ljust(40), str(vulns[14]).ljust(25), str(vulns[13]).ljust(25), str(vulns[15]))
                         except ValueError:
@@ -213,3 +239,21 @@ def find(plugin, docker, webapp, creds, time, ghost, port, query):
 
             data = cur.fetchall()
             pprint.pprint(data)
+
+    if name != '':
+        try:
+            database = r"navi.db"
+            conn = new_db_connection(database)
+            with conn:
+                cur = conn.cursor()
+                cur.execute("SELECT asset_ip, asset_uuid, plugin_name, plugin_id from vulns where plugin_name LIKE '%" + name + "%';")
+
+                plugin_data = cur.fetchall()
+                print("\nThe Following assets had '{}' in the Plugin Name".format(name))
+                print("\nIP address".ljust(20), " UUID".ljust(45), " Plugin Name".ljust(65), " Plugin ID")
+                print("-" * 150)
+                for vulns in plugin_data:
+                    print(vulns[0].ljust(20), str(vulns[1]).ljust(45), str(vulns[2]).ljust(65), vulns[3])
+                print()
+        except Error:
+            pass

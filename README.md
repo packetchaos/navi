@@ -192,7 +192,7 @@ There are thirteen core commands:
   * -docker -->       Find Running Docker Containers
   * -webapp -->       Find Web Servers running
   * -creds  -->       Find Credential failures
-  * --time TEXT -->   Find Assets where the scan duration is over X mins
+  * --scantime TEXT -->   Find Assets where the scan duration is over X mins
   * -ghost -->        Find Assets found by a Connector and not scanned by Nessus(AWS ONLY)
   * --port TEXT --->  Find assets with an the open port provided
 
@@ -382,7 +382,7 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 * policy -    Delete a Policy
 * asset -     Delete an asset
 * container - Delete a container by container ID
-* tag -       Delete a Tag value by Value UUID
+* value -       Delete a Tag value by Value UUID
 * category -  Delete a Tag category by the Category UUID
 * bytag -     Delete All assets that have a certain tag  - specify Value and tag.category
 ### Examples

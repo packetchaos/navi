@@ -420,4 +420,4 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if version:
-        print("\nNavi Version 5.1.36\n")
+        print("\nNavi Version 5.2.0\n")

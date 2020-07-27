@@ -4,7 +4,6 @@ from .database import new_db_connection
 from .api_wrapper import request_data, request_delete
 from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid
 from sqlite3 import Error
-import time
 
 
 @click.command(help="Create a Tag Category/Value Pair")
@@ -17,7 +16,8 @@ import time
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 @click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
-def tag(c, v, d, plugin, name, group, output, port, file):
+@click.option('--scantime', default='', help="Create a Tag for assets that took longer than supplied minutes")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file):
     # Generator to split IPs into 2000 IP chunks
     def chunks(l, n):
         for i in range(0, len(l), n):
@@ -70,6 +70,7 @@ def tag(c, v, d, plugin, name, group, output, port, file):
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
+            # This should be reduced.  Use a Join statement and only pull the IP and uuid
             cur.execute("SELECT * from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
 
             data = cur.fetchall()
@@ -107,7 +108,7 @@ def tag(c, v, d, plugin, name, group, output, port, file):
     if group != '':
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
         # Need to research a better solution for this problem.  Need to submit a bug.  Going to just delete the tag for now.
-        uuid_to_delete = return_tag_uuid(c,v)
+        uuid_to_delete = return_tag_uuid(c, v)
         request_delete('DELETE', '/tags/values/' + str(uuid_to_delete))
         try:
             querystring = {"limit": "5000"}
@@ -128,6 +129,51 @@ def tag(c, v, d, plugin, name, group, output, port, file):
         except Error:
             print("You might not have agent groups, or you are using Nessus Manager.  ")
 
+    if scantime != '':
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='19506';")
+
+            data = cur.fetchall()
+            try:
+                for vulns in data:
+
+                    output = vulns[2]
+
+                    # split the output by return
+                    parsed_output = output.split("\n")
+
+                    # grab the length so we can grab the seconds
+                    length = len(parsed_output)
+
+                    # grab the scan duration- second to the last variable
+                    duration = parsed_output[length - 2]
+
+                    # Split at the colon to grab the numerical value
+                    seconds = duration.split(" : ")
+
+                    # split to remove "secs"
+                    number = seconds[1].split(" ")
+
+                    # grab the number for our minute calculation
+                    final_number = number[0]
+
+                    # convert seconds into minutes
+                    minutes = int(final_number) / 60
+
+                    # grab assets that match the criteria
+                    if minutes > int(scantime):
+                        try:
+                            ip_list = ip_list + "," + str(vulns[0])
+                            tag_list.append(vulns[1])
+                        except ValueError:
+                            pass
+                print()
+            except ValueError:
+                pass
+
     if file != '':
         with open(file, 'r', newline='') as new_file:
             add_ips = csv.reader(new_file)
@@ -140,11 +186,11 @@ def tag(c, v, d, plugin, name, group, output, port, file):
 
     if ip_list == '':
         print("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
+        exit()
     else:
         # Before updating confirm if the tag exists
         answer = confirm_tag_exists(c, v)
 
-        # If the tag does exist and the group option was selected. delete the tag until API bug is resolved
         if answer == 'yes':
             if len(tag_list) > 1999:
                 # break the list into 2000 IP chunks
