@@ -17,7 +17,7 @@ def agent_export():
             with open('agent_data.csv', mode='w') as csv_file:
                 agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
-                header_list = ["Agent Name", "IP Address", "Platform", "Last connected", "Last scanned", "Status"]
+                header_list = ["Agent Name", "IP Address", "Platform", "Last connected", "Last scanned", "Status", "Plugin Feed ID"]
                 agent_writer.writerow(header_list)
 
                 # cycle through the agents and display the useful information
@@ -25,6 +25,7 @@ def agent_export():
                     name = a['name']
                     ip = a['ip']
                     platform = a['platform']
+                    plugin_feed = a['plugin_feed_id']
 
                     last_connect = a['last_connect']
                     connect_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_connect))
@@ -35,5 +36,5 @@ def agent_export():
                         scanned_time = "Not Yet Scanned"
                     status = a['status']
 
-                    agent_writer.writerow([name, ip, platform, connect_time, scanned_time, status])
+                    agent_writer.writerow([name, ip, platform, connect_time, scanned_time, status, plugin_feed])
     return

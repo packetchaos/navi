@@ -195,15 +195,21 @@ There are thirteen core commands:
   * --scantime TEXT -->   Find Assets where the scan duration is over X mins
   * -ghost -->        Find Assets found by a Connector and not scanned by Nessus(AWS ONLY)
   * --port TEXT --->  Find assets with an the open port provided
+  * --query TEXT ---> Query the db directly and display the output
+  * --output TEXT --> Find Assets based on the text in the output. Requires --plugin
+  * --name TEXT --->  Find Assets based on Text in a plugin Name
 
 ### Examples
-
 
     navi find --plugin 19506
     
     navi find -docker
 
     navi find --time 10
+    
+    navi find --query "select * from assets;"
+    
+    navi find --plugin 20869 --output "splunk"
 
 ### Reports - Information - 'report'
   * -latest -->          Report the Last Scan Details
@@ -247,6 +253,7 @@ There are thirteen core commands:
   * -categories --> Displays Tag Categories and the Category UUID
   * -cloud -->      Displays Cloud assets found in the last 30 days
   * -networks -->   Displays Network IDs
+  * -version -->    Displays Current Navi Version
   
 ### Examples
     navi display -scanners
@@ -269,13 +276,16 @@ This is the order the information is parsed so getting it incorrect will cause e
    * --source - TEXT  Add the Source 
    
 ### Tag assets by Plugin Name, or Plugin ID - 'tag'
-   * --c -->      Create a Tag with this Category - Required
-   * --v -->      Create a Tag with this Value - Required
-   * --d -->      Create a description for your Tag - Optional (TEXT"
-   * --plugin --> Define a Tag by a plugin ID - Optional (TEXT)
-   * --name -->   Define a tag by text found in a plugin Name - Optional (TEXT)
-   * --group -->  Define a tag by a Agent Group Name - Optional (TEXT)
-   * --output TEXT  Create a Tag based on the text in the output. Requires --plugin
+   * --c -->         Create a Tag with this Category - Required
+   * --v -->         Create a Tag with this Value - Required
+   * --d -->         Create a description for your Tag - Optional (TEXT"
+   * --plugin -->    Define a Tag by a plugin ID - Optional (TEXT)
+   * --name -->      Define a tag by text found in a plugin Name - Optional (TEXT)
+   * --group -->     Define a tag by a Agent Group Name - Optional (TEXT)
+   * --output TEXT   Create a Tag based on the text in the output. Requires --plugin
+   * --port TEXT     Create a Tag based on Assets that have a port open
+   * --file TEXT     Create a Tag based on IPs in a CSV file
+   * --scantime TEXT Create a Tag for assets that took longer than supplied minutes
 
    
 ### Examples
@@ -295,18 +305,28 @@ This is especially important if you want to export using your newly created tag.
    * --c TEXT      Category name to use
    * --v TEXT      Tag Value to use; requires --c and Category Name
    * --group TEXT  Create a Tag based on a Agent Group
-   
+   * --user TEXT   User you want to Assign to the Access Group")
+   * --usergroup   User Group you want to assign to the Access Group")
+   * -scan         Set Scan ONLY permission")
+   * -view         Set View ONLY permission")
+   * -scanview     Set Scan AND View permissions")
+
 ### Examples
 
-    navi agroup --name "My New Group" -tag --c "OS" --v "Linux"
+    navi agroup --name "My New Group" -tag --c "OS" --v "Linux" --user username@yourdomain -scanview
     
-    navi agroup --name "My Other Group" --group "Linux
+    navi agroup --name "My Other Group" --group "Linux --usergroup "Linux Admins" -scan
     
 ### Bulk Adjust ACRs based on a Tag - 'lumin'
-   * --acr -->  The new ACR value (1-10)
-   * --c -->    The Tag Category to use
-   * --v -->    The Tag value to use
-   * --note --> Justification for ACR change
+   * --acr -->            The new ACR value (1-10)
+   * --c -->              The Tag Category to use
+   * --v -->              The Tag value to use
+   * --note -->           Justification for ACR change
+   * -business', '-b'     Add Business Critical To ACR Change Reason(s)")
+   * -compliance', '-c'   Add Compliance To ACR Change Reason(s)")
+   * -mitigation', '-m'   Add Mitigation Controls To ACR Change Reason(s)")
+   * -development', '-d'  Add Development To ACR Change Reason(s)")
+
    
 ### Note - ACR Exceptions?
     Tag your assets with "NO:UPDATE" if you don't want to be affected by bulk ACR changes
@@ -315,6 +335,10 @@ This is especially important if you want to export using your newly created tag.
    
 ### Examples
     navi lumin --acr 10 --c "Applications" --v "Core Business" --note "Main application"
+    
+    navi lumin --acr 9 --c "Corporate Apps" --v "Jira" -d 
+    
+    navi lumin --acr 8 --c "Corporate Apps" --v "Confluence" -development -b -c
 
 
 ### WAS V2 API - Interact with 2.0 APIs

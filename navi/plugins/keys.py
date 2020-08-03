@@ -6,16 +6,19 @@ from .dbconfig import create_keys_table
 
 @click.command(help="Enter or Reset your Keys")
 @click.option("-clear", is_flag=True, help="Show my Keys on the screen")
-def keys(clear):
+@click.option("--access_key", "--a", default="", help="Provide your Access Key")
+@click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
+def keys(clear, access_key, secret_key):
     create_keys_table()
-    # assumption is that the user keys didn't work or don't exist
-    print("Hey you don't have any Keys!")
-    if clear:
-        access_key = input("Please provide your Access Key : ")
-        secret_key = input("Please provide your Secret Key : ")
-    else:
-        access_key = getpass.getpass("Please provide your Access Key : ")
-        secret_key = getpass.getpass("Please provide your Secret Key : ")
+
+    if access_key == "" or secret_key == "":
+        print("Hey you don't have any Keys!")
+        if clear:
+            access_key = input("Please provide your Access Key : ")
+            secret_key = input("Please provide your Secret Key : ")
+        else:
+            access_key = getpass.getpass("Please provide your Access Key : ")
+            secret_key = getpass.getpass("Please provide your Secret Key : ")
 
     key_dict = (access_key, secret_key)
 

@@ -11,6 +11,7 @@ from .tag_helper import tag_checker
 from .network_export import network_export
 from .query_export import query_export
 from .was_v2_export import was_export
+from .agent_group_export import agent_group_export
 
 
 @click.command(help="Export data into a CSV")
@@ -23,12 +24,13 @@ from .was_v2_export import was_export
 @click.option('-lumin', is_flag=True, help="Export all Asset data including ACR and AES into a CSV. This will take some time")
 @click.option('--network', default='', help="Export All assets of a given network")
 @click.option('--query', default='', help="Export assets by query to the vuln db")
+@click.option('--group', default='', help="Export Agents by Group name - API limits 5000 Agents")
 @click.option('-bytag', is_flag=True, help="Export all assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default='', help="Export bytag with the following Category name")
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
 @click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
 @click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
-def export(assets, agents, webapp, consec, licensed, lumin, network, query, bytag, c, v, ec, ev, was):
+def export(assets, agents, webapp, consec, licensed, lumin, network, query, group, bytag, c, v, ec, ev, was):
     if assets:
         print("\nExporting your data now. Saving asset_data.csv now...\n")
         csv_export()
@@ -60,6 +62,10 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, byta
 
     if query != '':
         query_export(query)
+
+    if group != '':
+        print("\nExporting your data now.  Saving agent_group_data.csv now...")
+        agent_group_export(group)
 
     if bytag:
         if c == '':

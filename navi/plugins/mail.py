@@ -27,19 +27,26 @@ def grab_smtp():
 @click.option('-latest', is_flag=True, help='Email Vulnerability Summary Information')
 @click.option('-consec', is_flag=True, help="Email Container Security Summary Information")
 @click.option('-webapp', is_flag=True, help="Email Web Application Scanning Summary Information")
-def mail(latest, consec, webapp):
+@click.option("--message", default='', help="Email a custom message or use result of a navi command")
+@click.option("--to", default='', help="Email address to send to")
+@click.option("--subject", default='', help="Subject of the Email")
+@click.option("-v", is_flag=True, help="Display a copy of the message")
+def mail(latest, consec, webapp, message, to, subject, v):
     try:
         # grab SMTP information
         server, port, from_email, password = grab_smtp()
-        to_email = input("Please enter the email you wish send this mail to: ")
-        subject = input("Please enter the Subject of the email : ")
+
+        if to == '':
+            to = input("Please enter the email you wish send this mail to: ")
+        if subject == '':
+            subject = input("Please enter the Subject of the email : ")
 
         subject += " - Emailed by navi Pro"
 
         # start the message with the proper heading
         msg = "\r\n".join([
             "From: {}".format(from_email),
-            "To: {}".format(to_email),
+            "To: {}".format(to),
             "Subject: {}".format(subject),
             "", ])
 
@@ -166,9 +173,14 @@ def mail(latest, consec, webapp):
                                "Medium {}\n" \
                                "Low {}\n".format(hostname, message, critical, high, medium, low)
 
-        print("Here is a copy of your email that was Sent")
-        print(msg)
-        send_email(from_email, to_email, msg, server, password, port)
+        if message != '':
+            msg += str(message)
+
+        if v:
+            print("Here is a copy of your email that was Sent")
+            print(msg)
+
+        send_email(from_email, to, msg, server, password, port)
     except Exception as E:
         print("Your Email information may be incorrect")
         print("Run the 'SMTP' command to correct your information")

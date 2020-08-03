@@ -59,5 +59,6 @@ def return_tag_uuid(key, value):
     except Exception as E:
         print(E)
 
+
 def tag_msg():
     print("Remember to run the update command if you want to use your new tag in navi")
