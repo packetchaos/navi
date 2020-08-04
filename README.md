@@ -2,7 +2,9 @@
 A command-line tool which leverages the Tenable.io API to reduce the time it takes to get information that is common 
 in Cyber Exposure or Vulnerability Management. 
 
-    *** This is not Supported by Tenable ***
+    *** This tool is not an officially supported Tenable project ***
+    
+    *** Use of this tool is subject to the terms and conditions identified below, and is not subject to any license agreement you may have with Tenable ***
 
 ### Important Notes
 Navi Pro will download the entire data-set(90 days) locally after API keys are 
