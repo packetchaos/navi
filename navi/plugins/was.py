@@ -95,21 +95,24 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
         print(target)
         print("-" * 40)
         print()
-        print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS3 Base Score".ljust(10))
+        print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS".ljust(10))
         print("-" * 100)
         for finding in report['findings']:
             risk = finding['risk_factor']
             plugin_id = finding['plugin_id']
             plugin_name = finding['name']
-
+            cvss = 'None'
             if risk == 'high':
                 high.append(plugin_id)
             elif risk == 'medium':
                 meduim.append(plugin_id)
             elif risk == 'low':
                 low.append(plugin_id)
-
-            print(str(plugin_id).ljust(10), str(plugin_name).ljust(60), str(risk).ljust(10), str(finding['cvss3']))
+            try:
+                cvss = finding['cvss']
+            except KeyError:
+                pass
+            print(str(plugin_id).ljust(10), str(plugin_name).ljust(60), str(risk).ljust(10), str(cvss))
 
         print("\nSeverity Counts")
         print("-" * 20)

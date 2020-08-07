@@ -3,6 +3,7 @@ from sqlite3 import Error
 import pprint
 from .api_wrapper import request_data
 from .database import new_db_connection
+import textwrap
 
 
 def find_by_plugin(plugin):
@@ -253,7 +254,7 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                 print("\nIP address".ljust(20), " UUID".ljust(45), " Plugin Name".ljust(65), " Plugin ID")
                 print("-" * 150)
                 for vulns in plugin_data:
-                    print(vulns[0].ljust(20), str(vulns[1]).ljust(45), str(vulns[2]).ljust(65), vulns[3])
+                    print(vulns[0].ljust(20), str(vulns[1]).ljust(45), textwrap.shorten(str(vulns[2]), 65).ljust(65), vulns[3])
                 print()
         except Error:
             pass

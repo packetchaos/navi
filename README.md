@@ -318,7 +318,7 @@ This is especially important if you want to export using your newly created tag.
 
     navi agroup --name "My New Group" -tag --c "OS" --v "Linux" --user username@yourdomain -scanview
     
-    navi agroup --name "My Other Group" --group "Linux --usergroup "Linux Admins" -scan
+    navi agroup --name "My Other Group" --group "Linux" --usergroup "Linux Admins" -scan
     
 ### Bulk Adjust ACRs based on a Tag - 'lumin'
    * --acr -->            The new ACR value (1-10)
