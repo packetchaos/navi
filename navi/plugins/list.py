@@ -33,7 +33,10 @@ import textwrap
 @click.option('-cloud', is_flag=True, help="Print Cloud assets found in the last 30 days by the connectors")
 @click.option('-networks', is_flag=True, help="Print Network IDs")
 @click.option('-version', is_flag=True, help="Display current version of Navi")
-def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup, status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud, networks, version):
+@click.option('-usergroup', is_flag=True, help="Display current User groups")
+@click.option('--membership', default='', help="Display users of a certain group using the Group ID")
+def display(scanners, users, exclusions, containers, logs, running, scans, nnm, assets, policies, connectors, agroup,
+            status, agents, webapp, tgroup, licensed, tags, categories, smtp, cloud, networks, version, usergroup, membership):
 
     if scanners:
         nessus_scanners()
@@ -41,10 +44,10 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
     if users:
         try:
             data = request_data('GET', '/users')
-            print("\nUser Name".ljust(35), "Login email".ljust(40), "User UUID")
-            print("-" * 100)
+            print("\nUser Name".ljust(35), "Login email".ljust(40), "User UUID".ljust(40), "User ID".ljust(10), "Enabled?")
+            print("-" * 150)
             for user in data["users"]:
-                print(str(user["name"]).ljust(34), str(user["username"]).ljust(40), user['uuid'])
+                print(str(user["name"]).ljust(34), str(user["username"]).ljust(40), str(user['uuid']).ljust(40), str(user['id']).ljust(10), str(user["enabled"]))
             print()
 
         except Exception as E:
@@ -200,6 +203,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if agroup:
+        rules = "Not Rule Based"
         try:
             data = request_data('GET', '/access-groups')
             print("\nGroup Name".ljust(26), "Group ID".ljust(40), "Last Updated".ljust(25), "Rules")
@@ -215,7 +219,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
                     for rule in details['rules']:
                         rules = str(rule['terms'])
                 except KeyError:
-                    rules = "Not Rule based"
+                    rules = "Not Rule Based"
                 print(str(group['name']).ljust(25), str(group['id']).ljust(40), str(updated).ljust(25), textwrap.shorten(rules, width=60))
             print()
         except Exception as E:
@@ -420,4 +424,20 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if version:
-        print("\nNavi Version 5.2.2\n")
+        print("\nNavi Version 5.3.0\n")
+
+    if usergroup:
+        data = request_data("GET", "/groups")
+        print("\nGroup Name".ljust(35), "Group ID".ljust(10), "Group UUID".ljust(40), "User Count".ljust(10))
+        print("-" * 150)
+        for ugroup in data["groups"]:
+            print(str(ugroup['name']).ljust(35), str(ugroup['id']).ljust(10), str(ugroup['uuid']).ljust(40), str(ugroup['user_count']))
+        print()
+
+    if membership != '':
+        data = request_data("GET", '/groups/' + str(membership) + "/users")
+        print("\nUser Name".ljust(35), "Login email".ljust(40), "User UUID".ljust(40), "User ID".ljust(10), "Enabled?")
+        print("-" * 150)
+        for user in data["users"]:
+            print(str(user["name"]).ljust(34), str(user["username"]).ljust(40), str(user['uuid']).ljust(40), str(user['id']).ljust(10), str(user["enabled"]))
+        print()

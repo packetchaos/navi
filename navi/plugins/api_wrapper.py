@@ -13,22 +13,37 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.2.2', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': 'navi-5.3.0', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
-def request_delete(method, url_mod):
+def request_delete(method, url_mod, **kwargs):
 
     # set the Base URL
     url = "https://cloud.tenable.com"
 
+    # check for params and set to None if not found
     try:
-        r = requests.request(method, url + url_mod, headers=grab_headers(), verify=True)
+        params = kwargs['params']
+    except KeyError:
+        params = None
+
+    # check for a payload and set to None if not found
+    try:
+        payload = kwargs['payload']
+    except KeyError:
+        payload = None
+
+    try:
+        r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
         if r.status_code == 200:
             print("Success!\n")
         elif r.status_code == 404:
             print('\nCheck your query...', r)
         elif r.status_code == 429:
             print("\nToo many requests at a time...\n", r)
+        elif r.status_code == 400:
+            print("\nCheck your params.  Password complexity is the most common issue\n", r)
+            print()
         else:
             print("Something went wrong...Don't be trying to hack me now", r)
     except ConnectionError:
@@ -77,7 +92,7 @@ def request_data(method, url_mod, **kwargs):
                 print("\nYou are not authorized! You need to be an admin\n", r)
                 break
             elif r.status_code == 409:
-                print("\nScan is not Active\n", r)
+                print("API Returned 409")
                 break
             elif r.status_code == 504:
                 print("\nOne of the Threads and an issue during download...Retrying...\n", r)
@@ -89,5 +104,5 @@ def request_data(method, url_mod, **kwargs):
             print("Check your connection...You got a connection error. Retying")
             continue
         except JSONDecodeError:
-            print("Download Error. Retrying")
+            print("Download Error or User enabled / Disabled ")
             continue

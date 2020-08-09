@@ -12,7 +12,7 @@ from sqlite3 import Error
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
-@click.option('--group', default='', help="Create a Tag based on a Agent Group")
+@click.option('--group', default='', help="Create a Tag based on a Agent Group - BY IP Due To API BUG")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 @click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
@@ -26,6 +26,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
     # start a blank list; IP list is due to a bug
     tag_list = []
     ip_list = ""
+    ip_update = 0
 
     if c == '':
         print("Category is required.  Please use the --c command")
@@ -56,9 +57,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
                 for x in plugin_data:
                     ip = x[0]
                     uuid = x[1]
-                    # Check to make sure the UUID isn't already present, if it isn't add it to the list
+                    # To reduce duplicates check for the UUID in the list.
                     if uuid not in tag_list:
-                        tag_list.append(uuid)  # update functionality requires uuid.  Only using IP until API bug gets fixed
+                        tag_list.append(uuid)
                         ip_list = ip_list + "," + ip
                     else:
                         pass
@@ -70,7 +71,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            # This should be reduced.  Use a Join statement and only pull the IP and uuid
             cur.execute("SELECT * from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
 
             data = cur.fetchall()
@@ -79,6 +79,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
                 for vulns in data:
                     ip = vulns[1]
                     uuid = vulns[2]
+                    # To reduce duplicates check for the UUID in the list.
                     if uuid not in tag_list:
                         tag_list.append(uuid)
                         ip_list = ip_list + "," + ip
@@ -106,6 +107,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
             pass
 
     if group != '':
+        ip_update = 1
+        print("\nDue to a API bug, I'm going to delete the current tag. You may get a 404 error if this is a new tag.")
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
         # Need to research a better solution for this problem.  Need to submit a bug.  Going to just delete the tag for now.
         uuid_to_delete = return_tag_uuid(c, v)
@@ -175,6 +178,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
                 pass
 
     if file != '':
+        ip_update = 1
         with open(file, 'r', newline='') as new_file:
             add_ips = csv.reader(new_file)
 
@@ -191,16 +195,20 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
         # Before updating confirm if the tag exists
         answer = confirm_tag_exists(c, v)
 
+        # If the Tag does exist, update it.
         if answer == 'yes':
             if len(tag_list) > 1999:
                 # break the list into 2000 IP chunks
                 for chunks in chunks(tag_list, 1999):
                     update_tag(c, v, chunks)
             else:
+                # If the Chunk is less than 2000, simply update it.
                 update_tag(c, v, tag_list)
         else:
+            # If the tag doesn't exist. we need to create one.
             if len(tag_list) > 1999:
                 try:
+                    # Create the Tag
                     payload = {"category_name": str(c), "value": str(v), "description": str(d)}
                     data = request_data('POST', '/tags/values', payload=payload)
                     value_uuid = data["uuid"]
@@ -208,30 +216,48 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file):
                     print("\nI've created your new Tag - {} : {}\n".format(c, v))
                     print("The Category UUID is : {}\n".format(cat_uuid))
                     print("The Value UUID is : {}\n".format(value_uuid))
-                    print("Your Tag list was over 2000 IPs.  Splitting the IPs into chunks and updating the tags now")
+                    print("Your Tag list was over 2000 IPs.  Splitting the UUIDs into chunks and updating the tags now")
+                    # Break the UUIDs into Chunks and update the tag per chunk
                     for chunks in chunks(tag_list, 1999):
                         update_tag(c, v, chunks)
 
-                    print(str(len(tag_list)) + " IPs added to the Tag")
+                    print(str(len(tag_list)) + " UUIDs added to the Tag")
                 except Exception as E:
                     print("Duplicate Tag Category: You may need to delete your tag first\n")
                     print("We could not confirm your tag name, is it named weird?\n")
                     print(E)
             else:
-
-                try:
-                    payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
-                    data = request_data('POST', '/tags/values', payload=payload)
+                # File is meant to be by IP.  Agents are IP due to an API bug.
+                if ip_update == 1:
                     try:
+                        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+                        data = request_data('POST', '/tags/values', payload=payload)
+                        try:
+                            value_uuid = data["uuid"]
+                            cat_uuid = data['category_uuid']
+                            print("\nI've created your new Tag - {} : {}\n".format(c, v))
+                            print("The Category UUID is : {}\n".format(cat_uuid))
+                            print("The Value UUID is : {}\n".format(value_uuid))
+                            print(str(len(tag_list)) + " IPs added to the Tag")
+                        except Exception as E:
+                            print("Duplicate Tag Category: You may need to delete your tag first\n")
+                            print("We could not confirm your tag name, is it named weird?\n")
+                            print(E)
+                    except:
+                        print("Duplicate Category")
+                else:
+                    try:
+                        # Create the Tag
+                        payload = {"category_name": str(c), "value": str(v), "description": str(d)}
+                        data = request_data('POST', '/tags/values', payload=payload)
                         value_uuid = data["uuid"]
                         cat_uuid = data['category_uuid']
                         print("\nI've created your new Tag - {} : {}\n".format(c, v))
                         print("The Category UUID is : {}\n".format(cat_uuid))
                         print("The Value UUID is : {}\n".format(value_uuid))
-                        print(str(len(tag_list)) + " IPs added to the Tag")
+                        update_tag(c, v, tag_list)
+                        print(str(len(tag_list)) + " UUIDs added to the Tag")
                     except Exception as E:
                         print("Duplicate Tag Category: You may need to delete your tag first\n")
                         print("We could not confirm your tag name, is it named weird?\n")
                         print(E)
-                except:
-                    print("Duplicate Category")

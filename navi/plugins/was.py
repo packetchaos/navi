@@ -136,7 +136,7 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
             template = "072f4d6b-1dd7-4049-b279-78a56d1c778e"
         elif option == '4':
             template = "3078d0c6-6e81-44de-b585-6921b69ff0ef"
-        elif len(option) == 52:
+        elif len(option) == 36:
             template = str(option)
         else:
             print("Using Basic scan since you can't follow directions")

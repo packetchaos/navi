@@ -3,7 +3,7 @@ from .database import new_db_connection
 
 
 def update_tag(c, v, tag_list):
-    print("Your tag is being updated")
+    print("Your tag is being updated\n")
     tag_data = request_data('GET', '/tags/values')
     try:
         for tag in tag_data['values']:

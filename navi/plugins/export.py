@@ -1,7 +1,6 @@
 import click
 from .licensed_export import licensed_export
 from .agent_export import agent_export
-from .webapp_export import webapp_export
 from .consec_export import consec_export
 from .csv_export import csv_export
 from .lumin_export import lumin_export
@@ -17,7 +16,6 @@ from .agent_group_export import agent_group_export
 @click.command(help="Export data into a CSV")
 @click.option('-assets', is_flag=True, help='Exports all Asset data into a CSV')
 @click.option('-agents', is_flag=True, help="Export all Agent data into a CSV")
-@click.option('-webapp', is_flag=True, help="Export Webapp Scan Summary into a CSV")
 @click.option('-was', is_flag=True, help="Export Webapp Scan Summary into a CSV - WAS V2")
 @click.option('-consec', is_flag=True, help="Export Container Security Summary into a CSV")
 @click.option('-licensed', is_flag=True, help="Export a List of all the Licensed Assets")
@@ -30,7 +28,7 @@ from .agent_group_export import agent_group_export
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
 @click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
 @click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
-def export(assets, agents, webapp, consec, licensed, lumin, network, query, group, bytag, c, v, ec, ev, was):
+def export(assets, agents, consec, licensed, lumin, network, query, group, bytag, c, v, ec, ev, was):
     if assets:
         print("\nExporting your data now. Saving asset_data.csv now...\n")
         csv_export()
@@ -38,10 +36,6 @@ def export(assets, agents, webapp, consec, licensed, lumin, network, query, grou
     if agents:
         print("\nExporting your data now. Saving agent_data.csv now...\n")
         agent_export()
-
-    if webapp:
-        print("\nExporting your data now. Saving webapp_data.csv now...\n")
-        webapp_export()
 
     if consec:
         print("\nExporting your data now. Saving consec_data.csv now...\n")

@@ -17,7 +17,9 @@ from .api_wrapper import request_data
 @click.option('--c', default='', help="Delete a tag by Category / Value pair. Requires --v")
 @click.option('--v', default='', help="Delete a tag by Category / Value pair. Requires --c")
 @click.option('--bytag', default='', help="Delete assets by Tag. Ex: OS:Linux -- navi delete Linux --bytag tag.OS")
-def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, value, category, bytag, c, v):
+@click.option('-user', is_flag=True, help="Delete a user by User ID - API BUG! - Doesn't work right now")
+@click.option('-usergroup', is_flag=True, help="Delete a user group by the Group ID")
+def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, value, category, bytag, c, v, user, usergroup):
 
     if bytag != '':
         print("\nI'm deleting all of the assets associated with your Tag\n")
@@ -71,3 +73,11 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, valu
     if repository:
         print("\nI'm Deleting your Repository")
         request_delete('delete', '/container-security/api/v2/' + str(repository))
+
+    if user:
+        print("\nI'm Deleting the User you requested")
+        request_delete('delete', '/users/' + str(user))
+
+    if usergroup:
+        print("\nI'm Deleting the User you requested")
+        request_delete('delete', '/groups/' + str(usergroup))

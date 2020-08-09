@@ -26,6 +26,8 @@ from .navi_portal import portal
 from .was import was
 from .change import change
 from .network import network
+from .user import user
+from .group import usergroup
 
 
 def plugin_loader(group):
@@ -57,3 +59,5 @@ def plugin_loader(group):
     group.add_command(was)
     group.add_command(change)
     group.add_command(network)
+    group.add_command(user)
+    group.add_command(usergroup)

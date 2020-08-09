@@ -92,12 +92,12 @@ It took 30 mins for t.io to prepare the download and 30 mins to download and par
   
     <press enter>
 
-## Configure For Reporting
+## Configure Container For Reporting
 Navi has a few reporting capabilities where a CSV is the output.  To extract this data from the container you will need to launch the container with port 8000 exposed and use the 'http' command to extract the reports.
 
     docker run -it -p 8000:8000 silentninja/navi:latest /bin/bash
 
-### Extract Data
+### Extract Data from the Container
 To extract data from the container you need to run an http server.  Use the below built in command.
 
     navi http
@@ -112,16 +112,24 @@ To extract data from the container you need to run an http server.  Use the belo
 ## Install Navi Pro using pip
 
     pip3 install navi-pro
-    
-# Usage
+
+## Uninstall Navi Pro using pip
+
+    pip3 uninstall navi-pro
+
+# Navi General Usage
 Before you begin you need the Keys! The program will continue to error out without valid API keys.
 Note: The keys will not show up on the screen; similar to a password prompt.
 
     navi keys
 
+Alternatively, to support automation, you can add your keys with a single command
+
+    navi keys --a your-access-key  --s your-secret-key
+
 Each command has two parts: the Command and the Option/Request. Double-Dash(--) commands expect a text value. Single-Dash commands do not have an expected input.  
 
-There are thirteen core commands: 
+There are eighteen core commands:
  * api - query api endpoints
  * ip - find details on Specific IPs
  * find - Find information: credential failures, containers, etc
@@ -138,8 +146,11 @@ There are thirteen core commands:
  * agroup - Create an Access Group by Tag or Agent Group
  * was - Interact with the WAS 2.0 V2 API
  * change - Change Scan Ownership
+ * user - Add, enable or disable a user
+ * usergroup - Create a new group and Add or remove users from a group
+
  
- There are thirteen single use commands: 
+ There are twelve single use commands:
  * scan - Create and launch a scan
  * start - Start a scan by Scan-ID
  * pause - Pause a scan by Scan-ID
@@ -213,6 +224,10 @@ There are thirteen core commands:
     navi find --query "select * from assets;"
     
     navi find --plugin 20869 --output "splunk"
+    
+    navi find --name java
+    
+    navi find --port 8080
 
 ### Reports - Information - 'report'
   * -latest -->          Report the Last Scan Details
@@ -257,6 +272,8 @@ There are thirteen core commands:
   * -cloud -->      Displays Cloud assets found in the last 30 days
   * -networks -->   Displays Network IDs
   * -version -->    Displays Current Navi Version
+  * -usergroup -->  Display current user groups
+  * --membership -> Display user of a certain group using the Group ID
   
 ### Examples
     navi display -scanners
@@ -264,6 +281,8 @@ There are thirteen core commands:
     navi display -running
 
     navi display -nnm
+    
+    navi display --membership 192939
 
 ### Add assets manually or via a CSV file - 'add'
 To add an asset you need an IP address; Everything else is optional.
@@ -276,8 +295,46 @@ This is the order the information is parsed so getting it incorrect will cause e
    * --fqdn TEXT      FQDN of new asset
    * --hostname TEXT  Hostname of new asset
    * --list - TEXT    Import all assets in the CSV file
-   * --source - TEXT  Add the Source 
-   
+   * --source - TEXT  Add the Source
+
+### Examples
+
+    navi add --ip "192.168.1.1" --mac "01:02:03:04:05:06" --netbios "Netbios Name" --fqdn "myfqdn@domain.local" --hostname "myhostname" --source "commandline"
+    
+    navi add --file my_csv_file.csv --source "My source"
+
+### Add, Disable or Enable Users - 'user'
+  * -add                    Add User. Requires:
+  * --username, --u TEXT    Username. Requires: -add, -enable, or -disable
+  * --password, --p TEXT    Users password. Requires: -add
+  * --permission, --m TEXT  Users Permission. Requires: -add
+  * --name, --n TEXT        Users Name. Requires: -add
+  * --email, --e TEXT       Users email. Requires: -add
+  * --enable TEXT           Enable user by User ID
+  * --disable TEXT          Disable user by User ID
+
+### Examples
+Notice - The '\\' before the '!' is to treat '!' as a string and as a special command.  Becareful about certain special charaters and their commandline implications.  Don't share this password with the user.  Force them to reset their password!
+
+    navi user -add --username "thor@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Thor" --email "thor@gmail.com"
+    
+    navi user --enable 192939
+    
+    navi user --disable 192939
+
+### Create a group or Add/Remove a user from a group -  'usergroup'
+  * -new         Create a new Group. Required: --name
+  * -add         Add a user to a group. Required: --user and --name
+  * --name TEXT  The Name of the group
+  * --user TEXT  The User Name to be added or removed
+  * -remove      Remove a user from a group. Requires --name and user
+
+### Examples
+
+    navi usergroup -new Linux
+    
+    navi usergroup -add --user thor@marvel.avengers --name Linux
+
 ### Tag assets by Plugin Name, or Plugin ID - 'tag'
    * --c -->         Create a Tag with this Category - Required
    * --v -->         Create a Tag with this Value - Required
@@ -370,7 +427,6 @@ This is especially important if you want to export using your newly created tag.
 
    * -assets -->   Export Assets data into CSV: IP, Hostname, FQDN, UUID, exposure, etc
    * -agents -->   Export Asset data into CSV: IP, Last Connect, Last scanned, Status
-   * -webapp -->   Export Webapp Scan Summary into a CSV
    * -was -->      Export Webapp Scan Summary into a CSV - WAS V2
    * -consec -->   Export Container Security summary info into a CSV.
    * -licensed --> Export a List of all Licensed Assets into a CSV.
@@ -386,7 +442,7 @@ This is especially important if you want to export using your newly created tag.
 
     navi export -assets
     
-    navi export -agents -assets -webapp -consec -licensed
+    navi export -agents -assets -was -consec -licensed
     
     navi export --network 00000000-0000-0000-0000-000000000000
 
@@ -403,17 +459,21 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi export -bytag --c "OS" --v "Linux" --ec "OS" --ev "AWS"
 
 ### Delete an Object by an ID
-* scan -      Delete a scan by ID
-* agroup -    Delete an Access group
-* tgroup -    Delete a Target Group
-* policy -    Delete a Policy
-* asset -     Delete an asset
-* container - Delete a container by container ID
-* value -       Delete a Tag value by Value UUID
-* category -  Delete a Tag category by the Category UUID
-* bytag -     Delete All assets that have a certain tag  - specify Value and tag.category
-### Examples
+* -scan -      Delete a scan by ID
+* -agroup -    Delete an Access group
+* -tgroup -    Delete a Target Group
+* -policy -    Delete a Policy
+* -asset -     Delete an asset
+* -container - Delete a container by container ID
+* -value -     Delete a Tag value by Value UUID
+* -category -  Delete a Tag category by the Category UUID
+* --bytag -    Delete All assets that have a certain tag  - specify Value and tag.category
+  * --c        Category Name to be used for delete bytag
+  * --v        Value Name to be used for delete bytag
+* -user        Delete a user by User ID - API BUG! - Doesn't work right now
+* -usergroup   Delete a usergroup by Group ID
 
+### Examples
 
     navi delete 1234 -scan
 
@@ -428,9 +488,27 @@ Export into a CSV via a Tag; but exclude a specific Tag.
     navi delete Linux --bytag tag.OS
 
 ### Mail a Report
-* latest - Mail a report of the latest scan: Same output as "report -latest"
-* consec - Mail a report of the ConSec Summary: Same output as "list -containers"
-* webapp - Mail a report of the WebApp Summary
+* -latest -      Mail a report of the latest scan: Same output as "report -latest"
+* -consec -      Mail a report of the ConSec Summary: Same output as "list -containers"
+* -webapp -      Mail a report of the WebApp Summary
+* --message -    Email a custom message for automation. Concatinate a navi command.
+* --to -         Email address to send to
+* --subject -    Subject of the email
+* -v -           Display a copy of the message on screen
+
+### Examples
+
+    navi mail --latest --to "your@email.com" --subject "This is my subject line" 
+
+Send a Special note to support automation
+
+    navi mail --to "your@email.com" --subject "navi automation note" --message "Download Finished"
+
+Send the output of a Navi command using --message
+
+    navi mail --to "your@email.com" --subject "WAS Report" --message "`navi was --sd 35b54d95-f1b5-40f1-a98e-4f4c82a2a719`"
+
+
 
 ### Change Scanner Ownership
 
