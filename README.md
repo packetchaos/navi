@@ -331,7 +331,7 @@ Notice - The '\\' before the '!' is to treat '!' as a string and as a special co
 
 ### Examples
 
-    navi usergroup -new Linux
+    navi usergroup -new --name Linux
     
     navi usergroup -add --user thor@marvel.avengers --name Linux
 
