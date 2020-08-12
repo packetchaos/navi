@@ -69,7 +69,7 @@ def cloud_to_target_group(cloud, days):
 @click.option('-aws', is_flag=True, help="Turn AWS assets found by the connector into a Target Group")
 @click.option('-gcp', is_flag=True, help="Turn GCP assets found by the connector into a Target Group")
 @click.option('-azure', is_flag=True, help="Turn Azure assets found by the connector into a Target Group")
-@click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. Requires: aws, gcp, or asure")
+@click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. Requires: aws, gcp, or azure")
 def tgroup(name, ip, aws, gcp, azure, days):
 
     if name == '':

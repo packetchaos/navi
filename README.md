@@ -346,12 +346,18 @@ Notice - The '\\' before the '!' is to treat '!' as a string and as a special co
    * --port TEXT     Create a Tag based on Assets that have a port open
    * --file TEXT     Create a Tag based on IPs in a CSV file
    * --scantime TEXT Create a Tag for assets that took longer than supplied minutes
+   * --cc TEXT        Add a Tag to a new parent tag: Child Category
+   * --cv TEXT        Add a Tag to a new parent tag: Child Value
 
    
 ### Examples
     navi tag --c "My Category" --v "My Value" --d "My description" --plugin 93561
+    
     navi tag --c "Application Vulns" --v "Java vulns" --name java
+    
     navi tag --c "Agent Group" --v "Linux Agents" --group "Linux"
+
+    navi tag --c "Corp Agents" --v "Agent Groups" --cc "Agent Group" --cv "Linux Agents"
 
 ### Note on Tagging assets
 If you created a new Tag you will need to run an update on the assets to download the new Tag relationships.
@@ -376,7 +382,22 @@ This is especially important if you want to export using your newly created tag.
     navi agroup --name "My New Group" -tag --c "OS" --v "Linux" --user username@yourdomain -scanview
     
     navi agroup --name "My Other Group" --group "Linux" --usergroup "Linux Admins" -scan
+
+### Create Target Groups by Cloud Connector or IPs - 'tgroup'
+
+* --name         Create Target Group with the following Name
+* --ip           Create Target Group by Ip(s) or subnet(s) separated by coma
+* -aws           Turn AWS assets found by the connector into a Target Group
+* -gcp           Turn GCP assets found by the connector into a Target Group
+* -azure         Turn Azure assets found by the connector into a Target Group
+* --days         Set the number of days(30 default) for the IPs found by the connector. Requires: aws, gcp, or azure
+
+### Examples
+
+    navi tgroup --name "By IP" --ip "192.168.128.0/24, 192.168.56.1"
     
+    navi tgroup --name "AWS Assets Found in 7 days" -aws --days 7
+
 ### Bulk Adjust ACRs based on a Tag - 'lumin'
    * --acr -->            The new ACR value (1-10)
    * --c -->              The Tag Category to use
