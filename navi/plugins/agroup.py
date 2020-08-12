@@ -95,7 +95,7 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
         print("\nUse one of the following:\n-scan\n-view\n-scanview\n")
         exit()
 
-    payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS", "all-users": True, "rules": [{"type": "ipv4", "operator": "eq", "terms": new_list}],
+    payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS", "rules": [{"type": "ipv4", "operator": "eq", "terms": new_list}],
                "principals": [{"permissions": permission, "type": permtype, "principal_name": choice}]}
 
     answer = check_agroup_exists(str(name))

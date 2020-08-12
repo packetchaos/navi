@@ -318,7 +318,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print("https://github.com/packetchaos/tio_automation/blob/master/migrate_target_groups.py")
         print("*" * 40)
         data = request_data('GET', '/target-groups')
-        print("\nTarge Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
+        print("\nTarget Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
         print("-" * 100)
         try:
             for targets in data['target_groups']:
@@ -424,7 +424,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if version:
-        print("\nNavi Version 5.3.0\n")
+        print("\nNavi Version 5.4.0\n")
 
     if usergroup:
         data = request_data("GET", "/groups")
