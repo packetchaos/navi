@@ -84,42 +84,45 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
         request_data('POST', '/was/v2/configs/' + start + '/scans')
 
     if sd != '':
-        report = request_data('GET', '/was/v2/scans/' + str(sd) + '/report')
-        high = []
-        meduim = []
-        low = []
-        name = report['config']['name']
-        target = report['config']['settings']['target']
-        print()
-        print(name)
-        print(target)
-        print("-" * 40)
-        print()
-        print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS".ljust(10))
-        print("-" * 100)
-        for finding in report['findings']:
-            risk = finding['risk_factor']
-            plugin_id = finding['plugin_id']
-            plugin_name = finding['name']
-            cvss = 'None'
-            if risk == 'high':
-                high.append(plugin_id)
-            elif risk == 'medium':
-                meduim.append(plugin_id)
-            elif risk == 'low':
-                low.append(plugin_id)
-            try:
-                cvss = finding['cvss']
-            except KeyError:
-                pass
-            print(str(plugin_id).ljust(10), str(plugin_name).ljust(60), str(risk).ljust(10), str(cvss))
+        try:
+            report = request_data('GET', '/was/v2/scans/' + str(sd) + '/report')
+            high = []
+            meduim = []
+            low = []
+            name = report['config']['name']
+            target = report['config']['settings']['target']
+            print()
+            print(name)
+            print(target)
+            print("-" * 40)
+            print()
+            print("Plugin".ljust(10), "Plugin Name".ljust(60), "Severity".ljust(10), "CVSS".ljust(10))
+            print("-" * 100)
+            for finding in report['findings']:
+                risk = finding['risk_factor']
+                plugin_id = finding['plugin_id']
+                plugin_name = finding['name']
+                cvss = 'None'
+                if risk == 'high':
+                    high.append(plugin_id)
+                elif risk == 'medium':
+                    meduim.append(plugin_id)
+                elif risk == 'low':
+                    low.append(plugin_id)
+                try:
+                    cvss = finding['cvss']
+                except KeyError:
+                    pass
+                print(str(plugin_id).ljust(10), str(plugin_name).ljust(60), str(risk).ljust(10), str(cvss))
 
-        print("\nSeverity Counts")
-        print("-" * 20)
-        print("High: ", len(high))
-        print("Medium: ", len(meduim))
-        print("Low: ", len(low))
-        print()
+            print("\nSeverity Counts")
+            print("-" * 20)
+            print("High: ", len(high))
+            print("Medium: ", len(meduim))
+            print("Low: ", len(low))
+            print()
+        except KeyError:
+            pass
 
     if scan:
         print("\nChoose your Scan Template")
