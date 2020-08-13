@@ -1,6 +1,6 @@
 import click
 from .api_wrapper import request_data
-
+from IPy import IP
 
 def find_target_group(tg_name):
 
@@ -33,6 +33,10 @@ def create_target_group(tg_name, tg_list):
     else:
         trgstring = tg_list
 
+    if not tg_list:
+        print("\nYour request returned zero results\nAs a result, nothing happened\n")
+        exit()
+
     print("\nThese are the IPs that will be added to the target Group: {}".format(tg_name))
     print(tg_list)
     print()
@@ -47,7 +51,7 @@ def create_target_group(tg_name, tg_list):
         request_data("POST", '/target-groups', payload=payload)
 
 
-def cloud_to_target_group(cloud, days):
+def cloud_to_target_group(cloud, days, choice):
     query = {"date_range": days, "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": cloud}
     data = request_data('GET', '/workbenches/assets', params=query)
     target_ips = []
@@ -55,10 +59,15 @@ def cloud_to_target_group(cloud, days):
     for assets in data['assets']:
         for source in assets['sources']:
             if source['name'] == 'AWS':
-                target_ip = assets['ipv4']
-
-                # Need logic to Figure out Eternal vs Internal
-                target_ips.append(target_ip)
+                target_ip_list = assets['ipv4']
+                # loop through all of the IPs
+                for ip in target_ip_list:
+                    # Check to IP type
+                    check_ip = IP(ip)
+                    check = check_ip.iptype()
+                    if check == choice:
+                        # Add the IP if there is a match
+                        target_ips.append(ip)
 
     create_target_group("{} Targets".format(cloud), target_ips)
 
@@ -70,7 +79,16 @@ def cloud_to_target_group(cloud, days):
 @click.option('-gcp', is_flag=True, help="Turn GCP assets found by the connector into a Target Group")
 @click.option('-azure', is_flag=True, help="Turn Azure assets found by the connector into a Target Group")
 @click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. Requires: aws, gcp, or azure")
-def tgroup(name, ip, aws, gcp, azure, days):
+@click.option('-priv', is_flag=True, help="Set the IP(s) to be used as Private")
+@click.option('-pub', is_flag=True, help="Set the IP to be used as Public")
+def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
+    choice = 'PUBLIC'
+
+    if priv:
+        choice = 'PRIVATE'
+
+    if pub:
+        choice = 'PUBLIC'
 
     if name == '':
         print("You must name your Target Group")
@@ -80,10 +98,10 @@ def tgroup(name, ip, aws, gcp, azure, days):
             create_target_group(name, ip)
 
         if aws:
-            cloud_to_target_group("AWS", days)
+            cloud_to_target_group("AWS", days, choice)
 
         if gcp:
-            cloud_to_target_group("GCP", days)
+            cloud_to_target_group("GCP", days, choice)
 
         if azure:
-            cloud_to_target_group("AZURE", days)
+            cloud_to_target_group("AZURE", days, choice)

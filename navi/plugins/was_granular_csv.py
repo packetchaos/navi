@@ -15,7 +15,6 @@ def was_csv_export():
         data = request_data('GET', '/was/v2/scans', params=params)
 
         for scan_data in data['data']:
-            csv_list = []
             was_scan_id = scan_data['scan_id']
             status = scan_data['status']
 
@@ -25,9 +24,13 @@ def was_csv_export():
 
                 try:
                     name = report['config']['name']
-                    target = report['config']['settings']['target']
+                    try:
+                        target = report['scan']['target']
+                    except KeyError:
+                        target = report['config']['settings']['target']
 
                     for finding in report['findings']:
+                        csv_list = []
                         risk = finding['risk_factor']
                         # ignore info vulns
                         if risk != "info":

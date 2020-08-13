@@ -29,7 +29,10 @@ def was_export():
                 low = []
                 try:
                     name = report['config']['name']
-                    target = report['config']['settings']['target']
+                    try:
+                        target = report['scan']['target']
+                    except KeyError:
+                        target = report['config']['settings']['target']
                     try:
                         title = report['notes'][0]['title']
                         message = report['notes'][0]['message']

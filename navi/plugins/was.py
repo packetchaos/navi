@@ -92,7 +92,10 @@ def was(scans, start, sd, scan, file, configs, stats, summary, details):
             meduim = []
             low = []
             name = report['config']['name']
-            target = report['config']['settings']['target']
+            try:
+                target = report['scan']['target']
+            except KeyError:
+                target = report['config']['settings']['target']
             print()
             print(name)
             print(target)
@@ -192,7 +195,10 @@ def was(scans, start, sd, scan, file, configs, stats, summary, details):
         medium = []
         low = []
         name = report['config']['name']
-        target = report['config']['settings']['target']
+        try:
+            target = report['scan']['target']
+        except KeyError:
+            target = report['config']['settings']['target']
         output = ''
         print()
         print(name)
@@ -258,7 +264,10 @@ def was(scans, start, sd, scan, file, configs, stats, summary, details):
                 low = []
                 try:
                     name = report['config']['name']
-                    target = report['config']['settings']['target']
+                    try:
+                        target = report['scan']['target']
+                    except KeyError:
+                        target = report['config']['settings']['target']
 
                     for finding in report['findings']:
                         risk = finding['risk_factor']
