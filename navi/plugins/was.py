@@ -5,6 +5,7 @@ import time
 import uuid
 import csv
 import textwrap
+from .was_granular_csv import was_csv_export
 
 
 def web_app_scanners():
@@ -61,7 +62,8 @@ def create_was_scan(owner_id, temp_id, scanner_id, target, name):
 @click.option('-configs', is_flag=True, help="Show config UUIDs to start or stop scans")
 @click.option('--stats', default='', help="Show scan stats")
 @click.option('-summary', is_flag=True, help="Summary of all of the Web Apps")
-def was(scans, start, sd, scan, file, configs, stats, summary):
+@click.option('-details', is_flag=True, help="Export CSV with Details on all Webapps")
+def was(scans, start, sd, scan, file, configs, stats, summary, details):
     if scans:
         params = {"size": "1000"}
         data = request_data('GET', '/was/v2/scans', params=params)
@@ -272,3 +274,11 @@ def was(scans, start, sd, scan, file, configs, stats, summary):
                 except TypeError:
                     pass
         print()
+
+    if details:
+        answer = input("\nThis is going to export all of your data into a CSV.  "
+                       "It will take some time. \nType 'yes' to continue\n")
+        if answer == 'yes':
+            was_csv_export()
+        else:
+            print("Okay...next time then")
