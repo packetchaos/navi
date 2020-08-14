@@ -338,7 +338,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
         tag_by_uuid(tag_list, c, v, d)
 
     if file != '':
-        ip_update = 1
         with open(file, 'r', newline='') as new_file:
             add_ips = csv.reader(new_file)
 
@@ -348,7 +347,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
                     tag_list.append(ips)
                     ip_list = ip_list + "," + ips
 
-        tag_by_ip(ip_list, c, v, d)
+        tag_by_ip(ip_list, tag_list, c, v, d)
 
     if cv != '' and cc != '':
         tag_by_tag(c, v, d, cv, cc)

@@ -424,7 +424,7 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         print()
 
     if version:
-        print("\nNavi Version 5.4.2\n")
+        print("\nNavi Version 5.4.4\n")
 
     if usergroup:
         data = request_data("GET", "/groups")
