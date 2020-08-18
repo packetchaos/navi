@@ -17,13 +17,17 @@ def find_by_plugin(plugin):
             rows = cur.fetchall()
 
             for row in rows:
-                print("\nIP Address: " + row[0])
-                print("UUID : " + row[1])
-                print("\n--- Plugin " + plugin + " Output ---\n")
-                print(row[2])
-                print("--- End plugin Output ---")
+                ip = row[0]
+                uuid = row[1]
+                find_output = row[2]
+                click.echo("\nIP Address: {}".format(ip))
+                click.echo("UUID : {}".format(uuid))
+                click.echo("\n--- Plugin {} Output ---".format(plugin))
+                click.echo()
+                click.echo(find_output)
+                click.echo("--- End plugin Output ---")
     except Error as e:
-        print(e)
+        click.echo(e)
 
 
 @click.command(help="Find Containers, Web Apps, Credential failures, Ghost Assets")
@@ -40,12 +44,12 @@ def find_by_plugin(plugin):
 def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, name):
 
     if output != '' and plugin == '':
-        print("You must supply a plugin")
+        click.echo("You must supply a plugin")
         exit()
 
     if plugin != '':
         if not str.isdigit(plugin):
-            print("You didn't enter a number")
+            click.echo("You didn't enter a number")
             exit()
         else:
             try:
@@ -62,16 +66,18 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
 
                     plugin_data = plugin_cur.fetchall()
                     for x in plugin_data:
-                        print(x[0])
-                        print('*' * 20)
-                        print(x[2])
-                        print('*' * 150)
-                        print('*' * 150)
+                        asset_ip = x[0]
+                        asset_output = x[2]
+                        click.echo(asset_ip)
+                        click.echo('*' * 20)
+                        click.echo(asset_output)
+                        click.echo('*' * 150)
+                        click.echo('*' * 150)
             except Error:
                 pass
 
     if docker:
-        print("Searching for RUNNING docker containers...")
+        click.echo("Searching for RUNNING docker containers...")
         find_by_plugin(str(93561))
 
     if webapp:
@@ -82,8 +88,8 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
             cur.execute("SELECT * from vulns where plugin_id='1442';")
 
             data = cur.fetchall()
-            print("\nWeb Servers found by plugin 1442")
-            print("-------------------------------")
+            click.echo("\nWeb Servers found by plugin 1442")
+            click.echo("-------------------------------")
             for plugins in data:
                 web = plugins[6]  # output
                 wsplit = web.split("\n")
@@ -92,11 +98,13 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                 web_port = plugins[10]  # port number
                 proto = plugins[11]  # Protocol
                 asset = plugins[1]  # Ip address
-                print()
-                print(server, "is running on: ", web_port, "/", proto, "On :", asset)
+                click.echo()
+                click.echo("\n{} is running on: {} / {} On : {}".format(str(server), str(web_port), str(proto), str(asset)))
+                click.echo()
         try:
-            print("\n\nWeb Servers/SSH Servers found by plugin '22964';")
-            print("-------------------------------\n")
+            click.echo("\n\nWeb Servers/SSH Servers found by plugin '22964';")
+            click.echo("-" * 32)
+            click.echo()
             conn2 = new_db_connection(database)
             with conn2:
                 cur2 = conn.cursor()
@@ -104,27 +112,30 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                 data = cur2.fetchall()
 
                 for plugins in data:
-                    print("\n", plugins[0][:-1], plugins[1], "On :", plugins[2])
-                print()
+                    web_output = plugins[0][:-1]
+                    web_port = plugins[1]
+                    web_ip = plugins[2]
+                    click.echo("\n{} {} On : {}".format(str(web_output), str(web_port), str(web_ip)))
+                click.echo()
         except IndexError:
-            print("No information for plugin 22964")
+            click.echo("No information for plugin 22964")
 
     if creds:
-        print("I'm looking for credential issues...Please hang tight")
+        click.echo("I'm looking for credential issues...Please hang tight")
         find_by_plugin(str(104410))
 
     if scantime != '':
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
-            print("\n*** Below are the assets that took longer than " + str(scantime) + " minutes to scan ***")
+            click.echo("\n*** Below are the assets that took longer than {} minutes to scan ***".format(str(scantime)))
             cur = conn.cursor()
             cur.execute("SELECT * from vulns where plugin_id='19506';")
 
             data = cur.fetchall()
             try:
-                print("\nAsset IP".ljust(16), "Asset UUID".ljust(40), "Started".ljust(25), "Finished".ljust(25), "Scan UUID")
-                print("-" * 150)
+                click.echo("\n{:16s} {:40s} {:25s} {:25s} {}".format("Asset IP", "Asset UUID", "Started", "Finished", "Scan UUID"))
+                click.echo("-" * 150)
                 for vulns in data:
 
                     output = vulns[6]
@@ -153,10 +164,12 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                     # grab assets that match the criteria
                     if minutes > int(scantime):
                         try:
-                            print(str(vulns[1]).ljust(15), str(vulns[2]).ljust(40), str(vulns[14]).ljust(25), str(vulns[13]).ljust(25), str(vulns[15]))
+                            click.echo("{:16s} {:40s} {:25s} {:25s} {}".format(str(vulns[1]), str(vulns[2]),
+                                                                               str(vulns[14]), str(vulns[13]),
+                                                                               str(vulns[15])))
                         except ValueError:
                             pass
-                print()
+                click.echo()
             except ValueError:
                 pass
 
@@ -165,8 +178,8 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
 
             ghost_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
             data = request_data('GET', '/workbenches/assets', params=ghost_query)
-            print("\nSource".ljust(11), "IP".ljust(15), "FQDN".ljust(45), "First seen")
-            print("-" * 150)
+            click.echo("\n{:11s} {:15s} {:45} {}".format("Source", "IP", "FQDN", "First seen"))
+            click.echo("-" * 150)
             for assets in data['assets']:
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
@@ -176,8 +189,9 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                         except IndexError:
                             aws_fqdn = assets['fqdn'][0]
 
-                        print(str(source['name']).ljust(10), str(aws_ip).ljust(15), str(aws_fqdn).ljust(45), source['first_seen'])
-            print()
+                        click.echo("{:11s} {:15s} {:45} {}".format(str(source['name']), str(aws_ip),
+                                                                   str(aws_fqdn), source['first_seen']))
+            click.echo()
 
             gcp_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "GCP"}
             gcp_data = request_data('GET', '/workbenches/assets', params=gcp_query)
@@ -190,8 +204,9 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                         except IndexError:
                             gcp_fqdn = "NO FQDN FOUND"
                             
-                        print(gcp_source['name'].ljust(10), gcp_ip.ljust(15), gcp_fqdn.ljust(45), gcp_source['first_seen'])
-            print()
+                        click.echo("{:11s} {:15s} {:45} {}".format(gcp_source['name'], gcp_ip, gcp_fqdn,
+                                                                   gcp_source['first_seen']))
+            click.echo()
 
             az_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AZURE"}
             az_data = request_data('GET', '/workbenches/assets', params=az_query)
@@ -205,12 +220,13 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                         except IndexError:
                             az_fqdn = "NO FQDN Found"
 
-                        print(az_source['name'].ljust(10), az_ip.ljust(15), az_fqdn.ljust(45), az_source['first_seen'])
-            print()
+                        click.echo("{:11s} {:15s} {:45} {}".format(az_source['name'], az_ip, az_fqdn,
+                                                                   az_source['first_seen']))
+            click.echo()
                 
         except Exception as E:
-            print("Check your API keys or your internet connection")
-            print(E)
+            click.echo("Check your API keys or your internet connection")
+            click.echo(E)
 
     if port != '':
         database = r"navi.db"
@@ -222,11 +238,12 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
             data = cur.fetchall()
 
             try:
-                print("\nThe Following assets had Open ports found by various plugins")
-                print("\nIP address".ljust(20), " UUID".ljust(45), " Plugins")
-                print("-" * 80)
+                click.echo("\nThe Following assets had Open ports found by various plugins")
+                click.echo("\n{:20} {:45} {}".format("IP address", " UUID", " Plugins"))
+                click.echo("-" * 80)
                 for vulns in data:
-                    print(vulns[1].ljust(20), str(vulns[2]).ljust(45), vulns[7])
+                    click.echo("{:20} {:45} {}".format(vulns[1], str(vulns[2]), vulns[7]))
+                click.echo()
             except ValueError:
                 pass
 
@@ -250,11 +267,11 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                 cur.execute("SELECT asset_ip, asset_uuid, plugin_name, plugin_id from vulns where plugin_name LIKE '%" + name + "%';")
 
                 plugin_data = cur.fetchall()
-                print("\nThe Following assets had '{}' in the Plugin Name".format(name))
-                print("\nIP address".ljust(20), " UUID".ljust(45), " Plugin Name".ljust(65), " Plugin ID")
-                print("-" * 150)
+                click.echo("\nThe Following assets had '{}' in the Plugin Name".format(name))
+                click.echo("\n{:20} {:45} {:65} {}".format("IP address", "UUID", "Plugin Name", "Plugin ID"))
+                click.echo("-" * 150)
                 for vulns in plugin_data:
-                    print(vulns[0].ljust(20), str(vulns[1]).ljust(45), textwrap.shorten(str(vulns[2]), 65).ljust(65), vulns[3])
-                print()
+                    click.echo("{:20} {:45} {:65} {}".format(vulns[0], str(vulns[1]), textwrap.shorten(str(vulns[2]), 65), vulns[3]))
+                click.echo()
         except Error:
             pass
