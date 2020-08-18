@@ -106,7 +106,7 @@ def mail(latest, consec, webapp, message, to, subject, v):
                 duration = (details["info"]["scan_end"] - details["info"]["scan_start"]) / 60
                 msg += "Duration : {} Minutes".format(duration)
             except:
-                print("This scan is still running")
+                click.echo("This scan is still running")
 
             msg += "\nScan Notes Below : \n\n"
 
@@ -177,11 +177,11 @@ def mail(latest, consec, webapp, message, to, subject, v):
             msg += str(message)
 
         if v:
-            print("Here is a copy of your email that was Sent")
-            print(msg)
+            click.echo("Here is a copy of your email that was Sent")
+            click.echo(msg)
 
         send_email(from_email, to, msg, server, password, port)
     except Exception as E:
-        print("Your Email information may be incorrect")
-        print("Run the 'SMTP' command to correct your information")
-        print(E)
+        click.echo("Your Email information may be incorrect")
+        click.echo("Run the 'SMTP' command to correct your information")
+        click.echo(E)

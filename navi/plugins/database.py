@@ -1,5 +1,6 @@
 import sqlite3
 from sqlite3 import Error
+import click
 
 
 def new_db_connection(db_file):
@@ -9,7 +10,7 @@ def new_db_connection(db_file):
         # A database file will be created if one doesn't exist
         conn = sqlite3.connect(db_file, timeout=60.0)
     except Error as E:
-        print(E)
+        click.echo(E)
     return conn
 
 
@@ -19,7 +20,7 @@ def create_table(conn, table_information):
         c.execute('pragma journal_mode=wal;')
         c.execute(table_information)
     except Error as e:
-        print(e)
+        click.echo(e)
 
 
 def insert_assets(conn, assets):

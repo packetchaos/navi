@@ -13,9 +13,9 @@ from sqlite3 import Error
 def update(assets, vulns, days, exid, threads):
     # Limit the amount of threads to avoid issues
     if threads != 10:
-        print("\nUsing {} thread(s) at your request".format(threads))
+        click.echo("\nUsing {} thread(s) at your request".format(threads))
         if threads not in range(1, 11):
-            print("Enter a value between 1 and 10")
+            click.echo("Enter a value between 1 and 10")
             exit()
     try:
         if exid == ' ':
@@ -33,5 +33,5 @@ def update(assets, vulns, days, exid, threads):
             # default for assets should be 90 days to support licensing exports
             asset_export(90, exid, threads)
     except Error as E:
-        print("\n Have you entered your keys?\n")
-        print("Error: ", E, "\n")
+        click.echo("\n Have you entered your keys?\n")
+        click.echo("Error: {}".format(E))

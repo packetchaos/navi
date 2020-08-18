@@ -12,7 +12,7 @@ def keys(clear, access_key, secret_key):
     create_keys_table()
 
     if access_key == "" or secret_key == "":
-        print("Hey you don't have any Keys!")
+        click.echo("Hey you don't have any Keys!")
         if clear:
             access_key = input("Please provide your Access Key : ")
             secret_key = input("Please provide your Secret Key : ")

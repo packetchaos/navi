@@ -6,7 +6,7 @@ from .database import new_db_connection, create_table, drop_tables
 @click.command(help="Enter or Overwrite your SMTP information")
 def smtp():
     # update using ex: https://gist.github.com/BietteMaxime/f75ae41f7b4557274a9f
-    print("Hey you don't have any SMTP information!")
+    click.echo("Hey you don't have any SMTP information!")
     server = input("Enter the Email servers address - ex: smtp.gmail.com : ")
     port = input("Enter the port your Email server uses - ex: 587: ")
     from_email = input("Enter your Email Address - ex: youremail@gmail.com ")

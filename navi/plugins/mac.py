@@ -15,12 +15,12 @@ def mac(address):
 
         r = requests.request('GET', url + address, headers=headers, verify=True)
         data = r.json()
-        print("Assignment Group:")
-        print(data['data']['assignment'])
+        click.echo("Assignment Group:")
+        click.echo(data['data']['assignment'])
 
-        print("\nOrganization name:")
-        print(data['data']['organization_name'])
+        click.echo("\nOrganization name:")
+        click.echo(data['data']['organization_name'])
     except ConnectionError as E:
         error_msg(E)
     except KeyError:
-        print("Mac Address information Not found")
+        click.echo("Mac Address information Not found")
