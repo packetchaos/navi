@@ -12,11 +12,15 @@ def tag_by_tag(c, v, d, cv, cc):
     # Start a blank rules list to store current a new tag rule.
     rules_list = []
 
+    # Does the Parent Tag exist?
     parent_answer = confirm_tag_exists(c, v)
+
     # Is this the parent tag new or current?
     if parent_answer == 'yes':
 
+        # Does the Child Tag Exist?
         child_answer = confirm_tag_exists(cc, cv)
+
         # Is the child tag new or current?
         if child_answer == 'yes':
 

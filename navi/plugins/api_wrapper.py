@@ -1,6 +1,25 @@
 import requests
 from json import JSONDecodeError
 from .database import new_db_connection
+from tenable.io import TenableIO
+
+
+def navi_version():
+    return "navi-6.0.0"
+
+
+def tenb_connection():
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    with conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * from keys;")
+        rows = cur.fetchall()
+        for row in rows:
+            access_key = row[0]
+            secret_key = row[1]
+        tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
+        return tio
 
 
 def grab_headers():
@@ -13,7 +32,7 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': 'navi-5.4.4', 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': navi_version(), 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
 def request_delete(method, url_mod, **kwargs):
