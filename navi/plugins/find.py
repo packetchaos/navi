@@ -1,9 +1,12 @@
 import click
 from sqlite3 import Error
 import pprint
-from .api_wrapper import request_data
+from .api_wrapper import tenb_connection
 from .database import new_db_connection
 import textwrap
+
+
+tio = tenb_connection()
 
 
 def find_by_plugin(plugin):
@@ -175,12 +178,9 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
 
     if ghost:
         try:
-
-            ghost_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AWS"}
-            data = request_data('GET', '/workbenches/assets', params=ghost_query)
             click.echo("\n{:11s} {:15s} {:45} {}".format("Source", "IP", "FQDN", "First seen"))
             click.echo("-" * 150)
-            for assets in data['assets']:
+            for assets in tio.workbenches.assets(("sources", "set-hasonly", "AWS")):
                 for source in assets['sources']:
                     if source['name'] == 'AWS':
                         aws_ip = assets['ipv4'][0]
@@ -193,9 +193,7 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                                                                    str(aws_fqdn), source['first_seen']))
             click.echo()
 
-            gcp_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "GCP"}
-            gcp_data = request_data('GET', '/workbenches/assets', params=gcp_query)
-            for gcp_assets in gcp_data['assets']:
+            for gcp_assets in tio.workbenches.assets(("sources", "set-hasonly", "GCP")):
                 for gcp_source in gcp_assets['sources']:
                     if gcp_source['name'] == 'GCP':
                         gcp_ip = gcp_assets['ipv4'][0]
@@ -208,9 +206,7 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                                                                    gcp_source['first_seen']))
             click.echo()
 
-            az_query = {"date_range": "30", "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": "AZURE"}
-            az_data = request_data('GET', '/workbenches/assets', params=az_query)
-            for az_assets in az_data['assets']:
+            for az_assets in tio.workbenches.assets(("sources", "set-hasonly", "AZURE")):
                 for az_source in az_assets['sources']:
                     if az_source['name'] == 'AZURE':
 
@@ -223,7 +219,7 @@ def find(plugin, docker, webapp, creds, scantime, ghost, port, query, output, na
                         click.echo("{:11s} {:15s} {:45} {}".format(az_source['name'], az_ip, az_fqdn,
                                                                    az_source['first_seen']))
             click.echo()
-                
+
         except Exception as E:
             click.echo("Check your API keys or your internet connection")
             click.echo(E)
