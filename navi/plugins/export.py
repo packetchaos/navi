@@ -30,44 +30,44 @@ from .agent_group_export import agent_group_export
 @click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
 def export(assets, agents, consec, licensed, lumin, network, query, group, bytag, c, v, ec, ev, was):
     if assets:
-        print("\nExporting your data now. Saving asset_data.csv now...\n")
+        click.echo("\nExporting your data now. Saving asset_data.csv now...\n")
         csv_export()
 
     if agents:
-        print("\nExporting your data now. Saving agent_data.csv now...\n")
+        click.echo("\nExporting your data now. Saving agent_data.csv now...\n")
         agent_export()
 
     if consec:
-        print("\nExporting your data now. Saving consec_data.csv now...\n")
+        click.echo("\nExporting your data now. Saving consec_data.csv now...\n")
         consec_export()
 
     if licensed:
-        print("\nExporting your data now. Saving licensed_data.csv now...\n")
+        click.echo("\nExporting your data now. Saving licensed_data.csv now...\n")
         licensed_export()
 
     if lumin:
-        print("\nExporting your data now. This could take some time.  300 Assets per minute max.")
-        print("Saving asset_lumin.csv now...\n")
+        click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
+        click.echo("Saving asset_lumin.csv now...\n")
         lumin_export()
 
     if network:
-        print("\nExporting your data now. Saving network_data.csv now...")
+        click.echo("\nExporting your data now. Saving network_data.csv now...")
         network_export(network)
 
     if query != '':
         query_export(query)
 
     if group != '':
-        print("\nExporting your data now.  Saving agent_group_data.csv now...")
+        click.echo("\nExporting your data now.  Saving agent_group_data.csv now...")
         agent_group_export(group)
 
     if bytag:
         if c == '':
-            print("Tag Category is required.  Please use the --c command")
+            click.echo("Tag Category is required.  Please use the --c command")
             exit()
 
         if v == '':
-            print("Tag Value is required. Please use the --v command")
+            click.echo("Tag Value is required. Please use the --v command")
             exit()
 
         database = r"navi.db"
@@ -87,10 +87,10 @@ def export(assets, agents, consec, licensed, lumin, network, query, group, bytag
                     if check_for_no == 'no':
                         new_list.append(asset[0])
             except conn.OperationalError:
-                print('Sorry Right now, navi doesn\'t support \' in a tag')
+                click.echo('Sorry Right now, navi doesn\'t support \' in a tag')
 
         tag_export(new_list)
 
     if was:
-        print("\nExporting your data now. Saving was_v2_data.csv now...")
+        click.echo("\nExporting your data now. Saving was_v2_data.csv now...")
         was_export()

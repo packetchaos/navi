@@ -1,4 +1,5 @@
 import csv
+import click
 from .api_wrapper import request_data
 
 
@@ -63,4 +64,4 @@ def was_export():
                     agent_writer.writerow(csv_list)
                 except TypeError:
                     pass
-        print()
+        click.echo()

@@ -22,13 +22,13 @@ from .api_wrapper import request_data
 def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, value, category, bytag, c, v, user, usergroup):
 
     if bytag != '':
-        print("\nI'm deleting all of the assets associated with your Tag\n")
+        click.echo("\nI'm deleting all of the assets associated with your Tag\n")
         payload = {'query': {'field': str(bytag), 'operator': 'set-has', 'value': str(tid)}}
         request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
 
     if c != '':
         if v == '':
-            print("value is required.  Please use --v option when deleting tab by value pair")
+            click.echo("value is required.  Please use --v option when deleting tab by value pair")
             exit()
         else:
             tagdata = request_data('GET', '/tags/values')
@@ -39,45 +39,45 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, valu
                         request_delete('DELETE', '/tags/values/' + str(value_uuid))
 
     if scan:
-        print("\nI'm deleting your Scan Now")
+        click.echo("\nI'm deleting your Scan Now")
         request_delete('DELETE', '/scans/' + str(tid))
 
     if agroup:
-        print("\nI'm deleting your Access Group Now")
+        click.echo("\nI'm deleting your Access Group Now")
         request_delete('DELETE', ('/access-groups/' + str(tid)))
 
     if tgroup:
-        print("\nI'm deleting your Target group Now")
+        click.echo("\nI'm deleting your Target group Now")
         request_delete('DELETE', ('/target-groups/' + str(tid)))
 
     if policy:
-        print("\nI'm deleting your Policy Now")
+        click.echo("\nI'm deleting your Policy Now")
         request_delete('DELETE', ('/policies/' + str(tid)))
 
     if asset:
-        print("\nI'm deleting your asset Now")
+        click.echo("\nI'm deleting your asset Now")
         request_delete('DELETE', '/workbenches/assets/' + str(tid))
 
     if container:
-        print("\nI'm deleting your container")
+        click.echo("\nI'm deleting your container")
         request_delete('DELETE', '/container-security/api/v2/images/' + str(tid))
 
     if value:
-        print("\nI'm deleting your Tag Value")
+        click.echo("\nI'm deleting your Tag Value")
         request_delete('DELETE', '/tags/values/' + str(tid))
 
     if category:
-        print("\nI'm Deleting your Category")
+        click.echo("\nI'm Deleting your Category")
         request_delete('delete', '/tags/categories/' + str(tid))
 
     if repository:
-        print("\nI'm Deleting your Repository")
+        click.echo("\nI'm Deleting your Repository")
         request_delete('delete', '/container-security/api/v2/' + str(repository))
 
     if user:
-        print("\nI'm Deleting the User you requested")
+        click.echo("\nI'm Deleting the User you requested")
         request_delete('delete', '/users/' + str(user))
 
     if usergroup:
-        print("\nI'm Deleting the User you requested")
+        click.echo("\nI'm Deleting the User you requested")
         request_delete('delete', '/groups/' + str(usergroup))

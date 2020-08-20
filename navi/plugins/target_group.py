@@ -2,6 +2,7 @@ import click
 from .api_wrapper import request_data
 from IPy import IP
 
+
 def find_target_group(tg_name):
 
     data = request_data("GET", '/target-groups')
@@ -34,12 +35,12 @@ def create_target_group(tg_name, tg_list):
         trgstring = tg_list
 
     if not tg_list:
-        print("\nYour request returned zero results\nAs a result, nothing happened\n")
+        click.echo("\nYour request returned zero results\nAs a result, nothing happened\n")
         exit()
 
-    print("\nThese are the IPs that will be added to the target Group: {}".format(tg_name))
-    print(tg_list)
-    print()
+    click.echo("\nThese are the IPs that will be added to the target Group: {}".format(tg_name))
+    click.echo(tg_list)
+    click.echo()
 
     if group_id != 0:
         # Update current Target Group
@@ -91,7 +92,7 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
         choice = 'PUBLIC'
 
     if name == '':
-        print("You must name your Target Group")
+        click.echo("You must name your Target Group")
         exit()
     else:
         if ip != '':

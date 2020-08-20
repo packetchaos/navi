@@ -12,4 +12,4 @@ def network(net, age):
     payload = {"assets_ttl_days": age, "description": "TTL adjusted by navi", "name": name}
     if age != '':
         data = request_data('PUT', '/networks/' + net, payload=payload)
-        print(data)
+        click.echo(data)

@@ -1,10 +1,11 @@
 import csv
+import click
 from .database import new_db_connection
 from .api_wrapper import request_data
 
 
 def tag_export(tag_list):
-    print("This export can take some time.  ~300 assets per minute.")
+    click.echo("This export can take some time.  ~300 assets per minute.")
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
@@ -47,7 +48,7 @@ def tag_export(tag_list):
                             pass
 
                     except ConnectionError:
-                        print("Check your API keys or your internet connection")
+                        click.echo("Check your API keys or your internet connection")
                     # write to the CSV
                     agent_writer.writerow(export_list)
-        print("Export success! - bytag_lumin.csv")
+        click.echo("Export success! - bytag_lumin.csv")

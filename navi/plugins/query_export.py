@@ -11,7 +11,7 @@ def query_export(query):
 
         data = cur.fetchall()
 
-        print("I'm exporting query_export.py with your requested data")
+        click.echo("I'm exporting query_export.py with your requested data")
         # Crete a csv file object
         with open('query_data.csv', mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')

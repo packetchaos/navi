@@ -41,12 +41,12 @@ def get_user_id(username):
 def user(add, username, password, permission, name, email, enable, disable):
     if add:
         if username == '' or password == '' or permission == '' or name == '':
-            print("To add a user it requires\n")
-            print("Username, password, permissions(8,16,32,64), name and email")
+            click.echo("To add a user it requires\n")
+            click.echo("Username, password, permissions(8,16,32,64), name and email")
             exit()
 
         if len(password) < 11:
-            print("Password must be 12 chars, 1 Upper, 1 lower and 1 Special Char")
+            click.echo("Password must be 12 chars, 1 Upper, 1 lower and 1 Special Char")
             exit()
 
         # Check to see has already been created

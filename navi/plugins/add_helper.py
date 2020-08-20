@@ -1,4 +1,5 @@
 import csv
+import click
 from sqlite3 import Error
 from .api_wrapper import request_data
 
@@ -31,12 +32,12 @@ def add_helper(file, source):
                 # create Payload
                 payload = {"assets": [asset], "source": source}
 
-                print("Added the following Data : \n")
-                print(payload)
-                print()
+                click.echo("Added the following Data : \n")
+                click.echo(payload)
+                click.echo()
 
                 # request Import Job
                 data = request_data('POST', '/import/assets', payload=payload)
-                print("Your Import ID is : ", data['asset_import_job_uuid'])
+                click.echo("Your Import ID is : ", data['asset_import_job_uuid'])
     except Error as e:
-        print(e)
+        click.echo(e)
