@@ -1,7 +1,9 @@
 import csv
 import click
 from .database import new_db_connection
-from .api_wrapper import request_data
+from .api_wrapper import tenb_connection
+
+tio = tenb_connection()
 
 
 def tag_export(tag_list):
@@ -12,7 +14,8 @@ def tag_export(tag_list):
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network','Info', 'Low', 'Medium', 'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network','Info', 'Low', 'Medium',
+                       'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
         cur = conn.cursor()
         cur.execute("SELECT * from assets;")
 
@@ -36,14 +39,14 @@ def tag_export(tag_list):
                     asset_id = assets[3]  # Grab the UUID to make API calls
 
                     try:
-                        asset_info = request_data('GET', '/workbenches/assets/' + asset_id + '/info')
+                        asset_info = tio.workbenches.asset_info(asset_id)
 
-                        for vuln in asset_info['info']['counts']['vulnerabilities']['severities']:
+                        for vuln in asset_info['counts']['vulnerabilities']['severities']:
                             export_list.append(vuln["count"])  # Add the vuln counts to the new list
 
                         try:
-                            export_list.append(asset_info['info']['exposure_score'])  # add the exposure score
-                            export_list.append(asset_info['info']['acr_score'])  # add the ACR
+                            export_list.append(asset_info['exposure_score'])  # add the exposure score
+                            export_list.append(asset_info['acr_score'])  # add the ACR
                         except KeyError:  # Non Lumin users may not have these values
                             pass
 
