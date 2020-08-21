@@ -1,6 +1,8 @@
 import click
 from .api_wrapper import request_delete
-from .api_wrapper import request_data
+from .api_wrapper import request_data, tenb_connection
+
+tio = tenb_connection()
 
 
 @click.command(help="Delete an Object by it's ID")
@@ -40,23 +42,28 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, valu
 
     if scan:
         click.echo("\nI'm deleting your Scan Now")
-        request_delete('DELETE', '/scans/' + str(tid))
+        # request_delete('DELETE', '/scans/' + str(tid))
+        tio.scans.delete(str(tid))
 
     if agroup:
         click.echo("\nI'm deleting your Access Group Now")
-        request_delete('DELETE', ('/access-groups/' + str(tid)))
+        # request_delete('DELETE', ('/access-groups/' + str(tid)))
+        tio.access_groups.delete(str(tid))
 
     if tgroup:
         click.echo("\nI'm deleting your Target group Now")
-        request_delete('DELETE', ('/target-groups/' + str(tid)))
+        # request_delete('DELETE', ('/target-groups/' + str(tid)))
+        tio.target_groups.delete(str(tid))
 
     if policy:
         click.echo("\nI'm deleting your Policy Now")
-        request_delete('DELETE', ('/policies/' + str(tid)))
+        # request_delete('DELETE', ('/policies/' + str(tid)))
+        tio.policies.delete(str(tid))
 
     if asset:
         click.echo("\nI'm deleting your asset Now")
-        request_delete('DELETE', '/workbenches/assets/' + str(tid))
+        # request_delete('DELETE', '/workbenches/assets/' + str(tid))
+        tio.assets.delete(str(tid))
 
     if container:
         click.echo("\nI'm deleting your container")
@@ -64,11 +71,13 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, valu
 
     if value:
         click.echo("\nI'm deleting your Tag Value")
-        request_delete('DELETE', '/tags/values/' + str(tid))
+        # request_delete('DELETE', '/tags/values/' + str(tid))
+        tio.tags.delete(str(tid))
 
     if category:
         click.echo("\nI'm Deleting your Category")
-        request_delete('delete', '/tags/categories/' + str(tid))
+        # request_delete('delete', '/tags/categories/' + str(tid))
+        tio.tags.delete_category(str(tid))
 
     if repository:
         click.echo("\nI'm Deleting your Repository")
@@ -76,8 +85,10 @@ def delete(tid, scan, agroup, tgroup, policy, asset, container, repository, valu
 
     if user:
         click.echo("\nI'm Deleting the User you requested")
-        request_delete('delete', '/users/' + str(user))
+        # request_delete('delete', '/users/' + str(user))
+        tio.users.delete(str(user))
 
     if usergroup:
         click.echo("\nI'm Deleting the User you requested")
-        request_delete('delete', '/groups/' + str(usergroup))
+        # request_delete('delete', '/groups/' + str(usergroup))
+        tio.groups.delete(str(usergroup))

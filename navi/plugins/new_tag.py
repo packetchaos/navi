@@ -73,7 +73,8 @@ def tag_by_tag(c, v, d, cv, cc):
         if child_answer == 'yes':
             # if the child tag does exist, then create the new tag with the existing tag as a child
             try:
-                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
+                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
+                           {"asset": {"and": [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
 
                 value_uuid = data["uuid"]
@@ -91,7 +92,8 @@ def tag_by_tag(c, v, d, cv, cc):
 def tag_by_ip(ip_list, tag_list, c, v, d):
     # Tagging by IP is limited to 2000 Assets
     try:
-        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
+                   {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
         data = request_data('POST', '/tags/values', payload=payload)
         try:
             value_uuid = data["uuid"]

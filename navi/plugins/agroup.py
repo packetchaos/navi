@@ -1,12 +1,13 @@
 import click
 from .database import new_db_connection
-from .api_wrapper import request_data
+from .api_wrapper import request_data, tenb_connection
+
+tio = tenb_connection()
 
 
 def check_agroup_exists(aname):
-    agroups = request_data('GET', '/access-groups')
     rvalue = 'no'
-    for group in agroups['access_groups']:
+    for group in tio.access_groups.list():
         if str(group['name']).lower() == str(aname).lower():
             rvalue = group['id']
     return rvalue
@@ -30,7 +31,7 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
     permtype = 'none'
 
     if user == '' and usergroup == '':
-        print("You Need to use '--user' or '--usergroup' command and supply a user or group. e.g: user@yourdomain or Linux Admins")
+        click.echo("You Need to use '--user' or '--usergroup' command and supply a user or group. e.g: user@yourdomain or Linux Admins")
         exit()
 
     if user != '':
@@ -42,16 +43,16 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
         choice = usergroup
 
     if name == '':
-        print("You need to use the --name command to name your Access Group")
+        click.echo("You need to use the --name command to name your Access Group")
         exit()
 
     if tag:
         if c == '':
-            print("Tag Category is required.  Please use the --c command")
+            click.echo("Tag Category is required.  Please use the --c command")
             exit()
 
         if v == '':
-            print("Tag Value is required. Please use the --v command")
+            click.echo("Tag Value is required. Please use the --v command")
             exit()
 
         database = r"navi.db"
@@ -64,10 +65,10 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
                 new_list.append(asset[1])
 
     if group:
-        print()
-        print("*" * 50)
-        print("API limits agent groups to 5000")
-        print("*" * 50)
+        click.echo()
+        click.echo("*" * 50)
+        click.echo("API limits agent groups to 5000")
+        click.echo("*" * 50)
         querystring = {"limit": "5000"}
         group_data = request_data('GET', '/scanners/1/agent-groups')
         for agent_group in group_data['groups']:
@@ -76,6 +77,9 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
 
             if group_name == group:
                 data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
+
+                # Pytenable doesn't have an option for pagination
+                # data = tio.agent_groups.details(group_id)
 
                 for agent in data['agents']:
                     ip_address = agent['ip']
@@ -91,8 +95,8 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
         permission = ["CAN_SCAN"]
 
     if not scan and not view and not scanview:
-        print("\nYou must supply a permission")
-        print("\nUse one of the following:\n-scan\n-view\n-scanview\n")
+        click.echo("\nYou must supply a permission")
+        click.echo("\nUse one of the following:\n-scan\n-view\n-scanview\n")
         exit()
 
     payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS", "rules": [{"type": "ipv4", "operator": "eq", "terms": new_list}],
@@ -105,13 +109,13 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
         if new_list:
             if answer == 'no':
                 new_access_group = request_data('POST', '/v2/access-groups', payload=payload)
-                print("\nYour Access group {} is being created now \n".format(new_access_group['name']))
-                print("The UUID is {} \n".format(new_access_group['id']))
+                click.echo("\nYour Access group {} is being created now \n".format(new_access_group['name']))
+                click.echo("The UUID is {} \n".format(new_access_group['id']))
             else:
                 update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
-                print("\nYour Access group {} is being updated now \n".format(update_group['name']))
-                print("The UUID is {} \n".format(update_group['id']))
+                click.echo("\nYour Access group {} is being updated now \n".format(update_group['name']))
+                click.echo("The UUID is {} \n".format(update_group['id']))
         else:
-            print("\nYour list was empty so nothing happened\n")
+            click.echo("\nYour list was empty so nothing happened\n")
     except TypeError:
-        print("\nAccess group? - Check the Username")
+        click.echo("\nAccess group? - Check the Username")
