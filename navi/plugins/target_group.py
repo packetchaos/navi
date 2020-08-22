@@ -58,17 +58,15 @@ def cloud_to_target_group(cloud, days, choice):
     target_ips = []
 
     for assets in data['assets']:
-        for source in assets['sources']:
-            if source['name'] == 'AWS':
-                target_ip_list = assets['ipv4']
-                # loop through all of the IPs
-                for ip in target_ip_list:
-                    # Check to IP type
-                    check_ip = IP(ip)
-                    check = check_ip.iptype()
-                    if check == choice:
-                        # Add the IP if there is a match
-                        target_ips.append(ip)
+        target_ip_list = assets['ipv4']
+        # loop through all of the IPs
+        for ip in target_ip_list:
+            # Check to IP type
+            check_ip = IP(ip)
+            check = check_ip.iptype()
+            if check == choice:
+                # Add the IP if there is a match
+                target_ips.append(ip)
 
     create_target_group("{} Targets".format(cloud), target_ips)
 
