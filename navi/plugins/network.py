@@ -17,8 +17,8 @@ def get_scanner_id(scanner_name):
 
 def get_network_id(network_name):
     # Receive network name, convert to lower-case, then look up the network's uuid
-    for network in tio.networks.list():
-        if str(network_name).lower() == str(network['name']).lower():
+    for net in tio.networks.list():
+        if str(network_name).lower() == str(net['name']).lower():
             return network['uuid']
         else:
             return 'NONE'
@@ -81,10 +81,9 @@ def display(net):
 @click.option('--net', default='', help="Network Name or Network UUID")
 @click.option('--scanner', default='', help="Scanner Name or Scanner UUID")
 def move(net, scanner):
-
-    if network != '' and  scanner != '':
+    if net != '' and scanner != '':
         # Here I just want to check to see if its a uuid. If it's not 36 chars long, its not a uuid.
-        if len(network) != 36:
+        if len(net) != 36:
             network_id = get_network_id(net)
         else:
             network_id = net
