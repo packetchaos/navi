@@ -188,19 +188,19 @@ def change(owner, new, who, v):
     if who:
         scans = get_scans_by_owner(who)
 
-        print("\nScan Name".ljust(81), "Scan ID".ljust(10), "Scan Owner")
-        print("-" * 150)
-        print()
+        click.echo("\n{:80s} {:10} {}".format("Scan Name", "Scan ID", "Scan Owner"))
+        click.echo("-" * 150)
+        click.echo()
         for scan in scans:
-            print(str(scan[0]).ljust(80), str(scan[1]).ljust(10), str(scan[2]))
-        print()
+            click.echo("\n{:80s} {:10} {}".format(str(scan[0]), str(scan[1]), str(scan[2])))
+        click.echo()
 
     if owner:
         scans = get_scans_by_owner(owner)
         new_owner_uuid = get_owner_uuid(new)
-        print("\n*** Scans that have not run, will produce HTTP 400 errors ***")
-        print("\nYou Scans are being converted now.")
-        print("\nThis can take some time")
+        click.echo("\n*** Scans that have not run, will produce HTTP 400 errors ***")
+        click.echo("\nYou Scans are being converted now.")
+        click.echo("\nThis can take some time")
         for scan in scans:
             scan_uuid = scan[3]
             scan_name = scan[0]
@@ -215,7 +215,7 @@ def change(owner, new, who, v):
 
             request_data('PUT', '/scans/' + str(scan_id), payload=payload)
             if v:
-                print("\nDone - Payload: " + str(payload))
+                click.echo("\nDone - Payload: {}".format(str(payload)))
 
 
 @scan.command(help="Display Scan Details")
@@ -254,7 +254,7 @@ def latest():
 
         # turn epoch time into something readable
         epock_latest = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(grab_time))
-        print("\nThe last Scan run was at {}".format(epock_latest))
+        click.echo("\nThe last Scan run was at {}".format(epock_latest))
         scan_details(str(grab_uuid))
     except Exception as E:
         error_msg(E)
