@@ -1,6 +1,6 @@
 from .ip import ip
 from .find import find
-from .report import report
+from .cs import cs
 from .display import display
 from .mac import mac
 from .delete import delete
@@ -29,7 +29,7 @@ from .move_networks import move
 def plugin_loader(group):
     group.add_command(ip)
     group.add_command(find)
-    group.add_command(report)
+    group.add_command(cs)
     group.add_command(display)
     group.add_command(mac)
     group.add_command(delete)

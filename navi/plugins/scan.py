@@ -1,4 +1,6 @@
 import click
+import textwrap
+import time
 from .scanners import nessus_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
@@ -54,6 +56,39 @@ def get_scanner_id(scan_name):
             return scanner['id']
 
 
+def scan_details(scan_id):
+    try:
+        data = request_data('GET', '/scans/' + str(scan_id))
+        try:
+            click.echo("\nScan Details for Scan ID : {}\n".format(details))
+            click.echo("Notes: \b")
+            try:
+                click.echo(data['notes'][0]['message'])
+            except IndexError:
+                pass
+            click.echo("\nVulnerability Counts")
+            click.echo("-" * 20)
+            click.echo("Critical : {}".format(data['hosts'][0]['critical']))
+            click.echo("high : {}".format(data['hosts'][0]['high']))
+            click.echo("medium : {}".format(data['hosts'][0]['medium']))
+            click.echo("low : {}".format(data['hosts'][0]['low']))
+            try:
+                click.echo("-" * 15)
+                click.echo("Score : {}".format(data['hosts'][0]['score']))
+            except IndexError:
+                pass
+            click.echo("\n{:80s} {}".format("Vulnerability Details", "Vuln Count"))
+            click.echo("-" * 100)
+
+            for vulns in data['vulnerabilities']:
+                if vulns['severity'] != 0:
+                    click.echo("{:80s} {}".format(textwrap.shorten(str(vulns['plugin_name']), 80), vulns['count']))
+            click.echo()
+        except TypeError:
+            click.echo("Check the scan ID")
+    except Exception as E:
+        error_msg(E)
+
 
 @click.group(help="Create and Control Scans")
 def scan():
@@ -64,12 +99,12 @@ def scan():
 @click.argument('targets')
 def create(targets):
     try:
-        print("\nChoose your Scan Template")
-        print("1.   Basic Network Scan")
-        print("2.   Discovery Scan")
-        print("3.   Web App Overview")
-        print("4.   Web App Scan")
-        print("5.   WAS SSL SCAN")
+        click.echo("\nChoose your Scan Template")
+        click.echo("1.   Basic Network Scan")
+        click.echo("2.   Discovery Scan")
+        click.echo("3.   Web App Overview")
+        click.echo("4.   Web App Scan")
+        click.echo("5.   WAS SSL SCAN")
         option = input("Please enter option #.... ")
         if option == '1':
             template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"
@@ -82,16 +117,16 @@ def create(targets):
         elif len(option) == 52:
             template = str(option)
         else:
-            print("Using Basic scan since you can't follow directions")
+            click.echo("Using Basic scan since you can't follow directions")
             template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"
 
-        print("Here are the available scanners")
-        print("Remember, don't pick a Cloud scanner for an internal IP address")
-        print("Remember also, don't chose a Webapp scanner for an IP address")
+        click.echo("Here are the available scanners")
+        click.echo("Remember, don't pick a Cloud scanner for an internal IP address")
+        click.echo("Remember also, don't chose a Webapp scanner for an IP address")
         nessus_scanners()
         scanner_id = input("What scanner do you want to scan with ?.... ")
 
-        print("creating your scan of : " + targets + "  Now...")
+        click.echo("creating your scan of : {}  Now...".format(targets))
 
         payload = dict(uuid=template, settings={"name": "navi-Pro Created Scan of " + targets,
                                                 "enabled": "True",
@@ -107,7 +142,7 @@ def create(targets):
         # launch Scan
         request_data('POST', '/scans/' + scan_id + '/launch')
 
-        print("I started your scan, your scan ID is: ", scan_id)
+        click.echo("I started your scan, your scan ID is: {}".format(scan_id))
 
     except Exception as E:
         error_msg(E)
@@ -116,22 +151,13 @@ def create(targets):
 @scan.command(help="Start a valid Scan")
 @click.argument('scan_id')
 def start(scan_id):
-    try:
-        request_data('POST', '/scans/' + scan_id + '/launch')
-    except:
-        # Json error expected. Need to clean up api wrapper to fix this
-        pass
+    tio.scans.launch(scan_id)
 
 
 @scan.command(help="Get Scan Status")
 @click.argument('Scan_id')
 def status(scan_id):
-    try:
-        data = request_data('GET', '/scans/'+str(scan_id) + '/latest-status')
-        click.echo("\nLast Status update : {}".format(data['status']))
-        click.echo()
-    except Exception as E:
-        error_msg(E)
+    click.echo("\nLast Status update : {}\n".format(tio.scans.status(scan_id)))
 
 
 @scan.command(help="Resume a paused Scan")
@@ -190,3 +216,45 @@ def change(owner, new, who, v):
             request_data('PUT', '/scans/' + str(scan_id), payload=payload)
             if v:
                 print("\nDone - Payload: " + str(payload))
+
+
+@scan.command(help="Display Scan Details")
+@click.argument('scan_id')
+def details(scan_id):
+    scan_details(scan_id)
+
+
+@scan.command(help="Display the Latest scan information")
+def latest():
+    try:
+        data = request_data('GET', '/scans')
+        time_list = []
+        e = {}
+        for x in data["scans"]:
+            # keep UUID and Time together
+            # get last modication date for duration computation
+            epoch_time = x["last_modification_date"]
+            # get the scanner ID to display the name of the scanner
+            d = x["id"]
+            # need to identify type to compare against pvs and agent scans
+            scan_type = str(x["type"])
+            # don't capture the PVS or Agent data in latest
+            while scan_type not in ['pvs', 'agent', 'webapp', 'lce']:
+                # put scans in a list to find the latest
+                time_list.append(epoch_time)
+                # put the time and id into a dictionary
+                e[epoch_time] = d
+                break
+
+        # find the latest time
+        grab_time = max(time_list)
+
+        # get the scan with the corresponding ID
+        grab_uuid = e[grab_time]
+
+        # turn epoch time into something readable
+        epock_latest = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(grab_time))
+        print("\nThe last Scan run was at {}".format(epock_latest))
+        scan_details(str(grab_uuid))
+    except Exception as E:
+        error_msg(E)

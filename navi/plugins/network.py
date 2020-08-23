@@ -1,11 +1,12 @@
 import click
 from .api_wrapper import request_data, tenb_connection
+from .database import new_db_connection
 
 # pytenable - No TTL Days / Change Age-out policy
 tio = tenb_connection()
 
 
-@click.group(help="Change the Asset Age out or Create a Network")
+@click.group(help="Create, Change Networks or Display Assets in a network")
 def network():
     pass
 
@@ -35,3 +36,24 @@ def new(name, description):
 
     if name != '':
         tio.networks.create(name, description=description)
+
+
+@network.command()
+@click.option("--net", default='', required=True, help="Select Network ID")
+def display(net):
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    with conn:
+        cur = conn.cursor()
+        cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where network == '" + net + "';")
+        data = cur.fetchall()
+
+        click.echo("\n{:25s} {:65s} {}".format("IP Address", "Full Qualified Domain Name", "Licensed Scan Date"))
+        click.echo("-" * 150)
+        click.echo()
+        for asset in data:
+            ipv4 = asset[0]
+            fqdn = asset[1]
+            licensed_date = asset[2]
+            click.echo("{:25s} {:65s} {}".format(str(ipv4), str(fqdn), licensed_date))
+    click.echo()
