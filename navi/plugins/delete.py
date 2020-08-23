@@ -82,7 +82,7 @@ def repository(tid):
     request_delete('delete', '/container-security/api/v2/' + str(tid))
 
 
-@delete.command(help='Delete a user by User ID - API BUG! - Doesn\'t work right now')
+@delete.command(help='Delete a user by User ID - Not UUID')
 @click.argument('tid')
 def user(tid):
     click.echo("\nI'm Deleting the User you requested")
