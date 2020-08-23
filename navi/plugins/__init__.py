@@ -2,13 +2,8 @@ from .ip import ip
 from .find import find
 from .report import report
 from .display import display
-from .pause import pause
-from .start import start
-from .stop import stop
-from .resume import resume
 from .mac import mac
 from .delete import delete
-from .status import status
 from .api import api
 from .export import export
 from .lumin import lumin
@@ -24,7 +19,6 @@ from .new_tag import tag
 from .agroup import agroup
 from .navi_portal import portal
 from .was import was
-from .change import change
 from .network import network
 from .user import user
 from .group import usergroup
@@ -37,13 +31,8 @@ def plugin_loader(group):
     group.add_command(find)
     group.add_command(report)
     group.add_command(display)
-    group.add_command(pause)
-    group.add_command(resume)
-    group.add_command(start)
-    group.add_command(stop)
     group.add_command(mac)
     group.add_command(delete)
-    group.add_command(status)
     group.add_command(api)
     group.add_command(export)
     group.add_command(lumin)
@@ -59,7 +48,6 @@ def plugin_loader(group):
     group.add_command(agroup)
     group.add_command(portal)
     group.add_command(was)
-    group.add_command(change)
     group.add_command(network)
     group.add_command(user)
     group.add_command(usergroup)

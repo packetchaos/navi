@@ -7,7 +7,7 @@ tio = tenb_connection()
 def get_scanner_id(scanner_name):
     # Receive name, convert to lower-case, then look up the scanner's ID
     for scanner in tio.scanners.list():
-        if str(scanner_name).lower() == str(scanner_name['name']).lower():
+        if str(scanner_name).lower() == str(scanner['name']).lower():
             return scanner['uuid']
         else:
             return 'NONE'
@@ -29,14 +29,14 @@ def move(network, scanner):
 
     if network != '' and  scanner != '':
         # Here I just want to check to see if its a uuid. If it's not 36 chars long, its not a uuid.
-        if len(network) != 35:
+        if len(network) != 36:
             network_id = get_network_id(network)
         else:
             network_id = network
 
         # Scanner UUIDs have two lengths, both over 35. This isn't bullet proof but it's good enough for now.
         # I expect a lot from users. :)
-        if len(scanner) > 30:
+        if len(scanner) > 35:
             # This should be a uuid.
             scanner_id = scanner
         else:

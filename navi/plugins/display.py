@@ -311,10 +311,10 @@ def display(scanners, users, exclusions, containers, logs, running, scans, nnm, 
         click.echo()
 
     if networks:
-        click.echo("\n{:20s} {:16} {}".format("Network Name", "# of Scanners", "UUID"))
+        click.echo("\n{:45s} {:16} {}".format("Network Name", "# of Scanners", "UUID"))
         click.echo("-" * 150)
         for network in tio.networks.list():
-            click.echo("{:20s} {:16} {}".format(str(network['name']), str(network['scanner_count']),
+            click.echo("{:45s} {:16} {}".format(str(network['name']), str(network['scanner_count']),
                                                 str(network['uuid'])))
         click.echo()
 
