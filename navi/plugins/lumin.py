@@ -16,11 +16,11 @@ from .api_wrapper import request_data
 def lumin(acr, v, c, note, business,  compliance, mitigation, development):
     choice = []
     if c == '':
-        print("We require a Tag Category to update the ACR by Tag")
+        click.echo("We require a Tag Category to update the ACR by Tag")
         exit()
 
     if v == '':
-        print("We require a Tag value to update the ACR by Tag")
+        click.echo("We require a Tag value to update the ACR by Tag")
         exit()
 
     if business:
@@ -64,8 +64,8 @@ def lumin(acr, v, c, note, business,  compliance, mitigation, development):
                     pass
 
             if not lumin_list:
-                print("We did not find a Tag with that Category or Value\n")
-                print("If you think this is an error, surround your category and value in \"\"")
+                click.echo("We did not find a Tag with that Category or Value\n")
+                click.echo("If you think this is an error, surround your category and value in \"\"")
                 exit()
             else:
                 note = note + " - navi"
@@ -75,4 +75,4 @@ def lumin(acr, v, c, note, business,  compliance, mitigation, development):
 
 
     else:
-        print("You can't have a score below 1 or higher than 10")
+        click.echo("You can't have a score below 1 or higher than 10")

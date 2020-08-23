@@ -1,4 +1,5 @@
 import csv
+import click
 from .database import new_db_connection
 from .api_wrapper import tenb_connection
 
@@ -60,6 +61,6 @@ def lumin_export():
                             export_list.append(" ")
 
                 except ConnectionError:
-                    print("Check your API keys or your internet connection")
+                    click.echo("Check your API keys or your internet connection")
                 # write to the CSV
                 agent_writer.writerow(export_list)
