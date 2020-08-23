@@ -15,6 +15,7 @@ tio = tenb_connection()
 def display():
     pass
 
+
 @display.command(help="List all of the scanners")
 def scanners():
     nessus_scanners()
@@ -82,7 +83,7 @@ def scans():
     click.echo()
 
 
-@display.command( help="Nessus Network Monitor assets and their vulnerability scores")
+@display.command(help="Nessus Network Monitor assets and their vulnerability scores")
 def nnm():
     for scan in tio.scans.list():
         if str(scan["type"]) == "pvs":
@@ -310,13 +311,13 @@ def smtp():
 def cloud():
     click.echo("\n{:11s} {:15s} {:45s} {:40} {}".format("Source", "IP", "FQDN", "UUID", "First seen"))
     click.echo("-" * 150)
-    for assets in tio.workbenches.assets(('sources', 'set-has', 'AWS'), ('sources', 'set-has', 'GCP'), ('sources', 'set-has', 'AZURE'), filter_type="or", age=90):
-        for source in assets['sources']:
+    for cloud_assets in tio.workbenches.assets(('sources', 'set-has', 'AWS'), ('sources', 'set-has', 'GCP'), ('sources', 'set-has', 'AZURE'), filter_type="or", age=90):
+        for source in cloud_assets['sources']:
             if source['name'] != 'NESSUS_SCAN':
-                asset_ip = assets['ipv4'][0]
-                uuid = assets['id']
+                asset_ip = cloud_assets['ipv4'][0]
+                uuid = cloud_assets['id']
                 try:
-                    asset_fqdn = assets['fqdn'][0]
+                    asset_fqdn = cloud_assets['fqdn'][0]
                 except IndexError:
                     asset_fqdn = "NO FQDN found"
 

@@ -13,84 +13,98 @@ from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
 
 
-@click.command(help="Export data into a CSV")
-@click.option('-assets', is_flag=True, help='Exports all Asset data into a CSV')
-@click.option('-agents', is_flag=True, help="Export all Agent data into a CSV")
-@click.option('-was', is_flag=True, help="Export Webapp Scan Summary into a CSV - WAS V2")
-@click.option('-consec', is_flag=True, help="Export Container Security Summary into a CSV")
-@click.option('-licensed', is_flag=True, help="Export a List of all the Licensed Assets")
-@click.option('-lumin', is_flag=True, help="Export all Asset data including ACR and AES into a CSV. This will take some time")
-@click.option('--network', default='', help="Export All assets of a given network")
-@click.option('--query', default='', help="Export assets by query to the vuln db")
-@click.option('--group', default='', help="Export Agents by Group name - API limits 5000 Agents")
-@click.option('-bytag', is_flag=True, help="Export all assets by tag; Include ACR and AES into a CSV")
+@click.group(help="Export Ienable.io Data")
+def export():
+    pass
+
+
+@export.command(help="Export All Asset data in the Navi Database to a CSV")
+def assets():
+    click.echo("\nExporting your data now. Saving asset_data.csv now...\n")
+    csv_export()
+
+
+@export.command(help="Export All Agent data into a CSV")
+def agents():
+    click.echo("\nExporting your data now. Saving agent_data.csv now...\n")
+    agent_export()
+
+
+@export.command(help="Export Container Security Summary into a CSV")
+def consec():
+    click.echo("\nExporting your data now. Saving consec_data.csv now...\n")
+    consec_export()
+
+
+@export.command(help="Export Licsensed Assets into a CSV")
+def licensed():
+    click.echo("\nExporting your data now. Saving licensed_data.csv now...\n")
+    licensed_export()
+
+
+@export.command(help="Export all Asset data including ACR and AES into a CSV. This will take some time")
+def lumin():
+    click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
+    click.echo("Saving asset_lumin.csv now...\n")
+    lumin_export()
+
+
+@export.command(help="Export All assets of a given network")
+def network():
+    click.echo("\nExporting your data now. Saving network_data.csv now...")
+    network_export(network)
+
+
+@export.command(help='Export assets by query to the vuln db')
+@click.argument('statement')
+def query(statement):
+    query_export(statement)
+
+
+@export.command(help='Export Agents by Group name - API limits 5000 Agents')
+@click.argument('group_name')
+def group(group_name):
+    click.echo("\nExporting your data now.  Saving agent_group_data.csv now...")
+    agent_group_export(group_name)
+
+
+@export.command(help="Export all assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default='', help="Export bytag with the following Category name")
 @click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
 @click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
 @click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
-def export(assets, agents, consec, licensed, lumin, network, query, group, bytag, c, v, ec, ev, was):
-    if assets:
-        click.echo("\nExporting your data now. Saving asset_data.csv now...\n")
-        csv_export()
+def bytag(c, v, ec, ev):
+    if c == '':
+        click.echo("Tag Category is required.  Please use the --c command")
+        exit()
 
-    if agents:
-        click.echo("\nExporting your data now. Saving agent_data.csv now...\n")
-        agent_export()
+    if v == '':
+        click.echo("Tag Value is required. Please use the --v command")
+        exit()
 
-    if consec:
-        click.echo("\nExporting your data now. Saving consec_data.csv now...\n")
-        consec_export()
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    with conn:
+        try:
+            new_list = []
+            cur = conn.cursor()
+            cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
-    if licensed:
-        click.echo("\nExporting your data now. Saving licensed_data.csv now...\n")
-        licensed_export()
+            tag_assets = cur.fetchall()
 
-    if lumin:
-        click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
-        click.echo("Saving asset_lumin.csv now...\n")
-        lumin_export()
+            for asset in tag_assets:
+                # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
+                # for Each IP check to see if it exists in the exclude tag pair.  If it doesn't add it to the list.
+                check_for_no = tag_checker(asset[1], ec, ev)
+                if check_for_no == 'no':
+                    new_list.append(asset[0])
+        except conn.OperationalError:
+            click.echo('Sorry Right now, navi doesn\'t support \' in a tag')
 
-    if network:
-        click.echo("\nExporting your data now. Saving network_data.csv now...")
-        network_export(network)
+    tag_export(new_list)
 
-    if query != '':
-        query_export(query)
 
-    if group != '':
-        click.echo("\nExporting your data now.  Saving agent_group_data.csv now...")
-        agent_group_export(group)
-
-    if bytag:
-        if c == '':
-            click.echo("Tag Category is required.  Please use the --c command")
-            exit()
-
-        if v == '':
-            click.echo("Tag Value is required. Please use the --v command")
-            exit()
-
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            try:
-                new_list = []
-                cur = conn.cursor()
-                cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
-
-                assets = cur.fetchall()
-
-                for asset in assets:
-                    # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
-                    # for Each IP check to see if it exists in the exclude tag pair.  If it doesn't add it to the list.
-                    check_for_no = tag_checker(asset[1], ec, ev)
-                    if check_for_no == 'no':
-                        new_list.append(asset[0])
-            except conn.OperationalError:
-                click.echo('Sorry Right now, navi doesn\'t support \' in a tag')
-
-        tag_export(new_list)
-
-    if was:
-        click.echo("\nExporting your data now. Saving was_v2_data.csv now...")
-        was_export()
+@export.command(help="Export Webapp Scan Summary into a CSV - WAS V2")
+def was():
+    click.echo("\nExporting your data now. Saving was_v2_data.csv now...")
+    was_export()
