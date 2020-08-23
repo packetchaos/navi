@@ -38,7 +38,7 @@ def usergroup():
     pass
 
 
-@usergroup.command("Create a new user group")
+@usergroup.command(help="Create a new user group")
 @click.option("--name", default='', required=True, help="The Name of the group")
 def create(name):
     # Check to see if the group already exists
@@ -49,7 +49,7 @@ def create(name):
         print("Your Group already exists. Hers the group id {}".format(group_id))
 
 
-@usergroup.command("Add a User to a user group")
+@usergroup.command(help="Add a User to a user group")
 @click.option("--name", default='', required=True, help="The Name of the group")
 @click.option("--user", default='', required=True, help="The User Name to be added or removed")
 def add(name, user):
@@ -58,7 +58,7 @@ def add(name, user):
     add_users(user_id, group_id)
 
 
-@usergroup.command("Remove a User from a user group")
+@usergroup.command(help="Remove a User from a user group")
 @click.option("--name", default='', required=True, help="The Name of the group")
 @click.option("--user", default='', required=True, help="The User Name to be added or removed")
 def remove(name, user):
