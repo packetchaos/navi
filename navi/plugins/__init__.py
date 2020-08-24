@@ -15,7 +15,7 @@ from .listen import listen
 from .keys import keys
 from .smtp import smtp
 from .mail import mail
-from .new_tag import tag
+from .tag import tag
 from .agroup import agroup
 from .navi_portal import portal
 from .was import was
