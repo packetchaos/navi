@@ -25,7 +25,7 @@ def tag_by_tag(c, v, d, cv, cc):
         if child_answer == 'yes':
 
             # Update the tag parent tag with the new child tag
-            print("Your tag is being updated\n")
+            click.echo("Your tag is being updated\n")
 
             try:
                 rules_list.append({"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)})
@@ -50,7 +50,7 @@ def tag_by_tag(c, v, d, cv, cc):
                                     if filters not in rules_list:
                                         rules_list.append(filters)
                             except Exception as F:
-                                print(F)
+                                click.echo(F)
 
                 payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": rules_list}}}
                 # Update the Parent Tag with the new child tag information
@@ -58,13 +58,13 @@ def tag_by_tag(c, v, d, cv, cc):
 
                 value_uuid = data["uuid"]
                 cat_uuid = data['category_uuid']
-                print("\nI've Updated your Tag - {} : {}\n".format(c, v))
-                print("The Category UUID is : {}\n".format(cat_uuid))
-                print("The Value UUID is : {}\n".format(value_uuid))
+                click.echo("\nI've Updated your Tag - {} : {}\n".format(c, v))
+                click.echo("The Category UUID is : {}\n".format(cat_uuid))
+                click.echo("The Value UUID is : {}\n".format(value_uuid))
             except Exception as E:
-                print(E)
+                click.echo(E)
         else:
-            print("The Child Tag does not exist")
+            click.echo("The Child Tag does not exist")
 
     else:
         # If the parent tag doesn't exist, does the child?
@@ -79,14 +79,14 @@ def tag_by_tag(c, v, d, cv, cc):
 
                 value_uuid = data["uuid"]
                 cat_uuid = data['category_uuid']
-                print("\nI've created your new Tag - {} : {}\n".format(c, v))
-                print("The Category UUID is : {}\n".format(cat_uuid))
-                print("The Value UUID is : {}\n".format(value_uuid))
+                click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+                click.echo("The Category UUID is : {}\n".format(cat_uuid))
+                click.echo("The Value UUID is : {}\n".format(value_uuid))
 
             except Exception as F:
-                print(F)
+                click.echo(F)
         else:
-            print("Your Child Tag doesn't exist.")
+            click.echo("Your Child Tag doesn't exist.")
 
 
 def tag_by_ip(ip_list, tag_list, c, v, d):
@@ -98,16 +98,16 @@ def tag_by_ip(ip_list, tag_list, c, v, d):
         try:
             value_uuid = data["uuid"]
             cat_uuid = data['category_uuid']
-            print("\nI've created your new Tag - {} : {}\n".format(c, v))
-            print("The Category UUID is : {}\n".format(cat_uuid))
-            print("The Value UUID is : {}\n".format(value_uuid))
-            print(str(len(tag_list)) + " IPs added to the Tag")
+            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+            click.echo("The Category UUID is : {}\n".format(cat_uuid))
+            click.echo("The Value UUID is : {}\n".format(value_uuid))
+            click.echo("{} IPs added to the Tag".format(str(len(tag_list))))
         except Exception as E:
-            print("Duplicate Tag Category: You may need to delete your tag first\n")
-            print("We could not confirm your tag name, is it named weird?\n")
-            print(E)
+            click.echo("Duplicate Tag Category: You may need to delete your tag first\n")
+            click.echo("We could not confirm your tag name, is it named weird?\n")
+            click.echo(E)
     except:
-        print("Duplicate Category")
+        click.echo("Duplicate Category")
 
 
 def tag_by_uuid(tag_list, c, v, d):
@@ -119,7 +119,7 @@ def tag_by_uuid(tag_list, c, v, d):
 
     # We Want to bail if the result is 0 Assets
     if not tag_list:
-        print("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
+        click.echo("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
         exit()
     else:
         # Before updating confirm if the tag exists
@@ -142,27 +142,27 @@ def tag_by_uuid(tag_list, c, v, d):
             data = request_data('POST', '/tags/values', payload=payload)
             value_uuid = data["uuid"]
             cat_uuid = data['category_uuid']
-            print("\nI've created your new Tag - {} : {}\n".format(c, v))
-            print("The Category UUID is : {}\n".format(cat_uuid))
-            print("The Value UUID is : {}\n".format(value_uuid))
+            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+            click.echo("The Category UUID is : {}\n".format(cat_uuid))
+            click.echo("The Value UUID is : {}\n".format(value_uuid))
 
             # Check to see if the List of UUIDs is over 1999 (API Limit)
             if len(tag_list) > 1999:
                 try:
-                    print("Your Tag list was over 2000 IPs.  Splitting the UUIDs into chunks and updating the tags now")
+                    click.echo("Your Tag list was over 2000 IPs.  Splitting the UUIDs into chunks and updating the tags now")
                     # Break the UUIDs into Chunks and update the tag per chunk
                     for chunks in chunks(tag_list, 1999):
                         update_tag(c, v, chunks)
 
                 except Exception as E:
-                    print("An Error Occurred: \n")
-                    print(E)
+                    click.echo("An Error Occurred: \n")
+                    click.echo(E)
             else:
                 try:
                     update_tag(c, v, tag_list)
                 except Exception as E:
-                    print("An Error Occurred: \n")
-                    print(E)
+                    click.echo("An Error Occurred: \n")
+                    click.echo(E)
 
 
 @click.command(help="Create a Tag Category/Value Pair")
@@ -186,15 +186,15 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
     ip_update = 0
 
     if c == '':
-        print("Category is required.  Please use the --c command")
+        click.echo("Category is required.  Please use the --c command")
         exit()
 
     if v == '':
-        print("Value is required. Please use the --v command")
+        click.echo("Value is required. Please use the --v command")
         exit()
 
     if output != '' and plugin == '':
-        print("You must supply a plugin")
+        click.echo("You must supply a plugin")
         exit()
 
     if plugin:
@@ -270,7 +270,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
 
     if group != '':
         ip_update = 1
-        print("\nDue to a API bug, I'm going to delete the current tag. You may get a 404 error if this is a new tag.")
+        click.echo("\nDue to a API bug, I'm going to delete the current tag. You may get a 404 error if this is a new tag.")
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
         # Need to research a better solution for this problem.  Need to submit a bug.  Going to just delete the tag for now.
         uuid_to_delete = return_tag_uuid(c, v)
@@ -292,7 +292,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
                         ip_list = ip_list + "," + ip_address
                         tag_list.append(uuid)
         except Error:
-            print("You might not have agent groups, or you are using Nessus Manager.  ")
+            click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
 
         tag_by_ip(ip_list, tag_list, c, v, d)
 
@@ -337,7 +337,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
                             tag_list.append(vulns[1])
                         except ValueError:
                             pass
-                print()
+                click.echo()
             except ValueError:
                 pass
 

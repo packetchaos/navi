@@ -1,9 +1,10 @@
+import click
 from .api_wrapper import request_data
 from .database import new_db_connection
 
 
 def update_tag(c, v, tag_list):
-    print("Your tag is being updated\n")
+    click.echo("Your tag is being updated\n")
     tag_data = request_data('GET', '/tags/values')
     try:
         for tag in tag_data['values']:
@@ -13,7 +14,7 @@ def update_tag(c, v, tag_list):
                         tag_uuid = tag['uuid']
                         payload = {"action": "add", "assets": tag_list, "tags": [tag_uuid]}
                         data = request_data('POST', '/tags/assets/assignments', payload=payload)
-                        print("Job UUID : ", data['job_uuid'])
+                        click.echo("Job UUID : {}".format(data['job_uuid']))
                     except:
                         pass
     except:
@@ -44,7 +45,7 @@ def confirm_tag_exists(key, value):
                 if str(tag['value']).lower() == str(value).lower():
                     return 'yes'
     except Exception as E:
-        print(E)
+        click.echo(E)
 
 
 def return_tag_uuid(key, value):
@@ -57,8 +58,8 @@ def return_tag_uuid(key, value):
                 else:
                     return 'none'
     except Exception as E:
-        print(E)
+        click.echo(E)
 
 
 def tag_msg():
-    print("Remember to run the update command if you want to use your new tag in navi")
+    click.echo("Remember to run the update command if you want to use your new tag in navi")
