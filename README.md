@@ -8,6 +8,10 @@ in Cyber Exposure or Vulnerability Management.
      and is not subject to any license agreement you may have with Tenable ***
 
 ## Important Notes
+
+    Navi is being converted to use pytenable as it's base.  Many of the commands
+    have already been converted to using pytenable.
+
 Navi will download the entire data-set(90 days) locally after API keys are
 entered and the update command is used! To download Vulnerability data and Asset data you have to be an Administrator in Tenable.io.
 

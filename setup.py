@@ -27,7 +27,7 @@ setup(
     install_requires=[
         'Click>=7.0',
         'requests',
-        'flask', 'IPy'
+        'flask', 'IPy', 'pytenable'
     ],
     python_requires='>=3.0',
     extras_require={
