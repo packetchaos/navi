@@ -1,4 +1,5 @@
 import requests
+import click
 from json import JSONDecodeError
 from .database import new_db_connection
 from tenable.io import TenableIO
@@ -55,18 +56,18 @@ def request_delete(method, url_mod, **kwargs):
     try:
         r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
         if r.status_code == 200:
-            print("Success!\n")
+            click.echo("Success!\n")
         elif r.status_code == 404:
-            print('\nCheck your query...', r)
+            click.echo('\nCheck your query...{}'.format(r))
         elif r.status_code == 429:
-            print("\nToo many requests at a time...\n", r)
+            click.echo("\nToo many requests at a time...\n {}".format(r))
         elif r.status_code == 400:
-            print("\nCheck your params.  Password complexity is the most common issue\n", r)
-            print()
+            click.echo("\nCheck your params.  Password complexity is the most common issue\n{}".format(r))
+            click.echo()
         else:
-            print("Something went wrong...Don't be trying to hack me now", r)
+            click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))
     except ConnectionError:
-        print("Check your connection...You got a connection error")
+        click.echo("Check your connection...You got a connection error")
 
 
 def request_data(method, url_mod, **kwargs):
@@ -95,33 +96,33 @@ def request_data(method, url_mod, **kwargs):
 
             if r.status_code == 202:
                 # This response is for some successful posts.
-                print("\nSuccess!\n")
+                click.echo("\nSuccess!\n")
                 break
             elif r.status_code == 404:
-                print('\nCheck your query...I can\'t find what you\'re looking for', r)
+                click.echo('\nCheck your query...I can\'t find what you\'re looking for {}'.format(r))
                 return r.json()
             elif r.status_code == 429:
-                print("\nToo many requests at a time...\n", r)
+                click.echo("\nToo many requests at a time...\n{}".format(r))
                 break
             elif r.status_code == 400:
-                print("\nThe object you tried to create may already exist\n")
-                print("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
+                click.echo("\nThe object you tried to create may already exist\n")
+                click.echo("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
                 break
             elif r.status_code == 403:
-                print("\nYou are not authorized! You need to be an admin\n", r)
+                click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
                 break
             elif r.status_code == 409:
-                print("API Returned 409")
+                click.echo("API Returned 409")
                 break
             elif r.status_code == 504:
-                print("\nOne of the Threads and an issue during download...Retrying...\n", r)
+                click.echo("\nOne of the Threads and an issue during download...Retrying...\n{}".format(r))
                 break
             else:
-                print("Something went wrong...Don't be trying to hack me now", r)
+                click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))
                 break
         except ConnectionError:
-            print("Check your connection...You got a connection error. Retying")
+            click.echo("Check your connection...You got a connection error. Retying")
             continue
         except JSONDecodeError:
-            print("Download Error or User enabled / Disabled ")
+            click.echo("Download Error or User enabled / Disabled ")
             continue
