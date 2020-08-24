@@ -45,12 +45,10 @@ def add(ip, mac, netbios, fqdn, hostname, file, source):
         # create Payload
         payload = {"assets": [asset], "source": source}
 
-        print("Added the following Data : \n")
-        print(payload)
-        print()
+        click.echo("Added the following Data : \n{}\n".format(payload))
 
         # request Import Job
         data = request_data('POST', '/import/assets', payload=payload)
-        print("Your Import ID is : ", data['asset_import_job_uuid'])
+        click.echo("Your Import ID is : {}".format(data['asset_import_job_uuid']))
     except Error as E:
         error_msg(E)

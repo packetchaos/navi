@@ -32,12 +32,10 @@ def add_helper(file, source):
                 # create Payload
                 payload = {"assets": [asset], "source": source}
 
-                click.echo("Added the following Data : \n")
-                click.echo(payload)
-                click.echo()
+                click.echo("Added the following Data : \n{}\n".format(payload))
 
                 # request Import Job
                 data = request_data('POST', '/import/assets', payload=payload)
-                click.echo("Your Import ID is : ", data['asset_import_job_uuid'])
+                click.echo("Your Import ID is : {}".format(data['asset_import_job_uuid']))
     except Error as e:
         click.echo(e)
