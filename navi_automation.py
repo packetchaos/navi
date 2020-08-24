@@ -11,26 +11,26 @@ sys('navi keys --a access_key --s secret_key')
 
 sys('echo Adding User Groups')
 # Create User Groups
-sys('navi usergroup -new --name "Linux" >> user_navi.log')
-sys('navi usergroup -new --name "Corporate Apps" >> user_navi.log')
-sys('navi usergroup -new --name "Custom Apps" >> user_navi.log')
-sys('navi usergroup -new --name "Software" >> user_navi.log')
+sys('navi usergroup new --name "Linux" >> user_navi.log')
+sys('navi usergroup new --name "Corporate Apps" >> user_navi.log')
+sys('navi usergroup new --name "Custom Apps" >> user_navi.log')
+sys('navi usergroup new --name "Software" >> user_navi.log')
 
 sys('echo creating users')
 # Create or enable users
-sys('navi user -add --username "thor@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Thor" --email "thor@marvel.avengers" >> user_navi.log' )
-sys('navi user -add --username "hulk@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Hulk Smash" --email "hulk@marvel.avengers" >> user_navi.log')
-sys('navi user -add --username "ironman@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "IronMan" --email "ironman@@marvel.avengers" >> user_navi.log')
-sys('navi user -add --username "spiderman@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Spiderman" --email "spiderman@marvel.avengers" >> user_navi.log')
-sys('navi user -add --username "strange@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Dr Strange" --email "strange@marvel.avengers" >> user_navi.log')
+sys('navi user add --username "thor@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Thor" --email "thor@marvel.avengers" >> user_navi.log' )
+sys('navi user add --username "hulk@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Hulk Smash" --email "hulk@marvel.avengers" >> user_navi.log')
+sys('navi user add --username "ironman@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "IronMan" --email "ironman@@marvel.avengers" >> user_navi.log')
+sys('navi user add --username "spiderman@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Spiderman" --email "spiderman@marvel.avengers" >> user_navi.log')
+sys('navi user add --username "strange@marvel.avengers" --password "Dietcoke\!12345" --permission 64 --name "Dr Strange" --email "strange@marvel.avengers" >> user_navi.log')
 
 sys('echo Adding users to groups')
 # Add a user to a group
-sys('navi usergroup -add --user "spiderman@test.tenable" --name "Software" >> user_navi.log')
-sys('navi usergroup -add --user "ironman@test.tenable" --name "Linux" >> user_navi.log')
-sys('navi usergroup -add --user "hulk@test.tenable" --name "Corporate Apps" >> user_navi.log')
-sys('navi usergroup -add --user "thor@test.tenable" --name "Custom Apps" >> user_navi.log')
-sys('navi usergroup -add --user "spiderman@test.tenable" --name "Custom Apps" >> user_navi.log')
+sys('navi usergroup add --user "spiderman@test.tenable" --name "Software" >> user_navi.log')
+sys('navi usergroup add --user "ironman@test.tenable" --name "Linux" >> user_navi.log')
+sys('navi usergroup add --user "hulk@test.tenable" --name "Corporate Apps" >> user_navi.log')
+sys('navi usergroup add --user "thor@test.tenable" --name "Custom Apps" >> user_navi.log')
+sys('navi usergroup add --user "spiderman@test.tenable" --name "Custom Apps" >> user_navi.log')
 
 sys('echo first update')
 # First we need to download all of our data.
