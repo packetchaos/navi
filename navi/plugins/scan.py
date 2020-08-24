@@ -11,11 +11,11 @@ tio = tenb_connection()
 def get_scans_by_owner(owner):
     data = request_data('GET', '/scans')
     scan_data = []
-    for scan in data['scans']:
-        scan_id = scan['id']
-        scan_owner = scan['owner']
-        scan_name = scan['name']
-        scan_uuid = scan['wizard_uuid']
+    for get_scan in data['scans']:
+        scan_id = get_scan['id']
+        scan_owner = get_scan['owner']
+        scan_name = get_scan['name']
+        scan_uuid = get_scan['wizard_uuid']
         if scan_owner == owner:
             scan_data.append((scan_name, scan_id, owner, scan_uuid))
     return scan_data
@@ -31,20 +31,20 @@ def get_owner_uuid(owner):
 
 
 def get_targets(scan_id):
-    scan_details = request_data('GET', '/scans/' + str(scan_id))
+    get_scan_details = request_data('GET', '/scans/' + str(scan_id))
     try:
-        targets = scan_details['info']['targets']
+        targets = get_scan_details['info']['targets']
     except TypeError:
         targets = ""
     except KeyError:
         targets = ""
 
     try:
-        tag_targets = scan_details['info']['tag_targets']
+        tag_targets = get_scan_details['info']['tag_targets']
     except TypeError:
         tag_targets = ""
 
-    scanner_name = scan_details['info']['scanner_name']
+    scanner_name = get_scan_details['info']['scanner_name']
 
     return targets, tag_targets, scanner_name
 
@@ -186,25 +186,25 @@ def stop(scan_id):
 def change(owner, new, who, v):
 
     if who:
-        scans = get_scans_by_owner(who)
+        who_scans = get_scans_by_owner(who)
 
         click.echo("\n{:80s} {:10} {}".format("Scan Name", "Scan ID", "Scan Owner"))
         click.echo("-" * 150)
         click.echo()
-        for scan in scans:
-            click.echo("\n{:80s} {:10} {}".format(str(scan[0]), str(scan[1]), str(scan[2])))
+        for who_scan in who_scans:
+            click.echo("{:80s} {:10} {}".format(str(who_scan[0]), str(who_scan[1]), str(who_scan[2])))
         click.echo()
 
     if owner:
-        scans = get_scans_by_owner(owner)
+        owner_scans = get_scans_by_owner(owner)
         new_owner_uuid = get_owner_uuid(new)
         click.echo("\n*** Scans that have not run, will produce HTTP 400 errors ***")
         click.echo("\nYou Scans are being converted now.")
         click.echo("\nThis can take some time")
-        for scan in scans:
-            scan_uuid = scan[3]
-            scan_name = scan[0]
-            scan_id = scan[1]
+        for owner_scan in owner_scans:
+            scan_uuid = owner_scan[3]
+            scan_name = owner_scan[0]
+            scan_id = owner_scan[1]
             targets, tag_targets, scanner_name = get_targets(scan_id)
             payload = dict(uuid=scan_uuid, settings={"name": scan_name,
                                                      "owner_id": new_owner_uuid,

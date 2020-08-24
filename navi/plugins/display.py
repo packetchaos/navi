@@ -342,24 +342,24 @@ def version():
     click.echo("\nCurrent Navi Version: {}\n".format(navi_version()))
 
 
-@display.command(help="Print Usergroup information")
-def usergroup():
-    click.echo("\n{:35s} {:10s} {:40s} {}".format("Group Name", "Group ID", "Group UUID", "User Count"))
-    click.echo("-" * 150)
-    for ugroup in tio.groups.list():
-        click.echo("{:35s} {:10s} {:40s} {}".format(str(ugroup['name']), str(ugroup['id']),
+@display.command(help="Print User group information")
+@click.option('--membership', required=True, default='', help="Display Users that apart of a particular usergroup")
+def usergroup(membership):
+
+    if membership != '':
+        click.echo("\n{:35s} {:40s} {:40s} {:10} {}".format("User Name", "Login email", "User UUID", "User ID",
+                                                            "Enabled?"))
+        click.echo("-" * 150)
+        for user in tio.groups.list_users(membership):
+            click.echo("{:35s} {:40s} {:40s} {:10} {}".format(str(user["name"]), str(user["username"]),
+                                                              str(user['uuid']), str(user['id']),
+                                                              str(user["enabled"])))
+        click.echo()
+    else:
+        click.echo("\n{:35s} {:10s} {:40s} {}".format("Group Name", "Group ID", "Group UUID", "User Count"))
+        click.echo("-" * 150)
+        for ugroup in tio.groups.list():
+            click.echo("{:35s} {:10s} {:40s} {}".format(str(ugroup['name']), str(ugroup['id']),
                                                     str(ugroup['uuid']), str(ugroup['user_count'])))
-    click.echo()
+        click.echo()
 
-
-@display.command(help="Print Usergroup Membership")
-@click.argument('uid')
-def membership(uid):
-    click.echo("\n{:35s} {:40s} {:40s} {:10} {}".format("User Name", "Login email", "User UUID", "User ID",
-                                                        "Enabled?"))
-    click.echo("-" * 150)
-    for user in tio.groups.list_users(uid):
-        click.echo("{:35s} {:40s} {:40s} {:10} {}".format(str(user["name"]), str(user["username"]),
-                                                          str(user['uuid']), str(user['id']),
-                                                          str(user["enabled"])))
-    click.echo()

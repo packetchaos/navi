@@ -36,10 +36,10 @@ def user():
 
 @user.command(help="Add a User to Tenable.io - User will be enabled if already exists")
 @click.option("--username", "--u", default='', required=True, help="Username")
-@click.option("--password", "--p", default='', required=True, help="Users password. Requires: -add")
-@click.option("--permission", "--m", default='', required=True, help="Users Permission: (16,24,32,40,64) Requires: -add")
-@click.option("--name", "--n", default='', required=True, help="Users Name. Requires: -add")
-@click.option("--email", "--e", default='', required=True, help="Users email. Requires: -add")
+@click.option("--password", "--p", default='', required=True, help="Users password")
+@click.option("--permission", "--m", default='', required=True, help="Users Permission: (16,24,32,40,64)")
+@click.option("--name", "--n", default='', required=True, help="Users Name")
+@click.option("--email", "--e", default='', required=True, help="Users email")
 def add(username, password, permission, name, email):
 
     if len(password) < 11:

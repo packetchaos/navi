@@ -14,7 +14,7 @@ def check_agroup_exists(aname):
 
 
 @click.command(help="Create an Access group Based on a Tag or Agent Group")
-@click.option('--name', default='', help="Create an Access group with the following Name")
+@click.option('--name', default='', required=True, help="Create an Access group with the following Name")
 @click.option('-tag', is_flag=True, help="Create a Access Group by a Tag")
 @click.option('--c', default='', help="Category name to use: requires --v and Value Name")
 @click.option('--v', default='', help="Tag Value to use; requires --c and Category Name")
