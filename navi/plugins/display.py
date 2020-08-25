@@ -135,7 +135,7 @@ def connectors():
 
 
 @display.command(help="List Access Groups")
-def agroup():
+def agroups():
     rules = "Not Rule Based"
     try:
         click.echo("\n{:25s} {:40s} {:25} {}".format("Group Name", "Group ID", "Last Updated", "Rules"))
@@ -225,7 +225,7 @@ def agents():
 
 
 @display.command(help="Print Target Groups")
-def tgroup():
+def tgroups():
     print()
     print("*" * 40)
     print("Target Groups are going to be retired use the Migration script to covert them to tags")
@@ -344,7 +344,7 @@ def version():
 
 @display.command(help="Print User group information")
 @click.option('--membership', required=True, default='', help="Display Users that apart of a particular usergroup")
-def usergroup(membership):
+def usergroups(membership):
 
     if membership != '':
         click.echo("\n{:35s} {:40s} {:40s} {:10} {}".format("User Name", "Login email", "User UUID", "User ID",

@@ -106,16 +106,14 @@ def agroup(name, tag, c, v, group, user, usergroup, scan, view, scanview):
 
     try:
         # Check to see if the list has any IPs in it.
-        if new_list:
-            if answer == 'no':
-                new_access_group = request_data('POST', '/v2/access-groups', payload=payload)
-                click.echo("\nYour Access group {} is being created now \n".format(new_access_group['name']))
-                click.echo("The UUID is {} \n".format(new_access_group['id']))
-            else:
-                update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
-                click.echo("\nYour Access group {} is being updated now \n".format(update_group['name']))
-                click.echo("The UUID is {} \n".format(update_group['id']))
+        if answer == 'no':
+            new_access_group = request_data('POST', '/v2/access-groups', payload=payload)
+            click.echo("\nYour Access group {} is being created now \n".format(new_access_group['name']))
+            click.echo("The UUID is {} \n".format(new_access_group['id']))
         else:
-            click.echo("\nYour list was empty so nothing happened\n")
-    except TypeError:
+            update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
+            click.echo("\nYour Access group {} is being updated now \n".format(update_group['name']))
+            click.echo("The UUID is {} \n".format(update_group['id']))
+    except TypeError as E:
         click.echo("\nAccess group? - Check the Username")
+        click.echo(E)

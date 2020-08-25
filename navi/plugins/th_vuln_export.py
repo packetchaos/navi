@@ -1,5 +1,6 @@
 import time
 import threading
+import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
@@ -140,14 +141,14 @@ def parse_data(chunk_data, chunk_number):
                     try:
                         insert_vulns(vuln_conn, vuln_list)
                     except Error as e:
-                        print(e)
+                        click.echo(e)
                 except IndexError:
-                    print("skipped one")
+                    click.echo("skipped one")
         except TypeError:
-            print("Your Export has no data.  It may have expired")
-            print("Error on Chunk " + chunk_number)
+            click.echo("Your Export has no data.  It may have expired")
+            click.echo("Error on Chunk {}".format(chunk_number))
 
-    print("Chunk " + chunk_number + " Finished")
+    click.echo("Chunk {} Finished".format(chunk_number))
     vuln_conn.close()
 
 
@@ -178,42 +179,42 @@ def vuln_export(days, ex_uuid, threads):
 
             # grab the export UUID
             ex_uuid = export['export_uuid']
-            print('\nRequesting Vulnerability Export with ID : ' + ex_uuid)
+            click.echo('\nRequesting Vulnerability Export with ID : {}'.format(ex_uuid))
 
             # set a variable to True for our While loop
             not_ready = True
         else:
-            print("\nUsing your Export UUID\n")
+            click.echo("\nUsing your Export UUID\n")
             not_ready = True
 
         # now check the status
         status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
 
         # status = get_data('/vulns/export/89ac18d9-d6bc-4cef-9615-2d138f1ff6d2/status')
-        print("Status : " + str(status["status"]))
+        click.echo("Status : {}".format(str(status["status"])))
 
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
             if status['status'] == 'PROCESSING' or 'QUEUED':
-                time.sleep(15)
+                time.sleep(2.5)
                 status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
-                print("Status : " + str(status["status"]))
+                # click.echo("Status : " + str(status["status"]))
 
             # Exit Loop once confirmed finished
             if status['status'] == 'FINISHED':
                 ptime = time.time()
-                print("\nProcessing Time took : " + str(ptime - start))
+                click.echo("\nProcessing Time took : {}".format(str(ptime - start)))
 
                 # Display how many chunks there are
                 avail = status['total_chunks']
-                print("\nChunks Available - ", avail)
-                print("Downloading chunks now...hold tight...This can take some time\n")
+                click.echo("\nChunks Available - {}".format(avail))
+                click.echo("Downloading chunks now...hold tight...This can take some time\n")
                 not_ready = False
 
             # Tell the user an error occured
             if status['status'] == 'ERROR':
-                print("Error occurred")
+                click.echo("Error occurred")
 
         # grab all of the chunks and craft the URLS for threading
         for y in status['chunks_available']:
@@ -229,10 +230,10 @@ def vuln_export(days, ex_uuid, threads):
 
         q.join()
         end = time.time()
-        print(end - start)
+        click.echo("Vulnerability Update Time took : {}\n".format(str(end - start)))
 
     except KeyError:
-        print("Well this is a bummer; you don't have permissions to download Asset data :( ")
+        click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")
 
     except TypeError:
-        print("You may not be authorized or your keys are invalid")
+        click.echo("You may not be authorized or your keys are invalid")

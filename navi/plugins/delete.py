@@ -94,3 +94,15 @@ def user(tid):
 def usergroup(tid):
     click.echo("\nI'm Deleting the User you requested")
     tio.groups.delete(str(tid))
+
+
+@delete.command(help='Delete a tag by Category/Value pair')
+@click.option('--c', default='', required=True, help="Category to delete")
+@click.option('--v', default='', required=True, help="Value to Delete")
+def tag(c,v):
+    tagdata = request_data('GET', '/tags/values')
+    for tags in tagdata['values']:
+        if c == tags['category_name']:
+            if v == tags['value']:
+                value_uuid = tags['uuid']
+                request_delete('DELETE', '/tags/values/' + str(value_uuid))

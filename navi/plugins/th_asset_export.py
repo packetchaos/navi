@@ -1,5 +1,6 @@
 import time
 import threading
+import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
@@ -115,13 +116,13 @@ def parse_data(chunk_data):
                     try:
                         insert_tags(asset_conn, tag_list)
                     except Error as e:
-                        print(e)
+                        click.echo(e)
             except IndexError:
                 pass
             try:
                 insert_assets(asset_conn, csv_list)
             except Error as e:
-                print(e)
+                click.echo(e)
         '''
         # Collect and save Tag Data
         for tag_assets in chunk_data:
@@ -151,7 +152,7 @@ def parse_data(chunk_data):
                     try:
                         insert_tags(asset_conn, tag_list)
                     except Error as e:
-                        print(e)
+                        click.echo(e)
             except IndexError:
                 pass
         '''
@@ -182,37 +183,37 @@ def asset_export(days, ex_uuid, threads):
 
             # grab the export UUID
             ex_uuid = export['export_uuid']
-            print('\nRequesting Asset Export with ID : ' + ex_uuid)
+            click.echo('\nRequesting Asset Export with ID : {}'.format(ex_uuid))
 
             # set a variable to True for our While loop
             not_ready = True
         else:
-            print("\nUsing your Export UUID\n")
+            click.echo("\nUsing your Export UUID\n")
             not_ready = False
 
         # now check the status
         status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
 
         # status = get_data('/vulns/export/89ac18d9-d6bc-4cef-9615-2d138f1ffsdf/status')
-        print("Status : " + str(status["status"]))
+        click.echo("Status : {}".format(str(status["status"])))
 
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
             if status['status'] == 'PROCESSING' or 'QUEUED':
-                time.sleep(15)
+                time.sleep(2.5)
                 status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
-                print("Status : " + str(status["status"]))
+                # click.echo("Status : " + str(status["status"]))
 
             # Exit Loop once confirmed finished
             if status['status'] == 'FINISHED':
                 ptime = time.time()
-                print("\nProcessing Time took : " + str(ptime - start))
+                click.echo("\nProcessing Time took : {}".format(str(ptime - start)))
                 not_ready = False
 
             # Tell the user an error occured
             if status['status'] == 'ERROR':
-                print("Error occurred")
+                click.echo("Error occurred")
 
         create_assets_table()
         create_tag_table()
@@ -234,9 +235,9 @@ def asset_export(days, ex_uuid, threads):
 
         q.join()
         end = time.time()
-        print(end - start)
+        click.echo("Asset Download took: {}\n".format(str(end - start)))
 
     except IndexError:
-        print("Well this is a bummer; you don't have permissions to download Asset data :( ")
+        click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")
     except TypeError:
-        print("You may not be authorized or your keys are invalid")
+        click.echo("You may not be authorized or your keys are invalid")
