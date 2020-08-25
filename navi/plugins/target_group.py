@@ -43,20 +43,17 @@ def create_target_group(target_name, tg_list):
     click.echo()
 
     if group_id != 0:
-        print("new group - {}".format(target_name))
         # Update current Target Group
         payload = {"name": target_name, "members": trgstring, "type": "system"}
-        data = request_data("PUT", '/target-groups/'+str(group_id), payload=payload)
-        print(data)
+        request_data("PUT", '/target-groups/'+str(group_id), payload=payload)
     else:
-        print("current group")
         # Create a New Target Group
         payload = {"name": target_name, "members": str(trgstring), "type": "system", "acls": [{"type": "default", "permissions": 64}]}
         request_data("POST", '/target-groups', payload=payload)
 
 
 def cloud_to_target_group(cloud, days, choice, target_group_name):
-    query = {"date_range": days, "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": cloud}
+    query = {"date_range": days, "filter.0.filter": "sources", "filter.0.quality": "set-has", "filter.0.value": cloud}
     data = request_data('GET', '/workbenches/assets', params=query)
     target_ips = []
 
@@ -92,18 +89,14 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
     if pub:
         choice = 'PUBLIC'
 
-    if name == '':
-        click.echo("You must name your Target Group")
-        exit()
-    else:
-        if ip != '':
-            create_target_group(name, ip)
+    if ip != '':
+        create_target_group(name, ip)
 
-        if aws:
-            cloud_to_target_group("AWS", days, choice, name)
+    if aws:
+        cloud_to_target_group("AWS", days, choice, name)
 
-        if gcp:
-            cloud_to_target_group("GCP", days, choice, name)
+    if gcp:
+        cloud_to_target_group("GCP", days, choice, name)
 
-        if azure:
-            cloud_to_target_group("AZURE", days, choice, name)
+    if azure:
+        cloud_to_target_group("AZURE", days, choice, name)
