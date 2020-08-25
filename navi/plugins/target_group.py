@@ -16,10 +16,10 @@ def find_target_group(tg_name):
     return group_id
 
 
-def create_target_group(tg_name, tg_list):
+def create_target_group(target_name, tg_list):
 
     # Check to see if the Target group exists
-    group_id = find_target_group(tg_name)
+    group_id = find_target_group(target_name)
 
     # Target group API takes a string of IPs. We will start the string here.
     trgstring = ""
@@ -30,7 +30,7 @@ def create_target_group(tg_name, tg_list):
     # turn the list into a string separated by a comma
     if not string_test:
         for ips in tg_list:
-            trgstring = trgstring + str(ips[0]) + ","
+            trgstring = trgstring + str(ips) + ","
     else:
         trgstring = tg_list
 
@@ -38,21 +38,24 @@ def create_target_group(tg_name, tg_list):
         click.echo("\nYour request returned zero results\nAs a result, nothing happened\n")
         exit()
 
-    click.echo("\nThese are the IPs that will be added to the target Group: {}".format(tg_name))
+    click.echo("\nThese are the IPs that will be added to the target Group: {}".format(target_name))
     click.echo(tg_list)
     click.echo()
 
     if group_id != 0:
+        print("new group - {}".format(target_name))
         # Update current Target Group
-        payload = {"name": tg_name, "members": trgstring, "type": "system"}
-        request_data("PUT", '/target-groups/'+str(group_id), payload=payload)
+        payload = {"name": target_name, "members": trgstring, "type": "system"}
+        data = request_data("PUT", '/target-groups/'+str(group_id), payload=payload)
+        print(data)
     else:
+        print("current group")
         # Create a New Target Group
-        payload = {"name": tg_name, "members": str(trgstring), "type": "system", "acls": [{"type": "default", "permissions": 64}]}
+        payload = {"name": target_name, "members": str(trgstring), "type": "system", "acls": [{"type": "default", "permissions": 64}]}
         request_data("POST", '/target-groups', payload=payload)
 
 
-def cloud_to_target_group(cloud, days, choice):
+def cloud_to_target_group(cloud, days, choice, target_group_name):
     query = {"date_range": days, "filter.0.filter": "sources", "filter.0.quality": "set-hasonly", "filter.0.value": cloud}
     data = request_data('GET', '/workbenches/assets', params=query)
     target_ips = []
@@ -68,7 +71,7 @@ def cloud_to_target_group(cloud, days, choice):
                 # Add the IP if there is a match
                 target_ips.append(ip)
 
-    create_target_group("{} Targets".format(cloud), target_ips)
+    create_target_group(target_group_name, target_ips)
 
 
 @click.command(help="Create a Target Group")
@@ -97,10 +100,10 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
             create_target_group(name, ip)
 
         if aws:
-            cloud_to_target_group("AWS", days, choice)
+            cloud_to_target_group("AWS", days, choice, name)
 
         if gcp:
-            cloud_to_target_group("GCP", days, choice)
+            cloud_to_target_group("GCP", days, choice, name)
 
         if azure:
-            cloud_to_target_group("AZURE", days, choice)
+            cloud_to_target_group("AZURE", days, choice, name)
