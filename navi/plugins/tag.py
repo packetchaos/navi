@@ -52,7 +52,7 @@ def tag_by_tag(c, v, d, cv, cc):
                             except Exception as F:
                                 click.echo(F)
 
-                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"and": rules_list}}}
+                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"or": rules_list}}}
                 # Update the Parent Tag with the new child tag information
                 data = request_data('PUT', '/tags/values/' + tag_uuid, payload=payload)
 
@@ -74,7 +74,7 @@ def tag_by_tag(c, v, d, cv, cc):
             # if the child tag does exist, then create the new tag with the existing tag as a child
             try:
                 payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                           {"asset": {"and": [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
+                           {"asset": {"or": [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
 
                 value_uuid = data["uuid"]
