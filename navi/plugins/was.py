@@ -50,6 +50,7 @@ def create_was_scan(owner_id, temp_id, scanner_id, target, name):
     )
 
     request_data('PUT', '/was/v2/configs/' + str(was_uuid), payload=payload)
+    return
 
 
 @click.group(help="Interact with WAS V2 API")
@@ -132,7 +133,7 @@ def details(scan_id):
 
 @was.command(help="Scan a Web Application Target")
 @click.argument('scan_target')
-@click.option('--file', default='', help="File name of the CSV containing Web Apps for bulk scan creation")
+@click.option('--file', is_flag=True, help="File name of the CSV containing Web Apps for bulk scan creation")
 def scan(scan_target, file):
     click.echo("\nChoose your Scan Template")
     click.echo("1.   Web App Overview")
@@ -167,14 +168,16 @@ def scan(scan_target, file):
 
     scan_name = "navi Created Scan of : " + str(scan_target)
 
-    if file != '':
-        with open(scan, 'r', newline='') as csv_file:
+    if file:
+        with open(scan_target, 'r', newline='') as csv_file:
             web_apps = csv.reader(csv_file)
             for apps in web_apps:
                 for app in apps:
                     scan_name = "navi Created Scan of : " + str(app)
-                    create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=str(app))
-                    time.sleep(5)
+                    # strip for white spaces
+                    application = app.strip()
+                    create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=application)
+                    time.sleep(2)
     else:
         click.echo("\nCreating your scan now for site: " + str(scan_target))
         create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=scan_target)
