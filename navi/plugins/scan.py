@@ -90,6 +90,11 @@ def scan_details(scan_id):
         error_msg(E)
 
 
+def get_plugin_family(plugin_id):
+    # return the plugin family for a given plugin
+    return tio.plugins.plugin_details(plugin_id)['family_name']
+
+
 @click.group(help="Create and Control Scans")
 def scan():
     pass
@@ -97,7 +102,9 @@ def scan():
 
 @scan.command(help="Quickly Scan a Target")
 @click.argument('targets')
-def create(targets):
+@click.option('--plugin', default='', help="Plugin required for Remediation Scan")
+def create(targets, plugin):
+
     try:
         click.echo("\nChoose your Scan Template")
         click.echo("1.   Basic Network Scan")
@@ -128,10 +135,19 @@ def create(targets):
 
         click.echo("creating your scan of : {}  Now...".format(targets))
 
-        payload = dict(uuid=template, settings={"name": "navi-Pro Created Scan of " + targets,
-                                                "enabled": "True",
-                                                "scanner_id": scanner_id,
-                                                "text_targets": targets})
+        if plugin != '':
+            family = get_plugin_family(plugin)
+            advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
+            payload = dict(plugins={family: {"individual": {plugin: "enabled"}}},
+                           uuid=advanced_template, settings={"name": "navi Created Remediation Scan of " + targets,
+                                                             "enabled": "True",
+                                                             "scanner_id": scanner_id,
+                                                             "text_targets": targets})
+        else:
+            payload = dict(uuid=template, settings={"name": "navi Created Scan of " + targets,
+                                                    "enabled": "True",
+                                                    "scanner_id": scanner_id,
+                                                    "text_targets": targets})
 
         # create a new scan
         data = request_data('POST', '/scans', payload=payload)

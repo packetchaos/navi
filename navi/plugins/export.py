@@ -14,7 +14,7 @@ from .agent_group_export import agent_group_export
 from .lumin_quick_export import lumin_quick_export
 
 
-@click.group(help="Export Ienable.io Data")
+@click.group(help="Export Tenable.io Data")
 def export():
     pass
 
@@ -37,7 +37,7 @@ def consec():
     consec_export()
 
 
-@export.command(help="Export Licsensed Assets into a CSV")
+@export.command(help="Export Licensed Assets into a CSV")
 def licensed():
     click.echo("\nExporting your data now. Saving licensed_data.csv now...\n")
     licensed_export()
