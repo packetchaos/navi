@@ -11,6 +11,7 @@ from .network_export import network_export
 from .query_export import query_export
 from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
+from .lumin_quick_export import lumin_quick_export
 
 
 @click.group(help="Export Ienable.io Data")
@@ -42,11 +43,18 @@ def licensed():
     licensed_export()
 
 
-@export.command(help="Export all Asset data including ACR and AES into a CSV. This will take some time")
-def lumin():
-    click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
-    click.echo("Saving asset_lumin.csv now...\n")
-    lumin_export()
+@export.command(help="Export all Asset data including ACR and AES into a CSV")
+@click.option("-v", is_flag=True, help="Include ACR Drivers.  This will make a call per asset!")
+def lumin(v):
+
+    if v:
+        click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
+        click.echo("Saving asset_lumin.csv now...\n")
+        lumin_export()
+    else:
+        click.echo("\nExporting your data now.")
+        click.echo("Saving asset_lumin.csv now...\n")
+        lumin_quick_export()
 
 
 @export.command(help="Export All assets of a given network")

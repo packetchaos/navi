@@ -89,6 +89,18 @@ def parse_data(chunk_data):
             except KeyError:
                 csv_list.append(" ")
 
+            try:
+                csv_list.append(assets["acr_score"])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets["exposure_score"])
+            except KeyError:
+                csv_list.append(" ")
+
+
+
             # Collect and save Tag Data
             try:
                 global tag_id
@@ -123,39 +135,6 @@ def parse_data(chunk_data):
                 insert_assets(asset_conn, csv_list)
             except Error as e:
                 click.echo(e)
-        '''
-        # Collect and save Tag Data
-        for tag_assets in chunk_data:
-            try:
-                global tag_id
-                tag_ip = tag_assets['ipv4s'][0]
-                tag_asset_id = tag_assets['id']
-                for t in tag_assets["tags"]:
-                    tag_list = []
-                    tag_id = tag_id + 1
-                    tag_list.append(tag_id)
-                    tag_list.append(tag_asset_id)
-                    tag_list.append(tag_ip)
-
-                    tag_key = t['key']
-                    tag_list.append(tag_key)
-
-                    tag_uuid = t['uuid']
-                    tag_list.append(tag_uuid)
-
-                    tag_value = t['value']
-                    tag_list.append(tag_value)
-
-                    tag_added_date = t['added_at']
-                    tag_list.append(tag_added_date)
-
-                    try:
-                        insert_tags(asset_conn, tag_list)
-                    except Error as e:
-                        click.echo(e)
-            except IndexError:
-                pass
-        '''
     asset_conn.close()
 
 

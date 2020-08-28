@@ -54,7 +54,9 @@ def create_assets_table():
                             mac_address text, 
                             agent_uuid text,
                             last_licensed_scan_date text,
-                            network text
+                            network text,
+                            acr text,
+                            aes text
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)
