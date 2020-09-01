@@ -5,7 +5,8 @@ import time
 import uuid
 import csv
 import textwrap
-from .was_granular_csv import was_csv_export
+from .was_detailed_csv import was_detailed_export
+from .was_v2_export import was_export
 
 
 def web_app_scanners():
@@ -305,5 +306,10 @@ def summary():
 
 @was.command(help="CSV Export")
 @click.confirmation_option(prompt='\nThis is going to export all of your data into a CSV. It will take some time')
-def export():
-    was_csv_export()
+@click.option("-d", is_flag=True, help="Export most of the Plugin Data for all applications into a csv")
+@click.option("-s", is_flag=True, help="Export Summary data for all applications into a csv")
+def export(d, s):
+    if d:
+        was_detailed_export()
+    if s:
+        was_export()

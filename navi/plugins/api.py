@@ -1,16 +1,16 @@
 import pprint
 import click
-from .api_wrapper import tenb_connection
+from .api_wrapper import request_data
 from .error_msg import error_msg
 
 
 @click.command(help="Test the API ex: scans ")
 @click.argument('url')
 def api(url):
-    tio = tenb_connection()
+
     try:
-        data = tio.get(url)
-        pprint.pprint(data.json())
+        data = request_data('GET', url)
+        pprint.pprint(data)
 
     except Exception as E:
         error_msg(E)

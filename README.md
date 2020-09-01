@@ -174,13 +174,13 @@ There are 25 core commands:
 
 ### api - examples
 
-    navi api scans 
+    navi api /scans 
 
-    navi api scanners
+    navi api /scanners
     
-    navi api users
+    navi api /users
     
-    navi api workbenches/assets
+    navi api /workbenches/assets
   
 ## IP address queries - 'ip'
 The majority of the options in the ip command are using the plugin output.
@@ -480,26 +480,33 @@ assets, it makes since to use these groupings to apply Asset criticality.
 
 
 ### WAS V2 API - Interact with 2.0 APIs
-   * -scans -->    Displays WAS Scans
-   * --start -->   Start Scan with Provided Scan ID
-   * --sd -->      Get Scan Details with Provided Scan ID
-   * --scan -->    Create a scan via FQDN or CSV file name; use -file option for bulk scan creation via CSV file
+   * scans -->    Displays WAS Scans
+   * start -->   Start Scan with Provided Scan ID
+   * details -->      Get Scan Details with Provided Scan ID
+   * scan -->    Create a scan via FQDN or CSV file name; use -file option for bulk scan creation via CSV file
    * -file -->     File name of the CSV containing Web Apps for bulk scan creation
-   * -configs -->  Show config UUIDs to start or stop scans
-   * --stats -->   Show scan stats
-   * -summary -->  Summary of all of the Web Apps
+   * configs -->  Show config UUIDs to start or stop scans
+   * stats -->   Show scan stats
+   * summary -->  Summary of all of the Web Apps
+   * export --> Export Web app information into a CSV
+     * -d --> Export most plugin information per completed web app scan
+     * -s --> Export summary information per complted web app scan
    
     navi was scans
     
     navi was configs
     
-    navi was sd 123456789-aedd-45dc-9c0d-fc87a9a5a1c9
+    navi was details 123456789-aedd-45dc-9c0d-fc87a9a5a1c9
     
     navi was scan http://myscan.com
     
     navi was scan mycsvfile.csv -file
     
     navi was stats 123456789-aedd-45dc-9c0d-fc87a9a5a1c9  
+    
+    navi export -d
+    
+    navi export -s
    
 ### Export Asset, Agent, Consec, or Webapp Data - 'export'
 

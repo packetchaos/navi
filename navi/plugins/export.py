@@ -114,5 +114,5 @@ def bytag(c, v, ec, ev):
 
 @export.command(help="Export Webapp Scan Summary into a CSV - WAS V2")
 def was():
-    click.echo("\nExporting your data now. Saving was_v2_data.csv now...")
+    click.echo("\nExporting your data now. Saving was_summary_data.csv now...")
     was_export()
