@@ -21,7 +21,7 @@ from .navi_portal import portal
 from .was import was
 from .network import network
 from .user import user
-from .group import usergroup
+from .usergroup import usergroup
 from .target_group import tgroup
 
 

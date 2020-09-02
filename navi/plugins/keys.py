@@ -10,7 +10,6 @@ from .dbconfig import create_keys_table
 @click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
 def keys(clear, access_key, secret_key):
     create_keys_table()
-
     if access_key == "" or secret_key == "":
         click.echo("Hey you don't have any Keys!")
         if clear:
@@ -21,7 +20,6 @@ def keys(clear, access_key, secret_key):
             secret_key = getpass.getpass("Please provide your Secret Key : ")
 
     key_dict = (access_key, secret_key)
-
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:

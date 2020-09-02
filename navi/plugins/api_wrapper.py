@@ -6,22 +6,24 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.1.1"
+    return "navi-6.1.2"
 
 
 def tenb_connection():
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * from keys;")
-        rows = cur.fetchall()
-        for row in rows:
-            access_key = row[0]
-            secret_key = row[1]
-        tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
-        return tio
-
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * from keys;")
+            rows = cur.fetchall()
+            for row in rows:
+                access_key = row[0]
+                secret_key = row[1]
+            tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
+            return tio
+    except:
+        pass
 
 def grab_headers():
     database = r"navi.db"

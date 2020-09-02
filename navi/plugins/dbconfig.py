@@ -9,7 +9,6 @@ def create_keys_table():
                             access_key text,
                             secret_key text
                             );"""
-    key_conn.execute('pragma journal_mode=wal;')
     create_table(key_conn, key_table)
 
 
