@@ -45,16 +45,29 @@ def was_detailed_export():
                             see_also = ''
 
                         risk = finding['risk_factor']
-                        cvss = finding['cvss']
-                        cvss3 = finding['cvssv3']
+
+                        try:
+                            cvss = finding['cvss']
+                        except:
+                            cvss = ''
+                        try:
+                            cvss3 = finding['cvssv3']
+                        except:
+                            cvss3 = ''
+
                         cves = finding['cves']
                         for xref in finding['xrefs']:
                             if xref['xref_name'] == 'CWE':
-                                cwe = xref['xref_value']
+                                try:
+                                    cwe = xref['xref_value']
+                                except:
+                                    cwe = ''
 
                             if xref['xref_name'] == 'WASC':
-                                wasc = xref['xref_value']
-
+                                try:
+                                    wasc = xref['xref_value']
+                                except:
+                                    wasc = ''
                             # Grab multiples values here
                             if xref['xref_name'] == 'OWASP':
                                 owasp_list.append(xref['xref_value'])
