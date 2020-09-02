@@ -7,5 +7,4 @@ from .plugins import plugin_loader
 def cli(ctx):
     click.echo("Hey Listen!")
 
-
 plugin_loader(cli)
