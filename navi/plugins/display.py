@@ -163,7 +163,6 @@ def status():
     try:
         data = tio.server.properties()
         session_data = tio.session.details()
-
         click.echo("\nTenable IO Information")
         click.echo("-" * 25)
         click.echo("{} {}".format("Container ID : ", session_data["container_id"]))
@@ -175,9 +174,12 @@ def status():
         click.echo("\nLicense information")
         click.echo("-" * 25)
         click.echo("{} {}".format("Licensed Assets : ", get_licensed()))
-        click.echo("{} {}".format("Agents Used : ", data["license"]["agents"]))
-        click.echo("{} {}".format("Expiration Date : ", data["license"]["expiration_date"]))
-        click.echo("{} {}".format("Scanners Used : ", data["license"]["scanners"]))
+        click.echo("{} {}".format("Agents Used : ", data['license']["agents"]))
+        try:
+            click.echo("{} {}".format("Expiration Date : ", data['license']["expiration_date"]))
+        except:
+            pass
+        click.echo("{} {}".format("Scanners Used : ", data['license']["scanners"]))
         click.echo("{} {}".format("Users : ", data["license"]["users"]))
 
         click.echo("\nEnabled Apps")

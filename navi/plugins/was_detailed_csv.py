@@ -18,7 +18,8 @@ def was_detailed_export():
         for scan_data in data['data']:
             was_scan_id = scan_data['scan_id']
             status = scan_data['status']
-
+            cwe = ''
+            wasc = ''
             # Ignore all scans that have not completed
             if status == 'completed':
                 report = request_data('GET', '/was/v2/scans/' + was_scan_id + '/report')

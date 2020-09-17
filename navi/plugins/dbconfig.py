@@ -75,3 +75,28 @@ def create_tag_table():
                         );"""
     tag_conn.execute('pragma journal_mode=wal;')
     create_table(tag_conn, create_tags_table)
+
+
+def create_apps_table():
+    database = r"navi.db"
+    app_conn = new_db_connection(database)
+    create_apps = """CREATE TABLE IF NOT EXISTS apps (
+                            name text,
+                            uuid text PRIMARY KEY, 
+                            target text, 
+                            scan_completed_time text,
+                            pages_audited text,
+                            pages_crawled text,
+                            requests_made text, 
+                            critical_count text,
+                            high_count text,
+                            medium_count text,
+                            low_count text, 
+                            info_count text,
+                            owasp text,
+                            tech_list text,
+                            config_id text
+                            );"""
+    app_conn.execute('pragma journal_mode=wal;')
+
+    create_table(app_conn, create_apps)

@@ -313,3 +313,6 @@ def export(d, s):
         was_detailed_export()
     if s:
         was_export()
+
+    if not s and not d:
+        click.echo("\nYou must specify a selection use -d for Detailed and -s for summary\n")

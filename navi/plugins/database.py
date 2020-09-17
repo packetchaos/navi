@@ -73,3 +73,26 @@ def insert_vulns(conn, vulns):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, vulns)
+
+
+def insert_apps(conn, apps):
+    sql = '''INSERT or IGNORE into apps(
+             name,
+             uuid, 
+             target, 
+             scan_completed_time,
+             pages_audited,
+             pages_crawled,
+             requests_made, 
+             critical_count,
+             high_count,
+             medium_count,
+             low_count, 
+             info_count,
+             owasp,
+             tech_list,
+             config_id)
+     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, apps)
