@@ -60,7 +60,7 @@ def scan_details(scan_id):
     try:
         data = request_data('GET', '/scans/' + str(scan_id))
         try:
-            click.echo("\nScan Details for Scan ID : {}\n".format(details))
+            click.echo("\nScan Details for Scan ID : {}\n".format(scan_id))
             click.echo("Notes: \b")
             try:
                 click.echo(data['notes'][0]['message'])

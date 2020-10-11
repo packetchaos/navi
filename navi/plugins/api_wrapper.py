@@ -6,7 +6,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.1.4"
+    return "navi-6.1.5"
 
 
 def tenb_connection():
@@ -24,6 +24,7 @@ def tenb_connection():
             return tio
     except:
         pass
+
 
 def grab_headers():
     database = r"navi.db"

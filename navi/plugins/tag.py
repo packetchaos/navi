@@ -110,6 +110,26 @@ def tag_by_ip(ip_list, tag_list, c, v, d):
         click.echo("Duplicate Category")
 
 
+def tag_by_tenable_uuid(tag_list, c, v, d):
+    # Tagging by IP is limited to 2000 Assets
+    try:
+        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
+                   {"asset": {"and": [{"field": "tenable_uuid", "operator": "eq", "value": str(tag_list[1:])}]}}}
+        data = request_data('POST', '/tags/values', payload=payload)
+        try:
+            value_uuid = data["uuid"]
+            cat_uuid = data['category_uuid']
+            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+            click.echo("The Category UUID is : {}\n".format(cat_uuid))
+            click.echo("The Value UUID is : {}\n".format(value_uuid))
+        except Exception as E:
+            click.echo("Duplicate Tag Category: You may need to delete your tag first\n")
+            click.echo("We could not confirm your tag name, is it named weird?\n")
+            click.echo(E)
+    except:
+        click.echo("Duplicate Category")
+
+
 def tag_by_uuid(tag_list, c, v, d):
 
     # Generator to split IPs into 2000 IP chunks
@@ -269,6 +289,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
         tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
+        tags_by_commas = ''
+        from uuid import UUID
         ip_update = 1
         click.echo("\nDue to a API bug, I'm going to delete the current tag. You may get a 404 error if this is a new tag.")
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
@@ -285,16 +307,17 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
                 if group_name == group:
                     data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
                     ip_list = ''
-
                     for agent in data['agents']:
                         ip_address = agent['ip']
                         uuid = agent['uuid']
+                        new_uuid = UUID(uuid).hex
                         ip_list = ip_list + "," + ip_address
-                        tag_list.append(uuid)
+                        tags_by_commas = tags_by_commas + "," + new_uuid
+                        tag_list.append(new_uuid)
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
 
-        tag_by_ip(ip_list, tag_list, c, v, d)
+        tag_by_tenable_uuid(tags_by_commas, c, v, d)
 
     if scantime != '':
         database = r"navi.db"

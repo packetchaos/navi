@@ -97,23 +97,23 @@ def webapp():
             proto = plugins[11]  # Protocol
             asset = plugins[1]  # Ip address
             click.echo()
-            click.echo("{} is running on: {} / {} On : {}".format(str(server), str(web_port), str(proto), str(asset)))
+            click.echo("{:60s} is running on: {:6s} / {:6s} On : {}".format(str(server), str(web_port), str(proto), str(asset)))
             click.echo()
     try:
-        click.echo("\n\nWeb Servers/SSH Servers found by plugin '22964';")
+        click.echo("\n\nWeb Servers/SSH Servers found by plugin 22964")
         click.echo("-" * 32)
         click.echo()
         conn2 = new_db_connection(database)
         with conn2:
             cur2 = conn.cursor()
-            cur2.execute("SELECT output, port, asset_ip from vulns where plugin_id='22964'")
+            cur2.execute("SELECT output, port, asset_ip from vulns where plugin_id='22964';")
             data = cur2.fetchall()
 
             for plugins in data:
                 web_output = plugins[0][:-1]
                 web_port = plugins[1]
                 web_ip = plugins[2]
-                click.echo("{} {} On : {}".format(str(web_output), str(web_port), str(web_ip)))
+                click.echo("{:60s} {:6s} On : {}".format(str(web_output), str(web_port), str(web_ip)))
             click.echo()
     except IndexError:
         click.echo("No information for plugin 22964")
@@ -249,7 +249,7 @@ def port(open_port):
             pass
 
 
-@find.command(help="Find Assets with a given port open")
+@find.command(help="Find Assets through a SQL query.")
 @click.argument('statement')
 def query(statement):
     database = r"navi.db"
@@ -263,7 +263,7 @@ def query(statement):
         pprint.pprint(data)
 
 
-@find.command(help="Find Assets with a given port open")
+@find.command(help="Find Assets with a given name")
 @click.argument('plugin_name')
 def name(plugin_name):
     try:
