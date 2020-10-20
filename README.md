@@ -547,9 +547,7 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 
   * agroup   -->   Delete an access group by UUID
   * asset   -->    Delete an Asset by Asset UUID
-  * bytag   -->    Delete assets by Tag
-    * --c        Category Name to be used for delete bytag
-    * --v        Value Name to be used for delete bytag
+  * bytag   -->    Delete assets by Tag. Supply Tag-string: Category:value EX: OS:Linux
   * category  -->  Delete Tag Category by Category UUID
   * container -->  Delete a container by '/repository/image/tag'
   * policy  -->    Delete a Policy by Policy ID
@@ -572,7 +570,8 @@ Export into a CSV via a Tag; but exclude a specific Tag.
 
     navi delete 6789 -policy
     
-    navi delete Linux --bytag tag.OS
+    navi delete bytag OS:linux 
+
 
 ### Mail a Report
 * -latest -      Mail a report of the latest scan: Same output as "report -latest"

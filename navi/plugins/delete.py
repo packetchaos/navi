@@ -10,12 +10,15 @@ def delete():
     pass
 
 
-@delete.command(help="Delete assets by Tag. Ex: OS:Linux = tag.OS")
+@delete.command(help="Delete assets by Tag: tag_category:tag_value - Example - OS:Linux")
 @click.argument('tag_string')
 def bytag(tag_string):
+    tag_tuple = tag_string.split(':')
+    cat = tag_tuple[0]
+    val = tag_tuple[1]
     if bytag != '':
         click.echo("\nI'm deleting all of the assets associated with your Tag\n")
-        payload = {'query': {'field': str(tag_string), 'operator': 'set-has', 'value': str(tag_string)}}
+        payload = {'query': {'field': "tag.{}".format(cat), 'operator': 'set-has', 'value': str(val)}}
         request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
 
 
