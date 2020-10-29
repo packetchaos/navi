@@ -77,12 +77,31 @@ def scan_details(scan_id):
                 click.echo("Score : {}".format(data['hosts'][0]['score']))
             except IndexError:
                 pass
-            click.echo("\n{:80s} {}".format("Vulnerability Details", "Vuln Count"))
+            click.echo("\n{:10s} {:80s} {}".format("Plugin", "Vulnerability Details", "Vuln Count"))
             click.echo("-" * 100)
 
             for vulns in data['vulnerabilities']:
                 if vulns['severity'] != 0:
-                    click.echo("{:80s} {}".format(textwrap.shorten(str(vulns['plugin_name']), 80), vulns['count']))
+                    click.echo("{:10s} {:80s} {}".format(str(vulns['plugin_id']), textwrap.shorten(str(vulns['plugin_name']), 80), vulns['count']))
+            click.echo()
+        except TypeError:
+            click.echo("Check the scan ID")
+    except Exception as E:
+        error_msg(E)
+
+
+def scan_hosts(scan_id):
+    try:
+        data = request_data('GET', '/scans/' + str(scan_id))
+        try:
+            click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
+
+            click.echo("{:20s} {:45s} {:8s} {:8s} {:8s} {:8s} ".format("IP Address", "UUID", "Critical", "High", "Medium", "Low"))
+            click.echo("-"*150)
+            for host in data['hosts']:
+
+                click.echo("{:20s} {:45s} {:8} {:8} {:8} {:8}".format(host['hostname'], host['uuid'], host['critical'], host['high'], host['medium'], host['low']))
+
             click.echo()
         except TypeError:
             click.echo("Check the scan ID")
@@ -238,6 +257,12 @@ def change(owner, new, who, v):
 @click.argument('scan_id')
 def details(scan_id):
     scan_details(scan_id)
+
+
+@scan.command(help="Display Hosts Found by a Scan ID")
+@click.argument('scan_id')
+def hosts(scan_id):
+    scan_hosts(scan_id)
 
 
 @scan.command(help="Display the Latest scan information")

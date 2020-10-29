@@ -24,6 +24,54 @@ def plugin_by_ip(ipaddr, plugin):
         click.echo("No information found for this plugin")
 
 
+def vulns_by_uuid(uuid):
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
+
+            data = cur.fetchall()
+            click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+            click.echo("-"*150)
+            for vulns in data:
+                plugin_id = vulns[0]
+                plugin_name = vulns[1]
+                plugin_family = vulns[2]
+                port = vulns[3]
+                protocol = vulns[4]
+                severity = vulns[5]
+                click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
+            click.echo("")
+    except Error as e:
+        click.echo(e)
+
+
+def info_by_uuid(uuid):
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity =='info';".format(uuid))
+
+            data = cur.fetchall()
+            click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+            click.echo("-"*150)
+            for vulns in data:
+                plugin_id = vulns[0]
+                plugin_name = vulns[1]
+                plugin_family = vulns[2]
+                port = vulns[3]
+                protocol = vulns[4]
+                severity = vulns[5]
+                click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
+            click.echo("")
+    except Error as e:
+        click.echo(e)
+
+
 @click.command(help="Get IP specific information")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
@@ -38,11 +86,13 @@ def plugin_by_ip(ipaddr, plugin):
 @click.option('-d', is_flag=True, help="Scan Detail: 19506 plugin output")
 @click.option('-software', is_flag=True, help="Find software installed on Unix(22869) of windows(20811) hosts")
 @click.option('-outbound', is_flag=True, help="outbound connections found by nnm")
-@click.option('-exploit', is_flag=True, help="Display exploitable vulnerabilities")
-@click.option('-critical', is_flag=True, help="Display critical vulnerabilities")
+@click.option('-exploit', is_flag=True, help="Display Solution, Description for each Exploit")
+@click.option('-critical', is_flag=True, help="Display Plugin Output for each Critical Vuln")
 @click.option('-details', is_flag=True, help="Details on an Asset: IP, UUID, Vulns, etc")
+@click.option('-vulns', is_flag=True, help="Display all vulnerabilities and their plugin IDs")
+@click.option('-info', is_flag=True, help="Display all info plugins and their IDs")
 @click.pass_context
-def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details):
+def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns, info):
     tio = tenb_connection()
     if d:
         click.echo('\nScan Detail')
@@ -162,8 +212,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 for assets in data:
                     asset_id = assets[0]
 
-                    click.echo("Exploitable Details for : {}".format(ipaddr))
-                    click.echo()
+                    click.echo("\nExploitable Details for : {}\n".format(ipaddr))
+
                     vuln_data = tio.workbenches.asset_vulns(asset_id, ("plugin.attributes.exploit_available", "eq", "true"), age=90)
 
                     for plugins in vuln_data:
@@ -207,11 +257,11 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 data = cur.fetchall()
                 for assets in data:
                     asset_id = assets[0]
-                    click.echo("Critical Vulns for Ip Address : {}".format(ipaddr))
+                    click.echo("\nCritical Vulns for Ip Address : {}\n".format(ipaddr))
 
-                    vulns = tio.workbenches.asset_vulns(asset_id, age=90)
+                    asset_vulns = tio.workbenches.asset_vulns(asset_id, age=90)
 
-                    for severities in vulns:
+                    for severities in asset_vulns:
                         vuln_name = severities["plugin_name"]
                         plugin_id = severities["plugin_id"]
                         severity = severities["severity"]
@@ -419,10 +469,39 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         pass
 
                     click.echo("\nLast Authenticated Scan Date - {}".format(asset_data['last_authenticated_scan_date']))
+                    click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
                     click.echo("-" * 50)
                     click.echo("-" * 50)
                 except:
                     pass
+
+    if vulns:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            data = cur.fetchall()
+
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(assets[0]))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                vulns_by_uuid(assets[0])
+
+    if info:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            data = cur.fetchall()
+
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(assets[0]))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                info_by_uuid(assets[0])
 
     if plugin != '':
         plugin_by_ip(ipaddr, plugin)

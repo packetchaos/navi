@@ -105,7 +105,7 @@ def assets():
         sources = []
         for source in asset["sources"]:
             sources.append(source['name'])
-        click.echo("\n{:36} {:65} {:15} {}".format(str(asset["ipv4"]), str(asset["fqdn"]), str(asset["exposure_score"]), sources))
+        click.echo("{:36} {:65} {:15} {}".format(str(asset["ipv4"]), str(asset["fqdn"]), str(asset["exposure_score"]), sources))
     click.echo()
 
 
