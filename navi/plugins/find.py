@@ -44,24 +44,21 @@ def plugin(plugin_id, output):
         try:
             plugin_db = r"navi.db"
             plugin_conn = new_db_connection(plugin_db)
+            click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
+            click.echo("-" * 150)
             with plugin_conn:
                 plugin_cur = plugin_conn.cursor()
                 # See if we want to refine our search by the output found in this plugin
                 # this needs to have a JOIN statement to reduce the amount of IPs
                 if output != "":
-                    plugin_cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin_id + "' and output LIKE '%" + output + "%';")
+                    plugin_cur.execute("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON asset_uuid = uuid where plugin_id='" + plugin_id + "' and output LIKE '%" + output + "%';")
                 else:
                     find_by_plugin(plugin_id)
 
                 plugin_data = plugin_cur.fetchall()
-                for x in plugin_data:
-                    asset_ip = x[0]
-                    asset_output = x[2]
-                    click.echo(asset_ip)
-                    click.echo('*' * 20)
-                    click.echo(asset_output)
-                    click.echo('*' * 150)
-                    click.echo('*' * 150)
+                for row in plugin_data:
+                    click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
+
         except Error:
             pass
 
