@@ -207,11 +207,17 @@ def stats(scan_id):
     high = []
     medium = []
     low = []
-    name = report['config']['name']
+    name = ''
+    try:
+        name = report['config']['name']
+    except KeyError:
+        print("Scan Did not Finish or your UUID is incorrect.")
+        exit()
     try:
         target = report['scan']['target']
     except KeyError:
         target = report['config']['settings']['target']
+
     output = ''
     click.echo()
     click.echo(name)
