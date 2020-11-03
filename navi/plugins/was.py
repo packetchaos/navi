@@ -227,10 +227,34 @@ def stats(scan_id):
     click.echo("-" * 40)
 
     try:
-        for i in scan_metadata['metadata']:
-            click.echo("{} {}".format(i, scan_metadata['metadata'][i]))
+        requests_made = scan_metadata['metadata']['progress']['request_count']
+    except KeyError:
+        requests_made = scan_metadata['metadata']['request_count']
     except TypeError:
-        click.echo("None Available")
+        requests_made = 0
+
+    try:
+        pages_crawled = scan_metadata['metadata']['progress']['crawled_urls']
+    except KeyError:
+        try:
+            pages_crawled = scan_metadata['metadata']['audited_urls']
+        except KeyError:
+            try:
+                pages_crawled = scan_metadata['metadata']['crawled_urls']
+            except KeyError:
+                pages_crawled = scan_metadata['metadata']['progress']['audited_urls']
+    except TypeError:
+        pages_crawled = 0
+    try:
+        pages_audited = scan_metadata['metadata']['progress']['audited_pages']
+    except KeyError:
+        pages_audited = scan_metadata['metadata']['audited_pages']
+    except TypeError:
+        pages_audited = 0
+
+    click.echo("Requests Made: {}".format(requests_made))
+    click.echo("Pages Crawled: {}".format(pages_crawled))
+    click.echo("Pages Audited: {}".format(pages_audited))
 
     for finding in report['findings']:
         risk = finding['risk_factor']
