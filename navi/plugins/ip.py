@@ -13,7 +13,8 @@ def plugin_by_ip(ipaddr, plugin):
                 cur = conn.cursor()
                 cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
-                click.echo(rows[0][0])
+                for plug in rows:
+                    click.echo(plug[0])
             except:
                 pass
 

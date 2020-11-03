@@ -76,10 +76,10 @@ def running():
 
 @display.command(help="List all Scans")
 def scans():
-    click.echo("\n{:60s} {:10s} {:30s}".format("Scan Name", "Scan ID", "Status"))
+    click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
     click.echo("-" * 150)
     for scan in tio.scans.list():
-        click.echo("{:60s} {:10s} {:30s}".format(str(scan['name']), str(scan['id']), str(scan['status'])))
+        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']), str(scan['uuid'])))
     click.echo()
 
 
