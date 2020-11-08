@@ -101,12 +101,15 @@ def assets():
     click.echo("\nBelow are the assets found in the last 30 days")
     click.echo("\n{:36} {:65} {:15} {}".format("IP Address(es)", "FQDN(s)", "Exposure Score", "Sources"))
     click.echo("-" * 150)
+    count = 0
     for asset in tio.workbenches.assets():
+        count += 1
         sources = []
         for source in asset["sources"]:
             sources.append(source['name'])
         click.echo("{:36} {:65} {:15} {}".format(str(asset["ipv4"]), str(asset["fqdn"]), str(asset["exposure_score"]), sources))
-    click.echo()
+
+    click.echo("\nTotal: {}".format(count))
 
 
 @display.command(help="Scan Policies")
@@ -255,14 +258,16 @@ def licensed():
         click.echo("{:20s} {:65s} {}".format("IP Address", "Full Qualified Domain Name", "Licensed Date"))
         click.echo("-" * 150)
         click.echo()
+        count = 0
         for asset in data:
+            count += 1
             ipv4 = asset[0]
             fqdn = asset[1]
             licensed_date = asset[2]
             # Don't display Web applications in this output
             if ipv4 != " ":
                 click.echo("{:20s} {:65s} {}".format(str(ipv4), str(fqdn), licensed_date))
-    click.echo()
+    click.echo("\nTotal: {}".format(count))
 
 
 @display.command(help="Print Tag Information")
@@ -365,3 +370,24 @@ def usergroups(membership):
                                                     str(ugroup['uuid']), str(ugroup['user_count'])))
         click.echo()
 
+
+@display.command(help="List All Credentials")
+def credentials():
+    try:
+
+        click.echo("\n{:25s} {:25s} {:25s} {:25s} {:40s}".format("Credential Name", "Created By", "Credential Type", "Category", "Credential UUID"))
+        click.echo("-" * 150)
+        for cred in tio.credentials.list():
+            creator = cred['created_by']['display_name']
+            name = cred['name']
+            type = cred['type']['name']
+            cred_uuid = cred['uuid']
+            category = cred['category']['name']
+            click.echo("{:25s} {:25s} {:25s} {:25s} {:40s}".format(textwrap.shorten(name, width=25),
+                                                                     textwrap.shorten(creator, width=25),
+                                                                     textwrap.shorten(type, width=25),
+                                                                     textwrap.shorten(category, width=25),
+                                                                     textwrap.shorten(cred_uuid, width=40)))
+        click.echo()
+    except Exception as E:
+        error_msg(E)

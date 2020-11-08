@@ -1,4 +1,5 @@
 import click
+import textwrap
 from sqlite3 import Error
 from .api_wrapper import tenb_connection
 from .database import new_db_connection
@@ -34,7 +35,7 @@ def vulns_by_uuid(uuid):
             cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
 
             data = cur.fetchall()
-            click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+            click.echo("\n{:10s} {:80s} {:35s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
             click.echo("-"*150)
             for vulns in data:
                 plugin_id = vulns[0]
@@ -43,7 +44,7 @@ def vulns_by_uuid(uuid):
                 port = vulns[3]
                 protocol = vulns[4]
                 severity = vulns[5]
-                click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
+                click.echo("{:10s} {:80s} {:35s} {:6s} {:6s} {}".format(plugin_id, textwrap.shorten(plugin_name, 80), textwrap.shorten(plugin_family, 35), port, protocol, severity))
             click.echo("")
     except Error as e:
         click.echo(e)
