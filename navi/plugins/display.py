@@ -99,15 +99,31 @@ def nnm():
 @display.command(help="Assets found in the last 30 days")
 def assets():
     click.echo("\nBelow are the assets found in the last 30 days")
-    click.echo("\n{:36} {:65} {:15} {}".format("IP Address(es)", "FQDN(s)", "Exposure Score", "Sources"))
+    click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "Sources"))
     click.echo("-" * 150)
     count = 0
     for asset in tio.workbenches.assets():
         count += 1
-        sources = []
+        sources = ""
+        try:
+            exposure_score = str(asset["exposure_score"])
+        except KeyError:
+            exposure_score = "- -"
+
+        try:
+            fqdn = asset["fqdn"][0]
+        except IndexError:
+            fqdn = " - - - - - - - "
+
+        try:
+            ipv4 = asset["ipv4"][0]
+        except IndexError:
+            ipv4 = " - - - - - - - "
+
         for source in asset["sources"]:
-            sources.append(source['name'])
-        click.echo("{:36} {:65} {:15} {}".format(str(asset["ipv4"]), str(asset["fqdn"]), str(asset["exposure_score"]), sources))
+            sources += ", {}".format(str(source['name']))
+
+        click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, sources[1:]))
 
     click.echo("\nTotal: {}".format(count))
 
