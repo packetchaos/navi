@@ -73,8 +73,8 @@ def output(out_put):
             plugin_data = plugin_cur.fetchall()
             for row in plugin_data:
                 click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[4], row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
-    except Error:
-        pass
+    except Error as e:
+        click.echo(e)
 
 
 @find.command(help="Find Docker Hosts using plugin 93561")
