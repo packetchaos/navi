@@ -1,5 +1,6 @@
 import csv
 import click
+from sqlite3 import Error
 from .database import new_db_connection
 from .api_wrapper import tenb_connection
 
@@ -18,7 +19,10 @@ def lumin_export():
                        "ACR Driver Name", "ACR Driver Value", "ACR Driver Name", "ACR Driver Value"]
 
         cur = conn.cursor()
-        cur.execute("SELECT * from assets;")
+        try:
+            cur.execute("SELECT * from assets;")
+        except Error:
+            print("\n No data! \n Please run 'navi update' first.\n")
 
         data = cur.fetchall()
 

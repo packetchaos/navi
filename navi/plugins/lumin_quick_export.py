@@ -1,4 +1,5 @@
 import csv
+from sqlite3 import Error
 from .database import new_db_connection
 from .api_wrapper import tenb_connection
 
@@ -15,7 +16,10 @@ def lumin_quick_export():
                        "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'ACR', 'Asset Exposure Score']
 
         cur = conn.cursor()
-        cur.execute("SELECT * from assets;")
+        try:
+            cur.execute("SELECT * from assets;")
+        except Error:
+            print("\n No data! \n Please run 'navi update' first.\n")
 
         data = cur.fetchall()
 

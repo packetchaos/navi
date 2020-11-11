@@ -58,9 +58,10 @@ def lumin(v):
 
 
 @export.command(help="Export All assets of a given network")
-def network():
+@click.argument('network_uuid')
+def network(network_uuid):
     click.echo("\nExporting your data now. Saving network_data.csv now...")
-    network_export(network)
+    network_export(network_uuid)
 
 
 @export.command(help='Export assets by query to the vuln db')

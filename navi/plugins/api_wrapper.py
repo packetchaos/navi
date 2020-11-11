@@ -1,5 +1,6 @@
 import requests
 import click
+from sqlite3 import Error
 from json import JSONDecodeError
 from .database import new_db_connection
 from tenable.io import TenableIO
@@ -31,7 +32,11 @@ def grab_headers():
     conn = new_db_connection(database)
     with conn:
         cur = conn.cursor()
-        cur.execute("SELECT * from keys;")
+        try:
+            cur.execute("SELECT * from keys;")
+        except Error:
+            click.echo("\nYou don't have any API keys!  Please enter your keys\n")
+            exit()
         rows = cur.fetchall()
         for row in rows:
             access_key = row[0]

@@ -3,7 +3,6 @@ import time
 from .api_wrapper import tenb_connection, navi_version
 from .scanners import nessus_scanners
 from .database import new_db_connection
-from .error_msg import error_msg
 from .licensed_count import get_licensed
 from sqlite3 import Error
 import textwrap
@@ -30,7 +29,7 @@ def users():
             click.echo("{:34s} {:40s} {:40s} {:10s} {}".format(str(user["name"]), str(user["username"]), str(user['uuid']), str(user['id']), str(user['enabled'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List all Exclusions")
@@ -42,7 +41,7 @@ def exclusions():
             click.echo("{}".format(str(exclusion["members"])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List all containers and their Vulnerability  Scores")
@@ -60,7 +59,7 @@ def containers():
             pass
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List The actor and the action in the log file")
@@ -73,7 +72,7 @@ def logs():
             click.echo("{:24s} {:30s} {:30s}".format(str(log['received']), str(log['action']), str(log['actor']['name'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List the running Scans")
@@ -86,7 +85,7 @@ def running():
                 click.echo("{:60s} {:10s} {:30s}".format(str(scan['name']), str(scan['id']), str(scan['status'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List all Scans")
@@ -98,7 +97,7 @@ def scans():
             click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']), str(scan['uuid'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Nessus Network Monitor assets and their vulnerability scores")
@@ -114,7 +113,7 @@ def nnm():
                     click.echo("{:20} {}".format(str(host["hostname"]), str(host["score"])))
                 click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Assets found in the last 30 days")
@@ -149,7 +148,7 @@ def assets():
 
         click.echo("\nTotal: {}".format(count))
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Scan Policies")
@@ -161,7 +160,7 @@ def policies():
             click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['description']), policy['template_uuid']))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List Connector Details and Status")
@@ -180,7 +179,7 @@ def connectors():
             click.echo("{:11s} {:40s} {:40s} {:30s} {}".format(str(conn['type']), str(conn['name']), str(conn['id']), last_sync, schedule))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List Access Groups")
@@ -204,7 +203,7 @@ def agroups():
             click.echo("{:25s} {:40s} {:25} {:60s}".format(str(group['name']), str(group['id']), str(updated), textwrap.shorten(rules, width=60)))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print T.io Status and Account info")
@@ -226,7 +225,7 @@ def status():
         click.echo("{} {}".format("Agents Used : ", data['license']["agents"]))
         try:
             click.echo("{} {}".format("Expiration Date : ", data['license']["expiration_date"]))
-        except:
+        except KeyError:
             pass
         click.echo("{} {}".format("Scanners Used : ", data['license']["scanners"]))
         click.echo("{} {}".format("Users : ", data["license"]["users"]))
@@ -245,7 +244,7 @@ def status():
             click.echo()
 
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Agent information")
@@ -278,7 +277,7 @@ def agents():
                                                                       str(agent['status']), textwrap.shorten(groups[1:], width=40)))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Target Groups")
@@ -296,7 +295,7 @@ def tgroups():
             print(str(targets['name']).ljust(40), str(targets['id']).ljust(10), str(targets['owner']).ljust(30), textwrap.shorten(mem, width=60))
         print()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Licensed Assets")
@@ -325,7 +324,7 @@ def licensed():
                     click.echo("{:20s} {:65s} {}".format(str(ipv4), str(fqdn), licensed_date))
         click.echo("\nTotal: {}".format(count))
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Tag Information")
@@ -343,7 +342,7 @@ def tags():
             click.echo("{:30s} : {:35s} {}".format(str(tag_values['category_name']), str(tag_value), str(uuid)))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Tag Categories")
@@ -357,7 +356,7 @@ def categories():
             click.echo("{:31s} {}".format(str(category_name), str(category_uuid)))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print SMTP information")
@@ -373,9 +372,8 @@ def smtp():
                 click.echo("\nYour email server: {}".format(settings[0]))
                 click.echo("The email port is: {}".format(settings[1]))
                 click.echo("Your email is: {}\n".format(settings[2]))
-    except Error as E:
+    except Error:
         click.echo("\nYou have no SMTP information saved.\n")
-        click.echo("Error: ", E, "\n")
 
 
 @display.command(help="Print Cloud information")
@@ -398,7 +396,7 @@ def cloud():
                                                                        str(source['first_seen'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Network Information")
@@ -411,7 +409,7 @@ def networks():
                                                 str(network['uuid'])))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="Print Navi Version")
@@ -440,7 +438,7 @@ def usergroups(membership):
                                                         str(ugroup['uuid']), str(ugroup['user_count'])))
             click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List All Credentials")
@@ -462,4 +460,4 @@ def credentials():
                                                                    textwrap.shorten(cred_uuid, width=40)))
         click.echo()
     except AttributeError:
-        click.echo("Check your permissions or your API keys")
+        click.echo("\nCheck your permissions or your API keys\n")

@@ -1,5 +1,6 @@
 import csv
 import click
+from sqlite3 import Error
 from .database import new_db_connection
 
 
@@ -8,7 +9,10 @@ def query_export(query):
     conn = new_db_connection(database)
     with conn:
         cur = conn.cursor()
-        cur.execute(query)
+        try:
+            cur.execute(query)
+        except Error:
+            print("\n No data! \n Please run 'navi update' first.\n")
 
         data = cur.fetchall()
 

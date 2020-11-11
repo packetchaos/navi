@@ -1,4 +1,5 @@
 import csv
+from sqlite3 import Error
 from .database import new_db_connection
 
 
@@ -12,8 +13,10 @@ def licensed_export():
             agent_writer.writerow(header_list)
 
             cur = conn.cursor()
-            cur.execute("SELECT ip_address, fqdn, uuid, last_licensed_scan_date from assets where last_licensed_scan_date != ' ';")
-
+            try:
+                cur.execute("SELECT ip_address, fqdn, uuid, last_licensed_scan_date from assets where last_licensed_scan_date != ' ';")
+            except Error:
+                print("\n No data! \n Please run 'navi update' first.\n")
             data = cur.fetchall()
 
             for asset in data:

@@ -1,4 +1,5 @@
 import csv
+from sqlite3 import Error
 from .database import new_db_connection
 
 
@@ -11,8 +12,10 @@ def csv_export():
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
                        "Mac Address", "Agent-UUID", "last Licensed Scan Date", "Network ID"]
         cur = conn.cursor()
-        cur.execute("SELECT * from assets;")
-
+        try:
+            cur.execute("SELECT * from assets;")
+        except Error:
+            print("\n No data! \n Please run 'navi update' first.\n")
         data = cur.fetchall()
 
         # Crete a csv file object
