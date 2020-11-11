@@ -224,8 +224,11 @@ def agents():
     click.echo("-" * 150)
 
     for agent in tio.agents.list():
-        last_connect = agent['last_connect']
-        last_connect_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_connect))
+        try:
+            last_connect = agent['last_connect']
+            last_connect_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_connect))
+        except KeyError:
+            last_connect_time = "Unknown"
 
         try:
             last_scanned = agent['last_scanned']
@@ -241,7 +244,7 @@ def agents():
             pass
         click.echo("{:46s} {:20s} {:20s} {:20s} {:10s} {}".format(str(agent['name']), str(agent['ip']),
                                                                   str(last_connect_time), str(last_scanned_time),
-                                                                  str(agent['status']), str(groups[1:])))
+                                                                  str(agent['status']), textwrap.shorten(groups[1:], width=40)))
     click.echo()
 
 
