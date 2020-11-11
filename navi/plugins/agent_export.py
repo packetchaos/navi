@@ -18,7 +18,11 @@ def agent_export():
             name = agent['name']
             ip = agent['ip']
             platform = agent['platform']
-            plugin_feed = agent['plugin_feed_id']
+
+            try:
+                plugin_feed = agent['plugin_feed_id']
+            except KeyError:
+                plugin_feed = "Plugins Not updated"
 
             last_connect = agent['last_connect']
             connect_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_connect))
@@ -28,6 +32,5 @@ def agent_export():
             except KeyError:
                 scanned_time = "Not Yet Scanned"
             status = agent['status']
-
             agent_writer.writerow([name, ip, platform, connect_time, scanned_time, status, plugin_feed])
     return
