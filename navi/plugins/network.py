@@ -70,11 +70,14 @@ def display(net):
         click.echo("\n{:25s} {:65s} {}".format("IP Address", "Full Qualified Domain Name", "Licensed Scan Date"))
         click.echo("-" * 150)
         click.echo()
+
         for asset in data:
             ipv4 = asset[0]
             fqdn = asset[1]
             licensed_date = asset[2]
+
             click.echo("{:25s} {:65s} {}".format(str(ipv4), str(fqdn), licensed_date))
+
     click.echo()
 
 
