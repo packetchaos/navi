@@ -111,7 +111,9 @@ def tag_by_ip(ip_list, tag_list, c, v, d):
 
 
 def tag_by_tenable_uuid(tag_list, c, v, d):
-    # Tagging by IP is limited to 2000 Assets
+    # Tagging by Tenable UUID is limited to 500 UUIDS
+    # Two problems here.  One: There is no PUT equivalant to chunk tenable UUIDs into groups of 500
+    # two: the UUID returned from the agent endpoints is not the one needed to add a tag to the asset.
     try:
         payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
                    {"asset": {"and": [{"field": "tenable_uuid", "operator": "eq", "value": str(tag_list[1:])}]}}}

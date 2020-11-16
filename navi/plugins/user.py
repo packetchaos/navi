@@ -11,7 +11,6 @@ def create_user(username, password, permission, name, email):
 
 
 def enable_disable_user(user_id, answer):
-
     if answer == "enable":
         payload = {"enabled": True}
     else:

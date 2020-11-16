@@ -250,7 +250,7 @@ def status():
 @display.command(help="Print Agent information")
 def agents():
     try:
-        click.echo("\n{:46s} {:20} {:20} {:20} {:10} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "Groups"))
+        click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "Group(id)s"))
         click.echo("-" * 150)
 
         for agent in tio.agents.list():
@@ -269,12 +269,12 @@ def agents():
             groups = ''
             try:
                 for group in agent['groups']:
-                    groups = groups + ", " + group['name']
+                    groups = groups + ", {}({})".format(group['name'], group['id'])
             except KeyError:
                 pass
-            click.echo("{:46s} {:20s} {:20s} {:20s} {:10s} {}".format(str(agent['name']), str(agent['ip']),
-                                                                      str(last_connect_time), str(last_scanned_time),
-                                                                      str(agent['status']), textwrap.shorten(groups[1:], width=40)))
+            click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(str(agent['name']), str(agent['ip']),
+                                                                     str(last_connect_time), str(last_scanned_time),
+                                                                     str(agent['status']), textwrap.shorten(groups[1:], width=60)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
