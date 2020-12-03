@@ -24,13 +24,26 @@ def agent_group_export(group):
                     agents = tio.agent_groups.details(group_id)
 
                     for agent in agents['agents']:
-                        name = agent['name']
-                        ip = agent['ip']
-                        platform = agent['platform']
-                        plugin_feed = agent['plugin_feed_id']
+                        try:
+                            name = agent['name']
+                            ip = agent['ip']
+                            platform = agent['platform']
+                        except KeyError:
+                            name = "Unknown"
+                            ip = "Unknown"
+                            platform = "Unknown"
 
-                        last_connect = agent['last_connect']
-                        connect_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_connect))
+                        try:
+                            plugin_feed = agent['plugin_feed_id']
+                        except KeyError:
+                            plugin_feed = "Plugins Not updated"
+
+                        try:
+                            last_connect = agent['last_connect']
+                            connect_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_connect))
+                        except KeyError:
+                            connect_time = "Unknown"
+
                         try:
                             last_scanned = agent['last_scanned']
                             scanned_time = time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime(last_scanned))
@@ -38,7 +51,6 @@ def agent_group_export(group):
                             scanned_time = "Not Yet Scanned"
 
                         status = agent['status']
-
                         agent_writer.writerow([name, ip, platform, connect_time, scanned_time, status, plugin_feed])
     except AttributeError:
         print("\nCheck your permissions or your API keys\n")
