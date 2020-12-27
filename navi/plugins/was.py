@@ -1,6 +1,7 @@
 import click
 from .api_wrapper import request_data
 from .error_msg import error_msg
+import dateutil.parser as dp
 import time
 import uuid
 import csv
@@ -44,9 +45,7 @@ def create_was_scan(owner_id, temp_id, scanner_id, target, name):
         "owner_id": str(owner_id),
         "template_id": str(temp_id),
         "scanner_id": str(scanner_id),
-        "settings": {
-            "target": str(target)
-            }
+        "target": str(target)
         }
     )
 
@@ -59,7 +58,7 @@ def was():
     pass
 
 
-@was.command(help="Display All of the Completed Web Application Scans")
+@was.command(help="Display the last 30 days of Completed Web Application Scans")
 def scans():
     scan_params = {"size": "1000"}
     scans_data = request_data('GET', '/was/v2/scans', params=scan_params)
@@ -67,12 +66,22 @@ def scans():
     click.echo("-" * 150)
     try:
         for app_data in scans_data['data']:
-            app_url = app_data['application_uri']
-            app_scan_id = app_data['scan_id']
-            app_status = app_data['status']
-            updated = app_data['updated_at']
+            # Reduce list to last 30 days
 
-            click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_url), width=70), str(app_scan_id), str(app_status), str(updated)))
+            try:
+                target_time = time.time() - (30 * 86400)
+                parsed_time = dp.parse(app_data['started_at'])
+                finish_epoch = parsed_time.timestamp()
+
+                if finish_epoch > target_time:
+                    app_url = app_data['application_uri']
+                    app_scan_id = app_data['scan_id']
+                    app_status = app_data['status']
+                    updated = app_data['updated_at']
+
+                    click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_url), width=70), str(app_scan_id), str(app_status), str(updated)))
+            except TypeError:
+                pass
         click.echo()
     except Exception as E:
         error_msg(E)
@@ -102,13 +111,17 @@ def details(scan_id):
         click.echo(detail_name)
         click.echo(detail_target)
         click.echo("-" * 40)
-        click.echo("\n{:10s} {:60s} {:10s} {:10s}".format("Plugin", "Plugin Name", "Severity", "CVSS"))
-        click.echo("-" * 100)
+        click.echo("\n{:10s} {:45s} {:10s} {:10s} {:10s} {:40s} {:6s} {:10s}".format("Plugin", "Plugin Name", "Severity", "CVSS", "CWE", "WASC", "OWASP", "OWASP-API"))
+        click.echo("-" * 150)
         for detail_finding in detail_report_data['findings']:
             detail_risk = detail_finding['risk_factor']
             detail_plugin_id = detail_finding['plugin_id']
             plugin_name = detail_finding['name']
-            cvss = 'None'
+            cvss = ' '
+            cwe = ' '
+            wasc = ' '
+            owasp_2017 = ' '
+            owasp_api = ' '
             if detail_risk == 'high':
                 detail_high.append(detail_plugin_id)
             elif detail_risk == 'medium':
@@ -119,8 +132,23 @@ def details(scan_id):
                 cvss = detail_finding['cvss']
             except KeyError:
                 pass
-            click.echo("{:10s} {:60s} {:10s} {:10s}".format(str(detail_plugin_id), str(plugin_name), str(detail_risk),
-                                                            str(cvss)))
+            try:
+                cwe = detail_finding['cwe']
+            except KeyError:
+                pass
+            try:
+                wasc = detail_finding['wasc'][0]
+            except IndexError:
+                pass
+
+            for yr in detail_finding['owasp']:
+                if yr['year'] == "2017":
+                    owasp_2017 = yr['category']
+                if yr['year'] == "2019":
+                    owasp_api = yr['category']
+
+            click.echo("{:10s} {:45s} {:10s} {:10s} {:10s} {:40s} {:6s} {:10s}".format(str(detail_plugin_id), textwrap.shorten(str(plugin_name), width=45), str(detail_risk),
+                                                                                       str(cvss), str(cwe), str(wasc), str(owasp_2017), str(owasp_api)))
 
         click.echo("\nSeverity Counts")
         click.echo("-" * 20)
@@ -287,13 +315,13 @@ def stats(scan_id):
     click.echo()
 
 
-@was.command(help="Display a Summary of All of the WAS scans in Tenable.io")
+@was.command(help="Display a Summary of the WAS scans in Tenable.io - Last 30 days")
 def summary():
     # Grab all of the Scans
     params = {"size": "1000"}
 
     data = request_data('GET', '/was/v2/scans', params=params)
-    click.echo("\n{:38s} {:40s} {:6s} {:6s} {:25s} {:20s}".format("Scan Name", "Target", "High", "Mid", "Low", "Scan Started", "Scan Finished"))
+    click.echo("\n{:38s} {:60s} {:6s} {:6s} {:6s} {:27s}".format("Scan Name", "Target", "High", "Mid", "Low", "Scan Finished"))
     click.echo("-" * 150)
     for scan_data in data['data']:
         was_scan_id = scan_data['scan_id']
@@ -303,34 +331,40 @@ def summary():
 
         # Ignore all scans that have not completed
         if status == 'completed':
-            report = request_data('GET', '/was/v2/scans/' + was_scan_id + '/report')
-            high = []
-            medium = []
-            low = []
-            try:
-                name = report['config']['name']
+
+            # Reduce list to last 30 days
+            target_time = time.time() - (30 * 86400)
+            parsed_time = dp.parse(summary_start)
+            finish_epoch = parsed_time.timestamp()
+
+            if finish_epoch > target_time:
+                report = request_data('GET', '/was/v2/scans/' + was_scan_id + '/report')
+                high = []
+                medium = []
+                low = []
                 try:
-                    target = report['scan']['target']
-                except KeyError:
-                    target = report['config']['settings']['target']
+                    name = report['config']['name']
+                    try:
+                        target = report['scan']['target']
+                    except KeyError:
+                        target = report['config']['settings']['target']
 
-                for finding in report['findings']:
-                    risk = finding['risk_factor']
-                    plugin_id = finding['plugin_id']
-                    if risk == 'high':
-                        high.append(plugin_id)
-                    elif risk == 'medium':
-                        medium.append(plugin_id)
-                    elif risk == 'low':
-                        low.append(plugin_id)
+                    for finding in report['findings']:
+                        risk = finding['risk_factor']
+                        plugin_id = finding['plugin_id']
+                        if risk == 'high':
+                            high.append(plugin_id)
+                        elif risk == 'medium':
+                            medium.append(plugin_id)
+                        elif risk == 'low':
+                            low.append(plugin_id)
 
-                click.echo("{:38s} {:40s} {:6s} {:6s} {:25s} {:20s}".format(textwrap.shorten(str(name), width=38),
-                                                                            textwrap.shorten(str(target), width=40),
-                                                                            str(len(high)), str(len(medium)),
-                                                                            str(len(low)), str(summary_start),
-                                                                            str(finish)))
-            except TypeError:
-                pass
+                    click.echo("{:38s} {:60s} {:6s} {:6s} {:6s} {:27s}".format(textwrap.shorten(str(name), width=38),
+                                                                               textwrap.shorten(str(target), width=60),
+                                                                               str(len(high)), str(len(medium)),
+                                                                               str(len(low)), str(finish)))
+                except TypeError:
+                    pass
     click.echo()
 
 

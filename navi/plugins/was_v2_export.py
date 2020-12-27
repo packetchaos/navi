@@ -14,7 +14,7 @@ def was_export():
         params = {"size": "1000"}
         # Grab all of the Scans
         data = request_data('GET', '/was/v2/scans', params=params)
-        print(data)
+
         for scan_data in data['data']:
             csv_list = []
             was_scan_id = scan_data['scan_id']
