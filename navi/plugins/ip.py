@@ -12,10 +12,14 @@ def plugin_by_ip(ipaddr, plugin):
         with conn:
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT output from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+                cur.execute("SELECT output, cves from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
                 for plug in rows:
                     click.echo(plug[0])
+
+                    if plug[1] != ' ':
+                        click.echo("CVEs attached to this plugin\n")
+                        click.echo()
             except:
                 pass
 
@@ -74,6 +78,27 @@ def info_by_uuid(uuid):
         click.echo(e)
 
 
+def cves_by_uuid(uuid):
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("select plugin_id, plugin_name, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
+
+            data = cur.fetchall()
+            click.echo("\n{:10s} {:60s} {}".format("Plugin", "Plugin Name", "CVEs"))
+            click.echo("-"*150)
+            for vulns in data:
+                plugin_id = vulns[0]
+                plugin_name = vulns[1]
+                cves = vulns[2]
+                click.echo("{:10s} {:60s} {}".format(plugin_id, textwrap.shorten(plugin_name, 60), textwrap.shorten(cves, 80)))
+            click.echo("")
+    except Error as e:
+        click.echo(e)
+
+
 @click.command(help="Get IP specific information")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
@@ -93,8 +118,9 @@ def info_by_uuid(uuid):
 @click.option('-details', is_flag=True, help="Details on an Asset: IP, UUID, Vulns, etc")
 @click.option('-vulns', is_flag=True, help="Display all vulnerabilities and their plugin IDs")
 @click.option('-info', is_flag=True, help="Display all info plugins and their IDs")
+@click.option('-cves', is_flag=True, help="Display all cves found on the asset")
 @click.pass_context
-def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns, info):
+def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns, info, cves):
     tio = tenb_connection()
     if d:
         click.echo('\nScan Detail')
@@ -490,6 +516,20 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 click.echo("Asset IP: {}".format(ipaddr))
                 click.echo("-" * 26)
                 vulns_by_uuid(assets[0])
+
+    if cves:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            data = cur.fetchall()
+
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(assets[0]))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                cves_by_uuid(assets[0])
 
     if info:
         database = r"navi.db"

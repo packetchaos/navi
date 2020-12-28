@@ -59,6 +59,47 @@ def plugin(plugin_id, output):
             find_by_plugin(plugin_id)
 
 
+@find.command(help="Find Assets that have a given CVE")
+@click.argument('cve_id')
+def cve(cve_id):
+
+    if cve_id:
+        try:
+            cve_db = r"navi.db"
+            cve_conn = new_db_connection(cve_db)
+            with cve_conn:
+                click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
+                click.echo("-" * 150)
+                plugin_cur = cve_conn.cursor()
+                plugin_cur.execute("SELECT asset_ip, asset_uuid, fqdn, plugin_id, network from vulns LEFT JOIN assets ON asset_uuid = uuid where cves LIKE '%" + cve_id + "%';")
+                plugin_data = plugin_cur.fetchall()
+                for row in plugin_data:
+                    click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(row[2], 46), row[1], row[4]))
+                click.echo()
+        except Error:
+            pass
+
+
+@find.command(help="Find Assets that have an exploitable vuln")
+def exploit():
+
+    if exploit:
+        try:
+            exploit_db = r"navi.db"
+            exploit_conn = new_db_connection(exploit_db)
+            with exploit_conn:
+                click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
+                click.echo("-" * 150)
+                plugin_cur = exploit_conn.cursor()
+                plugin_cur.execute("SELECT asset_ip, asset_uuid, fqdn, plugin_id, network from vulns LEFT JOIN assets ON asset_uuid = uuid where exploit = 'True';")
+                plugin_data = plugin_cur.fetchall()
+                for row in plugin_data:
+                    click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(row[2], 46), row[1], row[4]))
+                click.echo()
+        except Error:
+            pass
+
+
 @find.command(help="Find Assets where Text was found in the output of any plugin")
 @click.argument('out_put')
 def output(out_put):

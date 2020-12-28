@@ -33,7 +33,10 @@ def create_vulns_table():
                             scan_started text, 
                             scan_uuid text, 
                             schedule_id text, 
-                            state text
+                            state text,
+                            cves text,
+                            score text,
+                            exploit text
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)

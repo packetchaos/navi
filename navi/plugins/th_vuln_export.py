@@ -138,6 +138,25 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(state)
                     except KeyError:
                         vuln_list.append(" ")
+
+                    try:
+                        cves = vulns['plugin']['cve']
+                        vuln_list.append(str(cves))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        score = vulns['plugin']['vpr']['score']
+                        vuln_list.append(score)
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        exploit = vulns['plugin']['exploit_available']
+                        vuln_list.append(str(exploit))
+                    except KeyError:
+                        vuln_list.append(" ")
+
                     try:
                         insert_vulns(vuln_conn, vuln_list)
                     except Error as e:

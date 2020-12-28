@@ -67,8 +67,11 @@ def insert_vulns(conn, vulns):
                             scan_started, 
                             scan_uuid, 
                             schedule_id, 
-                            state
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            state,
+                            cves,
+                            score,
+                            exploit
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
