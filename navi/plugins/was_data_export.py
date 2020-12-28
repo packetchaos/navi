@@ -62,7 +62,6 @@ def download_data(uuid):
             medium = []
             low = []
             info = []
-            name = report['config']['name']
 
             critical_summary = []
             high_summary = []

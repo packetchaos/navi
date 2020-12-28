@@ -122,24 +122,20 @@ def scan():
 @scan.command(help="Quickly Scan a Target")
 @click.argument('targets')
 @click.option('--plugin', default='', help="Plugin required for Remediation Scan")
-def create(targets, plugin):
-
+@click.option('--cred', default='', help="UUID of your intended credentials")
+def create(targets, plugin, cred):
+    cred_cat_name = ""
+    cred_type_name = ""
     try:
         click.echo("\nChoose your Scan Template")
         click.echo("1.   Basic Network Scan")
         click.echo("2.   Discovery Scan")
-        click.echo("3.   Web App Overview")
-        click.echo("4.   Web App Scan")
-        click.echo("5.   WAS SSL SCAN")
+
         option = input("Please enter option #.... ")
         if option == '1':
             template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"
         elif option == '2':
             template = "bbd4f805-3966-d464-b2d1-0079eb89d69708c3a05ec2812bcf"
-        elif option == '3':
-            template = "58323412-d521-9482-2224-bdf5e2d65e6a4c67d33d4322677f"
-        elif option == '4':
-            template = "09805055-a034-4088-8986-aac5e1c57d5f0d44f09d736969bf"
         elif len(option) == 52:
             template = str(option)
         else:
@@ -154,19 +150,28 @@ def create(targets, plugin):
 
         click.echo("creating your scan of : {}  Now...".format(targets))
 
+        if cred:
+            cred_data = request_data('GET', '/credentials/' + cred)
+            cred_cat_name = cred_data['category']['name']
+            cred_type_name = cred_data['type']['name']
+
         if plugin != '':
             family = get_plugin_family(plugin)
             advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
             payload = dict(plugins={family: {"individual": {plugin: "enabled"}}},
-                           uuid=advanced_template, settings={"name": "navi Created Remediation Scan of " + targets,
-                                                             "enabled": "True",
-                                                             "scanner_id": scanner_id,
-                                                             "text_targets": targets})
+                           uuid=advanced_template,
+                           credentials={"add": {cred_cat_name: {cred_type_name: [{"id": cred}]}}},
+                           settings={"name": "navi Created Remediation Scan of " + targets,
+                                     "enabled": "True",
+                                     "scanner_id": scanner_id,
+                                     "text_targets": targets})
         else:
-            payload = dict(uuid=template, settings={"name": "navi Created Scan of " + targets,
-                                                    "enabled": "True",
-                                                    "scanner_id": scanner_id,
-                                                    "text_targets": targets})
+            payload = dict(uuid=template,
+                           credentials={"add": {cred_cat_name: {cred_type_name: [{"id": cred}]}}},
+                           settings={"name": "navi Created Scan of " + targets,
+                                     "enabled": "True",
+                                     "scanner_id": scanner_id,
+                                     "text_targets": targets})
 
         # create a new scan
         data = request_data('POST', '/scans', payload=payload)
