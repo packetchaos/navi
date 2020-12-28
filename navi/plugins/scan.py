@@ -152,8 +152,12 @@ def create(targets, plugin, cred):
 
         if cred:
             cred_data = request_data('GET', '/credentials/' + cred)
-            cred_cat_name = cred_data['category']['name']
-            cred_type_name = cred_data['type']['name']
+            try:
+                cred_cat_name = cred_data['category']['name']
+                cred_type_name = cred_data['type']['name']
+            except:
+                print("\nCheck your Credential UUID\n")
+                exit()
 
         if plugin != '':
             family = get_plugin_family(plugin)
@@ -185,7 +189,7 @@ def create(targets, plugin, cred):
         click.echo("I started your scan, your scan ID is: {}".format(scan_id))
 
     except Exception as E:
-        error_msg(E)
+        click.echo(E)
 
 
 @scan.command(help="Start a valid Scan")
