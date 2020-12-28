@@ -18,8 +18,7 @@ def was_detailed_export():
         for scan_data in data['data']:
             was_scan_id = scan_data['scan_id']
             status = scan_data['status']
-            cwe = ''
-            wasc = ''
+
             # Ignore all scans that have not completed
             if status == 'completed':
                 report = request_data('GET', '/was/v2/scans/' + was_scan_id + '/report')
@@ -49,29 +48,28 @@ def was_detailed_export():
 
                         try:
                             cvss = finding['cvss']
-                        except:
+                        except KeyError:
                             cvss = ''
                         try:
                             cvss3 = finding['cvssv3']
-                        except:
+                        except KeyError:
                             cvss3 = ''
 
                         cves = finding['cves']
-                        for xref in finding['xrefs']:
-                            if xref['xref_name'] == 'CWE':
-                                try:
-                                    cwe = xref['xref_value']
-                                except:
-                                    cwe = ''
+                        try:
+                            cwe = finding['cwe']
+                        except KeyError:
+                            cwe = ''
 
-                            if xref['xref_name'] == 'WASC':
-                                try:
-                                    wasc = xref['xref_value']
-                                except:
-                                    wasc = ''
-                            # Grab multiples values here
-                            if xref['xref_name'] == 'OWASP':
-                                owasp_list.append(xref['xref_value'])
+                        try:
+                            wasc = finding['wasc']
+                        except KeyError:
+                            wasc = ''
+
+                        # Grab multiples values here
+                        for owasp in finding['owasp']:
+                            if owasp['year'] == '2017':
+                                owasp_list.append(owasp['category'])
 
                         # ignore info vulns
                         if risk != "info":

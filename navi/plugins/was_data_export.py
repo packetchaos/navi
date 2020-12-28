@@ -77,16 +77,15 @@ def download_data(uuid):
                 target = report['scan']['target']
             except KeyError:
                 target = report['config']['settings']['target']
+
             # Count for-loop
             plugin_list = []
             for finding in report['findings']:
                 plugin_list.append(finding['plugin_id'])
-                for xref in finding['xrefs']:
-                    # Grab multiples values here
-                    if xref['xref_name'] == 'OWASP':
-                        if '2017' in xref['xref_value']:
-                            owasp_clean = str(xref['xref_value']).split('-')[1]
-                            owasp_list.append(owasp_clean)
+
+                for owasp_ltr in finding['owasp']:
+                    if owasp_ltr['year'] == '2017':
+                        owasp_list.append(owasp_ltr['category'])
 
             def occurances(number, number_list):
                 return number_list.count(number)
