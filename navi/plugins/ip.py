@@ -12,14 +12,20 @@ def plugin_by_ip(ipaddr, plugin):
         with conn:
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT output, cves from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+                cur.execute("SELECT output, cves, score from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
+
                 for plug in rows:
+                    click.echo("\nVPR Score: {}".format(plug[2]))
+                    click.echo("\nPlugin Output")
+                    click.echo("-" * 60)
                     click.echo(plug[0])
 
                     if plug[1] != ' ':
-                        click.echo("CVEs attached to this plugin\n")
-                        click.echo()
+                        click.echo("CVEs attached to this plugin")
+                        click.echo("-" * 80)
+                        click.echo("{}\n".format(plug[1]))
+
             except:
                 pass
 
@@ -84,16 +90,15 @@ def cves_by_uuid(uuid):
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("select plugin_id, plugin_name, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
+            cur.execute("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
             data = cur.fetchall()
-            click.echo("\n{:10s} {:60s} {}".format("Plugin", "Plugin Name", "CVEs"))
+            click.echo("\n{:10s} {}".format("Plugin", "CVEs"))
             click.echo("-"*150)
             for vulns in data:
                 plugin_id = vulns[0]
-                plugin_name = vulns[1]
-                cves = vulns[2]
-                click.echo("{:10s} {:60s} {}".format(plugin_id, textwrap.shorten(plugin_name, 60), textwrap.shorten(cves, 80)))
+                cves = vulns[1]
+                click.echo("{:10s} {}".format(plugin_id, textwrap.shorten(cves, 140)))
             click.echo("")
     except Error as e:
         click.echo(e)
