@@ -77,12 +77,12 @@ def scan_details(scan_id):
                 click.echo("Score : {}".format(data['hosts'][0]['score']))
             except IndexError:
                 pass
-            click.echo("\n{:10s} {:80s} {}".format("Plugin", "Vulnerability Details", "Vuln Count"))
-            click.echo("-" * 100)
+            click.echo("\n{:10s} {:128s} {}".format("Plugin", "Vulnerability Details", "Vuln Count"))
+            click.echo("-" * 150)
 
             for vulns in data['vulnerabilities']:
                 if vulns['severity'] != 0:
-                    click.echo("{:10s} {:80s} {}".format(str(vulns['plugin_id']), textwrap.shorten(str(vulns['plugin_name']), 80), vulns['count']))
+                    click.echo("{:10s} {:128s} {}".format(str(vulns['plugin_id']), textwrap.shorten(str(vulns['plugin_name']), 128), vulns['count']))
             click.echo()
         except TypeError:
             click.echo("Check the scan ID")
@@ -96,11 +96,11 @@ def scan_hosts(scan_id):
         try:
             click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
 
-            click.echo("{:20s} {:45s} {:8s} {:8s} {:8s} {:8s} ".format("IP Address", "UUID", "Critical", "High", "Medium", "Low"))
+            click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Critical", "High", "Medium", "Low"))
             click.echo("-"*150)
             for host in data['hosts']:
 
-                click.echo("{:20s} {:45s} {:8} {:8} {:8} {:8}".format(host['hostname'], host['uuid'], host['critical'], host['high'], host['medium'], host['low']))
+                click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']), str(host['critical']), str(host['high']), str(host['medium']), str(host['low'])))
 
             click.echo()
         except TypeError:

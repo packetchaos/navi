@@ -63,7 +63,11 @@ def plugin(plugin_id, output):
 @click.argument('cve_id')
 def cve(cve_id):
 
-    if cve_id:
+    if len(cve_id) < 10:
+        click.echo("\nThis is likely not a CVE...Try again...\n")
+    elif not "CVE" in cve_id:
+        click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
+    else:
         try:
             cve_db = r"navi.db"
             cve_conn = new_db_connection(cve_db)

@@ -16,7 +16,9 @@ def plugin_by_ip(ipaddr, plugin):
                 rows = cur.fetchall()
 
                 for plug in rows:
-                    click.echo("\nVPR Score: {}".format(plug[2]))
+                    if plug[2] != ' ':
+                        click.echo("\nVPR Score: {}".format(plug[2]))
+
                     click.echo("\nPlugin Output")
                     click.echo("-" * 60)
                     click.echo(plug[0])
@@ -25,7 +27,7 @@ def plugin_by_ip(ipaddr, plugin):
                         click.echo("CVEs attached to this plugin")
                         click.echo("-" * 80)
                         click.echo("{}\n".format(plug[1]))
-
+                click.echo()
             except:
                 pass
 
