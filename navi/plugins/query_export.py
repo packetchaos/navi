@@ -12,11 +12,11 @@ def query_export(query):
         try:
             cur.execute(query)
         except Error:
-            print("\n No data! \n Please run 'navi update' first.\n")
+            print("\n No data! \n Please run 'navi update' first. OR check your query.\n")
 
         data = cur.fetchall()
 
-        click.echo("I'm exporting query_export.py with your requested data")
+        click.echo("I'm exporting query_data.csv with your requested data")
         # Crete a csv file object
         with open('query_data.csv', mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')

@@ -1,6 +1,7 @@
 import click
 import time
-from .api_wrapper import tenb_connection, navi_version
+import arrow
+from .api_wrapper import tenb_connection, navi_version, request_data
 from .scanners import nessus_scanners
 from .database import new_db_connection
 from .licensed_count import get_licensed
@@ -461,3 +462,49 @@ def credentials():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+
+
+@display.command(help="Print Asset and Vulnerability Export Job information")
+@click.option('-a', help="Display Asset Export Jobs", is_flag=True)
+@click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True)
+def exports(a, v):
+    if not a and not v:
+        click.echo("\nYou need to use '-a' or '-v' to select your export type. (assets vs vulns)\n")
+
+    current_time = time.time()
+    time_frame = (current_time - (86400 * 3)) * 1000
+    if a:
+        export_data = request_data('GET', '/assets/export/status')
+        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nAsset Export UUID", "Created Date", "Status", "Export Filter Used",  "Chunk Size", "Total Chunks"))
+        click.echo('-' * 150)
+
+        for export in export_data['exports']:
+            compare_time = export['created']
+            newtime = arrow.Arrow.fromtimestamp(compare_time)
+            if compare_time > time_frame:
+                export_uuid = export['uuid']
+                export_status = export['status']
+                export_chunk_size = export['num_assets_per_chunk']
+                export_filter = export['filters']
+                export_total_chunks = export['total_chunks']
+
+                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, newtime.format('MM-DD-YYYY'), export_status, export_filter, export_chunk_size, export_total_chunks))
+
+    if v:
+        vuln_export_data = request_data('GET', '/vulns/export/status')
+        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nVulnerability Export UUID", "Created Date", "Status", "States", "Chunk Size", "Total Chunks"))
+        click.echo('-' * 150)
+
+        for vuln_export in vuln_export_data['exports']:
+            vuln_compare_time = vuln_export['created']
+            vuln_newtime = arrow.Arrow.fromtimestamp(vuln_compare_time)
+            if vuln_compare_time > time_frame:
+                export_uuid = vuln_export['uuid']
+                export_status = vuln_export['status']
+                export_chunk_size = vuln_export['num_assets_per_chunk']
+                export_filter = str(vuln_export['filters']['state'])
+                vuln_export_total_chunks = vuln_export['total_chunks']
+
+                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, vuln_newtime.format('MM-DD-YYYY'), export_status, export_filter, export_chunk_size, vuln_export_total_chunks))
+
+    click.echo()
