@@ -7,7 +7,8 @@ from .api_wrapper import request_data
 @click.option('-a', is_flag=True, help="Cancel an Asset export")
 @click.option('-v', is_flag=True, help="Cancel an Vulnerability Export")
 def cancel(uuid, a, v):
-
+    if not a and not v:
+        click.echo("\n You need to signify which export type: '-a' or '-v'")
     if a:
         asset_response = request_data('POST', '/assets/export/{}/cancel'.format(uuid))
         click.echo(asset_response)
