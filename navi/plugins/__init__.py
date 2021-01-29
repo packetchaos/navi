@@ -22,6 +22,7 @@ from .network import network
 from .user import user
 from .usergroup import usergroup
 from .target_group import tgroup
+from .cancel import cancel
 
 
 def plugin_loader(group):
@@ -49,4 +50,5 @@ def plugin_loader(group):
     group.add_command(user)
     group.add_command(usergroup)
     group.add_command(tgroup)
+    group.add_command(cancel)
 
