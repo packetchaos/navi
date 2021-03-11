@@ -200,7 +200,8 @@ def tag_by_uuid(tag_list, c, v, d):
 @click.option('--scantime', default='', help="Create a Tag for assets that took longer than supplied minutes")
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
+@click.option('--scanid', default='', help="Create a tag by Scan ID")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid):
 
     # start a blank list; IP list is due to a bug
     tag_list = []
@@ -382,3 +383,18 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv):
 
     if cv != '' and cc != '':
         tag_by_tag(c, v, d, cv, cc)
+
+    if scanid:
+        scan_uuids = []
+        try:
+            scandata = request_data('GET', '/scans/' + str(scanid))
+            try:
+                for host in scandata['hosts']:
+
+                    scan_uuids.append(host['uuid'])
+
+                tag_by_uuid(scan_uuids, c, v, d)
+            except TypeError:
+                click.echo("Check the scan ID")
+        except Exception as E:
+            click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
