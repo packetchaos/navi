@@ -27,7 +27,7 @@ def users():
         click.echo("\n{:34s} {:40s} {:40s} {:10s} {}".format("User Name", "Login Email", "UUID", "ID", "Enabled"))
         click.echo("-" * 150)
         for user in tio.users.list():
-            click.echo("{:34s} {:40s} {:40s} {:10s} {}".format(str(user["name"]), str(user["username"]), str(user['uuid']), str(user['id']), str(user['enabled'])))
+            click.echo("{:34s} {:40s} {:40s} {:10s} {}".format(str(user["user_name"]), str(user["username"]), str(user['uuid']), str(user['id']), str(user['enabled'])))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")

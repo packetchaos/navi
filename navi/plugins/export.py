@@ -12,6 +12,7 @@ from .query_export import query_export
 from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
 from .lumin_quick_export import lumin_quick_export
+from .user_export import user_export
 
 
 @click.group(help="Export Tenable.io Data")
@@ -117,3 +118,9 @@ def bytag(c, v, ec, ev):
 def was():
     click.echo("\nExporting your data now. Saving was_summary_data.csv now...")
     was_export()
+
+
+@export.command(help="Export User and Role information to a CSV")
+def users():
+    click.echo("\nExporting User Data now. Saving user-summary.csv now...\n")
+    user_export()
