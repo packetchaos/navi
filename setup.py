@@ -17,7 +17,7 @@ setup(
     author_email="itprofguru@gmail.com",
     url="https://github.com/packetchaos/Navi",
     license="GNUv3",
-    keywords='tenable tenable_io navi tio, lumin, navi pro, tio cli, tenable io cli',
+    keywords='tenable tenable_io navi tio, lumin, navi pro, tio cli, tenable io cli, automation',
     packages=find_packages(exclude=['docs', 'tests']),
     classifiers=[
         "Programming Language :: Python :: 3",
