@@ -225,8 +225,8 @@ discover asset related information very quickly.
 ## Find information - 'find'
 
 While the 'ip' command helps find unknown information on known assets.  The
-'find' command helps indenfity the unknown information on unknown assets.  For
-instance consider the following questions and the time it may take for you to
+'find' command helps identify the unknown information on unknown assets.  For
+instance, consider the following questions and the time it may take for you to
 answer them.
 
   * What assets have port 21/ftp open? `navi find port 21`
@@ -381,7 +381,7 @@ This tagging functionality and use cases are beyond the scope of this documentat
    * --scantime TEXT --> Create a Tag for assets that took longer than supplied minutes
    * --cc TEXT   -->     Add a Tag to a new parent tag: Child Category
    * --cv TEXT   -->     Add a Tag to a new parent tag: Child Value
-
+   * --scanid TEXT -->  Create a tag based on a scan ID
    
 ### tag Examples
     navi tag --c "My Category" --v "My Value" --d "My description" --plugin 93561
@@ -522,6 +522,7 @@ assets, it makes since to use these groupings to apply Asset criticality.
      * --v TEXT   Export bytag with the Tag Value; requires --c and Category Name
      * --ec TEXT  Exclude tag from export with Tag Category; requires --ev
      * --ev TEXT  Exclude tag from export with Tag Value; requires --ec
+   * users --> Export User information
    
 ### export examples
 
