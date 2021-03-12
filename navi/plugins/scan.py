@@ -95,9 +95,9 @@ def scan_details(scan_id):
 def scan_hosts(scan_id):
     try:
         data = request_data('GET', '/scans/' + str(scan_id))
+
         try:
             click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
-
             click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Critical", "High", "Medium", "Low"))
             click.echo("-"*150)
             for host in data['hosts']:
@@ -105,6 +105,12 @@ def scan_hosts(scan_id):
                 click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']), str(host['critical']), str(host['high']), str(host['medium']), str(host['low'])))
 
             click.echo()
+        except KeyError:
+            click.echo("There was an Error.  It could be the scan was Aborted, canceled or Archived.\n")
+            click.echo("Status: {}".format(data['info']['status']))
+            click.echo("Archived? {}".format(data['info']['is_archived']))
+
+
         except TypeError:
             click.echo("Check the scan ID")
     except Exception as E:

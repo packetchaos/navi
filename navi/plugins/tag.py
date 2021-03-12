@@ -396,5 +396,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 tag_by_uuid(scan_uuids, c, v, d)
             except TypeError:
                 click.echo("Check the scan ID")
+            except KeyError:
+                click.echo("The scan used is archived, canceled or aborted. Your Tag was not created.")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
