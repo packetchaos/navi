@@ -399,8 +399,13 @@ This is especially important if you want to export using your newly created tag.
     navi update -assets
 
 ### Note on Tagging using Agent Groups
-The Agent group APIs are currently limited to 5000 assets.  Group information
-is not available in the asset exports
+The Agent group APIs are currently limited to 500 agents.  This is because Agents do not become "assets" until they are scanned in T.io and therefore do not get an asset UUID.  
+The Asset UUID is used to bulk Tag assets and with it's absence I chose to utilize the only unique identifier given, the Tenable UUID.  While I can pull 5000 agents from this endpoint  
+creating a Tag Rule is limited to 500 rules.  Since Taggging Agents by Group requires a Tenable Tag rule, it effectively limits this feature to 500 Agents for each Group.
+
+### Tagging Agents Workaround
+There is a recently work around created in 6.2.3 to tag all agents in a Agent Group; using the Tag by Scan-ID function.  It will require you to retrieve the "Scan ID" for all Agent scans.
+You can acheive this by using the "navi display scans" command.
 
 
 ## Create Access Groups by Tags or Agent Groups - 'agroup'
