@@ -12,10 +12,11 @@ def plugin_by_ip(ipaddr, plugin):
         with conn:
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT output, cves, score from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+                cur.execute("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
                 rows = cur.fetchall()
 
                 for plug in rows:
+                    click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
                     if plug[2] != ' ':
                         click.echo("\nVPR Score: {}".format(plug[2]))
 
@@ -44,10 +45,10 @@ def vulns_by_uuid(uuid):
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
+            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity, state from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
 
             data = cur.fetchall()
-            click.echo("\n{:10s} {:80s} {:35s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+            click.echo("\n{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "state", "Port", "Proto", "Severity"))
             click.echo("-"*150)
             for vulns in data:
                 plugin_id = vulns[0]
@@ -56,7 +57,8 @@ def vulns_by_uuid(uuid):
                 port = vulns[3]
                 protocol = vulns[4]
                 severity = vulns[5]
-                click.echo("{:10s} {:80s} {:35s} {:6s} {:6s} {}".format(plugin_id, textwrap.shorten(plugin_name, 80), textwrap.shorten(plugin_family, 35), port, protocol, severity))
+                state = vulns[6]
+                click.echo("{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format(plugin_id, textwrap.shorten(plugin_name, 70), textwrap.shorten(plugin_family, 35), state, port, protocol, severity))
             click.echo("")
     except Error as e:
         click.echo(e)
