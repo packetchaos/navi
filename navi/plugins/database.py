@@ -23,6 +23,29 @@ def create_table(conn, table_information):
         click.echo(e)
 
 
+def get_last_update_id():
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    try:
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT update_id from diff;")
+            data = cur.fetchall()
+
+            new_id = len(data) + 1
+    except Error:
+        new_id = 1
+
+    return new_id
+
+
+def insert_update_info(conn, diff):
+    sql = '''INSERT or IGNORE into diff(update_id, timestamp, days, update_type, exid) VALUES(?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, diff)
+
+
 def insert_assets(conn, assets):
     sql = '''INSERT or IGNORE into assets(ip_address, hostname, fqdn, uuid, first_found, last_found, operating_system,
                        mac_address, agent_uuid, last_licensed_scan_date, network, acr, aes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'''

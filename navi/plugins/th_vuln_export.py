@@ -4,7 +4,7 @@ import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import new_db_connection, drop_tables, insert_vulns
+from .database import new_db_connection, drop_tables, insert_vulns, insert_update_info, get_last_update_id
 from .dbconfig import create_vulns_table
 
 lock = threading.Lock()
@@ -250,6 +250,13 @@ def vuln_export(days, ex_uuid, threads):
         q.join()
         end = time.time()
         click.echo("Vulnerability Update Time took : {}\n".format(str(end - start)))
+
+        update_id = get_last_update_id()
+        diff_dict = [update_id, str(start), str(days), "Vuln update", str(ex_uuid)]  # need to ignore if the Ex_uuid exists in the db.
+        database_2 = r"navi.db"
+        conn = new_db_connection(database_2)
+        with conn:
+            insert_update_info(conn, diff_dict)
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")

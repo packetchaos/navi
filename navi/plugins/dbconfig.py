@@ -2,7 +2,6 @@ from .database import new_db_connection, create_table
 
 
 def create_keys_table():
-    # Create Tables
     database = r"navi.db"
     key_conn = new_db_connection(database)
     key_table = """CREATE TABLE IF NOT EXISTS keys (
@@ -10,6 +9,18 @@ def create_keys_table():
                             secret_key text
                             );"""
     create_table(key_conn, key_table)
+
+
+def create_diff_table():
+    database = r"navi.db"
+    diff_conn = new_db_connection(database)
+    diff_table = """CREATE TABLE IF NOT EXISTS diff (
+                        update_id integer PRIMARY KEY,
+                        timestamp text,
+                        days text,
+                        update_type text,
+                        exid text);"""
+    create_table(diff_conn, diff_table)
 
 
 def create_vulns_table():

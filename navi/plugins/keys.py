@@ -1,7 +1,7 @@
 import click
 import getpass
 from .database import new_db_connection
-from .dbconfig import create_keys_table
+from .dbconfig import create_keys_table, create_diff_table, create_assets_table, create_vulns_table
 
 
 @click.command(help="Enter or Reset your Keys")
@@ -9,7 +9,12 @@ from .dbconfig import create_keys_table
 @click.option("--access_key", "--a", default="", help="Provide your Access Key")
 @click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
 def keys(clear, access_key, secret_key):
+    # create all Tables when keys are added.
     create_keys_table()
+    create_diff_table()
+    #create_vulns_table()
+    #create_assets_table()
+
     if access_key == "" or secret_key == "":
         click.echo("Hey you don't have any Keys!")
         if clear:

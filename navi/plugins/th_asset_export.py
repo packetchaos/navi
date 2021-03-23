@@ -4,8 +4,8 @@ import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import new_db_connection, insert_assets, insert_tags, drop_tables
-from .dbconfig import create_assets_table, create_tag_table
+from .database import new_db_connection, insert_assets, insert_tags, drop_tables, get_last_update_id, insert_update_info
+from .dbconfig import create_assets_table, create_tag_table, create_diff_table
 
 lock = threading.Lock()
 
@@ -140,6 +140,7 @@ def parse_data(chunk_data):
 
 def asset_export(days, ex_uuid, threads):
     start = time.time()
+
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
@@ -216,7 +217,16 @@ def asset_export(days, ex_uuid, threads):
         end = time.time()
         click.echo("Asset Download took: {}\n".format(str(end - start)))
 
+        # Now that the download has completed we need to record it
+        update_id = get_last_update_id()
+        diff_dict = [update_id, str(start), str(days), "Asset Update", str(ex_uuid)] # need to ignore if the Ex_uuid exsists in the db.
+        database_2 = r"navi.db"
+        conn = new_db_connection(database_2)
+        with conn:
+            insert_update_info(conn, diff_dict)
+
     except IndexError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")
     except TypeError:
         click.echo("You may not be authorized or your keys are invalid")
+

@@ -13,8 +13,8 @@ from sqlite3 import Error
 @click.option('--exid', default='0', help="Download using a specified Export ID")
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
 def update(assets, vulns, days, exid, threads, was):
-    # Limit the amount of threads to avoid issues
-    if threads != 10:
+
+    if threads != 10:  # Limit the amount of threads to avoid issues
         click.echo("\nUsing {} thread(s) at your request".format(threads))
         if threads not in range(1, 11):
             click.echo("Enter a value between 1 and 10")
