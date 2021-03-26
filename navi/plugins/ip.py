@@ -1,111 +1,92 @@
 import click
+import time
 import textwrap
 from sqlite3 import Error
 from .api_wrapper import tenb_connection
-from .database import new_db_connection
+from .database import new_db_connection, db_query
 
 
 def plugin_by_ip(ipaddr, plugin):
+    plugin_start = time.time()
     try:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            try:
-                cur = conn.cursor()
-                cur.execute("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
-                rows = cur.fetchall()
+        rows = db_query("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
 
-                for plug in rows:
-                    click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
-                    if plug[2] != ' ':
-                        click.echo("\nVPR Score: {}".format(plug[2]))
+        for plug in rows:
+            click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
+            if plug[2] != ' ':
+                click.echo("\nVPR Score: {}".format(plug[2]))
 
-                    click.echo("\nPlugin Output")
-                    click.echo("-" * 60)
-                    click.echo(plug[0])
+            click.echo("\nPlugin Output")
+            click.echo("-" * 60)
+            click.echo(plug[0])
 
-                    if plug[1] != ' ':
-                        click.echo("CVEs attached to this plugin")
-                        click.echo("-" * 80)
-                        click.echo("{}\n".format(plug[1]))
-                click.echo()
-            except:
-                pass
-
-    except Error as e:
-        click.echo(e)
-
+            if plug[1] != ' ':
+                click.echo("CVEs attached to this plugin")
+                click.echo("-" * 80)
+                click.echo("{}\n".format(plug[1]))
+        click.echo()
+        end = time.time()
+        total = end - plugin_start
+        print("\nSearch took : {} seconds".format(total))
     except IndexError:
         click.echo("No information found for this plugin")
 
 
 def vulns_by_uuid(uuid):
     try:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity, state from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
+        data = db_query("select plugin_id, plugin_name, plugin_family, port, protocol, severity, state from vulns where asset_uuid='{}' and severity !='info';".format(uuid))
 
-            data = cur.fetchall()
-            click.echo("\n{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "state", "Port", "Proto", "Severity"))
-            click.echo("-"*150)
-            for vulns in data:
-                plugin_id = vulns[0]
-                plugin_name = vulns[1]
-                plugin_family = vulns[2]
-                port = vulns[3]
-                protocol = vulns[4]
-                severity = vulns[5]
-                state = vulns[6]
-                click.echo("{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format(plugin_id, textwrap.shorten(plugin_name, 70), textwrap.shorten(plugin_family, 35), state, port, protocol, severity))
-            click.echo("")
+        click.echo("\n{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "state", "Port", "Proto", "Severity"))
+        click.echo("-"*150)
+
+        for vulns in data:
+            plugin_id = vulns[0]
+            plugin_name = vulns[1]
+            plugin_family = vulns[2]
+            port = vulns[3]
+            protocol = vulns[4]
+            severity = vulns[5]
+            state = vulns[6]
+            click.echo("{:10s} {:70s} {:35s} {:10s} {:6s} {:6s} {}".format(plugin_id, textwrap.shorten(plugin_name, 70), textwrap.shorten(plugin_family, 35), state, port, protocol, severity))
+        click.echo("")
     except Error as e:
         click.echo(e)
 
 
 def info_by_uuid(uuid):
     try:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity =='info';".format(uuid))
+        data = db_query("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity =='info';".format(uuid))
 
-            data = cur.fetchall()
-            click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
-            click.echo("-"*150)
-            for vulns in data:
-                plugin_id = vulns[0]
-                plugin_name = vulns[1]
-                plugin_family = vulns[2]
-                port = vulns[3]
-                protocol = vulns[4]
-                severity = vulns[5]
-                click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
-            click.echo("")
+        click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+        click.echo("-"*150)
+
+        for vulns in data:
+            plugin_id = vulns[0]
+            plugin_name = vulns[1]
+            plugin_family = vulns[2]
+            port = vulns[3]
+            protocol = vulns[4]
+            severity = vulns[5]
+            click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
+        click.echo("")
     except Error as e:
         click.echo(e)
 
 
 def cves_by_uuid(uuid):
     try:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
+        data = db_query("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
-            data = cur.fetchall()
-            click.echo("\n{:10s} {}".format("Plugin", "CVEs"))
-            click.echo("-"*150)
-            for vulns in data:
-                plugin_id = vulns[0]
-                cves = vulns[1]
-                click.echo("{:10s} {}".format(plugin_id, textwrap.shorten(cves, 140)))
-            click.echo("")
-    except Error as e:
-        click.echo(e)
+        click.echo("\n{:10s} {}".format("Plugin", "CVEs"))
+        click.echo("-"*150)
+
+        for vulns in data:
+            plugin_id = vulns[0]
+            cves = vulns[1]
+            click.echo("{:10s} {}".format(plugin_id, textwrap.shorten(cves, 140)))
+        click.echo("")
+    except:
+        click.echo("Something went wrong")
 
 
 @click.command(help="Get IP specific information")
@@ -187,18 +168,13 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if s:
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                cur.execute("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
-                data = cur.fetchall()
+            data = db_query("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
 
-                for plugins in data:
-                    output = plugins[0]
-                    port = plugins[1]
-                    click.echo("\n{} {}".format(str(output), str(port)))
-                click.echo()
+            for plugins in data:
+                output = plugins[0]
+                port = plugins[1]
+                click.echo("\n{} {}".format(str(output), str(port)))
+            click.echo()
         except IndexError:
             click.echo("No information for plugin 22964")
 
@@ -217,342 +193,306 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if outbound:
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                cur.execute("SELECT output, port, protocol from vulns where asset_ip=\"%s\" and plugin_id='16'" % ipaddr)
+            data = db_query("SELECT output, port, protocol from vulns where asset_ip=\"%s\" and plugin_id='16'" % ipaddr)
 
-                data = cur.fetchall()
-                click.echo("\n{:15s} {:5} {}".format("IP address", "Port", "Protocol"))
-                click.echo("-" * 25)
-                for plugins in data:
-                    output = plugins[0]
-                    port = plugins[1]
-                    proto = plugins[2]
-                    click.echo("\n{:15s} {:5} {}".format(str(output), str(port), str(proto)))
-                click.echo()
+            click.echo("\n{:15s} {:5} {}".format("IP address", "Port", "Protocol"))
+            click.echo("-" * 25)
+            for plugins in data:
+                output = plugins[0]
+                port = plugins[1]
+                proto = plugins[2]
+                click.echo("\n{:15s} {:5} {}".format(str(output), str(port), str(proto)))
+            click.echo()
         except Exception as E:
             click.echo("No information for plugin 16")
             click.echo(E)
 
     if exploit:
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                # Grab all of the UUIDs for the asset in question based on the IP provided
-                cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-                data = cur.fetchall()
-                for assets in data:
-                    asset_id = assets[0]
+            for assets in data:
+                asset_id = assets[0]
 
-                    click.echo("\nExploitable Details for : {}\n".format(ipaddr))
+                click.echo("\nExploitable Details for : {}\n".format(ipaddr))
 
-                    vuln_data = tio.workbenches.asset_vulns(asset_id, ("plugin.attributes.exploit_available", "eq", "true"), age=90)
+                vuln_data = tio.workbenches.asset_vulns(asset_id, ("plugin.attributes.exploit_available", "eq", "true"), age=90)
 
-                    for plugins in vuln_data:
-                        plugin = plugins['plugin_id']
+                for plugins in vuln_data:
+                    plugin = plugins['plugin_id']
 
-                        plugin_data = tio.plugins.plugin_details(plugin)
+                    plugin_data = tio.plugins.plugin_details(plugin)
 
-                        click.echo("\n----Exploit Info----")
-                        click.echo(plugin_data['name'])
-                        click.echo()
-                        for attribute in plugin_data['attributes']:
+                    click.echo("\n----Exploit Info----")
+                    click.echo(plugin_data['name'])
+                    click.echo()
+                    for attribute in plugin_data['attributes']:
 
-                            if attribute['attribute_name'] == 'cve':
-                                cve = attribute['attribute_value']
-                                click.echo("CVE ID : " + cve)
+                        if attribute['attribute_name'] == 'cve':
+                            cve = attribute['attribute_value']
+                            click.echo("CVE ID : " + cve)
 
-                            if attribute['attribute_name'] == 'description':
-                                description = attribute['attribute_value']
-                                click.echo("Description")
-                                click.echo("------------\n")
-                                click.echo(description)
-                                click.echo()
+                        if attribute['attribute_name'] == 'description':
+                            description = attribute['attribute_value']
+                            click.echo("Description")
+                            click.echo("------------\n")
+                            click.echo(description)
+                            click.echo()
 
-                            if attribute['attribute_name'] == 'solution':
-                                solution = attribute['attribute_value']
-                                click.echo("\nSolution")
-                                click.echo("------------\n")
-                                click.echo(solution)
-                                click.echo()
+                        if attribute['attribute_name'] == 'solution':
+                            solution = attribute['attribute_value']
+                            click.echo("\nSolution")
+                            click.echo("------------\n")
+                            click.echo(solution)
+                            click.echo()
         except Exception as E:
             click.echo(E)
 
     if critical:
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-                data = cur.fetchall()
-                for assets in data:
-                    asset_id = assets[0]
-                    click.echo("\nCritical Vulns for Ip Address : {}\n".format(ipaddr))
+            for assets in data:
+                asset_id = assets[0]
+                click.echo("\nCritical Vulns for Ip Address : {}\n".format(ipaddr))
 
-                    asset_vulns = tio.workbenches.asset_vulns(asset_id, age=90)
+                asset_vulns = tio.workbenches.asset_vulns(asset_id, age=90)
 
-                    for severities in asset_vulns:
-                        vuln_name = severities["plugin_name"]
-                        plugin_id = severities["plugin_id"]
-                        severity = severities["severity"]
-                        state = severities["vulnerability_state"]
+                for severities in asset_vulns:
+                    vuln_name = severities["plugin_name"]
+                    plugin_id = severities["plugin_id"]
+                    severity = severities["severity"]
+                    state = severities["vulnerability_state"]
 
-                        # only pull the critical vulns; critical = severity 4
-                        if severity >= 4:
-                            click.echo("Plugin Name : {}".format(vuln_name))
-                            click.echo("ID : {}".format(str(plugin_id)))
-                            click.echo("Severity : Critical")
-                            click.echo("State : {}".format(state))
-                            click.echo("----------------\n")
-                            plugin_by_ip(str(ipaddr), str(plugin_id))
-                            click.echo()
+                    # only pull the critical vulns; critical = severity 4
+                    if severity >= 4:
+                        click.echo("Plugin Name : {}".format(vuln_name))
+                        click.echo("ID : {}".format(str(plugin_id)))
+                        click.echo("Severity : Critical")
+                        click.echo("State : {}".format(state))
+                        click.echo("----------------\n")
+                        plugin_by_ip(str(ipaddr), str(plugin_id))
+                        click.echo()
         except Exception as E:
             click.echo(E)
 
     if details:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-            data = cur.fetchall()
-            for assets in data:
-                asset_data = tio.workbenches.asset_info(str(assets[0]))
+        for assets in data:
+            asset_data = tio.workbenches.asset_info(str(assets[0]))
 
+            try:
+                asset_id = asset_data['id']
+
+                click.echo("\nTenable ID")
+                click.echo("--------------")
+                click.echo(asset_id)
+
+                click.echo("\nNetwork Name")
+                click.echo("--------------")
+                click.echo(asset_data['network_name'])
+
+                click.echo("\nIdentities")
+                click.echo("--------------")
                 try:
-                    asset_id = asset_data['id']
-
-                    click.echo("\nTenable ID")
-                    click.echo("--------------")
-                    click.echo(asset_id)
-
-                    click.echo("\nNetwork Name")
-                    click.echo("--------------")
-                    click.echo(asset_data['network_name'])
-
-                    click.echo("\nIdentities")
-                    click.echo("--------------")
-                    try:
-                        for netbioss in asset_data['netbios_name']:
-                            click.echo("Netbios - {}".format(netbioss))
-                    except KeyError:
-                        pass
-                    try:
-                        for fqdns in asset_data['fqdns']:
-                            click.echo("FQDN - {}".format(fqdns))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for hosts in asset_data['hostname']:
-                            click.echo("Host Name - {}".format(hosts))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for agentname in asset_data['agent_name']:
-                            click.echo("Agent Name - {}".format(agentname))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for awsid in asset_data['aws_ec2_instance_id']:
-                            click.echo("AWS EC2 Instance ID - {}".format(awsid))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for awsamiid in asset_data['aws_ec2_ami_id']:
-                            click.echo("AWS EC2 AMI ID - {}".format(awsamiid))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for awsname in asset_data['aws_ec2_name']:
-                            click.echo("AWS EC2 Name - {}".format(awsname))
-                    except KeyError:
-                        pass
-
-                    click.echo("\nOperating Systems")
-                    click.echo("--------------")
-                    try:
-                        for oss in asset_data['operating_system']:
-                            click.echo(oss)
-                    except KeyError:
-                        pass
-
-                    try:
-                        click.echo("\nIP Addresses:")
-                        click.echo("--------------")
-                        for ips in asset_data['ipv4']:
-                            click.echo(ips)
-                    except KeyError:
-                        pass
-
-                    try:
-                        click.echo("\nMac Addresses:")
-                        click.echo("--------------")
-                        for macs in asset_data['mac_address']:
-                            click.echo(macs)
-                    except KeyError:
-                        pass
-
-                    try:
-                        click.echo("\nCloud Information:")
-                        click.echo("--------------")
-                        for zone in asset_data['aws_availability_zone']:
-                            click.echo("AWS Availability Zone - {}".format(zone))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for groupname in asset_data['aws_ec2_instance_group_name']:
-                            click.echo("AWS Instance group Name - {}".format(groupname))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for zone in asset_data['aws_availability_zone']:
-                            click.echo("AWS Availability Zone - {}".format(zone))
-                    except KeyError:
-                        pass
-                    try:
-                        for statename in asset_data['aws_ec2_instance_state_name']:
-                            click.echo("AWS Instance State - {}".format(statename))
-                    except KeyError:
-                        pass
-                    try:
-                        for instatncetype in asset_data['aws_ec2_instance_type']:
-                            click.echo("AWS Instance Type - {}".format(instatncetype))
-                    except KeyError:
-                        pass
-                    try:
-                        for region in asset_data['aws_region']:
-                            click.echo("AWS Region - {}".format(region))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for subnet in asset_data['aws_subnet_id']:
-                            click.echo("AWS Subnet ID - {}".format(subnet))
-                    except KeyError:
-                        pass
-                    try:
-                        for vpc in asset_data['aws_vpc_id']:
-                            click.echo("AWS VPC ID - {}".format(vpc))
-                    except KeyError:
-                        pass
-                    try:
-                        for azureid in asset_data['azure_resource_id']:
-                            click.echo("Azure Resource ID - {}".format(azureid))
-                    except KeyError:
-                        pass
-                    try:
-                        for vmid in asset_data['azure_vm_id']:
-                            click.echo("Azure VM ID - {}".format(vmid))
-                    except KeyError:
-                        pass
-
-                    try:
-                        for gcpid in asset_data['gcp_instance_id']:
-                            click.echo("GCP Instance ID - {}".format(gcpid))
-                    except KeyError:
-                        pass
-                    try:
-                        for projectid in asset_data['gcp_project_id']:
-                            click.echo("GCP Project ID- {}".format(projectid))
-                    except KeyError:
-                        pass
-                    try:
-                        for gcpzone in asset_data['gcp_zone']:
-                            click.echo("GCP Zone - {}".format(gcpzone))
-                    except KeyError:
-                        pass
-                    try:
-                        click.echo("\nSources:")
-                        click.echo("-" * 15)
-                        for source in asset_data['sources']:
-                            click.echo(source['name'])
-                    except KeyError:
-                        pass
-                    try:
-                        click.echo("\nTags:")
-                        click.echo("-" * 15)
-                        for tags in asset_data['tags']:
-                            click.echo("{} : {}".format(tags["tag_key"], tags['tag_value']))
-                    except KeyError:
-                        pass
-
-                    click.echo("\nVulnerability Counts")
-                    click.echo("-" * 15)
-
-                    asset_info = tio.workbenches.asset_info(asset_id)
-
-                    for vuln in asset_info['counts']['vulnerabilities']['severities']:
-                        click.echo("{} : {}".format(vuln["name"], vuln["count"]))
-
-                    try:
-                        click.echo("\nAsset Exposure Score : {}".format(asset_info['exposure_score']))
-                        click.echo("\nAsset Criticality Score : {}".format(asset_info['acr_score']))
-                    except KeyError:
-                        pass
-
-                    click.echo("\nLast Authenticated Scan Date - {}".format(asset_data['last_authenticated_scan_date']))
-                    click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
-                    click.echo("-" * 50)
-                    click.echo("-" * 50)
-                except:
+                    for netbioss in asset_data['netbios_name']:
+                        click.echo("Netbios - {}".format(netbioss))
+                except KeyError:
+                    pass
+                try:
+                    for fqdns in asset_data['fqdns']:
+                        click.echo("FQDN - {}".format(fqdns))
+                except KeyError:
                     pass
 
-    if vulns:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
-            data = cur.fetchall()
+                try:
+                    for hosts in asset_data['hostname']:
+                        click.echo("Host Name - {}".format(hosts))
+                except KeyError:
+                    pass
 
-            for assets in data:
-                click.echo("\nAsset UUID: {}".format(assets[0]))
-                click.echo("Asset IP: {}".format(ipaddr))
-                click.echo("-" * 26)
-                vulns_by_uuid(assets[0])
+                try:
+                    for agentname in asset_data['agent_name']:
+                        click.echo("Agent Name - {}".format(agentname))
+                except KeyError:
+                    pass
+
+                try:
+                    for awsid in asset_data['aws_ec2_instance_id']:
+                        click.echo("AWS EC2 Instance ID - {}".format(awsid))
+                except KeyError:
+                    pass
+
+                try:
+                    for awsamiid in asset_data['aws_ec2_ami_id']:
+                        click.echo("AWS EC2 AMI ID - {}".format(awsamiid))
+                except KeyError:
+                    pass
+
+                try:
+                    for awsname in asset_data['aws_ec2_name']:
+                        click.echo("AWS EC2 Name - {}".format(awsname))
+                except KeyError:
+                    pass
+
+                click.echo("\nOperating Systems")
+                click.echo("--------------")
+                try:
+                    for oss in asset_data['operating_system']:
+                        click.echo(oss)
+                except KeyError:
+                    pass
+
+                try:
+                    click.echo("\nIP Addresses:")
+                    click.echo("--------------")
+                    for ips in asset_data['ipv4']:
+                        click.echo(ips)
+                except KeyError:
+                    pass
+
+                try:
+                    click.echo("\nMac Addresses:")
+                    click.echo("--------------")
+                    for macs in asset_data['mac_address']:
+                        click.echo(macs)
+                except KeyError:
+                    pass
+
+                try:
+                    click.echo("\nCloud Information:")
+                    click.echo("--------------")
+                    for zone in asset_data['aws_availability_zone']:
+                        click.echo("AWS Availability Zone - {}".format(zone))
+                except KeyError:
+                    pass
+
+                try:
+                    for groupname in asset_data['aws_ec2_instance_group_name']:
+                        click.echo("AWS Instance group Name - {}".format(groupname))
+                except KeyError:
+                    pass
+
+                try:
+                    for zone in asset_data['aws_availability_zone']:
+                        click.echo("AWS Availability Zone - {}".format(zone))
+                except KeyError:
+                    pass
+                try:
+                    for statename in asset_data['aws_ec2_instance_state_name']:
+                        click.echo("AWS Instance State - {}".format(statename))
+                except KeyError:
+                    pass
+                try:
+                    for instatncetype in asset_data['aws_ec2_instance_type']:
+                        click.echo("AWS Instance Type - {}".format(instatncetype))
+                except KeyError:
+                    pass
+                try:
+                    for region in asset_data['aws_region']:
+                        click.echo("AWS Region - {}".format(region))
+                except KeyError:
+                    pass
+
+                try:
+                    for subnet in asset_data['aws_subnet_id']:
+                        click.echo("AWS Subnet ID - {}".format(subnet))
+                except KeyError:
+                    pass
+                try:
+                    for vpc in asset_data['aws_vpc_id']:
+                        click.echo("AWS VPC ID - {}".format(vpc))
+                except KeyError:
+                    pass
+                try:
+                    for azureid in asset_data['azure_resource_id']:
+                        click.echo("Azure Resource ID - {}".format(azureid))
+                except KeyError:
+                    pass
+                try:
+                    for vmid in asset_data['azure_vm_id']:
+                        click.echo("Azure VM ID - {}".format(vmid))
+                except KeyError:
+                    pass
+
+                try:
+                    for gcpid in asset_data['gcp_instance_id']:
+                        click.echo("GCP Instance ID - {}".format(gcpid))
+                except KeyError:
+                    pass
+                try:
+                    for projectid in asset_data['gcp_project_id']:
+                        click.echo("GCP Project ID- {}".format(projectid))
+                except KeyError:
+                    pass
+                try:
+                    for gcpzone in asset_data['gcp_zone']:
+                        click.echo("GCP Zone - {}".format(gcpzone))
+                except KeyError:
+                    pass
+                try:
+                    click.echo("\nSources:")
+                    click.echo("-" * 15)
+                    for source in asset_data['sources']:
+                        click.echo(source['name'])
+                except KeyError:
+                    pass
+                try:
+                    click.echo("\nTags:")
+                    click.echo("-" * 15)
+                    for tags in asset_data['tags']:
+                        click.echo("{} : {}".format(tags["tag_key"], tags['tag_value']))
+                except KeyError:
+                    pass
+
+                click.echo("\nVulnerability Counts")
+                click.echo("-" * 15)
+
+                asset_info = tio.workbenches.asset_info(asset_id)
+
+                for vuln in asset_info['counts']['vulnerabilities']['severities']:
+                    click.echo("{} : {}".format(vuln["name"], vuln["count"]))
+
+                try:
+                    click.echo("\nAsset Exposure Score : {}".format(asset_info['exposure_score']))
+                    click.echo("\nAsset Criticality Score : {}".format(asset_info['acr_score']))
+                except KeyError:
+                    pass
+
+                click.echo("\nLast Authenticated Scan Date - {}".format(asset_data['last_authenticated_scan_date']))
+                click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
+                click.echo("-" * 50)
+                click.echo("-" * 50)
+            except:
+                pass
+
+    if vulns:
+        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+
+        for assets in data:
+            click.echo("\nAsset UUID: {}".format(assets[0]))
+            click.echo("Asset IP: {}".format(ipaddr))
+            click.echo("-" * 26)
+            vulns_by_uuid(assets[0])
 
     if cves:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
-            data = cur.fetchall()
+        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-            for assets in data:
-                click.echo("\nAsset UUID: {}".format(assets[0]))
-                click.echo("Asset IP: {}".format(ipaddr))
-                click.echo("-" * 26)
-                cves_by_uuid(assets[0])
+        for assets in data:
+            click.echo("\nAsset UUID: {}".format(assets[0]))
+            click.echo("Asset IP: {}".format(ipaddr))
+            click.echo("-" * 26)
+            cves_by_uuid(assets[0])
 
     if info:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT uuid from assets where ip_address='" + ipaddr + "';")
-            data = cur.fetchall()
+        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-            for assets in data:
-                click.echo("\nAsset UUID: {}".format(assets[0]))
-                click.echo("Asset IP: {}".format(ipaddr))
-                click.echo("-" * 26)
-                info_by_uuid(assets[0])
+        for assets in data:
+            click.echo("\nAsset UUID: {}".format(assets[0]))
+            click.echo("Asset IP: {}".format(ipaddr))
+            click.echo("-" * 26)
+            info_by_uuid(assets[0])
 
     if plugin != '':
         plugin_by_ip(ipaddr, plugin)
