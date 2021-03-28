@@ -2,7 +2,7 @@ from os import system as sys
 import time
 
 # Instructions #
-# Replace 'access_key and secrek_key with your keys
+# Replace 'access_key and secret_key with your keys
 # Add/remove or adjust any of the below commands
 # The structure is there to help you with the command syntax.
 
@@ -34,7 +34,7 @@ sys('navi usergroup add --user "spiderman@test.tenable" --name "Custom Apps" >> 
 
 sys('echo first update')
 # First we need to download all of our data.
-sys('navi update >> navi_update.log')
+sys('navi update full >> navi_update.log')
 
 sys('echo Turn Agents into groups')
 # Turn Agent Groups into Tags
@@ -83,7 +83,7 @@ sys('echo new update')
 # if we are going to do anything with the tags we created, we have to download the new tag information
 # Lets give the tags a mintute to update in Tenable.io
 time.sleep(60)
-sys('navi update >> navi_update.log')
+sys('navi update full >> navi_update.log')
 
 sys('echo Access groups')
 # Use a Tag create an access group - For now, assign owners in the UI.

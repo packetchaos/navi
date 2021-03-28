@@ -82,7 +82,6 @@ def insert_tags(conn, tags):
 
 
 def drop_tables(conn, table):
-    print("Dropping Tables Now")
     try:
         drop_table = '''DROP TABLE {}'''.format(table)
         cur = conn.cursor()

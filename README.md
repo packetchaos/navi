@@ -640,7 +640,7 @@ Then tansfer the scans owned by User A to User B
 
     navi scan resume 13
 
-    navi scan sstop 13
+    navi scan stop 13
 
     navi scan start 13
 

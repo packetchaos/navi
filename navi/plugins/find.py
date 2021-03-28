@@ -18,6 +18,8 @@ def find_by_plugin(pid):
     for row in rows:
         click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(pid), row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
 
+    click.echo()
+
 
 @click.group(help="Discover what is in Tenable.io")
 def find():
@@ -165,14 +167,14 @@ def scantime(minute):
 
     click.echo("\n*** Below are the assets that took longer than {} minutes to scan ***".format(str(minute)))
 
-    data = db_query("SELECT * from vulns where plugin_id='19506';")
+    data = db_query("SELECT asset_ip, asset_uuid, scan_started, scan_completed, scan_uuid, output from vulns where plugin_id='19506';")
 
     try:
         click.echo("\n{:16s} {:40s} {:25s} {:25s} {}".format("Asset IP", "Asset UUID", "Started", "Finished", "Scan UUID"))
         click.echo("-" * 150)
         for vulns in data:
 
-            output = vulns[6]
+            output = vulns[5]
 
             # split the output by return
             parsed_output = output.split("\n")
@@ -198,9 +200,9 @@ def scantime(minute):
             # grab assets that match the criteria
             if minutes > int(minute):
                 try:
-                    click.echo("{:16s} {:40s} {:25s} {:25s} {}".format(str(vulns[1]), str(vulns[2]),
-                                                                       str(vulns[14]), str(vulns[13]),
-                                                                       str(vulns[15])))
+                    click.echo("{:16s} {:40s} {:25s} {:25s} {}".format(str(vulns[0]), str(vulns[1]),
+                                                                       str(vulns[2]), str(vulns[3]),
+                                                                       str(vulns[4])))
                 except ValueError:
                     pass
         click.echo()
