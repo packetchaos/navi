@@ -75,9 +75,15 @@ Alternatively, you could try entering your keys again using the '-clear' command
     navi keys -clear
 
 ### What is the biggest Tenable.io instance Navi has been tested on?
-Navi 5.1.4 was recently tested on a container with 100,000 assets and 13 million vulnerabilties.  
+Navi 6.3.0 was recently tested on a container with 250,000 assets and 41 million vulnerabilties.  
 It took 30 mins for t.io to prepare the download and 30 mins to download and parse the data
- into navi.db.  On another internet connection the entire process too 2.5 hours.
+ into navi.db which ended up being 31GB.  Plugin queries took 2secs where looking for text in an output took 2mins.
+
+ 6.2.3 improves query performance by a factor of 10 with the below changes.
+ * Three indexes where added to reduce vuln query time
+ * Exports were reduced to 50 from 500 assets to increase download time
+ * Synchronous was turned off to speed up downloads
+ * DB cache was increased to 10000 from 2000 default in SQLite
     
 
 # Download and Configure navi in a Docker Container
@@ -88,7 +94,7 @@ It took 30 mins for t.io to prepare the download and 30 mins to download and par
 
     navi keys
     
-    navi update
+    navi update full
   
 ## Detach from Container
     CTR+Q+P - CTR+Q+P
@@ -224,6 +230,8 @@ discover asset related information very quickly.
     navi ip 192.168.1.1 --plugin 19506
 
     navi ip 192.168.1.1 -details -software
+    
+    navi ip 192.168.1.1 -vulns
 
 ## Find information - 'find'
 
@@ -608,6 +616,7 @@ Send the output of a Navi command using --message
   * change   Change Ownership
   * create   Quickly Scan a Target
   * details  Display Scan Details
+  * hosts    Display Hosts found by a scan
   * latest   Display the Latest scan information
   * pause    Pause a running Scan
   * resume   Resume a paused Scan
