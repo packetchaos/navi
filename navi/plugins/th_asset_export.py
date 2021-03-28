@@ -5,7 +5,7 @@ from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection, insert_assets, insert_tags, drop_tables, get_last_update_id, insert_update_info
-from .dbconfig import create_assets_table, create_tag_table, create_diff_table
+from .dbconfig import create_assets_table, create_tag_table
 
 lock = threading.Lock()
 
@@ -98,8 +98,6 @@ def parse_data(chunk_data):
                 csv_list.append(assets["exposure_score"])
             except KeyError:
                 csv_list.append(" ")
-
-
 
             # Collect and save Tag Data
             try:

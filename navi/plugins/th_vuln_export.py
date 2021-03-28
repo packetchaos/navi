@@ -4,14 +4,12 @@ import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import new_db_connection, drop_tables, insert_vulns, insert_update_info, get_last_update_id
+from .database import new_db_connection, drop_tables, insert_vulns, insert_update_info, get_last_update_id, db_query
 from .dbconfig import create_vulns_table
 
 lock = threading.Lock()
 
 q = Queue()
-
-navi_id = 0
 
 
 def worker():
@@ -29,17 +27,16 @@ def parse_data(chunk_data, chunk_number):
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_conn.execute('pragma journal_mode=wal;')
+    vuln_conn.execute('pragma cashe_size=-10000')
+    vuln_conn.execute('pragma synchronous=OFF')
     with vuln_conn:
         try:
             # loop through all of the vulns in this chunk
             for vulns in chunk_data:
                 # create a blank list to append asset details
                 vuln_list = []
-                global navi_id
-                navi_id = navi_id + 1
                 # Try block to ignore assets without IPs
                 try:
-                    vuln_list.append(navi_id)
                     try:
                         ipv4 = vulns['asset']['ipv4']
                         vuln_list.append(ipv4)
@@ -173,10 +170,11 @@ def parse_data(chunk_data, chunk_number):
 
 def vuln_export(days, ex_uuid, threads):
     start = time.time()
-    # Crete a new connection to our database
+
     database = r"navi.db"
     drop_conn = new_db_connection(database)
     drop_conn.execute('pragma journal_mode=wal;')
+
     # Right now we just drop the table.  Eventually I will actually update the database
     drop_tables(drop_conn, 'vulns')
 
@@ -189,7 +187,7 @@ def vuln_export(days, ex_uuid, threads):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit)}}
+    pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": ['open', 'reopened']}}
     try:
 
         if ex_uuid == '0':
@@ -257,6 +255,11 @@ def vuln_export(days, ex_uuid, threads):
         conn = new_db_connection(database_2)
         with conn:
             insert_update_info(conn, diff_dict)
+
+        click.echo("\nCreating a few indexes to make queries faster.\n")
+        db_query("CREATE INDEX vulns_plugin_id on vulns (plugin_id);")
+        db_query("CREATE INDEX vulns_ports on vulns (port);")
+        db_query("CREATE INDEX vulns_uuid on vulns (asset_uuid);")
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")

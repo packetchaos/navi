@@ -9,7 +9,7 @@ def new_db_connection(db_file):
     conn = None
     try:
         # A database file will be created if one doesn't exist
-        conn = sqlite3.connect(db_file, timeout=60.0)
+        conn = sqlite3.connect(db_file, timeout=10.0)
     except Error as E:
         click.echo(E)
     return conn
@@ -22,6 +22,26 @@ def create_table(conn, table_information):
         c.execute(table_information)
     except Error as e:
         click.echo(e)
+
+
+def db_query(statement):
+    start = time.time()
+    database = r"navi.db"
+    query_conn = new_db_connection(database)
+    with query_conn:
+        cur = query_conn.cursor()
+        cur.execute('pragma journal_mode=wal;')
+        cur.execute('pragma cache_size=-10000;')
+        cur.execute('PRAGMA synchronous = OFF')
+        cur.execute('pragma threads=4')
+        cur.execute(statement)
+
+        data = cur.fetchall()
+        end = time.time()
+        total = end - start
+    query_conn.close()
+    click.echo("Sql Query took: {} seconds".format(total))
+    return data
 
 
 def get_last_update_id():
@@ -74,7 +94,6 @@ def drop_tables(conn, table):
 
 def insert_vulns(conn, vulns):
     sql = '''INSERT or IGNORE into vulns(
-                            navi_id,
                             asset_ip, 
                             asset_uuid, 
                             asset_hostname, 
@@ -95,7 +114,7 @@ def insert_vulns(conn, vulns):
                             cves,
                             score,
                             exploit
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
@@ -125,15 +144,4 @@ def insert_apps(conn, apps):
     cur.execute(sql, apps)
 
 
-def db_query(statement):
-    database = r"navi.db"
-    query_conn = new_db_connection(database)
-    with query_conn:
 
-        cur = query_conn.cursor()
-        cur.execute('pragma journal_mode=wal;')
-        cur.execute('pragma cache_size=-10000;')
-        cur.execute(statement)
-
-        data = cur.fetchall()
-        return data

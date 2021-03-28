@@ -27,7 +27,6 @@ def create_vulns_table():
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_table = """CREATE TABLE IF NOT EXISTS vulns (
-                            navi_id integer PRIMARY KEY,
                             asset_ip text, 
                             asset_uuid text, 
                             asset_hostname text, 
