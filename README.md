@@ -22,26 +22,26 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  
  The data will not be updated until you run the update command.  Keep this in mind when adding elements to Tenable.io like Tags.
  
-    navi update
+    navi update full
     
  Alternatively you can select which export you want to update:
  
-    navi update -assets
+    navi update assets
     
-    navi update -vulns
+    navi update vulns
  
  Furthermore, you can limit how much data is downloaded by using the --days command
  
-    navi update -assets --days 2
+    navi update assets --days 2
  
  You can even specify your export id.
  
-    navi update -vulns --exid 123456-987654-asdfgh-jklopi-ididis
+    navi update vulns --exid 123456-987654-asdfgh-jklopi-ididis
     
  You can also control the amount of threads used for downlaods (1-10)
  The Default thread value is 10.
  
-    navi update -vulns --threads 4
+    navi update vulns --threads 4
 
 # Common Container Issues
 
@@ -56,7 +56,7 @@ fluctuate this can spike the memory above 2G.  If this happens increase your mem
 ### I keep getting DB locks
 I'm still working on a fix for large accounts, those over 100K assets.  For now use the thread option to avoid DB locks by reducing it to 1.
 
-    navi update --threads 1
+    navi update full --threads 1
  
 ### What is my Navi Version
 Versions older than 5.1.36 do not have this feature.
@@ -68,7 +68,7 @@ In different terminals it can be a challenge to copy the keys to navi since you 
 
 Use the below commands to check your keys
     
-    navi find --query "select * from keys;"
+    navi find query "select * from keys;"
 
 Alternatively, you could try entering your keys again using the '-clear' command to see what is being copied to the screen.
 
@@ -215,6 +215,9 @@ discover asset related information very quickly.
   * -exploit -->      Display exploitable vulnerabilities
   * -critical -->     Display critical vulnerabilities
   * -details -->      Details on an Asset: IP, UUID, Vulns, etc
+  * -vulns -->        Display all vulnerabilities and their plugin IDs
+  * -info -->         Display all info plugins and their IDs
+  * -cves -->         Display all cves found on the asset
 
 ### ip - Examples
 
@@ -243,6 +246,7 @@ command and find nothing vs finding 1000s, your action may change dramatically.
 
 
   * creds  -->    Find Assets with Credential Issues using plugin 104410
+  * cves   -->    Find Assets that have a given CVE
   * docker  -->   Find Docker Hosts using plugin 93561
   * ghost   -->   Find Assets that have not been scanned in any Cloud
   * name    -->   Find Assets with a given port open

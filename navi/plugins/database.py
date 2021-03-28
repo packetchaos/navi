@@ -1,7 +1,7 @@
 import sqlite3
 from sqlite3 import Error
 import click
-import time
+# import time
 
 
 def new_db_connection(db_file):
@@ -25,7 +25,7 @@ def create_table(conn, table_information):
 
 
 def db_query(statement):
-    start = time.time()
+    # start = time.time()
     database = r"navi.db"
     query_conn = new_db_connection(database)
     with query_conn:
@@ -37,10 +37,10 @@ def db_query(statement):
         cur.execute(statement)
 
         data = cur.fetchall()
-        end = time.time()
-        total = end - start
+        # end = time.time()
+        # total = end - start
     query_conn.close()
-    click.echo("Sql Query took: {} seconds".format(total))
+    # click.echo("Sql Query took: {} seconds".format(total))
     return data
 
 

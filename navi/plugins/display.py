@@ -152,7 +152,7 @@ def assets():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Scan Policies")
+@display.command(help="List Scan Policies")
 def policies():
     try:
         click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
