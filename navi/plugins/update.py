@@ -1,42 +1,67 @@
 import click
+import time
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
 from .was_data_export import grab_scans
+from .dbconfig import new_db_connection, create_assets_table, create_vulns_table, create_tag_table
+from .database import drop_tables, create_table, db_query
 from sqlite3 import Error
 
 
-@click.command(help="Update local repository")
-@click.option('-assets', is_flag=True, help="Update the Agent data")
-@click.option('-vulns', is_flag=True, help="Update the Vulnerability Data")
-@click.option('-was', is_flag=True, help="Update the WAS data")
-@click.option('--days', default='30', help="Limit the download to X # of days")
-@click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
-def update(assets, vulns, days, exid, threads, was):
-
+def threads_check(threads):
     if threads != 10:  # Limit the amount of threads to avoid issues
         click.echo("\nUsing {} thread(s) at your request".format(threads))
         if threads not in range(1, 11):
             click.echo("Enter a value between 1 and 10")
             exit()
-    try:
-        if exid == ' ':
-            exid = '0'
 
-        if was:
-            grab_scans()
 
-        if assets:
-            asset_export(days, exid, threads)
+@click.group(help="Update the local Navi repository - saved in your current dir")
+def update():
+    pass
 
-        if vulns:
-            vuln_export(days, exid, threads)
 
-        if not assets and not vulns and not was:
-            vuln_export(days, exid, threads)
+@update.command(help="Perform a full update (30d Vulns / 90d Assets); Delete the current Database")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+def full(threads):
 
-            # default for assets should be 90 days to support licensing exports
-            asset_export(90, exid, threads)
-    except Error as E:
-        click.echo("\n Have you entered your keys?\n")
-        click.echo("Error: {}".format(E))
+    if threads:
+        threads_check(threads)
+
+    exid = '0'
+
+    vuln_export(30, exid, threads)
+    asset_export(90, exid, threads)
+
+
+@update.command(help="Update the Asset Table")
+@click.option('--days', default='90', help="Limit the download to X # of days")
+@click.option('--exid', default='0', help="Download using a specified Export ID")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+def assets(threads, days, exid):
+    if threads:
+        threads_check(threads)
+
+    if exid == ' ':
+        exid = '0'
+
+    asset_export(days, exid, threads)
+
+
+@update.command(help="Update the vulns Table")
+@click.option('--days', default='30', help="Limit the download to X # of days")
+@click.option('--exid', default='0', help="Download using a specified Export ID")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+def vulns(threads, days, exid):
+    if threads:
+        threads_check(threads)
+
+    if exid == ' ':
+        exid = '0'
+
+    vuln_export(days, exid, threads)
+
+
+@update.command(help="Update the Was Data")
+def was():
+    grab_scans()

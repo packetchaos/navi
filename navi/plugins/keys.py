@@ -12,8 +12,8 @@ def keys(clear, access_key, secret_key):
     # create all Tables when keys are added.
     create_keys_table()
     create_diff_table()
-    #create_vulns_table()
-    #create_assets_table()
+    create_vulns_table()
+    create_assets_table()
 
     if access_key == "" or secret_key == "":
         click.echo("Hey you don't have any Keys!")
