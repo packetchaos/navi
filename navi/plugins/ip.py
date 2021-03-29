@@ -7,7 +7,6 @@ from .database import new_db_connection, db_query
 
 
 def plugin_by_ip(ipaddr, plugin):
-    plugin_start = time.time()
     try:
         rows = db_query("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
 
@@ -25,9 +24,6 @@ def plugin_by_ip(ipaddr, plugin):
                 click.echo("-" * 80)
                 click.echo("{}\n".format(plug[1]))
         click.echo()
-        end = time.time()
-        total = end - plugin_start
-        print("\nSearch took : {} seconds".format(total))
     except IndexError:
         click.echo("No information found for this plugin")
 
