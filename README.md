@@ -43,18 +43,18 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  
     navi update vulns --threads 4
 
-# Common Container Issues
+# Common Issues
 
-### My container keeps getting "Killed"
-To speed up downloads navi uses threading. It pulls 500 asset chunks on 10 threads and since the vulnerabilities per asset
-fluctuate this can spike the memory above 2G.  If this happens increase your memeory to 4G.
+### My Docker container keeps getting "Killed"
+Navi uses threading, to speed up downloads; It pulls 50 asset chunks on 10 threads and since the vulnerabilities per asset
+fluctuate this can spike the memory above 2G.  If this happens increase your memeory to 4G for under 10,000 assets and 8Gb for larger asset counts..
 
 [Directions for Mac](https://docs.docker.com/docker-for-mac/#memory)
 
 [Directions for Windows](https://docs.docker.com/docker-for-windows/#advanced)
  
 ### I keep getting DB locks
-I'm still working on a fix for large accounts, those over 100K assets.  For now use the thread option to avoid DB locks by reducing it to 1.
+I'm still working on a fix for large accounts, those over 100K assets.  For now use the thread option to avoid DB locks by reducing it to 1. Increasing your RAM and running Navi on SSDs will speed help avoid DB locks.
 
     navi update full --threads 1
  
@@ -104,12 +104,12 @@ It took 30 mins for t.io to prepare the download and 30 mins to download and par
   
     <press enter>
 
-## Configure Container For Reporting
+## Configure Docker Container For Reporting
 Navi has a few reporting capabilities where a CSV is the output.  To extract this data from the container you will need to launch the container with port 8000 exposed and use the 'http' command to extract the reports.
 
     docker run -it -p 8000:8000 silentninja/navi:latest /bin/bash
 
-### Extract Data from the Container
+### Extract Data from the Docker Container
 To extract data from the container you need to run an http server.  Use the below built in command.
 
     navi http
@@ -408,7 +408,7 @@ This tagging functionality and use cases are beyond the scope of this documentat
 If you created a new Tag you will need to run an update on the assets to download the new Tag relationships.
 This is especially important if you want to export using your newly created tag.
 
-    navi update -assets
+    navi update assets
 
 ### Note on Tagging using Agent Groups
 The Agent group APIs are currently limited to 500 agents.  This is because Agents do not become "assets" until they are scanned in T.io and therefore do not get an asset UUID.  
