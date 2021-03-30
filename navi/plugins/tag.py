@@ -1,7 +1,7 @@
 import click
 import csv
 from .database import new_db_connection
-from .api_wrapper import request_data, request_delete
+from .api_wrapper import request_data, request_no_response
 from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid
 from sqlite3 import Error
 import json
@@ -299,7 +299,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
         # Need to research a better solution for this problem.  Need to submit a bug.  Going to just delete the tag for now.
         uuid_to_delete = return_tag_uuid(c, v)
-        request_delete('DELETE', '/tags/values/' + str(uuid_to_delete))
+        request_no_response('DELETE', '/tags/values/' + str(uuid_to_delete))
         try:
             querystring = {"limit": "5000"}
             group_data = request_data('GET', '/scanners/1/agent-groups')

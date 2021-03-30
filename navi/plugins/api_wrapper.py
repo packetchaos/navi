@@ -44,7 +44,7 @@ def grab_headers():
     return {'Content-type': 'application/json', 'user-agent': navi_version(), 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
-def request_delete(method, url_mod, **kwargs):
+def request_no_response(method, url_mod, **kwargs):
 
     # set the Base URL
     url = "https://cloud.tenable.com"

@@ -1,5 +1,5 @@
 import click
-from .api_wrapper import request_delete
+from .api_wrapper import request_no_response
 from .api_wrapper import request_data, tenb_connection
 
 tio = tenb_connection()
@@ -61,7 +61,7 @@ def asset(tid):
 @click.argument('tid')
 def container(tid):
     click.echo("\nI'm deleting your container")
-    request_delete('DELETE', '/container-security/api/v2/images/' + str(tid))
+    request_no_response('DELETE', '/container-security/api/v2/images/' + str(tid))
 
 
 @delete.command(help='Delete Tag Value by Value UUID')
@@ -82,7 +82,7 @@ def category(tid):
 @click.argument('tid')
 def repository(tid):
     click.echo("\nI'm Deleting your Repository")
-    request_delete('delete', '/container-security/api/v2/' + str(tid))
+    request_no_response('delete', '/container-security/api/v2/' + str(tid))
 
 
 @delete.command(help='Delete a user by User ID - Not UUID')
@@ -108,4 +108,4 @@ def tag(c,v):
         if c == tags['category_name']:
             if v == tags['value']:
                 value_uuid = tags['uuid']
-                request_delete('DELETE', '/tags/values/' + str(value_uuid))
+                request_no_response('DELETE', '/tags/values/' + str(value_uuid))

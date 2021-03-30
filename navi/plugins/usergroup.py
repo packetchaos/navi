@@ -1,12 +1,12 @@
 import click
-from .api_wrapper import request_delete, request_data
+from .api_wrapper import request_no_response, request_data
 from .user import get_user_id
 
 
 def create_group(group_name):
     payload = {'name': group_name}
     # Using the Delete request because of an API Return issue.
-    data = request_delete("POST", "/groups", payload=payload)
+    data = request_no_response("POST", "/groups", payload=payload)
 
     return data
 
@@ -14,13 +14,13 @@ def create_group(group_name):
 def add_users(user_id, group_id):
     url = "/groups/{}/users/{}".format(group_id, user_id)
     # Using the Delete request because of an API Return issue.
-    request_delete("POST", url)
+    request_no_response("POST", url)
 
 
 def remove_user(user_id, group_id):
     url = "/groups/{}/users/{}".format(group_id, user_id)
     # Using the Delete request because of an API Return issue.
-    request_delete("DELETE", url)
+    request_no_response("DELETE", url)
 
 
 def get_group_id(group_name):
