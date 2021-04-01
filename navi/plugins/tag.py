@@ -90,7 +90,7 @@ def tag_by_tag(c, v, d, cv, cc):
 
 
 def tag_by_ip(ip_list, tag_list, c, v, d):
-    # Tagging by IP is limited to 2000 Assets
+    # Tagging by IP is limited to 2000 Assets and is only used by the file command
     try:
         payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
                    {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
@@ -203,10 +203,9 @@ def tag_by_uuid(tag_list, c, v, d):
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid):
 
-    # start a blank list; IP list is due to a bug
+    # start a blank list
     tag_list = []
     ip_list = ""
-    ip_update = 0
 
     if c == '':
         click.echo("Category is required.  Please use the --c command")
@@ -253,18 +252,17 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("SELECT * from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
+            cur.execute("SELECT asset_uuid from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
 
             data = cur.fetchall()
 
             try:
                 for vulns in data:
-                    ip = vulns[1]
-                    uuid = vulns[2]
+                    uuid = vulns[0]
                     # To reduce duplicates check for the UUID in the list.
                     if uuid not in tag_list:
                         tag_list.append(uuid)
-                        ip_list = ip_list + "," + ip
+                        print(tag_list)
             except ValueError:
                 pass
         tag_by_uuid(tag_list, c, v, d)
