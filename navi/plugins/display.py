@@ -508,3 +508,16 @@ def exports(a, v):
                 click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, vuln_newtime.format('MM-DD-YYYY'), export_status, export_filter, export_chunk_size, vuln_export_total_chunks))
 
     click.echo()
+
+
+@display.command(help="Print Auth information for each user")
+@click.argument('uid')
+def auth(uid):
+    info = request_data("GET", "/users/{}/authorizations".format(uid))
+
+    click.echo("\n{:45} {:20} {:20} {:20} {}".format("Account_UUID", "API Permitted", "Password Permitted", "SAML Permitted", "User_UUID"))
+    click.echo("-" * 150)
+
+    click.echo("{:45} {:20} {:20} {:20} {}".format(str(info['account_uuid']), str(info['api_permitted']), str(info['password_permitted']), str(info['saml_permitted']), str(info['user_uuid'])))
+
+    click.echo()

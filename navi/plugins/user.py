@@ -1,11 +1,11 @@
 import click
-from .api_wrapper import request_data, request_delete
+from .api_wrapper import request_data, request_no_response
 
 
 def create_user(username, password, permission, name, email):
     payload = {"username": "{}".format(str(username)), "password": str(password), "permissions": permission, "name": name, "email": "{}".format(str(email))}
     # Using the Delete request because of an API Return issue.
-    data = request_delete("POST", "/users", payload=payload)
+    data = request_no_response("POST", "/users", payload=payload)
 
     return data
 
@@ -16,7 +16,7 @@ def enable_disable_user(user_id, answer):
     else:
         payload = {"enabled": False}
     # Using the Delete request because of an API Return issue.
-    request_delete("PUT", "/users/" + str(user_id) + "/enabled", payload=payload)
+    request_no_response("PUT", "/users/" + str(user_id) + "/enabled", payload=payload)
 
 
 def get_user_id(username):
