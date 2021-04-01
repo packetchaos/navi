@@ -262,7 +262,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     # To reduce duplicates check for the UUID in the list.
                     if uuid not in tag_list:
                         tag_list.append(uuid)
-                        print(tag_list)
             except ValueError:
                 pass
         tag_by_uuid(tag_list, c, v, d)
