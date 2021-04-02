@@ -36,13 +36,13 @@ def change(age, net):
     click.echo("\nChanging the age to {}\n".format(age))
 
     if age != '' and net != '' and len(net) == 36:
-        if 7 <= int(age) <= 365:
+        if 1 <= int(age) <= 365:
             network_data = request_data('GET', '/networks/' + net)
             name = network_data['name']
             payload = {"assets_ttl_days": age, "name": name, "description": "TTL adjusted by navi"}
             request_data('PUT', '/networks/' + net, payload=payload)
         else:
-            click.echo("Asset Age Out number must between 7 and 365")
+            click.echo("Asset Age Out number must between 1 and 365")
     else:
         click.echo("Please enter a Age value and a network UUID")
 

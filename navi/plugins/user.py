@@ -19,6 +19,10 @@ def enable_disable_user(user_id, answer):
     request_no_response("PUT", "/users/" + str(user_id) + "/enabled", payload=payload)
 
 
+def change_auth_settings(user_id, payload):
+    request_no_response("PUT", "/users/{}/authorizations".format(user_id), payload=payload)
+
+
 def get_user_id(username):
     data = request_data("GET", "/users")
     user_id = 0
@@ -56,13 +60,48 @@ def add(username, password, permission, name, email):
         enable_disable_user(user_id, "enable")
 
 
-@user.command(help="Enable a user by ID")
+@user.command(help="Enable Auth settings or an Account")
 @click.argument('uid')
-def enable(uid):
-    enable_disable_user(uid, "enable")
+@click.option('-account', is_flag=True, help="Enable User Account")
+@click.option('-api', is_flag=True, help="Enable API Access")
+@click.option('-pwd', is_flag=True, help="Enable Password Access")
+@click.option('-saml', is_flag=True, help="Enable SAML Access")
+def enable(uid, api, pwd, saml, account):
+    payload = {"api_permitted": False, "password_permitted": False, "saml_permitted": False}
+    if api:
+        payload["api_permitted"] = True
+
+    if pwd:
+        payload["password_permitted"] = True
+
+    if saml:
+        payload["saml_permitted"] = True
+
+    if account:
+        enable_disable_user(uid, "enable")
+    else:
+        change_auth_settings(uid, payload)
 
 
-@user.command(help="Disable a user by ID")
+@user.command(help="Disable a user by ID or auth settings")
 @click.argument('uid')
-def disable(uid):
-    enable_disable_user(uid, "disable")
+@click.option('-account', is_flag=True, help="Enable User Account")
+@click.option('-api', is_flag=True, help="Enable API Access")
+@click.option('-pwd', is_flag=True, help="Enable Password Access")
+@click.option('-saml', is_flag=True, help="Enable SAML Access")
+def disable(uid, account, api, pwd, saml):
+    payload = {"api_permitted": True, "password_permitted": True, "saml_permitted": True}
+    if api:
+        payload["api_permitted"] = False
+
+    if pwd:
+        payload["password_permitted"] = False
+
+    if saml:
+        payload["saml_permitted"] = False
+
+    if account:
+        enable_disable_user(uid, "disable")
+    else:
+        change_auth_settings(uid, payload)
+
