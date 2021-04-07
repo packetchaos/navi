@@ -3,7 +3,7 @@ import time
 import arrow
 from .api_wrapper import tenb_connection, navi_version, request_data
 from .scanners import nessus_scanners
-from .database import new_db_connection
+from .database import new_db_connection, db_query
 from .licensed_count import get_licensed
 from sqlite3 import Error
 import textwrap
@@ -103,53 +103,76 @@ def scans():
 
 @display.command(help="Nessus Network Monitor assets and their vulnerability scores")
 def nnm():
-    try:
-        for scan in tio.scans.list():
+    click.echo("\nChecking all NNM scanners for assets recently found...")
+    click.echo("\n{:20} {:10} {}".format("IP Address", "Score", "Scan ID"))
+    click.echo("-" * 150)
+    for scan in tio.scans.list():
+        try:
             if str(scan["type"]) == "pvs":
                 resp = tio.get('scans/{}'.format(scan["id"]))
                 data = resp.json()
-                click.echo("\n{:20} {}".format("IP Address", "Score"))
-                click.echo("-" * 150)
+
                 for host in data["hosts"]:
-                    click.echo("{:20} {}".format(str(host["hostname"]), str(host["score"])))
-                click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
+                    click.echo("{:20} {:10} {}".format(str(host["hostname"]), str(host["score"]), str(scan["id"])))
+
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
+
+        except KeyError:
+            pass
+
 
 
 @display.command(help="Assets found in the last 30 days")
-def assets():
-    try:
-        click.echo("\nBelow are the assets found in the last 30 days")
-        click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "Sources"))
+@click.option("--tag", default='', help="Assets that are apart of a given Tag.  Use Value UUID")
+def assets(tag):
+    if tag:
+        data = db_query("select ip_address, fqdn, aes, acr from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(tag))
+
+        click.echo("\nBelow are the assets that are apart of the Tag")
+        click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "ACR"))
         click.echo("-" * 150)
-        count = 0
-        for asset in tio.workbenches.assets():
-            count += 1
-            sources = ""
-            try:
-                exposure_score = str(asset["exposure_score"])
-            except KeyError:
-                exposure_score = "- -"
 
-            try:
-                fqdn = asset["fqdn"][0]
-            except IndexError:
-                fqdn = " - - - - - - - "
+        for asset in data:
+            ipv4 = asset[0]
+            fqdn = asset[1]
+            exposure_score = asset[2]
+            acr = asset[3]
 
-            try:
-                ipv4 = asset["ipv4"][0]
-            except IndexError:
-                ipv4 = " - - - - - - - "
+            click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, acr))
+        click.echo()
+    else:
+        try:
+            click.echo("\nBelow are the assets found in the last 30 days")
+            click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "Sources"))
+            click.echo("-" * 150)
+            count = 0
+            for asset in tio.workbenches.assets():
+                count += 1
+                sources = ""
+                try:
+                    exposure_score = str(asset["exposure_score"])
+                except KeyError:
+                    exposure_score = "- -"
 
-            for source in asset["sources"]:
-                sources += ", {}".format(str(source['name']))
+                try:
+                    fqdn = asset["fqdn"][0]
+                except IndexError:
+                    fqdn = " - - - - - - - "
 
-            click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, sources[1:]))
+                try:
+                    ipv4 = asset["ipv4"][0]
+                except IndexError:
+                    ipv4 = " - - - - - - - "
 
-        click.echo("\nTotal: {}".format(count))
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
+                for source in asset["sources"]:
+                    sources += ", {}".format(str(source['name']))
+
+                click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, sources[1:]))
+
+            click.echo("\nTotal: {}".format(count))
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
 
 
 @display.command(help="List Scan Policies")
