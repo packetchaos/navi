@@ -1,8 +1,7 @@
 import click
-from sqlite3 import Error
 import pprint
 from .api_wrapper import tenb_connection
-from .database import new_db_connection, db_query
+from .database import db_query
 import textwrap
 
 
@@ -120,39 +119,38 @@ def webapp():
         host = row[0].split()
         final_host = host[3][:-1]
         uuid = row[1]
-        print()
-        print("*" * 50)
-        print("Asset IP: {}".format(row[2]))
-        print("Asset UUID: {}".format(row[1]))
-        print("Network UUID: {}".format(row[3]))
-        print("*" * 50)
+
+        click.echo("\n*" * 50)
+        click.echo("Asset IP: {}".format(row[2]))
+        click.echo("Asset UUID: {}".format(row[1]))
+        click.echo("Network UUID: {}".format(row[3]))
+        click.echo("*" * 50)
 
         new_row = db_query("SELECT output, port FROM vulns where plugin_id ='22964' and asset_uuid='{}';".format(uuid))
-        print("\nWeb Apps Found")
-        print("-" * 14)
+        click.echo("\nWeb Apps Found")
+        click.echo("-" * 14)
+
         for service in new_row:
-
             if "web" in service[0]:
-
                 if "through" in service[0]:
-                    print("https://{}:{}".format(final_host, service[1]))
+                    click.echo("https://{}:{}".format(final_host, service[1]))
                 else:
-                    print("http://{}:{}".format(final_host, service[1]))
+                    click.echo("http://{}:{}".format(final_host, service[1]))
 
         doc_row = db_query("SELECT output, port FROM vulns where plugin_id ='93561' and asset_uuid='{}';".format(uuid))
 
         if doc_row:
-            print("\nThese web apps might be running on one or more of these containers:\n")
+            click.echo("\nThese web apps might be running on one or more of these containers:\n")
 
         for doc in doc_row:
             plug = doc[0].splitlines()
             for x in plug:
                 if "Image" in x:
-                    print(x)
+                    click.echo(x)
                 if "Port" in x:
-                    print(x)
-                    print()
-        print("-" * 100)
+                    click.echo(x)
+                    click.echo()
+        click.echo("-" * 100)
 
 
 @find.command(help="Find Assets with Credential Issues using plugin 104410")
@@ -212,52 +210,57 @@ def scantime(minute):
 
 @find.command(help="Find Assets that have not been scanned in any Cloud")
 def ghost():
-    try:
-        click.echo("\n{:11s} {:15s} {:45} {}".format("Source", "IP", "FQDN", "First seen"))
-        click.echo("-" * 150)
-        for assets in tio.workbenches.assets(("sources", "set-hasonly", "AWS")):
-            for source in assets['sources']:
-                if source['name'] == 'AWS':
+    click.echo("\n{:11s} {:15s} {:50} {}".format("Source", "IP", "FQDN", "First seen"))
+    click.echo("-" * 150)
+
+    for assets in tio.workbenches.assets(("sources", "set-hasonly", "AWS")):
+        for source in assets['sources']:
+            if source['name'] == 'AWS':
+                try:
                     aws_ip = assets['ipv4'][0]
-                    try:
-                        aws_fqdn = assets['fqdn'][0]
-                    except IndexError:
-                        aws_fqdn = assets['fqdn'][0]
+                except IndexError:
+                    aws_ip = "No IP Found"
+                try:
+                    aws_fqdn = assets['fqdn'][0]
+                except IndexError:
+                    aws_fqdn = "No FQDN Found"
 
-                    click.echo("{:11s} {:15s} {:45} {}".format(str(source['name']), str(aws_ip),
-                                                               str(aws_fqdn), source['first_seen']))
-        click.echo()
+                click.echo("{:11s} {:15s} {:50} {}".format(str(source['name']), str(aws_ip),
+                                                           str(aws_fqdn), source['first_seen']))
+    click.echo()
 
-        for gcp_assets in tio.workbenches.assets(("sources", "set-hasonly", "GCP")):
-            for gcp_source in gcp_assets['sources']:
-                if gcp_source['name'] == 'GCP':
+    for gcp_assets in tio.workbenches.assets(("sources", "set-hasonly", "GCP")):
+        for gcp_source in gcp_assets['sources']:
+            if gcp_source['name'] == 'GCP':
+                try:
                     gcp_ip = gcp_assets['ipv4'][0]
-                    try:
-                        gcp_fqdn = gcp_assets['fqdn'][0]
-                    except IndexError:
-                        gcp_fqdn = "NO FQDN FOUND"
+                except IndexError:
+                    gcp_ip = "No IP Found"
+                try:
+                    gcp_fqdn = gcp_assets['fqdn'][0]
+                except IndexError:
+                    gcp_fqdn = "NO FQDN FOUND"
 
-                    click.echo("{:11s} {:15s} {:45} {}".format(gcp_source['name'], gcp_ip, gcp_fqdn,
-                                                               gcp_source['first_seen']))
-        click.echo()
+                click.echo("{:11s} {:15s} {:50} {}".format(gcp_source['name'], gcp_ip, gcp_fqdn,
+                                                           gcp_source['first_seen']))
+    click.echo()
 
-        for az_assets in tio.workbenches.assets(("sources", "set-hasonly", "AZURE")):
-            for az_source in az_assets['sources']:
-                if az_source['name'] == 'AZURE':
-
+    for az_assets in tio.workbenches.assets(("sources", "set-hasonly", "AZURE")):
+        for az_source in az_assets['sources']:
+            if az_source['name'] == 'AZURE':
+                try:
                     az_ip = az_assets['ipv4'][0]
-                    try:
-                        az_fqdn = az_assets['fqdn'][0]
-                    except IndexError:
-                        az_fqdn = "NO FQDN Found"
+                except IndexError:
+                    az_ip = "No IP Found"
 
-                    click.echo("{:11s} {:15s} {:45} {}".format(az_source['name'], az_ip, az_fqdn,
-                                                               az_source['first_seen']))
-        click.echo()
+                try:
+                    az_fqdn = az_assets['fqdn'][0]
+                except IndexError:
+                    az_fqdn = "NO FQDN Found"
 
-    except Exception as E:
-        click.echo("Check your API keys or your internet connection")
-        click.echo(E)
+                click.echo("{:11s} {:15s} {:50} {}".format(az_source['name'], az_ip, az_fqdn,
+                                                           az_source['first_seen']))
+    click.echo()
 
 
 @find.command(help="Find Assets with a given port open")
@@ -274,7 +277,8 @@ def port(open_port):
         click.echo("-" * 150)
 
         for vulns in data:
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(vulns[0]), vulns[1], textwrap.shorten(vulns[3], 46), vulns[2], vulns[4]))
+            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(vulns[0]), vulns[1], textwrap.shorten(vulns[3], 46),
+                                                              vulns[2], vulns[4]))
 
         click.echo()
     except ValueError:
@@ -302,4 +306,3 @@ def name(plugin_name):
         click.echo("{:8s} {:20} {:45} {:70}".format(vulns[3], vulns[0], str(vulns[1]), textwrap.shorten(str(vulns[2]), 65)))
 
     click.echo()
-
