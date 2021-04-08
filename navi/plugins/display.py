@@ -51,13 +51,18 @@ def containers():
         # Use CS module
         resp = tio.get('container-security/api/v2/images?limit=1000')
         data = resp.json()
+
         click.echo("{:35s} {:35s} {:15s} {:15s} {:10s}".format("Container Name", "Repository ID", "Tag", "Docker ID", "# of Vulns"))
         click.echo("-" * 150)
+
         try:
             for images in data["items"]:
-                click.echo("{:35s} {:35s} {:15s} {:15s} {:10s}".format(images["name"], images["repoName"], images["tag"], str(images["imageHash"]), str(images["numberOfVulns"])))
+                click.echo("{:35s} {:35s} {:15s} {:15s} {:10s}".format(images["name"], images["repoName"],
+                                                                       images["tag"], str(images["imageHash"]),
+                                                                       str(images["numberOfVulns"])))
         except KeyError:
             pass
+
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -69,8 +74,11 @@ def logs():
         events = tio.audit_log.events()
         click.echo("{:24s} {:30s} {}".format("Event Date", "Action Taken", "User"))
         click.echo("-" * 150)
+
         for log in events:
-            click.echo("{:24s} {:30s} {:30s}".format(str(log['received']), str(log['action']), str(log['actor']['name'])))
+            click.echo("{:24s} {:30s} {:30s}".format(str(log['received']), str(log['action']),
+                                                     str(log['actor']['name'])))
+
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -81,9 +89,11 @@ def running():
     try:
         click.echo("\n{:60s} {:10s} {:30s}".format("Scan Name", "Scan ID", "Status"))
         click.echo("-" * 150)
+
         for scan in tio.scans.list():
             if scan['status'] == "running":
                 click.echo("{:60s} {:10s} {:30s}".format(str(scan['name']), str(scan['id']), str(scan['status'])))
+
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -94,8 +104,10 @@ def scans():
     try:
         click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
         click.echo("-" * 150)
+
         for scan in tio.scans.list():
-            click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']), str(scan['uuid'])))
+            click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                        str(scan['uuid'])))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -106,6 +118,7 @@ def nnm():
     click.echo("\nChecking all NNM scanners for assets recently found...")
     click.echo("\n{:20} {:10} {}".format("IP Address", "Score", "Scan ID"))
     click.echo("-" * 150)
+
     for scan in tio.scans.list():
         try:
             if str(scan["type"]) == "pvs":
@@ -120,7 +133,6 @@ def nnm():
 
         except KeyError:
             pass
-
 
 
 @display.command(help="Assets found in the last 30 days")
@@ -146,6 +158,7 @@ def assets(tag):
             click.echo("\nBelow are the assets found in the last 30 days")
             click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "Sources"))
             click.echo("-" * 150)
+
             count = 0
             for asset in tio.workbenches.assets():
                 count += 1
@@ -180,8 +193,10 @@ def policies():
     try:
         click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
         click.echo("-" * 150)
+
         for policy in tio.policies.list():
-            click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['description']), policy['template_uuid']))
+            click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['description']),
+                                                 policy['template_uuid']))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -192,15 +207,20 @@ def connectors():
     try:
         resp = tio.get('settings/connectors')
         data = resp.json()
+
         click.echo("\n{:11s} {:40s} {:40s} {:30s} {}".format("Type", "Connector Name", "Connector ID", "Last Sync", "Schedule"))
         click.echo("-" * 150)
+
         for conn in data["connectors"]:
             schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
+
             try:
                 last_sync = conn['last_sync_time']
             except KeyError:
                 last_sync = "Hasn't synced"
-            click.echo("{:11s} {:40s} {:40s} {:30s} {}".format(str(conn['type']), str(conn['name']), str(conn['id']), last_sync, schedule))
+
+            click.echo("{:11s} {:40s} {:40s} {:30s} {}".format(str(conn['type']), str(conn['name']), str(conn['id']),
+                                                               last_sync, schedule))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -212,19 +232,24 @@ def agroups():
     try:
         click.echo("\n{:25s} {:40s} {:25} {}".format("Group Name", "Group ID", "Last Updated", "Rules"))
         click.echo("-" * 150)
+
         for group in tio.access_groups.list():
+
             try:
                 updated = group['updated_at']
             except KeyError:
                 updated = "Not Updated"
 
             details = tio.access_groups.details(group['id'])
+
             try:
                 for rule in details['rules']:
                     rules = str(rule['terms'])
             except KeyError:
                 rules = "Not Rule Based"
-            click.echo("{:25s} {:40s} {:25} {:60s}".format(str(group['name']), str(group['id']), str(updated), textwrap.shorten(rules, width=60)))
+
+            click.echo("{:25s} {:40s} {:25} {:60s}".format(str(group['name']), str(group['id']), str(updated),
+                                                           textwrap.shorten(rules, width=60)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -403,19 +428,27 @@ def smtp():
 @display.command(help="Print Cloud information")
 def cloud():
     try:
-        click.echo("\n{:11s} {:15s} {:45s} {:40} {}".format("Source", "IP", "FQDN", "UUID", "First seen"))
+        click.echo("\n{:13s} {:15s} {:50s} {:40} {}".format("Source", "IP", "FQDN", "UUID", "First seen"))
         click.echo("-" * 150)
-        for cloud_assets in tio.workbenches.assets(('sources', 'set-has', 'AWS'), ('sources', 'set-has', 'GCP'), ('sources', 'set-has', 'AZURE'), filter_type="or", age=90):
+
+        for cloud_assets in tio.workbenches.assets(('sources', 'set-has', 'AWS'), ('sources', 'set-has', 'GCP'),
+                                                   ('sources', 'set-has', 'AZURE'), filter_type="or", age=90):
             for source in cloud_assets['sources']:
                 if source['name'] != 'NESSUS_SCAN':
-                    asset_ip = cloud_assets['ipv4'][0]
+
+                    try:
+                        asset_ip = cloud_assets['ipv4'][0]
+                    except IndexError:
+                        asset_ip = "No Ip found"
+
                     uuid = cloud_assets['id']
+
                     try:
                         asset_fqdn = cloud_assets['fqdn'][0]
                     except IndexError:
                         asset_fqdn = "NO FQDN found"
 
-                    click.echo("{:11s} {:15s} {:45s} {:40s} {}".format(str(source['name']), str(asset_ip),
+                    click.echo("{:13s} {:15s} {:50s} {:40s} {}".format(str(source['name']), str(asset_ip),
                                                                        str(asset_fqdn), str(uuid),
                                                                        str(source['first_seen'])))
         click.echo()
@@ -428,10 +461,12 @@ def networks():
     try:
         click.echo("\n{:45s} {:16} {}".format("Network Name", "# of Scanners", "UUID"))
         click.echo("-" * 150)
+
         for network in tio.networks.list():
             click.echo("{:45s} {:16} {}".format(str(network['name']), str(network['scanner_count']),
                                                 str(network['uuid'])))
         click.echo()
+
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
 
@@ -445,7 +480,7 @@ def version():
 @click.option('--membership', required=True, default='', help="Display Users that apart of a particular usergroup")
 def usergroups(membership):
     try:
-        if membership != '':
+        if membership:
             click.echo("\n{:35s} {:40s} {:40s} {:10} {}".format("User Name", "Login email", "User UUID", "User ID",
                                                                 "Enabled?"))
             click.echo("-" * 150)
@@ -457,9 +492,10 @@ def usergroups(membership):
         else:
             click.echo("\n{:35s} {:10s} {:40s} {}".format("Group Name", "Group ID", "Group UUID", "User Count"))
             click.echo("-" * 150)
-            for ugroup in tio.groups.list():
-                click.echo("{:35s} {:10s} {:40s} {}".format(str(ugroup['name']), str(ugroup['id']),
-                                                        str(ugroup['uuid']), str(ugroup['user_count'])))
+
+            for user_group in tio.groups.list():
+                click.echo("{:35s} {:10s} {:40s} {}".format(str(user_group['name']), str(user_group['id']),
+                                                        str(user_group['uuid']), str(user_group['user_count'])))
             click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -471,15 +507,16 @@ def credentials():
 
         click.echo("\n{:25s} {:25s} {:25s} {:25s} {:40s}".format("Credential Name", "Created By", "Credential Type", "Category", "Credential UUID"))
         click.echo("-" * 150)
+
         for cred in tio.credentials.list():
             creator = cred['created_by']['display_name']
             name = cred['name']
-            type = cred['type']['name']
+            cred_type = cred['type']['name']
             cred_uuid = cred['uuid']
             category = cred['category']['name']
             click.echo("{:25s} {:25s} {:25s} {:25s} {:40s}".format(textwrap.shorten(name, width=25),
                                                                    textwrap.shorten(creator, width=25),
-                                                                   textwrap.shorten(type, width=25),
+                                                                   textwrap.shorten(cred_type, width=25),
                                                                    textwrap.shorten(category, width=25),
                                                                    textwrap.shorten(cred_uuid, width=40)))
         click.echo()
@@ -488,8 +525,8 @@ def credentials():
 
 
 @display.command(help="Print Asset and Vulnerability Export Job information")
-@click.option('-a', help="Display Asset Export Jobs", is_flag=True)
-@click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True)
+@click.option('-a', help="Display Asset Export Jobs", is_flag=True, required=True)
+@click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True, required=True)
 def exports(a, v):
     if not a and not v:
         click.echo("\nYou need to use '-a' or '-v' to select your export type. (assets vs vulns)\n")
@@ -498,12 +535,14 @@ def exports(a, v):
     time_frame = (current_time - (86400 * 3)) * 1000
     if a:
         export_data = request_data('GET', '/assets/export/status')
-        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nAsset Export UUID", "Created Date", "Status", "Export Filter Used",  "Chunk Size", "Total Chunks"))
+        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nAsset Export UUID", "Created Date", "Status",
+                                                                  "Export Filter Used",  "Chunk Size", "Total Chunks"))
         click.echo('-' * 150)
 
         for export in export_data['exports']:
             compare_time = export['created']
             newtime = arrow.Arrow.fromtimestamp(compare_time)
+
             if compare_time > time_frame:
                 export_uuid = export['uuid']
                 export_status = export['status']
@@ -511,16 +550,20 @@ def exports(a, v):
                 export_filter = export['filters']
                 export_total_chunks = export['total_chunks']
 
-                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, newtime.format('MM-DD-YYYY'), export_status, export_filter, export_chunk_size, export_total_chunks))
+                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, newtime.format('MM-DD-YYYY'),
+                                                                          export_status, export_filter,
+                                                                          export_chunk_size, export_total_chunks))
 
     if v:
         vuln_export_data = request_data('GET', '/vulns/export/status')
-        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nVulnerability Export UUID", "Created Date", "Status", "States", "Chunk Size", "Total Chunks"))
+        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nVulnerability Export UUID", "Created Date",
+                                                                  "Status", "States", "Chunk Size", "Total Chunks"))
         click.echo('-' * 150)
 
         for vuln_export in vuln_export_data['exports']:
             vuln_compare_time = vuln_export['created']
             vuln_newtime = arrow.Arrow.fromtimestamp(vuln_compare_time)
+
             if vuln_compare_time > time_frame:
                 export_uuid = vuln_export['uuid']
                 export_status = vuln_export['status']
@@ -528,7 +571,9 @@ def exports(a, v):
                 export_filter = str(vuln_export['filters']['state'])
                 vuln_export_total_chunks = vuln_export['total_chunks']
 
-                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, vuln_newtime.format('MM-DD-YYYY'), export_status, export_filter, export_chunk_size, vuln_export_total_chunks))
+                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid, vuln_newtime.format('MM-DD-YYYY'),
+                                                                          export_status, export_filter,
+                                                                          export_chunk_size, vuln_export_total_chunks))
 
     click.echo()
 
@@ -538,9 +583,12 @@ def exports(a, v):
 def auth(uid):
     info = request_data("GET", "/users/{}/authorizations".format(uid))
 
-    click.echo("\n{:45} {:20} {:20} {:20} {}".format("Account_UUID", "API Permitted", "Password Permitted", "SAML Permitted", "User_UUID"))
+    click.echo("\n{:45} {:20} {:20} {:20} {}".format("Account_UUID", "API Permitted", "Password Permitted",
+                                                     "SAML Permitted", "User_UUID"))
     click.echo("-" * 150)
 
-    click.echo("{:45} {:20} {:20} {:20} {}".format(str(info['account_uuid']), str(info['api_permitted']), str(info['password_permitted']), str(info['saml_permitted']), str(info['user_uuid'])))
+    click.echo("{:45} {:20} {:20} {:20} {}".format(str(info['account_uuid']), str(info['api_permitted']),
+                                                   str(info['password_permitted']), str(info['saml_permitted']),
+                                                   str(info['user_uuid'])))
 
     click.echo()
