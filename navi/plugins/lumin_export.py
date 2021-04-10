@@ -14,8 +14,8 @@ def lumin_export():
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'Info', 'Low', 'Medium',
-                       'High', 'Critical', 'Asset Exposure Score',' ACR', 'ACR Driver Name', "ACR Driver Value",
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'ACR', 'AES', "AWS ID", 'Info',
+                       'Low', 'Medium', 'High', 'Critical', 'ACR Driver Name', "ACR Driver Value",
                        "ACR Driver Name", "ACR Driver Value", "ACR Driver Name", "ACR Driver Value"]
 
         cur = conn.cursor()
@@ -46,12 +46,6 @@ def lumin_export():
 
                     for vuln in asset_info['counts']['vulnerabilities']['severities']:
                         export_list.append(vuln["count"])  # Add the vuln counts to the new list
-
-                    try:
-                        export_list.append(asset_info['exposure_score'])  # add the exposure score
-                        export_list.append(asset_info['acr_score'])  # add the ACR
-                    except KeyError:
-                        pass
 
                     for driver in range(3):
                         try:

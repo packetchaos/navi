@@ -13,7 +13,7 @@ def lumin_quick_export():
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'ACR', 'Asset Exposure Score']
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network ID', 'ACR', 'Asset Exposure Score', 'AWS ID']
 
         cur = conn.cursor()
         try:

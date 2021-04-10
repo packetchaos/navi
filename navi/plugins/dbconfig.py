@@ -68,7 +68,8 @@ def create_assets_table():
                             last_licensed_scan_date text,
                             network text,
                             acr text,
-                            aes text
+                            aes text,
+                            aws_id text
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)

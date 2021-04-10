@@ -98,6 +98,10 @@ def parse_data(chunk_data):
                 csv_list.append(assets["exposure_score"])
             except KeyError:
                 csv_list.append(" ")
+            try:
+                csv_list.append(assets['aws_ec2_instance_id'])
+            except KeyError:
+                csv_list.append(" ")
 
             # Collect and save Tag Data
             try:

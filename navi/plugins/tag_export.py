@@ -15,8 +15,8 @@ def tag_export(tag_list):
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network','Info', 'Low', 'Medium',
-                       'High', 'Critical', 'Asset Exposure Score', 'Asset Criticality Score']
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network', 'ACR', 'AES', 'AWS ID',
+                       'Info', 'Low', 'Medium', 'High', 'Critical']
         cur = conn.cursor()
         try:
             cur.execute("SELECT * from assets;")
@@ -47,12 +47,6 @@ def tag_export(tag_list):
 
                         for vuln in asset_info['counts']['vulnerabilities']['severities']:
                             export_list.append(vuln["count"])  # Add the vuln counts to the new list
-
-                        try:
-                            export_list.append(asset_info['exposure_score'])  # add the exposure score
-                            export_list.append(asset_info['acr_score'])  # add the ACR
-                        except KeyError:  # Non Lumin users may not have these values
-                            pass
 
                     except ConnectionError:
                         click.echo("Check your API keys or your internet connection")
