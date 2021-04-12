@@ -27,18 +27,18 @@ def find():
 
 @find.command(help="Find Assets where a plugin fired")
 @click.argument('plugin_id')
-@click.option('--output', default='', help='Find Assets based on the text in the output')
-def plugin(plugin_id, output):
+@click.option('--o', default='', help='Find Assets based on the text in the output')
+def plugin(plugin_id, o):
     if not str.isdigit(plugin_id):
         click.echo("You didn't enter a number")
         exit()
     else:
-        if output != "":
+        if o != "":
             click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
             click.echo("-" * 150)
 
             plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
-                                   "asset_uuid = uuid where plugin_id='" + plugin_id + "' and output LIKE '%" + output + "%';")
+                                   "asset_uuid = uuid where plugin_id='" + plugin_id + "' and output LIKE '%" + o + "%';")
 
             for row in plugin_data:
                 click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
@@ -266,7 +266,6 @@ def ghost():
 @find.command(help="Find Assets with a given port open")
 @click.argument('open_port')
 def port(open_port):
-
     data = db_query("SELECT plugin_id, asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN "
                     "assets ON asset_uuid = uuid where port=" + open_port + " and "
                     "(plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")

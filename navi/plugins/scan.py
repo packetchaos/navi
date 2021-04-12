@@ -11,6 +11,7 @@ tio = tenb_connection()
 def get_scans_by_owner(owner):
     data = request_data('GET', '/scans')
     scan_data = []
+
     for get_scan in data['scans']:
         scan_id = get_scan['id']
         scan_owner = get_scan['owner']
@@ -24,6 +25,7 @@ def get_scans_by_owner(owner):
 def get_owner_uuid(owner):
     users = request_data('GET', '/users')
     user_uuid = 0
+
     for user in users['users']:
         if user['username'] == owner:
             user_uuid = user['id']
@@ -109,7 +111,6 @@ def scan_hosts(scan_id):
             click.echo("There was an Error.  It could be the scan was Aborted, canceled or Archived.\n")
             click.echo("Status: {}".format(data['info']['status']))
             click.echo("Archived? {}".format(data['info']['is_archived']))
-
 
         except TypeError:
             click.echo("Check the scan ID")
@@ -245,6 +246,7 @@ def change(owner, new, who, v):
         click.echo("\n{:80s} {:10} {}".format("Scan Name", "Scan ID", "Scan Owner"))
         click.echo("-" * 150)
         click.echo()
+
         for who_scan in who_scans:
             click.echo("{:80s} {:10} {}".format(str(who_scan[0]), str(who_scan[1]), str(who_scan[2])))
         click.echo()
@@ -252,9 +254,11 @@ def change(owner, new, who, v):
     if owner:
         owner_scans = get_scans_by_owner(owner)
         new_owner_uuid = get_owner_uuid(new)
+
         click.echo("\n*** Scans that have not run, will produce HTTP 400 errors ***")
         click.echo("\nYou Scans are being converted now.")
         click.echo("\nThis can take some time")
+
         for owner_scan in owner_scans:
             scan_uuid = owner_scan[3]
             scan_name = owner_scan[0]

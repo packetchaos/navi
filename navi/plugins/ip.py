@@ -1,9 +1,8 @@
 import click
-import time
 import textwrap
 from sqlite3 import Error
 from .api_wrapper import tenb_connection
-from .database import new_db_connection, db_query
+from .database import db_query
 
 
 def plugin_by_ip(ipaddr, plugin):
