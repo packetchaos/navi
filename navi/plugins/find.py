@@ -120,7 +120,7 @@ def webapp():
         final_host = host[3][:-1]
         uuid = row[1]
 
-        click.echo("\n*" * 50)
+        click.echo("*" * 50)
         click.echo("Asset IP: {}".format(row[2]))
         click.echo("Asset UUID: {}".format(row[1]))
         click.echo("Network UUID: {}".format(row[3]))
