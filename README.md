@@ -422,7 +422,7 @@ You can acheive this by using the "navi display scans" command.
 
 
 ### Migrate - Migrate AWS tags to Tenable.io
-As you know Tags are kind of a thing in the cloud and using them in T.io enriches the VM data and makes managing VM workloads easier.  Navi integrates with AWS via the Bogo3 python SDK.
+As you know Tags are kind of a thing in the cloud and using them in T.io enriches the VM data and makes managing VM workloads easier.  Navi integrates with AWS via the Boto3 python SDK.
 Currently, you authenticate via the command-line and as such should be used in Container workloads to reduce any security implications.  In the near future, an AWS keys table will be crated to hold
 all of your AWS keys. Using this command takes all of your AWS tags and migrates them to T.io.
 
