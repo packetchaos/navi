@@ -33,6 +33,9 @@ def organize_aws_keys(aws_ec2):
 @click.option("--a", default="", required=True, help="AWS Region")
 @click.option("--s", default="", required=True, help="AWS Region")
 def migrate(region, a, s):
+    if not a or not s or not region:
+        click.echo("You need a region, access key and secret Key")
+        exit()
     # Authentication
     ec2client = boto3.client('ec2', region_name=region, aws_access_key_id=a, aws_secret_access_key=s)
 
