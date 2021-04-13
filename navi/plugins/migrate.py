@@ -34,8 +34,8 @@ def organize_aws_keys(aws_ec2):
 
 @click.command(help="Migrate AWS Tags to T.io tags by Instance ID")
 @click.option("--region", default="", required=True, help="AWS Region")
-@click.option("--a", default="", required=True, help="AWS Region")
-@click.option("--s", default="", required=True, help="AWS Region")
+@click.option("--a", default="", required=True, help="Access Key")
+@click.option("--s", default="", required=True, help="Secret Key")
 def migrate(region, a, s):
     if not a or not s or not region:
         click.echo("You need a region, access key and secret Key")
