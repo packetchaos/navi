@@ -144,15 +144,17 @@ def assets(tag):
         click.echo("\nBelow are the assets that are apart of the Tag")
         click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "ACR"))
         click.echo("-" * 150)
+        try:
+            for asset in data:
+                ipv4 = str(asset[0])
+                fqdn = str(asset[1])
+                exposure_score = str(asset[2])
+                acr = str(asset[3])
 
-        for asset in data:
-            ipv4 = asset[0]
-            fqdn = asset[1]
-            exposure_score = asset[2]
-            acr = asset[3]
-
-            click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, acr))
-        click.echo()
+                click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, acr))
+            click.echo()
+        except TypeError:
+            click.echo("\nThe Tag has no assets or the tag hasn't finished being processed by T.io\n")
     else:
         try:
             click.echo("\nBelow are the assets found in the last 30 days")
