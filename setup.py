@@ -30,7 +30,8 @@ setup(
         'flask',
         'IPy',
         'pytenable>=1.2.6',
-        'arrow>=0.17.0'
+        'arrow>=0.17.0',
+        'boto3>=1.17.48'
     ],
     python_requires='>=3.0',
     extras_require={

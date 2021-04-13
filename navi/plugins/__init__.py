@@ -23,6 +23,7 @@ from .user import user
 from .usergroup import usergroup
 from .target_group import tgroup
 from .cancel import cancel
+from .migrate import migrate
 
 
 def plugin_loader(group):
@@ -51,4 +52,5 @@ def plugin_loader(group):
     group.add_command(usergroup)
     group.add_command(tgroup)
     group.add_command(cancel)
+    group.add_command(migrate)
 
