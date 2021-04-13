@@ -165,6 +165,7 @@ There are 25 core commands:
  * user       Enable, Disable or add users
  * usergroup  Create a group or Add/remove a user from a group
  * was        Interact with WAS V2 API
+ * migrate    Migrate AWS tags to T.io tags
 
 ## Explore the Tenable.io API - 'api'
   In many cases, it is useful to see the data behind an api endpoint
@@ -419,6 +420,19 @@ creating a Tag Rule is limited to 500 rules.  Since Taggging Agents by Group req
 There is a recently work around created in 6.2.3 to tag all agents in a Agent Group; using the Tag by Scan-ID function.  It will require you to retrieve the "Scan ID" for all Agent scans.
 You can acheive this by using the "navi display scans" command.
 
+
+### Migrate - Migrate AWS tags to Tenable.io
+As you know Tags are kind of a thing in the cloud and using them in T.io enriches the VM data and makes managing VM workloads easier.  Navi integrates with AWS via the Bogo3 python SDK.
+Currently, you authenticate via the command-line and as such should be used in Container workloads to reduce any security implications.  In the near future, an AWS keys table will be crated to hold
+all of your AWS keys. Using this command takes all of your AWS tags and migrates them to T.io.
+
+* --region  --> "Enter your region Ex: us-west-1"
+* --a  --> "Enter your AWS access Key"
+* --s  --> "Enter your AWS secret Key"
+
+### Migrate Examples:
+
+    navi migrate --region "us-west-1" --a <AWS ACCESS KEY> --s <AWS SECRET KEY>
 
 ## Create Access Groups by Tags or Agent Groups - 'agroup'
 Grouping is the theme when trying to influence positive change in a risk
