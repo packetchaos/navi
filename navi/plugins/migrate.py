@@ -6,8 +6,8 @@ from .tag import tag_by_uuid
 
 def organize_aws_keys(aws_ec2):
     '''Collect All Ids to reduce calls to the T.io API'''
-    aws = {}
-    aws_keys = {}
+    aws_tags = {}  # Dictionary of Tag key/Value pairs
+    aws_keys = {}  # Dictionary of Values/List of Instane Ids
     for tags in aws_ec2['Tags']:
         if tags['ResourceType'] == 'instance':
             aws_key = tags['Key']
@@ -19,13 +19,17 @@ def organize_aws_keys(aws_ec2):
                 aws_value = aws_key
 
             try:
-                aws[aws_value].append(resource_id)
+                aws_keys[aws_value].append(resource_id)
+                #pprint.pprint(aws_tags)
             except KeyError:
-                aws[aws_value] = [resource_id]
+                aws_keys[aws_value] = [resource_id]
 
-            aws_keys[aws_key] = {aws_value: aws[aws_value]}
+            if aws_key not in aws_tags:
+                aws_tags[aws_key] = {aws_value: aws_keys[aws_value]}
+            else:
+                aws_tags[aws_key].update({aws_value: aws_keys[aws_value]})
 
-    return aws_keys
+    return aws_tags
 
 
 @click.command(help="Migrate AWS Tags to T.io tags by Instance ID")
@@ -56,6 +60,6 @@ def migrate(region, a, s):
                     uuid_list.append(record[0])
             description = "AWS Tag by Navi"
 
-            print("Creating a Tag named - {} : {} - with the following ids {}".format(z, key, w))
+            print("Creating a Tag named - {} : {} - with the following ids {}".format(key, z, w))
 
             tag_by_uuid(uuid_list,key, z, description)
