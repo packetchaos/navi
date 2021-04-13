@@ -52,6 +52,7 @@ def lumin(acr, v, c, note, business,  compliance, mitigation, development):
             data = cur.fetchall()
 
             lumin_list = []
+
             for asset in data:
                 # grab the first record, in this case the uuid
                 uuid = asset[0]
@@ -64,7 +65,8 @@ def lumin(acr, v, c, note, business,  compliance, mitigation, development):
                     pass
 
             if not lumin_list:
-                click.echo("We did not find a Tag with that Category or Value\n")
+                click.echo("We did not find a Tag with that Category or Value... "
+                           "It's also possible the tag has not been applied to any assets\n")
                 click.echo("If you think this is an error, surround your category and value in \"\"")
                 exit()
             else:
@@ -72,7 +74,6 @@ def lumin(acr, v, c, note, business,  compliance, mitigation, development):
                 # this needs to be changed to ID once the api is fixed
                 lumin_payload = [{"acr_score": int(acr), "reason": choice, "note": note, "asset": [{"ipv4": lumin_list}]}]
                 request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
-
 
     else:
         click.echo("You can't have a score below 1 or higher than 10")
