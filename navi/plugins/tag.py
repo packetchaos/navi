@@ -201,7 +201,8 @@ def tag_by_uuid(tag_list, c, v, d):
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid):
+@click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe):
 
     # start a blank list
     tag_list = []
@@ -397,3 +398,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 click.echo("The scan used is archived, canceled or aborted. Your Tag was not created.")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
+
+    if pipe:
+        tag_by_uuid(eval(pipe), c, v, d)

@@ -286,9 +286,26 @@ def port(open_port):
 
 @find.command(help="Find Assets through a SQL query.")
 @click.argument('statement')
-def query(statement):
+@click.option('-pipe', is_flag=True, help="Used to pipe results to another query")
+def query(statement, pipe):
     data = db_query(statement)
-    pprint.pprint(data)
+
+    if pipe:
+        data_list = []
+        for record in data:
+            data_list.append(record[0])
+        click.echo(data_list)
+    else:
+        pprint.pprint(data)
+
+
+@find.command(help="Testing")
+@click.argument('standard')
+def testing(standard):
+    new_list = list(standard.split(","))
+
+    for item in new_list:
+        print(item)
 
 
 @find.command(help="Find Assets with a given name")
