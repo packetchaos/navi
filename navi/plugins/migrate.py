@@ -5,9 +5,8 @@ from .tag import tag_by_uuid
 
 
 def organize_aws_keys(aws_ec2):
-    '''Collect All Ids to reduce calls to the T.io API'''
     aws_tags = {}  # Dictionary of Tag key/Value pairs
-    aws_keys = {}  # Dictionary of Values/List of Instane Ids
+    aws_keys = {}  # Dictionary of Values/List of Instance Ids
     for tags in aws_ec2['Tags']:
         if tags['ResourceType'] == 'instance':
             aws_key = tags['Key']
@@ -18,12 +17,13 @@ def organize_aws_keys(aws_ec2):
             if aws_value == '':
                 aws_value = aws_key
 
+            # Creates a new value dict if one doesn't exist, adds to the value list if one does.
             try:
                 aws_keys[aws_value].append(resource_id)
-                #pprint.pprint(aws_tags)
             except KeyError:
                 aws_keys[aws_value] = [resource_id]
 
+            # creates a key dict if one doesn't exist, adds the value dict if one does
             if aws_key not in aws_tags:
                 aws_tags[aws_key] = {aws_value: aws_keys[aws_value]}
             else:
@@ -62,4 +62,4 @@ def migrate(region, a, s):
 
             print("Creating a Tag named - {} : {} - with the following ids {}".format(key, z, w))
 
-            tag_by_uuid(uuid_list,key, z, description)
+            tag_by_uuid(uuid_list, key, z, description)
