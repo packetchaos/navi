@@ -200,12 +200,12 @@ def download_csv_by_plugin_id(scan_id):
 
 def create_uuid_list(filename):
     from csv import DictReader
-    uuids = set()
+    uuids = []
     with open(filename) as fobj:
         for row in DictReader(fobj):
             asset_uuid = row['Asset UUID']
             if asset_uuid and asset_uuid != '':
-                uuids.add(asset_uuid)
+                uuids.append(asset_uuid)
     return uuids
 
 
@@ -225,7 +225,6 @@ def create_uuid_list(filename):
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 @click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe):
-
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -405,8 +404,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_tag(c, v, d, cv, cc)
 
     if scanid:
-        scan_uuids = []
-        try:
+        '''try:
             scandata = request_data('GET', '/scans/' + str(scanid))
             try:
                 for host in scandata['hosts']:
@@ -416,17 +414,24 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 click.echo("Check the scan ID")
             except KeyError:
                 click.echo("The scan used is archived, canceled or aborted. Your Tag was not created.")
+                filename = download_csv_by_plugin_id(scanid)
+                scan_uuids = create_uuid_list(filename)
+                tag_by_uuid(scan_uuids, c, v, d)
+
+                import os
+                os.remove(filename)
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
 
-        if len(scan_uuids) >= 1999:
-            click.echo("You're scan is very large. Taking a different approach.\n")
-            filename = download_csv_by_plugin_id(scanid)
-            scan_uuids = create_uuid_list(filename)
-            tag_by_uuid(scan_uuids, c, v, d)
+        if len(scan_uuids) >= 500:
+        
+        click.echo("You're scan is very large. Taking a different approach.\n")'''
+        filename = download_csv_by_plugin_id(scanid)
+        tag_list = create_uuid_list(filename)
+        tag_by_uuid(tag_list, c, v, d)
 
-            import os
-            os.remove(filename)
+        import os
+        os.remove(filename)
 
     if pipe:
         tag_by_uuid(eval(pipe), c, v, d)
