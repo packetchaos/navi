@@ -1,7 +1,7 @@
 import click
 import csv
 from .database import new_db_connection
-from .api_wrapper import request_data, request_no_response
+from .api_wrapper import request_data, request_no_response, tenb_connection
 from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid
 from sqlite3 import Error
 import json
@@ -185,6 +185,28 @@ def tag_by_uuid(tag_list, c, v, d):
                 except Exception as E:
                     click.echo("An Error Occurred: \n")
                     click.echo(E)
+
+
+def download_csv_by_plugin_id(scan_id):
+    filename = f'{scan_id}-report.csv'
+    tio = tenb_connection()
+
+    # Stream the report to disk
+    with open(filename, 'wb') as fobj:
+        tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
+                         format='csv', fobj=fobj)
+    return filename
+
+
+def create_uuid_list(filename):
+    from csv import DictReader
+    uuids = set()
+    with open(filename) as fobj:
+        for row in DictReader(fobj):
+            asset_uuid = row['Asset UUID']
+            if asset_uuid and asset_uuid != '':
+                uuids.add(asset_uuid)
+    return uuids
 
 
 @click.command(help="Create a Tag Category/Value Pair")
@@ -390,14 +412,21 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 for host in scandata['hosts']:
 
                     scan_uuids.append(host['uuid'])
-
-                tag_by_uuid(scan_uuids, c, v, d)
             except TypeError:
                 click.echo("Check the scan ID")
             except KeyError:
                 click.echo("The scan used is archived, canceled or aborted. Your Tag was not created.")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
+
+        if len(scan_uuids) >= 1999:
+            click.echo("You're scan is very large. Taking a different approach.\n")
+            filename = download_csv_by_plugin_id(scanid)
+            scan_uuids = create_uuid_list(filename)
+            tag_by_uuid(scan_uuids, c, v, d)
+
+            import os
+            os.remove(filename)
 
     if pipe:
         tag_by_uuid(eval(pipe), c, v, d)
