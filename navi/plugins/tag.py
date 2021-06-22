@@ -404,34 +404,32 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_tag(c, v, d, cv, cc)
 
     if scanid:
-        '''try:
+        tag_list = []
+        try:
             scandata = request_data('GET', '/scans/' + str(scanid))
             try:
                 for host in scandata['hosts']:
+                    tag_list.append(host['uuid'])
 
-                    scan_uuids.append(host['uuid'])
+                if len(tag_list) >= 4999:
+
+                    click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
+                    click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
+                    filename = download_csv_by_plugin_id(scanid)
+                    tag_list = create_uuid_list(filename)
+                    tag_by_uuid(tag_list, c, v, d)
+
+                    import os
+                    os.remove(filename)
+                else:
+                    tag_by_uuid(tag_list, c, v, d)
             except TypeError:
                 click.echo("Check the scan ID")
             except KeyError:
-                click.echo("The scan used is archived, canceled or aborted. Your Tag was not created.")
-                filename = download_csv_by_plugin_id(scanid)
-                scan_uuids = create_uuid_list(filename)
-                tag_by_uuid(scan_uuids, c, v, d)
+                click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
 
-                import os
-                os.remove(filename)
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
-
-        if len(scan_uuids) >= 500:
-        
-        click.echo("You're scan is very large. Taking a different approach.\n")'''
-        filename = download_csv_by_plugin_id(scanid)
-        tag_list = create_uuid_list(filename)
-        tag_by_uuid(tag_list, c, v, d)
-
-        import os
-        os.remove(filename)
 
     if pipe:
         tag_by_uuid(eval(pipe), c, v, d)
