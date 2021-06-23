@@ -5,7 +5,8 @@ from .database import new_db_connection
 
 def update_tag(c, v, tag_list):
     click.echo("Your tag is being updated\n")
-    tag_data = request_data('GET', '/tags/values')
+    querystring = {'limit': 5000}
+    tag_data = request_data('GET', '/tags/values', params=querystring)
     try:
         for tag in tag_data['values']:
             if tag['category_name'] == str(c):
@@ -38,7 +39,8 @@ def tag_checker(uuid, key, value):
 
 
 def confirm_tag_exists(key, value):
-    tag_value_data = request_data('GET', '/tags/values')
+    querystring = {'limit': 5000}
+    tag_value_data = request_data('GET', '/tags/values', params=querystring)
     try:
         for tag in tag_value_data['values']:
             if str(tag['category_name']).lower() == str(key).lower():
@@ -49,7 +51,8 @@ def confirm_tag_exists(key, value):
 
 
 def return_tag_uuid(key, value):
-    tag_value_data = request_data('GET', '/tags/values')
+    querystring = {'limit': 5000}
+    tag_value_data = request_data('GET', '/tags/values', params=querystring)
     try:
         for tag in tag_value_data['values']:
             if str(tag['category_name']).lower() == str(key).lower():
