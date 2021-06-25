@@ -97,3 +97,13 @@ Export command
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506' 
     AND NOT vulns.plugin_id='11219';"
+
+### Count Vulns or Assets using SQL
+Asset Total
+
+    navi find query "select count(uuid) from assets;"
+
+Vulnerability Total
+
+    navi find query "select count(*) from vulns where severity !='info';"
+
