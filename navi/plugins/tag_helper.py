@@ -1,29 +1,15 @@
 import click
-from .api_wrapper import request_data
+from .api_wrapper import request_data, tenb_connection
 from .database import new_db_connection
 
 
 def grab_all_tags():
-    # Quick solution to get to 10,000 Tag limit.
-    # next itration will be to clean this up and remove any limits
-
-    querystring = {'limit': 5000}
-    tag_value_data = request_data('GET', '/tags/values', params=querystring)
-    total_tags = tag_value_data['pagination']['total']
-
+    tio = tenb_connection()
     tag_list = []
 
-    for tag in tag_value_data['values']:
-        my_tuple = (tag['category_name'], tag['value'], tag['uuid'])
+    for tags in tio.tags.list():
+        my_tuple = (tags['category_name'], tags['value'], tags['uuid'])
         tag_list.append(my_tuple)
-
-    if total_tags > 5000:
-        querystring = {'offset': 5000}
-        new_tags = request_data('GET', '/tags/values', params=querystring)
-
-        for tags in new_tags['values']:
-            my_tuples = (tags['category_name'], tags['value'], tags['uuid'])
-            tag_list.append(my_tuples)
 
     return tag_list
 
@@ -78,14 +64,12 @@ def confirm_tag_exists(key, value):
 
 
 def return_tag_uuid(key, value):
-    # Helper function for Tag by group
-    querystring = {'limit': 5000}
-    tag_value_data = request_data('GET', '/tags/values', params=querystring)
+    tag_list = grab_all_tags()
     try:
-        for tag in tag_value_data['values']:
-            if str(tag['category_name']).lower() == str(key).lower():
-                if str(tag['value']).lower() == str(value).lower():
-                    return str(tag['uuid'])
+        for tag_info in tag_list:
+            if str(tag_info[0]).lower() == str(key).lower():
+                if str(tag_info[1]).lower() == str(value).lower():
+                    return str(tag_info[2])
                 else:
                     return 'none'
     except Exception as E:
