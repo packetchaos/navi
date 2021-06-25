@@ -181,7 +181,7 @@ def create(targets, plugin, cred, discovery, custom, scanner):
         advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
 
         # Change template
-        payload["uuid"]= advanced_template
+        payload["uuid"] = advanced_template
 
         # Add plugins to dictionary
         payload["plugins"] = {family: {"individual": {plugin: "enabled"}}}

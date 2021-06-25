@@ -146,7 +146,7 @@ There are 25 core commands:
  * cs         Interact with the Container Security API
  * delete     Delete objects from Tenable IO
  * display    Display or Print information found in Tenable.io
- * export     Export Ienable.io Data
+ * export     Export Tenable.io Data
  * find       Discover what is in Tenable.io
  * http       Spin up a http server to extract data from the Docker container
  * ip         Get IP specific information
@@ -650,12 +650,23 @@ Then tansfer the scans owned by User A to User B
 
 
 ### Create a Scan
-    navi scan create 192.168.128.1
+* --plugin - Plugin required for Remediation Scan")
+* --cred - UUID of your intended credentials")
+* -discovery - Scan using the Discovery Template")
+* --custom - Scan using a custom Scan Template")
+* --scanner - help="Scanner ID")
+
+### Examples
+
+    navi scan create 192.168.128.1 -scanner 123456
     
-    navi scan create 192.168.128.0/24
+    navi scan create 192.168.128.0/24 -discovery
     
-  * Choose your scan type: Basic or Discovery
-  * Pick your scanner by ID: scanners will be displayed
+    navi scan create 192.168.128.2 -scanner <scanner id> --cred <cred uuid> --plugin <plugin>
+
+### Workflow
+  * A basic Policy is used by default. Use -discovery or -custom alter
+  * If -scanner option is missing you will be prompted to enter in your scanner ID after displaying your scanners
   * Scan will immediately kick off
 
 ### Control your scans
