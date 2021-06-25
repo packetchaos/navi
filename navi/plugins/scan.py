@@ -132,75 +132,70 @@ def scan():
 @click.argument('targets')
 @click.option('--plugin', default='', help="Plugin required for Remediation Scan")
 @click.option('--cred', default='', help="UUID of your intended credentials")
-def create(targets, plugin, cred):
+@click.option('-discovery', is_flag=True, help="Scan using the Discovery Template")
+@click.option('--custom', default='', help="Scan using a custom Scan Template")
+@click.option('--scanner', default='', help="Scanner ID")
+def create(targets, plugin, cred, discovery, custom, scanner):
+    # If a Template isn't chosen we will assume a Basic Network scan
+    template = '731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65'
 
-    try:
-        click.echo("\nChoose your Scan Template")
-        click.echo("1.   Basic Network Scan")
-        click.echo("2.   Discovery Scan")
+    if discovery:
+        template = 'bbd4f805-3966-d464-b2d1-0079eb89d69708c3a05ec2812bcf'
 
-        option = input("Please enter option #.... ")
-        if option == '1':
-            template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"
-        elif option == '2':
-            template = "bbd4f805-3966-d464-b2d1-0079eb89d69708c3a05ec2812bcf"
-        elif len(option) == 52:
-            template = str(option)
-        else:
-            click.echo("Using Basic scan since you can't follow directions")
-            template = "731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65"
+    if len(custom) == 52:
+        template = custom
 
+    if scanner:
+        scanner_id = scanner
+    else:
         click.echo("Here are the available scanners")
         click.echo("Remember, don't pick a Cloud scanner for an internal IP address")
         click.echo("Remember also, don't chose a Webapp scanner for an IP address")
         nessus_scanners()
         scanner_id = input("What scanner do you want to scan with ?.... ")
 
-        click.echo("creating your scan of : {}  Now...".format(targets))
+    click.echo("creating your scan of : {}  Now...".format(targets))
 
-        # Begin Payload Creation
-        payload = dict(uuid=template,
-                       settings={"name": "navi Created Scan of " + targets,
-                                 "enabled": "True",
-                                 "scanner_id": scanner_id,
-                                 "text_targets": targets})
+    # Begin Payload Creation
+    payload = dict(uuid=template,
+                   settings={"name": "navi Created Scan of " + targets,
+                             "enabled": "True",
+                             "scanner_id": scanner_id,
+                             "text_targets": targets})
 
-        if cred:
-            cred_data = request_data('GET', '/credentials/' + cred)
-            try:
-                cred_cat_name = cred_data['category']['name']
-                cred_type_name = cred_data['type']['name']
+    if cred:
+        cred_data = request_data('GET', '/credentials/' + cred)
+        try:
+            cred_cat_name = cred_data['category']['name']
+            cred_type_name = cred_data['type']['name']
 
-                # Add credentials to payload
-                payload["credentials"] = {"add": {cred_cat_name: {cred_type_name: [{"id": cred}]}}}
+            # Add credentials to payload
+            payload["credentials"] = {"add": {cred_cat_name: {cred_type_name: [{"id": cred}]}}}
 
-            except KeyError:
-                click.echo("\nCheck your Credential UUID\n")
-                exit()
+        except KeyError:
+            click.echo("\nCheck your Credential UUID\n")
+            exit()
 
-        if plugin != '':
-            family = get_plugin_family(plugin)
-            advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
+    if plugin != '':
+        family = get_plugin_family(plugin)
+        advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
 
-            # Change template
-            payload["uuid"]= advanced_template
+        # Change template
+        payload["uuid"]= advanced_template
 
-            # Add plugins to dictionary
-            payload["plugins"] = {family: {"individual": {plugin: "enabled"}}}
+        # Add plugins to dictionary
+        payload["plugins"] = {family: {"individual": {plugin: "enabled"}}}
 
-        # create a new scan
-        data = request_data('POST', '/scans', payload=payload)
+    # create a new scan
+    data = request_data('POST', '/scans', payload=payload)
 
-        # pull scan ID after Creation
-        scan_id = str(data["scan"]["id"])
+    # pull scan ID after Creation
+    scan_id = str(data["scan"]["id"])
 
-        # launch Scan
-        request_data('POST', '/scans/' + scan_id + '/launch')
+    # launch Scan
+    request_data('POST', '/scans/' + scan_id + '/launch')
 
-        click.echo("I started your scan, your scan ID is: {}".format(scan_id))
-
-    except Exception as E:
-        click.echo(E)
+    click.echo("I started your scan, your scan ID is: {}".format(scan_id))
 
 
 @scan.command(help="Start a valid Scan")
