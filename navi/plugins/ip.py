@@ -7,7 +7,10 @@ from .database import db_query
 
 def plugin_by_ip(ipaddr, plugin):
     try:
-        rows = db_query("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+        if len(ipaddr) < 17:
+            rows = db_query("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+        else:
+            rows = db_query("SELECT output, cves, score, state from vulns where asset_uuid=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
 
         for plug in rows:
             click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
@@ -84,7 +87,7 @@ def cves_by_uuid(uuid):
         click.echo("Something went wrong")
 
 
-@click.command(help="Get IP specific information")
+@click.command(help="Get Asset details based on IP or UUID")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
 @click.option('-n', is_flag=True, help='Netstat Established(58561) and Listening and Open Ports(14272)')
@@ -107,6 +110,7 @@ def cves_by_uuid(uuid):
 @click.pass_context
 def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns, info, cves):
     tio = tenb_connection()
+
     if d:
         click.echo('\nScan Detail')
         click.echo("-" * 15)
@@ -163,7 +167,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if s:
         try:
-            data = db_query("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
+            if len(ipaddr) < 17:
+                data = db_query("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
+            else:
+                data = db_query("SELECT output, port from vulns where asset_uuid=\"%s\" and plugin_id='22964'" % ipaddr)
 
             for plugins in data:
                 output = plugins[0]
@@ -188,7 +195,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if outbound:
         try:
-            data = db_query("SELECT output, port, protocol from vulns where asset_ip=\"%s\" and plugin_id='16'" % ipaddr)
+            if len(ipaddr) < 17:
+                data = db_query("SELECT output, port, protocol from vulns where asset_ip=\"%s\" and plugin_id='16'" % ipaddr)
+            else:
+                data = db_query("SELECT output, port, protocol from vulns where asset_uuid=\"%s\" and plugin_id='16'" % ipaddr)
 
             click.echo("\n{:15s} {:5} {}".format("IP address", "Port", "Protocol"))
             click.echo("-" * 25)
@@ -204,7 +214,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if exploit:
         try:
-            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            if len(ipaddr) < 17:
+                data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            else:
+                data = ipaddr
 
             for assets in data:
                 asset_id = assets[0]
@@ -245,7 +258,11 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if critical:
         try:
-            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            if len(ipaddr) < 17:
+
+                data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            else:
+                data = db_query("SELECT uuid from assets where uuid='" + ipaddr + "';")
 
             for assets in data:
                 asset_id = assets[0]
@@ -272,7 +289,10 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
             click.echo(E)
 
     if details:
-        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+        if len(ipaddr) < 17:
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+        else:
+            data = db_query("SELECT uuid from assets where uuid='" + ipaddr + "';")
 
         for assets in data:
             asset_data = tio.workbenches.asset_info(str(assets[0]))
@@ -463,31 +483,51 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 pass
 
     if vulns:
-        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
-
-        for assets in data:
-            click.echo("\nAsset UUID: {}".format(assets[0]))
-            click.echo("Asset IP: {}".format(ipaddr))
+        if len(ipaddr) < 17:
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(ipaddr))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                vulns_by_uuid(assets[0])
+        else:
+            data = db_query("SELECT ip_address from assets where uuid='" + ipaddr + "';")
+            click.echo("\nAsset UUID: {}".format(ipaddr))
+            click.echo("Asset IP: {}".format(data[0]))
             click.echo("-" * 26)
-            vulns_by_uuid(assets[0])
+            vulns_by_uuid(ipaddr)
 
     if cves:
-        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+        if len(ipaddr) < 17:
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-        for assets in data:
-            click.echo("\nAsset UUID: {}".format(assets[0]))
-            click.echo("Asset IP: {}".format(ipaddr))
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(assets[0]))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                cves_by_uuid(assets[0])
+        else:
+            data = db_query("SELECT ip_address from assets where uuid='" + ipaddr + "';")
+            click.echo("\nAsset UUID: {}".format(ipaddr))
+            click.echo("Asset IP: {}".format(data[0]))
             click.echo("-" * 26)
-            cves_by_uuid(assets[0])
+            cves_by_uuid(ipaddr)
 
     if info:
-        data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
+        if len(ipaddr) < 17:
+            data = db_query("SELECT uuid from assets where ip_address='" + ipaddr + "';")
 
-        for assets in data:
-            click.echo("\nAsset UUID: {}".format(assets[0]))
-            click.echo("Asset IP: {}".format(ipaddr))
+            for assets in data:
+                click.echo("\nAsset UUID: {}".format(assets[0]))
+                click.echo("Asset IP: {}".format(ipaddr))
+                click.echo("-" * 26)
+                info_by_uuid(assets[0])
+        else:
+            data = db_query("SELECT ip_address from assets where uuid='" + ipaddr + "';")
+            click.echo("\nAsset UUID: {}".format(ipaddr))
+            click.echo("Asset IP: {}".format(data[0]))
             click.echo("-" * 26)
-            info_by_uuid(assets[0])
+            info_by_uuid(ipaddr)
 
     if plugin != '':
         plugin_by_ip(ipaddr, plugin)

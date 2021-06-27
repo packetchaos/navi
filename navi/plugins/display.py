@@ -594,3 +594,29 @@ def auth(uid):
                                                    str(info['user_uuid'])))
 
     click.echo()
+
+
+@display.command(help="List Scan Policies")
+@click.option("-policy", is_flag=True, help="Display all Policy Templates")
+@click.option("-scan", is_flag=True, help="Display all Scan Templates")
+def templates(policy, scan):
+    template_type = ""
+
+    if policy:
+        template_type = "policy"
+    if scan:
+        template_type = "scan"
+
+    if template_type:
+        try:
+            click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
+            click.echo("-" * 150)
+
+            for policy in tio.editor.template_list(str(template_type)):
+                click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['title']),
+                                                     policy['uuid']))
+            click.echo()
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
+    else:
+        click.echo("\nYou must use '-scan' or '-policy'")

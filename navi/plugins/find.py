@@ -308,7 +308,7 @@ def testing(standard):
         print(item)
 
 
-@find.command(help="Find Assets with a given name")
+@find.command(help="Find Assets where a plugin fired with TEXT found in a plugin name")
 @click.argument('plugin_name')
 def name(plugin_name):
 
