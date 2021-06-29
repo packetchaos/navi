@@ -135,7 +135,8 @@ def scan():
 @click.option('-discovery', is_flag=True, help="Scan using the Discovery Template")
 @click.option('--custom', default='', help="Scan using a custom Scan Template")
 @click.option('--scanner', default='', help="Scanner ID")
-def create(targets, plugin, cred, discovery, custom, scanner):
+@click.option('--policy', default='', help="Use Policy ID")
+def create(targets, plugin, cred, discovery, custom, scanner, policy):
     # If a Template isn't chosen we will assume a Basic Network scan
     template = '731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65'
 
@@ -171,6 +172,16 @@ def create(targets, plugin, cred, discovery, custom, scanner):
 
             # Add credentials to payload
             payload["credentials"] = {"add": {cred_cat_name: {cred_type_name: [{"id": cred}]}}}
+
+        except KeyError:
+            click.echo("\nCheck your Credential UUID\n")
+            exit()
+
+    if policy:
+
+        try:
+            # Add policy to payload
+            payload["settings"]["policy_id"] = policy
 
         except KeyError:
             click.echo("\nCheck your Credential UUID\n")

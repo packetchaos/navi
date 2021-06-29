@@ -193,11 +193,11 @@ def assets(tag):
 @display.command(help="List Scan Policies")
 def policies():
     try:
-        click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
+        click.echo("\n{:40s} {:51s} {:10} {}".format("Policy Name", "Description", "ID", "Template ID"))
         click.echo("-" * 150)
 
         for policy in tio.policies.list():
-            click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['description']),
+            click.echo("{:40s} {:51s} {:10} {}".format(str(policy['name']), str(policy['description']), str(policy['id']),
                                                  policy['template_uuid']))
         click.echo()
     except AttributeError:
