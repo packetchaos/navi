@@ -7,7 +7,9 @@ from sqlite3 import Error
 import json
 
 
-def tag_by_tag(c, v, d, cv, cc):
+def tag_by_tag(c, v, d, cv, cc, match):
+    # BUG: Does not check to see if rule exists right now.
+
     tag_uuid = 0
     # Start a blank rules list to store current a new tag rule.
     rules_list = []
@@ -28,7 +30,6 @@ def tag_by_tag(c, v, d, cv, cc):
             click.echo("Your tag is being updated\n")
 
             try:
-                rules_list.append({"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)})
                 # Need to grab the Tag UUID of our Parent Tag so we can get more details
                 tag_data = request_data('GET', '/tags/values')
                 for value in tag_data['values']:
@@ -36,23 +37,29 @@ def tag_by_tag(c, v, d, cv, cc):
                         if value['value'] == str(v):
                             try:
                                 tag_uuid = value['uuid']
+
                                 # Get filter details
-                                tag_sepcs = request_data("GET", "/tags/values/" + tag_uuid)
+                                current_rule_set = request_data("GET", "/tags/values/" + tag_uuid)
 
                                 # The filter is a string in the API, pull out the dictionary representation and
-                                # Turn the string into a dictionary
-                                filter_string = tag_sepcs['filters']['asset']
-                                newstring = json.loads(filter_string)
+                                filter_string = current_rule_set['filters']['asset']
 
-                                # Go through each filter and add it to the rules list for re-application
-                                for filters in newstring["and"]:
-                                    # To prevent or correct duplicates
-                                    if filters not in rules_list:
-                                        rules_list.append(filters)
+                                # Turn the string into a dictionary
+                                rule_set_dict = eval(filter_string)
+
+                                # Identify 'or' vs 'and' and set the current filter list to our 'rule_list'
+                                try:
+                                    rules_list = rule_set_dict['and']
+                                    match = 'and'
+                                except KeyError:
+                                    rules_list = rule_set_dict['or']
+                                    match = 'or'
+
+                                rules_list.append({"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)})
                             except Exception as F:
                                 click.echo(F)
 
-                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {"or": rules_list}}}
+                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {str(match): rules_list}}}
                 # Update the Parent Tag with the new child tag information
                 data = request_data('PUT', '/tags/values/' + tag_uuid, payload=payload)
 
@@ -74,7 +81,7 @@ def tag_by_tag(c, v, d, cv, cc):
             # if the child tag does exist, then create the new tag with the existing tag as a child
             try:
                 payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                           {"asset": {"or": [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
+                           {"asset": {str(match): [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
 
                 value_uuid = data["uuid"]
@@ -86,7 +93,7 @@ def tag_by_tag(c, v, d, cv, cc):
             except Exception as F:
                 click.echo(F)
         else:
-            click.echo("Your Child Tag doesn't exist.")
+            click.echo("Your Child Tag doesn't exist.\n You need to create a Child tag before adding it to a parent")
 
 
 def tag_by_ip(ip_list, tag_list, c, v, d):
@@ -224,7 +231,8 @@ def create_uuid_list(filename):
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 @click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe):
+@click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -401,7 +409,12 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_ip(ip_list, tag_list, c, v, d)
 
     if cv != '' and cc != '':
-        tag_by_tag(c, v, d, cv, cc)
+        if all:
+            match = 'and'
+            tag_by_tag(c, v, d, cv, cc, match)
+        else:
+            match = 'or'
+            tag_by_tag(c, v, d, cv, cc, match)
 
     if scanid:
         tag_list = []
