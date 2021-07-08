@@ -1,6 +1,6 @@
 import click
 import csv
-from .database import new_db_connection
+from .database import new_db_connection, db_query
 from .api_wrapper import request_data, request_no_response, tenb_connection
 from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid
 from sqlite3 import Error
@@ -319,35 +319,33 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
-        tags_by_commas = ''
         from uuid import UUID
-        ip_update = 1
-        click.echo("\nDue to a API bug, I'm going to delete the current tag. You may get a 404 error if this is a new tag.")
-        # Updating tags is only allowed via tenable ID(UUID); However you can't grab the UUID from the Agent URI
-        # Need to research a better solution for this problem.  Need to submit a bug.  Going to just delete the tag for now.
-        uuid_to_delete = return_tag_uuid(c, v)
-        request_no_response('DELETE', '/tags/values/' + str(uuid_to_delete))
-        try:
-            querystring = {"limit": "5000"}
-            group_data = request_data('GET', '/scanners/1/agent-groups')
-            for agent_group in group_data['groups']:
-                group_name = agent_group['name']
-                group_id = agent_group['id']
 
-                if group_name == group:
-                    data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
-                    ip_list = ''
-                    for agent in data['agents']:
-                        ip_address = agent['ip']
-                        uuid = agent['uuid']
-                        new_uuid = UUID(uuid).hex
-                        ip_list = ip_list + "," + ip_address
-                        tags_by_commas = tags_by_commas + "," + new_uuid
-                        tag_list.append(new_uuid)
+        try:
+            offset = 0
+            total = 0
+            while offset <= total:
+                querystring = {"limit": "5000", "offset": offset}
+                group_data = request_data('GET', '/scanners/1/agent-groups')
+
+                for agent_group in group_data['groups']:
+                    group_name = agent_group['name']
+                    group_id = agent_group['id']
+
+                    # Match on Given Name
+                    if group_name == group:
+                        agent_data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
+                        total = agent_data['pagination']['total']
+
+                        for agent in agent_data['agents']:
+                            new_uuid = UUID(agent['uuid']).hex
+                            tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(new_uuid))
+                            tag_list.append(tag_uuid[0][0])
+                offset = offset + 5000
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
 
-        tag_by_tenable_uuid(tags_by_commas, c, v, d)
+        tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
         database = r"navi.db"
