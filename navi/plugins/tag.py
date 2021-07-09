@@ -194,14 +194,14 @@ def tag_by_uuid(tag_list, c, v, d):
                     click.echo(E)
 
 
-def download_csv_by_plugin_id(scan_id):
+def download_csv_by_plugin_id(scan_id, hist_id):
     filename = f'{scan_id}-report.csv'
     tio = tenb_connection()
 
     # Stream the report to disk
     with open(filename, 'wb') as fobj:
         tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
-                         format='csv', fobj=fobj)
+                         format='csv', fobj=fobj, history_id=hist_id)
     return filename
 
 
@@ -418,29 +418,70 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_list = []
         try:
             scandata = request_data('GET', '/scans/' + str(scanid))
-            try:
-                for host in scandata['hosts']:
-                    tag_list.append(host['uuid'])
 
-                if len(tag_list) >= 4999:
+            status = scandata['history'][0]['status']
 
-                    click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
-                    click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
-                    filename = download_csv_by_plugin_id(scanid)
+            if status == 'completed':
+                try:
+                    for host in scandata['hosts']:
+                        tag_list.append(host['uuid'])
+
+                    # This method is to get around the 5000 row return limit in IO.
+                    if len(tag_list) >= 4999:
+
+                        click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
+                        click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
+                        hist_id = scandata['history'][0]['history_id']
+                        filename = download_csv_by_plugin_id(scanid, hist_id)
+                        tag_list = create_uuid_list(filename)
+                        tag_by_uuid(tag_list, c, v, d)
+
+                        import os
+                        os.remove(filename)
+                    else:
+                        # Scans under 5000 would just use the current tag_list
+                        tag_by_uuid(tag_list, c, v, d)
+                except TypeError:
+                    click.echo("Check the scan ID")
+                except KeyError:
+                    click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
+            else:
+                # cycle trough history until you reach completed
+                hist = 1
+                new_scan_data = None
+                new_hist = 0
+
+                # if you got here the first scan has not completed
+                while status != 'completed':
+                    # call the scan history again to check the next Status
+                    # continue to do so until one says completed
+                    new_scan_data = request_data('GET', '/scans/' + str(scanid))
+                    status = new_scan_data['history'][hist]['status']
+
+                    # Grab the history of the completed asset
+                    new_hist = new_scan_data['history'][hist]['history_id']
+
+                    # To limit the amount of called to a minimum
+                    # Use a while loop and increase the history ID by 1 until completed is found
+                    hist = hist + 1
+
+                try:
+                    # To reduce API calls lets just download the csv
+                    filename = download_csv_by_plugin_id(scanid, new_hist)
                     tag_list = create_uuid_list(filename)
                     tag_by_uuid(tag_list, c, v, d)
 
                     import os
                     os.remove(filename)
-                else:
-                    tag_by_uuid(tag_list, c, v, d)
-            except TypeError:
-                click.echo("Check the scan ID")
-            except KeyError:
-                click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
 
+                except TypeError:
+                    click.echo("Check the scan ID")
+                except KeyError:
+                    click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
+
+        except IndexError:
+            click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
-
     if pipe:
         tag_by_uuid(eval(pipe), c, v, d)
