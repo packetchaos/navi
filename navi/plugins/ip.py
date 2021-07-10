@@ -107,8 +107,10 @@ def cves_by_uuid(uuid):
 @click.option('-vulns', is_flag=True, help="Display all vulnerabilities and their plugin IDs")
 @click.option('-info', is_flag=True, help="Display all info plugins and their IDs")
 @click.option('-cves', is_flag=True, help="Display all cves found on the asset")
+@click.option('-compliance', is_flag=True, help="Display all Compliance info for a given asset UUID")
 @click.pass_context
-def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns, info, cves):
+def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns,
+       info, cves, compliance):
     tio = tenb_connection()
 
     if d:
@@ -531,3 +533,24 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if plugin != '':
         plugin_by_ip(ipaddr, plugin)
+
+    if compliance:
+        if len(ipaddr) > 16:
+            compliance_data = db_query("SELECT check_name, status, audit_file from compliance where asset_uuid='{}';".format(ipaddr))
+            click.echo("{:84} {:8} {}".format("Check Name", "Status", "Audit File"))
+            click.echo("-" * 150)
+            for finding in compliance_data:
+                check_name = finding[0]
+                status = finding[1]
+                audit_file = finding[2]
+                click.echo("{:85} {:8} {}".format(textwrap.shorten(check_name, width=80), status,
+                                                   textwrap.shorten(audit_file, width=60)))
+        else:
+            click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\n")
+            uuid_data = db_query("SELECT uuid, fqdn from assets where ip_address='{}';".format(ipaddr))
+
+            click.echo("{:45}{}".format("UUID", "FQDN"))
+            click.echo("-" * 150)
+            for address in uuid_data:
+                click.echo("{:45}{}".format(address[0], address[1]))
+            click.echo()

@@ -135,4 +135,5 @@ def create_compliance_table():
                             solution text,
                             status text 
                             );"""
+
     create_table(compliance_conn, create_compliance)

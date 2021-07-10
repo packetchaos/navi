@@ -158,7 +158,7 @@ def assets(tag):
     else:
         try:
             click.echo("\nBelow are the assets found in the last 30 days")
-            click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "Sources"))
+            click.echo("\n{:16} {:65} {:40} {:6} {}".format("IP Address", "FQDN", "UUID", "AES", "Sources"))
             click.echo("-" * 150)
 
             count = 0
@@ -170,6 +170,10 @@ def assets(tag):
                 except KeyError:
                     exposure_score = "- -"
 
+                try:
+                    uuid = asset["id"]
+                except IndexError:
+                    uuid = " - - - - - - - "
                 try:
                     fqdn = asset["fqdn"][0]
                 except IndexError:
@@ -183,7 +187,7 @@ def assets(tag):
                 for source in asset["sources"]:
                     sources += ", {}".format(str(source['name']))
 
-                click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, sources[1:]))
+                click.echo("{:16} {:65} {:40} {:6} {}".format(ipv4, fqdn, uuid, exposure_score, sources[1:]))
 
             click.echo("\nTotal: {}".format(count))
         except AttributeError:
@@ -620,3 +624,22 @@ def templates(policy, scan):
             click.echo("\nCheck your permissions or your API keys\n")
     else:
         click.echo("\nYou must use '-scan' or '-policy'")
+
+
+@display.command(help="List Completed Audit files")
+def audits():
+    compliance_data = db_query("SELECT audit_file from compliance;")
+    compliance_list = []
+
+    for audit in compliance_data:
+        if audit not in compliance_list:
+            compliance_list.append(audit)
+
+    click.echo("\nCompleted Audits")
+    click.echo("-" * 80)
+    click.echo()
+
+    for name in compliance_list:
+        click.echo(name[0])
+
+    click.echo()

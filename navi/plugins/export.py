@@ -13,6 +13,7 @@ from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
 from .lumin_quick_export import lumin_quick_export
 from .user_export import user_export
+from .compliance_export_csv import compliance_export_csv
 
 
 @click.group(help="Export Tenable.io Data")
@@ -120,7 +121,13 @@ def was():
     was_export()
 
 
-@export.command(help="Export User and Role information to a CSV")
+@export.command(help="Export User and Role information into a CSV")
 def users():
     click.echo("\nExporting User Data now. Saving user-summary.csv now...\n")
     user_export()
+
+
+@export.command(help="Export Compliance information into a CSV")
+def compliance():
+    click.echo("\nExporting All of your Compliance data into a CSV\n")
+    compliance_export_csv()
