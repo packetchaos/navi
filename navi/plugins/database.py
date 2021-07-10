@@ -66,6 +66,14 @@ def insert_update_info(conn, diff):
     cur.execute(sql, diff)
 
 
+def insert_compliance(conn, compliance):
+    sql = '''INSERT or IGNORE into compliance(asset_uuid, actual_value, audit_file, check_id, check_info, check_name, 
+                    expected_value, first_seen, last_seen, plugin_id, reference, see_also, solution, status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mod=wal;')
+    cur.execute(sql, compliance)
+
+
 def insert_assets(conn, assets):
     sql = '''INSERT or IGNORE into assets(ip_address, hostname, fqdn, uuid, first_found, last_found, operating_system,
                        mac_address, agent_uuid, last_licensed_scan_date, network, acr, aes, aws_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''

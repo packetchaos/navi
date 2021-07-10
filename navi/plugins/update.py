@@ -1,11 +1,8 @@
 import click
-import time
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
 from .was_data_export import grab_scans
-from .dbconfig import new_db_connection, create_assets_table, create_vulns_table, create_tag_table
-from .database import drop_tables, create_table, db_query
-from sqlite3 import Error
+from .th_compliance_export import compliance_export
 
 
 def threads_check(threads):
@@ -65,3 +62,17 @@ def vulns(threads, days, exid):
 @update.command(help="Update the Was Data")
 def was():
     grab_scans()
+
+
+@update.command(help="Update the Compliance data")
+@click.option('--days', default='30', help="Limit the download to X # of days")
+@click.option('--exid', default='0', help="Download using a specified Export ID")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+def compliance(threads, days, exid):
+    if threads:
+        threads_check(threads)
+
+    if exid == ' ':
+        exid = '0'
+
+    compliance_export(days, exid, threads)

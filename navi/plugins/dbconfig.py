@@ -114,3 +114,25 @@ def create_apps_table():
     app_conn.execute('pragma journal_mode=wal;')
 
     create_table(app_conn, create_apps)
+
+
+def create_compliance_table():
+    database = r"navi.db"
+    compliance_conn = new_db_connection(database)
+    create_compliance = """CREATE TABLE IF NOT EXISTS compliance (
+                            asset_uuid text,
+                            actual_value text,
+                            audit_file text,
+                            check_id text,
+                            check_info text,
+                            check_name text,
+                            expected_value text,
+                            first_seen text,
+                            last_seen text,
+                            plugin_id text,
+                            reference text,
+                            see_also text,
+                            solution text,
+                            status text 
+                            );"""
+    create_table(compliance_conn, create_compliance)
