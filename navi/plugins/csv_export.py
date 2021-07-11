@@ -10,7 +10,9 @@ def csv_export():
 
         # Create our headers - We will Add these two our list in order
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
-                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", "Network ID", "ACR Score", "AES Score", "AWS ID"]
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", "Network ID", "ACR Score", "AES Score",
+                       "AWS ID"]
+
         cur = conn.cursor()
         try:
             cur.execute("SELECT * from assets;")

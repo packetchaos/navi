@@ -128,6 +128,9 @@ def users():
 
 
 @export.command(help="Export Compliance information into a CSV")
-def compliance():
-    click.echo("\nExporting All of your Compliance data into a CSV\n")
-    compliance_export_csv()
+@click.option('--name', default=None, help="Exact name of the Audit file to be exported.  Use 'navi display audits' to "
+                                           "get the right name")
+@click.option('--uuid', default=None, help="UUID of the Asset for your export")
+def compliance(name, uuid):
+    click.echo("\nExporting your requested Compliance data into a CSV\n")
+    compliance_export_csv(name, uuid)
