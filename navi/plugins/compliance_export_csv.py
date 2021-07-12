@@ -10,8 +10,13 @@ def compliance_export_csv(name, uuid):
     conn = new_db_connection(database)
     with conn:
         cur = conn.cursor()
+        # Since the Compliance export doesn't have the FQDN of the asset, pull it from the asset table
         try:
-            if name:
+            if name and uuid:
+                cur.execute("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
+                            "assets.uuid = compliance.asset_uuid "
+                            "where compliance.audit_file='{}' and compliance.asset_uuid='{}';".format(name, uuid))
+            elif name:
                 cur.execute("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
                             "assets.uuid = compliance.asset_uuid "
                             "where audit_file='{}';".format(name))

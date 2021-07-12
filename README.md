@@ -21,6 +21,7 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  your all of the available data.  Tenable.io has a 5000 record limit so Navi utilizes the Export API.
  
  The data will not be updated until you run the update command.  Keep this in mind when adding elements to Tenable.io like Tags.
+ Compliance data will need to be downloaded seperately as it is not apart of the update full process.
  
     navi update full
     
@@ -29,6 +30,10 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
     navi update assets
     
     navi update vulns
+    
+    navi update compliance
+    
+    navi update was
  
  Furthermore, you can limit how much data is downloaded by using the --days command
  
@@ -41,7 +46,7 @@ All Vulns and All Assets are downloaded into a SQLLITE database named navi.db in
  You can also control the amount of threads used for downlaods (1-10)
  The Default thread value is 10.
  
-    navi update vulns --threads 4
+    navi update compliance --threads 4
 
 # Common Issues
 
@@ -79,7 +84,7 @@ Navi 6.3.0 was recently tested on a container with 250,000 assets and 41 million
 It took 30 mins for t.io to prepare the download and 30 mins to download and parse the data
  into navi.db which ended up being 31GB.  Plugin queries took 2secs where looking for text in an output took 2mins.
 
- 6.2.3 improves query performance by a factor of 10 with the below changes.
+ 6.2.3 and later improves query performance by a factor of 10 with the below changes.
  * Three indexes where added to reduce vuln query time
  * Exports were reduced to 50 from 500 assets to increase download time
  * Synchronous was turned off to speed up downloads
@@ -190,6 +195,8 @@ There are 25 core commands:
     navi api /workbenches/assets
   
 ## IP address queries - 'ip'
+NOTE: 6.4.14 and later support using a UUID instead of an IP.
+
 The majority of the options in the ip command are using the plugin output.
 This is the fastest way to get access to the most important data in
     vulnerability management and/or remediation activities.
@@ -225,6 +232,7 @@ discover asset related information very quickly.
   * -vulns -->        Display all vulnerabilities and their plugin IDs
   * -info -->         Display all info plugins and their IDs
   * -cves -->         Display all cves found on the asset
+  * -compliance -->   Display all compliance findings for a given UUID
 
 ### ip - Examples
 
@@ -232,7 +240,9 @@ discover asset related information very quickly.
 
     navi ip 192.168.1.1 -details -software
     
-    navi ip 192.168.1.1 -vulns
+    navi ip 1a955d70-468e-4667-b558-e7559c5cec54 -vulns
+    
+    navi ip 1a955d70-468e-4667-b558-e7559c5cec54 -compliance
 
 ## Find information - 'find'
 
@@ -293,6 +303,7 @@ if you added a user, is the user enabled?
   * scans       -->          List all Scans
   * nnm       -->       Nessus Network Monitor assets and their vulnerability scores
   * assets    -->       Assets found in the last 30 days
+    * --tag -->         Display assets for a given Tag; Using the Tag Value UUID
   * policies   -->      Scan Policies
   * connectors   -->    Displays information about the Connectors
   * agroup     -->      Displays information about Access Groups
@@ -308,6 +319,9 @@ if you added a user, is the user enabled?
   * version     -->          Displays Current Navi Version
   * usergroup    -->         Display current user groups
     * --membership TEXT -->  Display user of a certain group using the Group ID
+  * audits  -->         Display Completed Audits
+    * --name TEXT --> Display assets with compliance results for a given Audit file name
+    * --uuid TEXT --> Display all compliance findings for the given UUID
   
 ### Examples
     navi display scanners
@@ -317,6 +331,12 @@ if you added a user, is the user enabled?
     navi display nnm
     
     navi display usergroup --membership 192939
+    
+    navi display audits --name CIS_CentOS_7_Server_L1_v3.0.0.audit --uuid 1a955d70-468e-4667-b558-e7559c5cec54
+    
+    navi display audits
+    
+    navi display audits --uuid 1a955d70-468e-4667-b558-e7559c5cec54
 
 ### Add assets manually or via a CSV file - 'add'
 To add an asset you need an IP address; Everything else is optional.
@@ -404,6 +424,9 @@ This tagging functionality and use cases are beyond the scope of this documentat
     navi tag --c "Agent Group" --v "Linux Agents" --group "Linux"
 
     navi tag --c "Corp Agents" --v "Agent Groups" --cc "Agent Group" --cv "Linux Agents"
+    
+    navi tag --c "Business Unit A" --v "Daily Scan - Prod" --scanid 1234
+
 
 ### Note on Tagging assets
 If you created a new Tag you will need to run an update on the assets to download the new Tag relationships.
@@ -411,14 +434,8 @@ This is especially important if you want to export using your newly created tag.
 
     navi update assets
 
-### Note on Tagging using Agent Groups
-The Agent group APIs are currently limited to 500 agents.  This is because Agents do not become "assets" until they are scanned in T.io and therefore do not get an asset UUID.  
-The Asset UUID is used to bulk Tag assets and with it's absence I chose to utilize the only unique identifier given, the Tenable UUID.  While I can pull 5000 agents from this endpoint  
-creating a Tag Rule is limited to 500 rules.  Since Taggging Agents by Group requires a Tenable Tag rule, it effectively limits this feature to 500 Agents for each Group.
-
-### Tagging Agents Workaround
-There is a recently work around created in 6.2.3 to tag all agents in a Agent Group; using the Tag by Scan-ID function.  It will require you to retrieve the "Scan ID" for all Agent scans.
-You can acheive this by using the "navi display scans" command.
+### Note on Tagging
+There were a few limitations to tagging in releases prior to 6.4.14.  All known tagging limitations have been removed
 
 
 ### Migrate - Migrate AWS tags to Tenable.io
@@ -554,6 +571,9 @@ assets, it makes since to use these groupings to apply Asset criticality.
      * --ec TEXT  Exclude tag from export with Tag Category; requires --ev
      * --ev TEXT  Exclude tag from export with Tag Value; requires --ec
    * users --> Export User information
+   * compliance --> Export Compliance information into a CSV
+     * --name TEXT --> Export Compliance data by the Audit file name.  Use navi display audits to get the exact name
+     * --uuid TEXT --> Export All compliance data for a given UUID.  Use navi display assets to get an asset uuid
    
 ### export examples
 
@@ -562,6 +582,14 @@ assets, it makes since to use these groupings to apply Asset criticality.
     navi export agents 
     
     navi export network 00000000-0000-0000-0000-000000000000
+    
+    navi export compliance
+    
+    navi export compliance --uuid 1a955d70-468e-4667-b558-e7559c5cec54
+    
+    navi export compliance --name CIS_CentOS_7_Server_L1_v3.0.0.audit
+    
+    navi export compliance --name CIS_CentOS_7_Server_L1_v3.0.0.audit --uuid 1a955d70-468e-4667-b558-e7559c5cec54
 
 Export into a CSV, but include the ACR and AES of each asset.  This takes a bit of time.
     
