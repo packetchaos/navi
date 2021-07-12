@@ -5,9 +5,9 @@ There is no correction on SQL syntax so you will need to be precise with
 your queries.
 
 
-    navi find --query "<your query>"
+    navi find query "<your query>"
     
-    navi export --query "<your query>"
+    navi export query "<your query>"
 
 ## Navi Tables
 Vulns table - 'vulns'
@@ -45,38 +45,83 @@ Assets Table - 'assets'
     last_licensed_scan_date text
     network text
 
+Tags Table - 'tags'
+
+    tag_id integer PRIMARY KEY,
+    asset_uuid text,
+    asset_ip,
+    tag_key text,
+    tag_uuid text,
+    tag_value text,
+    tag_added_date text
+
+Compliance Table - 'compliance'
+
+    asset_uuid text
+    actual_value text
+    audit_file text
+    check_id text
+    check_info text
+    check_name text
+    expected_value text
+    first_seen text
+    last_seen text
+    plugin_id text
+    reference text
+    see_also text
+    solution text
+    status text  
+
+Was Table - 'apps'
+
+    name text
+    uuid text PRIMARY KEY 
+    target text
+    scan_completed_time text
+    pages_audited text
+    pages_crawled text
+    requests_made text 
+    critical_count text
+    high_count text
+    medium_count text
+    low_count text 
+    info_count text
+    owasp text
+    tech_list text
+    config_id text
+
 ## Navi --query Examples
 
    
 ### Give me everything in the asset table
 Find Command
 
-    navi find --query "select * from assets;"
+    navi find query "select * from assets;"
 
 Export Command
 
-    navi export --query "select * from assets;"
+    navi export query "select * from assets;"
     
 ### Give me everything in the vulns table
 Find Command
 
-    navi find --query "select * from vulns;"
+    navi find query "select * from vulns;"
 
 Export Command
 
-    navi export --query "select * from vulns;"
+    navi export query "select * from vulns;"
  
 ### IP, mac, fqdn by plugin ID 19506
 Use the find command first
 
-    navi find --query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi find query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506';"
 
 Then you can export.  The columns will follow the order of your select statement
 
-    navi export --query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi export query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506';"
@@ -84,7 +129,7 @@ Then you can export.  The columns will follow the order of your select statement
 ### IP, mac, fqdn by plugin ID 19506 but not 11219
 Find command
 
-    navi find --query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi find query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506' 
@@ -92,11 +137,20 @@ Find command
 
 Export command
 
-    navi export --query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi export query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506' 
     AND NOT vulns.plugin_id='11219';"
+
+
+### Export FQDN and ALl compliance information for a given UUID
+
+    navi export query "SELECT assets.fqdn, compliance.* 
+    FROM compliance 
+    LEFT OUTER JOIN assets 
+    ON assets.uuid = compliance.asset_uuid 
+    where asset_uuid='<uuid>';"
 
 ### Count Vulns or Assets using SQL
 Asset Total
