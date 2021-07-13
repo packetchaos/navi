@@ -192,20 +192,21 @@ def scantime(minute):
             # grab the number for our minute calculation
             final_number = number[0]
 
-            # convert seconds into minutes
-            minutes = int(final_number) / 60
+            if final_number != 'unknown':
+                # convert seconds into minutes
+                minutes = int(final_number) / 60
 
-            # grab assets that match the criteria
-            if minutes > int(minute):
-                try:
-                    click.echo("{:16s} {:40s} {:25s} {:25s} {}".format(str(vulns[0]), str(vulns[1]),
-                                                                       str(vulns[2]), str(vulns[3]),
-                                                                       str(vulns[4])))
-                except ValueError:
-                    pass
+                # grab assets that match the criteria
+                if minutes > int(minute):
+                    try:
+                        click.echo("{:16s} {:40s} {:25s} {:25s} {}".format(str(vulns[0]), str(vulns[1]),
+                                                                           str(vulns[2]), str(vulns[3]),
+                                                                           str(vulns[4])))
+                    except ValueError:
+                        pass
         click.echo()
-    except ValueError:
-        pass
+    except Exception as E:
+        print(E)
 
 
 @find.command(help="Find Assets that have not been scanned in any Cloud")
@@ -297,15 +298,6 @@ def query(statement, pipe):
         click.echo(data_list)
     else:
         pprint.pprint(data)
-
-
-@find.command(help="Testing")
-@click.argument('standard')
-def testing(standard):
-    new_list = list(standard.split(","))
-
-    for item in new_list:
-        print(item)
 
 
 @find.command(help="Find Assets where a plugin fired with TEXT found in a plugin name")
