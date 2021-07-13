@@ -118,11 +118,6 @@ def scan_hosts(scan_id):
         error_msg(E)
 
 
-def get_plugin_family(plugin_id):
-    # return the plugin family for a given plugin
-    return tio.plugins.plugin_details(plugin_id)['family_name']
-
-
 @click.group(help="Create and Control Scans")
 def scan():
     pass
@@ -188,14 +183,13 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
             exit()
 
     if plugin != '':
-        family = get_plugin_family(plugin)
         advanced_template = 'ad629e16-03b6-8c1d-cef6-ef8c9dd3c658d24bd260ef5f9e66'
 
         # Change template
         payload["uuid"] = advanced_template
 
         # Add plugins to dictionary
-        payload["plugins"] = {family: {"individual": {plugin: "enabled"}}}
+        payload["enabled_plugins"] = [plugin]
 
     # create a new scan
     data = request_data('POST', '/scans', payload=payload)
