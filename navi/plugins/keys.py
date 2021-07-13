@@ -1,8 +1,7 @@
 import click
 import getpass
 from .database import new_db_connection
-from .dbconfig import create_keys_table, create_diff_table, create_assets_table, create_vulns_table, create_sc_keys, \
-    create_compliance_table
+from .dbconfig import create_keys_table, create_diff_table, create_assets_table, create_vulns_table, create_compliance_table
 
 
 @click.command(help="Enter or Reset your Keys")
@@ -11,7 +10,6 @@ from .dbconfig import create_keys_table, create_diff_table, create_assets_table,
 @click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
 def keys(clear, access_key, secret_key):
     # create all Tables when keys are added.
-    create_sc_keys()
     create_keys_table()
     create_diff_table()
     create_vulns_table()
