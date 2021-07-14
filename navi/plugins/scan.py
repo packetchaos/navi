@@ -4,6 +4,7 @@ import time
 from .scanners import nessus_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
+import os
 
 tio = tenb_connection()
 
@@ -331,7 +332,6 @@ def latest():
 @click.option('--scanid', default=None, help="Limit the Download to one scan ID")
 def move(a, s, limit, scanid):
     from tenable.io import TenableIO
-    import os
     # Source Container Keys
     src = tenb_connection()
 
@@ -346,7 +346,7 @@ def move(a, s, limit, scanid):
         return move_scan_list
 
     def get_history(move_scan_id):
-        move_limit = 1
+        move_limit = 0
         move_history_list = []
 
         for scan_instance in src.scans.history(scan_id=move_scan_id):
@@ -365,13 +365,13 @@ def move(a, s, limit, scanid):
 
             # pull the last X(limit) scan jobs
             history_list = get_history(history_ids)
-            print("Here is the history for {}:\n {}\n".format(history_ids, history_list))
+            click.echo("Here is the history for {}:\n {}\n".format(history_ids, history_list))
 
             # iterate over each scan history
             for move_scans in history_list:
                 scan_name = "{}_{}".format(history_ids, move_scans)
 
-                print("Exporting Scan ID:{}, with history_id: {} now\n".format(history_ids, move_scans))
+                click.echo("Exporting Scan ID:{}, with history_id: {} now\n".format(history_ids, move_scans))
 
                 # export the scan
                 with open('{}.nessus'.format(str(scan_name)), 'wb') as nessus:
@@ -379,7 +379,7 @@ def move(a, s, limit, scanid):
 
                 nessus.close()
 
-                print("Importing Scan ID: {}, with history_id: {} now\n".format(history_ids, move_scans))
+                click.echo("Importing Scan ID: {}, with history_id: {} now\n".format(history_ids, move_scans))
 
                 # import the scan
                 with open('{}.nessus'.format(str(scan_name)), 'rb') as file:
@@ -395,6 +395,36 @@ def move(a, s, limit, scanid):
     else:
         # Grab all of the 'remote' scans
         scan_list = get_scans()
-        print("Grabbing the list {}\n".format(scan_list))
+        click.echo("Grabbing the list {}\n".format(scan_list))
 
         scan_mover(scan_list)
+
+
+@scan.command(help="Export scans from T.io and Import them into T.sc")
+@click.option('--un', default=None, help="T.sc User Name")
+@click.option('--pw', default=None, help="T.sc password")
+@click.option('--host', default=None, help="T.sc IP Address")
+@click.option('--scanid', default=None, help="Limit the Download to one scan ID")
+@click.option('--repoid', default=None, help="T.sc Repository to import the scan data into")
+def bridge(un, pw, host, scanid, repoid):
+    from tenable.sc import TenableSC
+
+    sc = TenableSC(host)
+    sc.login(un, pw)
+
+    try:
+        click.echo("\nExporting your Scan ID: {} now\n".format(scanid))
+
+        with open('{}.nessus'.format(str(scanid)), 'wb') as nessus:
+            tio.scans.export(scanid, fobj=nessus)
+
+        click.echo("Importing your Scan into Repo {} at https://{}\n".format(repoid, host))
+        with open('{}.nessus'.format(str(scanid))) as file:
+            sc.scan_instances.import_scan(file, repoid)
+
+        # delete the scan
+        os.remove('{}.nessus'.format(str(scanid)))
+    except:
+        pass
+
+    sc.logout()
