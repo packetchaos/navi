@@ -322,3 +322,79 @@ def latest():
         scan_details(str(grab_uuid))
     except Exception as E:
         error_msg(E)
+
+
+@scan.command(help="Move Scans")
+@click.option('--a', default=None, help="T.io Destination Access Key")
+@click.option('--s', default=None, help="T.io Destination Secret Key")
+@click.option('--limit', default=1, help="Limit History download to a number of completed scans; default is 1")
+@click.option('--scanid', default=None, help="Limit the Download to one scan ID")
+def move(a, s, limit, scanid):
+    from tenable.io import TenableIO
+    import os
+    # Source Container Keys
+    src = tenb_connection()
+
+    # Destination Container Keys
+    dst = TenableIO(access_key=a, secret_key=s)
+
+    def get_scans():
+        move_scan_list = []
+        for move_scan in src.scans.list():
+            if move_scan['type'] == 'remote' and move_scan['status'] == 'completed':
+                move_scan_list.append(move_scan['id'])
+        return move_scan_list
+
+    def get_history(move_scan_id):
+        move_limit = 1
+        move_history_list = []
+
+        for scan_instance in src.scans.history(scan_id=move_scan_id):
+
+            # Change the limit to how many scan histories you want to pull.
+            if move_limit == limit:
+                break
+
+            if scan_instance['status'] == "completed":
+                move_limit = move_limit + 1
+                move_history_list.append(scan_instance['id'])
+        return move_history_list
+
+    def scan_mover(scan_mover_list):
+        for history_ids in scan_mover_list:
+
+            # pull the last X(limit) scan jobs
+            history_list = get_history(history_ids)
+            print("Here is the history for {}:\n {}\n".format(history_ids, history_list))
+
+            # iterate over each scan history
+            for move_scans in history_list:
+                scan_name = "{}_{}".format(history_ids, move_scans)
+
+                print("Exporting Scan ID:{}, with history_id: {} now\n".format(history_ids, move_scans))
+
+                # export the scan
+                with open('{}.nessus'.format(str(scan_name)), 'wb') as nessus:
+                    src.scans.export(history_ids, fobj=nessus)
+
+                nessus.close()
+
+                print("Importing Scan ID: {}, with history_id: {} now\n".format(history_ids, move_scans))
+
+                # import the scan
+                with open('{}.nessus'.format(str(scan_name)), 'rb') as file:
+                    dst.scans.import_scan(fobj=file)
+                file.close()
+
+                # delete the scan
+                os.remove('{}.nessus'.format(str(scan_name)))
+
+    if scanid:
+        single_scan =[scanid]
+        scan_mover(single_scan)
+    else:
+        # Grab all of the 'remote' scans
+        scan_list = get_scans()
+        print("Grabbing the list {}\n".format(scan_list))
+
+        scan_mover(scan_list)
