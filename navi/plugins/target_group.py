@@ -80,7 +80,8 @@ def cloud_to_target_group(cloud, days, choice, target_group_name):
 @click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. Requires: aws, gcp, or azure")
 @click.option('-priv', is_flag=True, help="Set the IP(s) to be used as Private")
 @click.option('-pub', is_flag=True, help="Set the IP to be used as Public")
-def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
+@click.option('-migrate', is_flag=True, help="Migrate Target Groups to Tags")
+def tgroup(name, ip, aws, gcp, azure, days, priv, pub, migrate):
     choice = 'PUBLIC'
 
     if priv:
@@ -100,3 +101,25 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub):
 
     if azure:
         cloud_to_target_group("AZURE", days, choice, name)
+
+    if migrate:
+
+        tgroups = request_data('GET', '/target-groups')
+
+        for group in tgroups['target_groups']:
+            member = group['members']
+            name = group['name']
+            group_type = group['type']
+            d = "Imported by Script"
+            try:
+                if name != 'Default':
+                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(member)}]}}}
+                    data = request_data('POST', '/tags/values', payload=payload)
+
+                    value_uuid = data["uuid"]
+                    cat_uuid = data['category_uuid']
+                    print("\nI've created your new Tag - {} : {}\n".format(group_type, name))
+                    print("The Category UUID is : {}\n".format(cat_uuid))
+                    print("The Value UUID is : {}\n".format(value_uuid))
+            except:
+                pass
