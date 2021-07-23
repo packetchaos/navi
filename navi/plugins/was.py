@@ -8,6 +8,7 @@ import csv
 import textwrap
 from .was_detailed_csv import was_detailed_export
 from .was_v2_export import was_export
+from .database import db_query
 
 
 def web_app_scanners():
@@ -380,3 +381,27 @@ def export(d, s):
 
     if not s and not d:
         click.echo("\nYou must specify a selection use -d for Detailed and -s for summary\n")
+
+
+def abort_if_false(ctx, param, value):
+    if not value:
+        ctx.abort()
+
+
+@was.command()
+@click.option("--yes", is_flag=True, callback=abort_if_false, prompt="\nThis function Requires Docker "
+                                                                     "and Launches a Docker container: "
+                                                                     "silentninja/navi:was\n\n Please confirm you wish to "
+                                                                     "launch the docker container.\n\n This will take several"
+                                                                     "minutes\n\n",
+              help="Launch WAS Docker container - silentninja/navi:was")
+def reporter(yes):
+    import os
+    access_key = 0
+    secret_key = 0
+    key_pair = db_query("select * from keys;")
+    for keys in key_pair:
+        access_key = keys[0]
+        secret_key = keys[1]
+
+    os.system("docker run -it -e 'access_key={}' -e 'secret_key={}' -p 5004:5004 silentninja/navi:was".format(access_key, secret_key))
