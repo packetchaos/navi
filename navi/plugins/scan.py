@@ -403,14 +403,21 @@ def move(a, s, limit, scanid):
 @scan.command(help="Export scans from T.io and Import them into T.sc")
 @click.option('--un', default=None, help="T.sc User Name")
 @click.option('--pw', default=None, help="T.sc password")
+@click.option('--a', default=None, help="T.sc Destination Access Key")
+@click.option('--s', default=None, help="T.sc Destination Secret Key")
 @click.option('--host', default=None, help="T.sc IP Address")
 @click.option('--scanid', default=None, help="Limit the Download to one scan ID")
 @click.option('--repoid', default=None, help="T.sc Repository to import the scan data into")
-def bridge(un, pw, host, scanid, repoid):
+def bridge(un, pw, host, scanid, repoid, a, s):
     from tenable.sc import TenableSC
 
     sc = TenableSC(host)
-    sc.login(un, pw)
+
+    if un and pw:
+        sc.login(un, pw)
+
+    if a and s:
+        sc.login(access_key=a, secret_key=s)
 
     try:
         click.echo("\nExporting your Scan ID: {} now\n".format(scanid))
@@ -419,6 +426,7 @@ def bridge(un, pw, host, scanid, repoid):
             tio.scans.export(scanid, fobj=nessus)
 
         click.echo("Importing your Scan into Repo {} at https://{}\n".format(repoid, host))
+
         with open('{}.nessus'.format(str(scanid))) as file:
             sc.scan_instances.import_scan(file, repoid)
 

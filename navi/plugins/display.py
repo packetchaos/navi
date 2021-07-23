@@ -288,15 +288,18 @@ def status():
         click.echo("\nEnabled Apps")
         click.echo("-" * 15)
         click.echo()
-        for key in data["license"]["apps"]:
-            click.echo(key)
-            click.echo("-" * 5)
-            try:
-                click.echo("{} {}".format("Expiration: ", str(data["license"]["apps"][key]["expiration_date"])))
-            except KeyError:
-                pass
-            click.echo("{} {}".format("Mode: ", str(data["license"]["apps"][key]["mode"])))
-            click.echo()
+        try:
+            for key in data["license"]["apps"]:
+                click.echo(key)
+                click.echo("-" * 5)
+                try:
+                    click.echo("{} {}".format("Expiration: ", str(data["license"]["apps"][key]["expiration_date"])))
+                except KeyError:
+                    pass
+                click.echo("{} {}".format("Mode: ", str(data["license"]["apps"][key]["mode"])))
+                click.echo()
+        except KeyError:
+            pass
 
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -338,11 +341,6 @@ def agents():
 @display.command(help="Print Target Groups")
 def tgroups():
     try:
-        print()
-        print("*" * 40)
-        print("Target Groups are going to be retired use the Migration script to covert them to tags")
-        print("https://github.com/packetchaos/tio_automation/blob/master/migrate_target_groups.py")
-        print("*" * 40)
         print("\nTarget Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
         print("-" * 100)
         for targets in tio.target_groups.list():
