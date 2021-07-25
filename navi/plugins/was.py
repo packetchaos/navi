@@ -388,7 +388,7 @@ def abort_if_false(ctx, param, value):
         ctx.abort()
 
 
-@was.command()
+@was.command(help="Launch a Docker Container for WAS Reports using Docker and Flask")
 @click.option("--yes", is_flag=True, callback=abort_if_false, prompt="\nThis function Requires Docker "
                                                                      "and Launches a Docker container: "
                                                                      "silentninja/navi:was\n\n Please confirm you wish to "

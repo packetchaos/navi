@@ -202,7 +202,7 @@ def policies():
 
         for policy in tio.policies.list():
             click.echo("{:40s} {:51s} {:10} {}".format(str(policy['name']), str(policy['description']), str(policy['id']),
-                                                 policy['template_uuid']))
+                                                       policy['template_uuid']))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -499,7 +499,7 @@ def usergroups(membership):
 
             for user_group in tio.groups.list():
                 click.echo("{:35s} {:10s} {:40s} {}".format(str(user_group['name']), str(user_group['id']),
-                                                        str(user_group['uuid']), str(user_group['user_count'])))
+                                                            str(user_group['uuid']), str(user_group['user_count'])))
             click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")

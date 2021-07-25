@@ -24,6 +24,7 @@ from .usergroup import usergroup
 from .target_group import tgroup
 from .cancel import cancel
 from .migrate import migrate
+from .agents import agent
 
 
 def plugin_loader(group):
@@ -53,4 +54,5 @@ def plugin_loader(group):
     group.add_command(tgroup)
     group.add_command(cancel)
     group.add_command(migrate)
+    group.add_command(agent)
 
