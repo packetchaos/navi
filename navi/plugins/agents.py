@@ -23,7 +23,8 @@ def display():
                     groups_string = groups_string + ", {}({})".format(group['name'], group['id'])
             except KeyError:
                 pass
-            click.echo("{:45s} {:15} {:40s} {}".format(textwrap.shorten(str(agent_info['name']), width=45), str(agent_info['id']),
+            click.echo("{:45s} {:15} {:40s} {}".format(textwrap.shorten(str(agent_info['name']), width=45),
+                                                       str(agent_info['id']),
                                                        str(agent_info['uuid']), str(agent_info['status']),
                                                        textwrap.shorten(groups_string[1:], width=60)))
         click.echo()
@@ -37,12 +38,13 @@ def groups(gid):
     if gid:
         group_details = tio.agent_groups.details(gid)
 
-        click.echo("\n{:45s} {:40} {:6}".format("Agent Name", "UUID", "Status"))
+        click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
         click.echo("-" * 150)
 
         for agent_info in group_details['agents']:
-            click.echo("{:45} {:40} {:6}".format(str(agent_info['name']), str(agent_info['uuid']),
-                                                 str(agent_info['status'])))
+            click.echo("{:85s} {:15} {:40s}".format(textwrap.shorten(str(agent_info['name']), width=85),
+                                                    str(agent_info['id']),
+                                                    str(agent_info['uuid']), str(agent_info['status'])))
 
         click.echo()
     else:
