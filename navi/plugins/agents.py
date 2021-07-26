@@ -10,10 +10,10 @@ def agent():
     pass
 
 
-@agent.command()
+@agent.command(help="Display Agent information - Paired with Group IDs")
 def display():
     try:
-        click.echo("\n{:45s} {:40} {:6} {}".format("Agent Name", "Agent ID", "Status", "Group(id)s"))
+        click.echo("\n{:45s} {:15} {:40} {}".format("Agent Name", "Agent ID", "UUID", "Status", "Group(id)s"))
         click.echo("-" * 150)
 
         for agent_info in tio.agents.list():
@@ -23,9 +23,9 @@ def display():
                     groups_string = groups_string + ", {}({})".format(group['name'], group['id'])
             except KeyError:
                 pass
-            click.echo("{:45s} {:40} {:6s} {}".format(str(agent_info['name']), str(agent_info['id']),
-                                                      str(agent_info['status']), textwrap.shorten(groups_string[1:],
-                                                                                                  width=90)))
+            click.echo("{:45s} {:15} {:40s} {}".format(textwrap.shorten(str(agent_info['name']), width=45), str(agent_info['id']),
+                                                       str(agent_info['uuid']), str(agent_info['status']),
+                                                       textwrap.shorten(groups_string[1:], width=60)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
