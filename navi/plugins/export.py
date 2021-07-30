@@ -68,8 +68,9 @@ def network(network_uuid):
 
 @export.command(help='Export assets by query to the vuln db')
 @click.argument('statement')
-def query(statement):
-    query_export(statement)
+@click.option('--file', default="query_data", help="Name of the file excluding 'csv'")
+def query(statement, file):
+    query_export(statement, file)
 
 
 @export.command(help='Export Agents by Group name - API limits 5000 Agents')

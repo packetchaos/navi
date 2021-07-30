@@ -4,7 +4,7 @@ from sqlite3 import Error
 from .database import new_db_connection
 
 
-def query_export(query):
+def query_export(query, name):
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
@@ -16,9 +16,9 @@ def query_export(query):
 
         data = cur.fetchall()
 
-        click.echo("I'm exporting query_data.csv with your requested data")
+        click.echo("I'm exporting {}.csv with your requested data".format(name))
         # Crete a csv file object
-        with open('query_data.csv', mode='w') as csv_file:
+        with open('{}.csv'.format(name), mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
             # Loop through each asset
