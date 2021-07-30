@@ -15,6 +15,11 @@ def query_export(query, name):
             print("\n No data! \n Please run 'navi update' first. OR check your query.\n")
 
         data = cur.fetchall()
+        descripts = cur.description
+        header = []
+
+        for desc in descripts:
+            header.append(desc[0])
 
         click.echo("I'm exporting {}.csv with your requested data".format(name))
 
@@ -22,7 +27,7 @@ def query_export(query, name):
 
         with open('{}.csv'.format(name), mode='w') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-
+            agent_writer.writerow(header)
             # Loop through each asset
             for assets in data:
                 agent_writer.writerow(assets)
