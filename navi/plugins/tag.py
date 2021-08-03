@@ -340,7 +340,12 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                         for agent in agent_data['agents']:
                             new_uuid = UUID(agent['uuid']).hex
                             tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(new_uuid))
-                            tag_list.append(tag_uuid[0][0])
+                            # New agents will not have a corresponding UUID and will throw an error.
+                            # Since they can not be tagged without a UUID, we will silently skip over the agent
+                            try:
+                                tag_list.append(tag_uuid[0][0])
+                            except IndexError:
+                                pass
                 offset = offset + 5000
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
