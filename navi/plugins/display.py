@@ -254,7 +254,8 @@ def agroups():
             except KeyError:
                 rules = "Not Rule Based"
 
-            click.echo("{:25s} {:40s} {:25} {:60s}".format(str(group['name']), str(group['id']), str(updated),
+            click.echo("{:25s} {:40s} {:25} {:60s}".format(textwrap.shorten(str(group['name']), width=25),
+                                                           str(group['id']), str(updated),
                                                            textwrap.shorten(rules, width=60)))
         click.echo()
     except AttributeError:
@@ -384,7 +385,7 @@ def licensed():
 @display.command(help="Print Tag Information")
 def tags():
     try:
-        click.echo("\n{:30s} {:35s} {}".format("Category", "  Value", "  Value UUID"))
+        click.echo("\n{:55s} {:55s} {}".format("Category", "  Value", "  Value UUID"))
         click.echo("-" * 150)
         for tag_values in tio.tags.list():
             try:
@@ -393,7 +394,9 @@ def tags():
             except KeyError:
                 tag_value = "Value Not Set Yet"
                 uuid = "NO Value set"
-            click.echo("{:30s} : {:35s} {}".format(str(tag_values['category_name']), str(tag_value), str(uuid)))
+            click.echo("{:55s} : {:55s} {}".format(textwrap.shorten(str(tag_values['category_name']), width=55),
+                                                   textwrap.shorten(str(tag_value), width=55),
+                                                   str(uuid)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
