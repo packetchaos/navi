@@ -1,17 +1,13 @@
 import click
-from .licensed_export import licensed_export
 from .agent_export import agent_export
 from .consec_export import consec_export
-from .csv_export import csv_export
 from .lumin_export import lumin_export
 from .database import new_db_connection
 from .tag_export import tag_export
 from .tag_helper import tag_checker
-from .network_export import network_export
 from .query_export import query_export
 from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
-from .lumin_quick_export import lumin_quick_export
 from .user_export import user_export
 from .compliance_export_csv import compliance_export_csv
 
@@ -22,9 +18,11 @@ def export():
 
 
 @export.command(help="Export All Asset data in the Navi Database to a CSV")
-def assets():
-    click.echo("\nExporting your data now. Saving asset_data.csv now...\n")
-    csv_export()
+@click.option('--file', default="asset_data", help="Name of the file excluding 'csv'")
+def assets(file):
+    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
+    asset_query = "select * from assets;"
+    query_export(asset_query, file)
 
 
 @export.command(help="Export All Agent data into a CSV")
@@ -40,30 +38,36 @@ def consec():
 
 
 @export.command(help="Export Licensed Assets into a CSV")
-def licensed():
-    click.echo("\nExporting your data now. Saving licensed_data.csv now...\n")
-    licensed_export()
+@click.option('--file', default="licensed_data", help="Name of the file excluding 'csv'")
+def licensed(file):
+    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
+    licensed_query = "SELECT ip_address, fqdn, uuid, last_licensed_scan_date from assets where last_licensed_scan_date != ' ';"
+    query_export(licensed_query, file)
 
 
 @export.command(help="Export all Asset data including ACR and AES into a CSV")
 @click.option("-v", is_flag=True, help="Include ACR Drivers.  This will make a call per asset!")
-def lumin(v):
+@click.option('--file', default="lumin_data", help="Name of the file excluding 'csv'")
+def lumin(v, file):
 
     if v:
         click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
-        click.echo("Saving asset_lumin.csv now...\n")
+        click.echo("Saving {}.csv now...\n".format(file))
         lumin_export()
     else:
         click.echo("\nExporting your data now.")
-        click.echo("Saving asset_lumin.csv now...\n")
-        lumin_quick_export()
+        click.echo("Saving {}.csv now...\n".format(file))
+        asset_query = "select * from assets;"
+        query_export(asset_query, file)
 
 
 @export.command(help="Export All assets of a given network")
 @click.argument('network_uuid')
-def network(network_uuid):
-    click.echo("\nExporting your data now. Saving network_data.csv now...")
-    network_export(network_uuid)
+@click.option('--file', default="network_data", help="Name of the file excluding 'csv'")
+def network(network_uuid, file):
+    click.echo("\nExporting your data now. Saving {}.csv now...".format(file))
+    network_query = "SELECT * from assets where network=='{}';".format(network_uuid)
+    query_export(network_query, file)
 
 
 @export.command(help='Export assets by query to the vuln db')

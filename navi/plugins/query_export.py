@@ -14,10 +14,16 @@ def query_export(query, name):
         except Error:
             print("\n No data! \n Please run 'navi update' first. OR check your query.\n")
 
+        # Grab the Data
         data = cur.fetchall()
+
+        # Grab the Table data
         descripts = cur.description
+
+        # Create Header list
         header = []
 
+        # Pull the row data out to popluate the headers
         for desc in descripts:
             header.append(desc[0])
 
