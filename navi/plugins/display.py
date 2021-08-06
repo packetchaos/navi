@@ -330,9 +330,10 @@ def agents():
                     groups = groups + ", {}({})".format(group['name'], group['id'])
             except KeyError:
                 pass
-            click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(str(agent['name']), str(agent['ip']),
-                                                                     str(last_connect_time), str(last_scanned_time),
-                                                                     str(agent['status']), textwrap.shorten(groups[1:], width=60)))
+            click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']), width=30),
+                                                                     str(agent['ip']), str(last_connect_time),
+                                                                     str(last_scanned_time), str(agent['status']),
+                                                                     textwrap.shorten(groups[1:], width=60)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")

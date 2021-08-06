@@ -10,34 +10,70 @@ def agent():
     pass
 
 
-@agent.command(help="Display Agent information - Paired with Group IDs")
-def display():
+@agent.command(help="Display Agent information - Agent ID/UUID")
+@click.option("--aid", default=None, help="Display Agent information using the Agent ID")
+def display(aid):
     try:
-        click.echo("\n{:45s} {:15} {:40} {}".format("Agent Name", "Agent ID", "UUID", "Status", "Group(id)s"))
-        click.echo("-" * 150)
-
-        for agent_info in tio.agents.list():
-            groups_string = ''
+        if aid:
             try:
-                for group in agent_info['groups']:
-                    groups_string = groups_string + ", {}({})".format(group['name'], group['id'])
-            except KeyError:
-                pass
-            click.echo("{:45s} {:15} {:40s} {}".format(textwrap.shorten(str(agent_info['name']), width=45),
-                                                       str(agent_info['id']),
-                                                       str(agent_info['uuid']), str(agent_info['status']),
-                                                       textwrap.shorten(groups_string[1:], width=60)))
+                agent_details = tio.agents.details(aid)
+
+                click.echo("\nAgent Details")
+                click.echo("-----------------\n")
+                click.echo("Agent Name: {}".format(agent_details['distro']))
+                click.echo("Agent IP: {}".format(agent_details['distro']))
+                click.echo("Agent UUID: {}".format(agent_details['uuid']))
+                click.echo("Network UUID: {}".format(agent_details['network_uuid']))
+                click.echo("Plugin Feed: {}".format(agent_details['plugin_feed_id']))
+
+                click.echo("\nDistribution Information")
+                click.echo("----------------------------\n")
+                click.echo("Platform: {}".format(agent_details['platform']))
+                click.echo("Distribution: {}".format(agent_details['distro']))
+                click.echo("Core Version: {}".format(agent_details['core_version']))
+                click.echo("Core Build: {}".format(agent_details['core_build']))
+
+                click.echo("\nAgent Connection information")
+                click.echo("----------------------------\n")
+                click.echo("Last Connect Time: {}".format(agent_details['last_connect']))
+                click.echo("Last Scan Time: {}".format(agent_details['last_scanned']))
+                click.echo("Restart Pending: {}".format(agent_details['restart_pending']))
+                click.echo("Status: {}".format(agent_details['status']))
+
+                click.echo("\nAgent Groups")
+                click.echo("----------------------------\n")
+                for agent_groups in agent_details['groups']:
+                    click.echo("Group Name({}): {}".format(str(agent_groups['id']), str(agent_groups['name'])))
+            except TypeError:
+                click.echo("\nCommon...really? Focus...You need the Agent ID... Try again\n")
+                exit()
+
+        else:
+            click.echo("\n*** To see Agent Details use: navi agent --aid <agent id> ***\n")
+            click.echo("\n{:45s} {:12} {}".format("Agent Name", "Agent ID", "Group(id)s"))
+            click.echo("-" * 150)
+
+            for agent_info in tio.agents.list():
+                groups_string = ''
+                try:
+                    for group in agent_info['groups']:
+                        groups_string = groups_string + ", {}({})".format(group['name'], group['id'])
+                except KeyError:
+                    pass
+                click.echo("{:45s} {:12} {}".format(textwrap.shorten(str(agent_info['name']), width=45),
+                                                    str(agent_info['id']),
+                                                    textwrap.shorten(groups_string[1:], width=90)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@agent.command(help="Display Agent Groups")
+@agent.command(help="Display Agent Groups and membership information ")
 @click.option("--gid", default=None, help="Display the agents that are members of the group using the group ID")
 def groups(gid):
+
     if gid:
         group_details = tio.agent_groups.details(gid)
-
         click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
         click.echo("-" * 150)
 
@@ -48,7 +84,7 @@ def groups(gid):
 
         click.echo()
     else:
-
+        click.echo("\n*** To see group membership use: navi agent groups --gid <group id> ***\n")
         try:
             click.echo("\n{:45} {:40} {:10}".format("Group Name", "Group UUID", "Group ID"))
             click.echo("-" * 150)
@@ -64,7 +100,7 @@ def groups(gid):
 
 
 @agent.command(help="Create a new Agent Group")
-@click.option("--name", default=None, help="The name of the new Agent Group you want to create")
+@click.option("--name", default=None, required=True, help="The name of the new Agent Group you want to create")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def create(name, scanner):
     group_creation = tio.agent_groups.create(name=name, scanner_id=scanner)
@@ -74,34 +110,27 @@ def create(name, scanner):
 
 
 @agent.command(help="Add an agent to a Group")
-@click.option("--aid", default=None, help="The agent ID of the agent you want to add ")
-@click.option("--gid", default=None, help="The Group ID you want to add the agent(s) to.")
+@click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to add ")
+@click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
 def add(aid, gid):
-    if gid:
-        if aid:
-            # Add agent to Group
-            tio.agent_groups.add_agent(gid, aid)
+    # Add agent to Group
+    tio.agent_groups.add_agent(gid, aid)
 
-            click.echo("\nYour agent has been added to the Group ID: {}".format(gid))
+    click.echo("\nYour agent has been added to the Group ID: {}\n".format(gid))
 
 
 @agent.command(help="Remove an Agent from a Agent Group")
-@click.option("--aid", default=None, help="The agent ID of the agent you want to remove ")
-@click.option("--gid", default=None, help="The Group ID you want to add the agent(s) to.")
+@click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to remove ")
+@click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
 def remove(aid, gid):
-    if gid:
-        if aid:
-            # Remove an agent from a Group
-            tio.agent_groups.delete_agent(gid, aid)
+    # Remove an agent from a Group
+    tio.agent_groups.delete_agent(gid, aid)
 
-            click.echo("\nYour agent has been removed from the Group ID: {}".format(gid))
+    click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
 
 
 @agent.command(help="Unlink an by Agent ID")
-@click.option("--aid", default=None, help="The Agent ID of the agent you want to unlink")
+@click.option("--aid", default=None, required=True, help="The Agent ID of the agent you want to unlink")
 def unlink(aid):
-    if aid:
-        tio.agents.unlink(aid)
-        click.echo("\nYour Agent: {} has been unlinked".format(aid))
-    else:
-        click.echo("You have provide a agent ID")
+    tio.agents.unlink(aid)
+    click.echo("\nYour Agent: {} has been unlinked".format(aid))
