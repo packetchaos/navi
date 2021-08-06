@@ -87,9 +87,9 @@ sys('navi update full >> navi_update.log')
 
 sys('echo Access groups')
 # Use a Tag create an access group - For now, assign owners in the UI.
-sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Jira" --usergroup "Corporate Apps" -scanview >> access_navi.log')
-sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Confluence" --usergroup "Corporate Apps" -scanview >> access_navi.log')
-sys('navi agroup --name "Custom Apps" -tag --c "Custom Apps" --v "New host" --usergroup "Custom Apps" -scanview >> access_navi.log')
+sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Jira" --usergroup "Corporate Apps" --perm "scanview" >> access_navi.log')
+sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Confluence" --usergroup "Corporate Apps" --perm "scanview" >> access_navi.log')
+sys('navi agroup --name "Custom Apps" -tag --c "Custom Apps" --v "New host" --usergroup "Custom Apps" --perm "scanview" >> access_navi.log')
 
 sys('echo Delete then adds troubleshooting Tags')
 # Find Assets that are taking a log time to scan; delete the tag first, so that you always have the latest data for scan issues
