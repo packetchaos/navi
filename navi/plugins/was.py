@@ -393,9 +393,9 @@ def abort_if_false(ctx, param, value):
                                                                      "and Launches a Docker container: "
                                                                      "silentninja/navi:was\n\n Please confirm you wish to "
                                                                      "launch the docker container.\n\n This will take several"
-                                                                     "minutes\n\n",
+                                                                     " minutes\n\n",
               help="Launch WAS Docker container - silentninja/navi:was")
-def reporter():
+def reporter(yes):
     import os
     access_key = 0
     secret_key = 0

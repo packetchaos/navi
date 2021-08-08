@@ -13,12 +13,12 @@ def check_agroup_exists(aname):
     return rvalue
 
 
-@click.command(help="Create an Access group Based on a Tag")
-@click.option('--name', default='', required=True, help="Create an Access group with the following Name")
-@click.option('--c', default='', required=True, help="Category name to use: requires --v and Value Name")
-@click.option('--v', default='', required=True, help="Tag Value to use; requires --c and Category Name")
-@click.option('--user', default='', help="User you want to Assign to the Access Group - username@domain")
-@click.option('--usergroup', default='', help="User Group you want to assign to the Access Group")
+@click.command(help="Create an Access group Based on a Tag using the Category and Value")
+@click.option('--name', default='', required=True, help="Choose a Name for your Access Group.")
+@click.option('--c', default='', required=True, help="Tag Category name to use")
+@click.option('--v', default='', required=True, help="Tag Value to use")
+@click.option('--user', default='', help="The user you want to Assign to the Access Group - username@domain")
+@click.option('--usergroup', default='', help="The User Group you want to assign to the Access Group")
 @click.option('--perm', type=click.Choice(['scan', 'view', 'scanview'], case_sensitive=False), required=True)
 def agroup(name, c, v, user, usergroup, perm):
     permission = []

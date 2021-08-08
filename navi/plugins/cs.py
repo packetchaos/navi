@@ -3,7 +3,7 @@ from .api_wrapper import request_data
 from .error_msg import error_msg
 
 
-@click.group(help="Interact with the Container Security API")
+@click.group(help="Check container Compliance or Get a Container Risk report")
 def cs():
     pass
 

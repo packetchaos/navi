@@ -20,12 +20,12 @@ def find_by_plugin(pid):
     click.echo()
 
 
-@click.group(help="Discover what is in Tenable.io")
+@click.group(help="Discover assets with Open ports, Running containers and more")
 def find():
     pass
 
 
-@find.command(help="Find Assets where a plugin fired")
+@find.command(help="Find Assets where a plugin fired using the plugin ID")
 @click.argument('plugin_id')
 @click.option('--o', default='', help='Find Assets based on the text in the output')
 def plugin(plugin_id, o):
@@ -47,7 +47,7 @@ def plugin(plugin_id, o):
             find_by_plugin(plugin_id)
 
 
-@find.command(help="Find Assets that have a given CVE")
+@find.command(help="Find Assets that have a given CVE iD")
 @click.argument('cve_id')
 def cve(cve_id):
 
@@ -70,7 +70,7 @@ def cve(cve_id):
         click.echo()
 
 
-@find.command(help="Find Assets that have an exploitable vuln")
+@find.command(help="Find Assets that have an exploitable vulnerability")
 def exploit():
 
     click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
@@ -159,7 +159,7 @@ def creds():
     find_by_plugin(104410)
 
 
-@find.command(help="Find Assets where a plugin fired")
+@find.command(help="Find Assets that took longer than a given set of minutes to complete")
 @click.argument('minute')
 def scantime(minute):
 
@@ -285,9 +285,9 @@ def port(open_port):
         pass
 
 
-@find.command(help="Find Assets through a SQL query.")
+@find.command(help="Find Assets using a custom SQL query.")
 @click.argument('statement')
-@click.option('-pipe', is_flag=True, help="Used to pipe results to another query")
+@click.option('-pipe', is_flag=True, help="Used to pipe results to another query: returns a list of UUIDs.")
 def query(statement, pipe):
     data = db_query(statement)
 

@@ -29,7 +29,7 @@ def scan(tid):
     tio.scans.delete(str(tid))
 
 
-@delete.command(help='Delete an access group by UUID')
+@delete.command(help='Delete an access group by access group UUID')
 @click.argument('tid')
 def agroup(tid):
     click.echo("\nI'm deleting your Access Group Now")
@@ -57,7 +57,7 @@ def asset(tid):
     tio.assets.delete(str(tid))
 
 
-@delete.command(help='Delete a container by \'/repository/image/tag\'')
+@delete.command(help='Delete a container by: \'/repository/image/tag\'')
 @click.argument('tid')
 def container(tid):
     click.echo("\nI'm deleting your container")
@@ -78,7 +78,7 @@ def category(tid):
     tio.tags.delete_category(str(tid))
 
 
-@delete.command(help='Delete repository from Container Security')
+@delete.command(help='Delete repository from Container Security by Docker ID')
 @click.argument('tid')
 def repository(tid):
     click.echo("\nI'm Deleting your Repository")

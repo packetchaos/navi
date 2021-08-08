@@ -104,4 +104,3 @@ def disable(uid, account, api, pwd, saml):
         enable_disable_user(uid, "disable")
     else:
         change_auth_settings(uid, payload)
-

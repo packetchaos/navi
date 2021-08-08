@@ -11,17 +11,17 @@ import textwrap
 tio = tenb_connection()
 
 
-@click.group(help="Display or Print information found in Tenable.io")
+@click.group(help="Display information found in Tenable.io")
 def display():
     pass
 
 
-@display.command(help="List all of the scanners")
+@display.command(help="Display all of the scanners")
 def scanners():
     nessus_scanners()
 
 
-@display.command(help="List all of the Users")
+@display.command(help="Display  all of the Users")
 def users():
     try:
         click.echo("\n{:34s} {:40s} {:40s} {:10s} {}".format("User Name", "Login Email", "UUID", "ID", "Enabled"))
@@ -33,7 +33,7 @@ def users():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List all Exclusions")
+@display.command(help="Display all Exclusions")
 def exclusions():
     try:
         for exclusion in tio.exclusions.list():
@@ -45,7 +45,7 @@ def exclusions():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List all containers and their Vulnerability  Scores")
+@display.command(help="Display all containers and their Vulnerability Scores")
 def containers():
     try:
         # Use CS module
@@ -68,7 +68,7 @@ def containers():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List The actor and the action in the log file")
+@display.command(help="Display The actor and the action in the log file")
 def logs():
     try:
         events = tio.audit_log.events()
@@ -84,7 +84,7 @@ def logs():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List the running Scans")
+@display.command(help="Display running Scans")
 def running():
     try:
         click.echo("\n{:60s} {:10s} {:30s}".format("Scan Name", "Scan ID", "Status"))
@@ -99,7 +99,7 @@ def running():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List all Scans")
+@display.command(help="Display all Scans")
 def scans():
     try:
         click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
@@ -113,7 +113,7 @@ def scans():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Nessus Network Monitor assets and their vulnerability scores")
+@display.command(help="Display NNM assets and their vulnerability scores")
 def nnm():
     click.echo("\nChecking all NNM scanners for assets recently found...")
     click.echo("\n{:20} {:10} {}".format("IP Address", "Score", "Scan ID"))
@@ -135,8 +135,9 @@ def nnm():
             pass
 
 
-@display.command(help="Assets found in the last 30 days")
-@click.option("--tag", default='', help="Assets that are apart of a given Tag.  Use Value UUID")
+@display.command(help="Display All Assets found in the last 30 days")
+@click.option("--tag", default='', help="Display Assets membership of a given Tag.  "
+                                        "Use Tag Value UUID found in the command 'navi display tags'")
 def assets(tag):
     if tag:
         data = db_query("select ip_address, fqdn, aes, acr from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(tag))
@@ -194,7 +195,7 @@ def assets(tag):
             click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List Scan Policies")
+@display.command(help="Display Scan Policies")
 def policies():
     try:
         click.echo("\n{:40s} {:51s} {:10} {}".format("Policy Name", "Description", "ID", "Template ID"))
@@ -208,7 +209,7 @@ def policies():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List Connector Details and Status")
+@display.command(help="Display Cloud Connector Details and Status")
 def connectors():
     try:
         resp = tio.get('settings/connectors')
@@ -232,7 +233,7 @@ def connectors():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List Access Groups")
+@display.command(help="Display Access Groups including a rules snippet")
 def agroups():
     rules = "Not Rule Based"
     try:
@@ -262,7 +263,7 @@ def agroups():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print T.io Status and Account info")
+@display.command(help="Display T.io Status and Account info")
 def status():
     try:
         data = tio.server.properties()
@@ -306,7 +307,7 @@ def status():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Agent information")
+@display.command(help="Display Agent information - Limit 5000 agents")
 def agents():
     try:
         click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "Group(id)s"))
@@ -340,7 +341,7 @@ def agents():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Target Groups")
+@display.command(help="Display Target Groups")
 def tgroups():
     try:
         print("\nTarget Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
@@ -353,7 +354,7 @@ def tgroups():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Licensed Assets")
+@display.command(help="Display Licensed Assets")
 def licensed():
     try:
         click.echo("\n{} {}".format("Licensed Count: ", get_licensed()))
@@ -382,7 +383,7 @@ def licensed():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Tag Information")
+@display.command(help="Display Tags Information")
 def tags():
     try:
         click.echo("\n{:55s} {:55s} {}".format("Category", "  Value", "  Value UUID"))
@@ -402,7 +403,7 @@ def tags():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Tag Categories")
+@display.command(help="Display Tag Categories and UUIDs")
 def categories():
     try:
         click.echo("\n{:31s} {}".format("Tag Categories", "Category UUID"))
@@ -416,7 +417,7 @@ def categories():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print SMTP information")
+@display.command(help="Display saved SMTP information")
 def smtp():
     try:
         database = r"navi.db"
@@ -433,7 +434,7 @@ def smtp():
         click.echo("\nYou have no SMTP information saved.\n")
 
 
-@display.command(help="Print Cloud information")
+@display.command(help="Display Assets discovered by the Tenable Cloud Connectors")
 def cloud():
     try:
         click.echo("\n{:13s} {:15s} {:50s} {:40} {}".format("Source", "IP", "FQDN", "UUID", "First seen"))
@@ -464,7 +465,7 @@ def cloud():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Network Information")
+@display.command(help="Display Network Information including scanner counts - Use 'navi network' commands to get asset membership information.")
 def networks():
     try:
         click.echo("\n{:45s} {:16} {}".format("Network Name", "# of Scanners", "UUID"))
@@ -479,13 +480,13 @@ def networks():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Navi Version")
+@display.command(help="Display the current Navi Version")
 def version():
     click.echo("\nCurrent Navi Version: {}\n".format(navi_version()))
 
 
-@display.command(help="Print User group information")
-@click.option('--membership', required=True, default='', help="Display Users that apart of a particular usergroup")
+@display.command(help="Display User group information")
+@click.option('--membership', required=True, default='', help="Display Users that apart of a particular user group using the user group ID")
 def usergroups(membership):
     try:
         if membership:
@@ -509,7 +510,7 @@ def usergroups(membership):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="List All Credentials")
+@display.command(help="Display All Credentials, including Type and Credential UUID")
 def credentials():
     try:
 
@@ -532,7 +533,7 @@ def credentials():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Print Asset and Vulnerability Export Job information")
+@display.command(help="Display Asset and Vulnerability Export Job information")
 @click.option('-a', help="Display Asset Export Jobs", is_flag=True, required=True)
 @click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True, required=True)
 def exports(a, v):
@@ -586,7 +587,7 @@ def exports(a, v):
     click.echo()
 
 
-@display.command(help="Print Auth information for each user")
+@display.command(help="Display Authorization information for each user")
 @click.argument('uid')
 def auth(uid):
     info = request_data("GET", "/users/{}/authorizations".format(uid))
@@ -602,7 +603,7 @@ def auth(uid):
     click.echo()
 
 
-@display.command(help="List Scan Policies")
+@display.command(help="Display Scan Policy Templates")
 @click.option("-policy", is_flag=True, help="Display all Policy Templates")
 @click.option("-scan", is_flag=True, help="Display all Scan Templates")
 def templates(policy, scan):
@@ -628,9 +629,9 @@ def templates(policy, scan):
         click.echo("\nYou must use '-scan' or '-policy'")
 
 
-@display.command(help="List Completed Audit files and Audit information")
-@click.option('--name', default=None, help="List all of the Assets with completed Audits for the Given Audit name")
-@click.option('--uuid', default=None, help="List all compliance findings for a given Asset UUID")
+@display.command(help="Display completed Audit files and Audit information")
+@click.option('--name', default=None, help="Display all of the Assets with completed Audits for the Given Audit name")
+@click.option('--uuid', default=None, help="Display all compliance findings for a given Asset UUID")
 def audits(name, uuid):
 
     if name and uuid:

@@ -4,12 +4,12 @@ from .add_helper import add_helper
 from .api_wrapper import request_data
 
 
-@click.command(help="Manually add an asset to Tenable.io")
-@click.option('--ip', default='', help="IP address(s) of new asset")
-@click.option('--mac', default='', help="Mac Address of new asset")
-@click.option('--netbios', default='', help="NetBios of new asset")
-@click.option('--fqdn', default='', help='FQDN of new asset')
-@click.option('--hostname', default='', help="Hostname of new asset")
+@click.command(help="Add an asset to Tenable.io from another source via commandline or csv file")
+@click.option('--ip', default='', help="IP address of the new asset")
+@click.option('--mac', default='', help="Mac Address of the new asset")
+@click.option('--netbios', default='', help="NetBios of the new asset")
+@click.option('--fqdn', default='', help='FQDN of the new asset')
+@click.option('--hostname', default='', help="Hostname of the new asset")
 @click.option('--file', default='', help="Provide a CSV file in this order: IP, MAC, FQDN, Hostname. Leave fields blank if N/A")
 @click.option('--source', default='navi', help="Provide the source of the information")
 def add(ip, mac, netbios, fqdn, hostname, file, source):
