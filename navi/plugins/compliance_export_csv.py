@@ -50,4 +50,3 @@ def compliance_export_csv(name, uuid):
             # Loop through each asset
             for assets in data:
                 compliance_writer.writerow(assets)
-

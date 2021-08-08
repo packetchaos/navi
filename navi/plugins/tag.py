@@ -1,10 +1,9 @@
 import click
 import csv
 from .database import new_db_connection, db_query
-from .api_wrapper import request_data, request_no_response, tenb_connection
-from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid
+from .api_wrapper import request_data, tenb_connection
+from .tag_helper import update_tag, confirm_tag_exists
 from sqlite3 import Error
-import json
 
 
 def tag_by_tag(c, v, d, cv, cc, match):

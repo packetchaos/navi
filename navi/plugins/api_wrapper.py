@@ -23,7 +23,7 @@ def tenb_connection():
                 secret_key = row[1]
             tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
             return tio
-    except:
+    except KeyError:
         pass
 
 

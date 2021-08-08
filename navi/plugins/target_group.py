@@ -11,7 +11,7 @@ def find_target_group(tg_name):
         try:
             if group['name'] == tg_name:
                 group_id = group['id']
-        except:
+        except KeyError:
             pass
     return group_id
 

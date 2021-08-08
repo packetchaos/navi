@@ -390,7 +390,7 @@ def move(a, s, limit, scanid):
                 os.remove('{}.nessus'.format(str(scan_name)))
 
     if scanid:
-        single_scan =[scanid]
+        single_scan = [scanid]
         scan_mover(single_scan)
     else:
         # Grab all of the 'remote' scans

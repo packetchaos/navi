@@ -149,6 +149,3 @@ def insert_apps(conn, apps):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, apps)
-
-
-

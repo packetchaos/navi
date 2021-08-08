@@ -156,7 +156,7 @@ def compliance_export(days, ex_uuid, threads):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_findings": 50}#, "filters": {'last_seen': int(day_limit)}}
+    pay_load = {"num_findings": 50}  #, "filters": {'last_seen': int(day_limit)}}
     try:
 
         if ex_uuid == '0':

@@ -1,4 +1,5 @@
-import click, time
+import click
+import time
 from .database import new_db_connection
 from .api_wrapper import request_data
 from .send_mail import send_email
@@ -105,7 +106,7 @@ def mail(latest, consec, webapp, message, to, subject, v):
 
                 duration = (details["info"]["scan_end"] - details["info"]["scan_start"]) / 60
                 msg += "Duration : {} Minutes".format(duration)
-            except:
+            except KeyError:
                 click.echo("This scan is still running")
 
             msg += "\nScan Notes Below : \n\n"
@@ -181,6 +182,7 @@ def mail(latest, consec, webapp, message, to, subject, v):
             click.echo(msg)
 
         send_email(from_email, to, msg, server, password, port)
+
     except Exception as E:
         click.echo("Your Email information may be incorrect")
         click.echo("Run the 'SMTP' command to correct your information")

@@ -83,7 +83,7 @@ def cves_by_uuid(uuid):
             cves = vulns[1]
             click.echo("{:10s} {}".format(plugin_id, textwrap.shorten(cves, 140)))
         click.echo("")
-    except:
+    except IndexError:
         click.echo("Something went wrong")
 
 
@@ -481,7 +481,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
                 click.echo("-" * 50)
                 click.echo("-" * 50)
-            except:
+            except KeyError:
                 pass
 
     if vulns:
@@ -544,7 +544,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 status = finding[1]
                 audit_file = finding[2]
                 click.echo("{:85} {:8} {}".format(textwrap.shorten(check_name, width=80), status,
-                                                   textwrap.shorten(audit_file, width=60)))
+                                                  textwrap.shorten(audit_file, width=60)))
         else:
             click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\n")
             uuid_data = db_query("SELECT uuid, fqdn from assets where ip_address='{}';".format(ipaddr))

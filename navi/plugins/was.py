@@ -92,7 +92,7 @@ def scans():
 @click.argument('scan_id')
 def start(scan_id):
     click.echo("\n Your Scan is starting")
-    request_data('POST', '/was/v2/configs/' + str(scan_id)+ '/scans')
+    request_data('POST', '/was/v2/configs/' + str(scan_id) + '/scans')
 
 
 @was.command(help="Display Details for Web Application Scan")
@@ -395,7 +395,7 @@ def abort_if_false(ctx, param, value):
                                                                      "launch the docker container.\n\n This will take several"
                                                                      "minutes\n\n",
               help="Launch WAS Docker container - silentninja/navi:was")
-def reporter(yes):
+def reporter():
     import os
     access_key = 0
     secret_key = 0
