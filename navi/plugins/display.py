@@ -465,7 +465,7 @@ def cloud():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Display Network Information including scanner counts - Use 'navi network' commands to get asset membership information.")
+@display.command(help="Display Network Information including scanner counts")
 def networks():
     try:
         click.echo("\n{:45s} {:16} {}".format("Network Name", "# of Scanners", "UUID"))

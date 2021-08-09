@@ -4,7 +4,7 @@ from .add_helper import add_helper
 from .api_wrapper import request_data
 
 
-@click.command(help="Add an asset to Tenable.io from another source via commandline or csv file")
+@click.command(help="Add an asset to Tenable.io from another source via CLI")
 @click.option('--ip', default='', help="IP address of the new asset")
 @click.option('--mac', default='', help="Mac Address of the new asset")
 @click.option('--netbios', default='', help="NetBios of the new asset")

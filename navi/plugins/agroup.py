@@ -13,7 +13,7 @@ def check_agroup_exists(aname):
     return rvalue
 
 
-@click.command(help="Create an Access group Based on a Tag using the Category and Value")
+@click.command(help="Create an Access group Based on a Tag")
 @click.option('--name', default='', required=True, help="Choose a Name for your Access Group.")
 @click.option('--c', default='', required=True, help="Tag Category name to use")
 @click.option('--v', default='', required=True, help="Tag Value to use")

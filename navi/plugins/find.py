@@ -54,7 +54,7 @@ def cve(cve_id):
     if len(cve_id) < 10:
         click.echo("\nThis is likely not a CVE...Try again...\n")
 
-    elif not "CVE" in cve_id:
+    elif "CVE" not in cve_id:
         click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
 
     else:
@@ -172,10 +172,10 @@ def scantime(minute):
         click.echo("-" * 150)
         for vulns in data:
 
-            output = vulns[5]
+            plugin_output = vulns[5]
 
             # split the output by return
-            parsed_output = output.split("\n")
+            parsed_output = plugin_output.split("\n")
 
             # grab the length so we can grab the seconds
             length = len(parsed_output)
