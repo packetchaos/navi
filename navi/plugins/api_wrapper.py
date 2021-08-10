@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.5.19"
+    return "navi-6.5.20"
 
 
 def tenb_connection():
@@ -23,7 +23,7 @@ def tenb_connection():
                 secret_key = row[1]
             tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
             return tio
-    except KeyError:
+    except Error:
         pass
 
 
