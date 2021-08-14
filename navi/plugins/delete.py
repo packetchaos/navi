@@ -102,10 +102,17 @@ def usergroup(tid):
 @delete.command(help='Delete a tag by Category/Value pair')
 @click.option('--c', default='', required=True, help="Category to delete")
 @click.option('--v', default='', required=True, help="Value to Delete")
-def tag(c,v):
+def tag(c, v):
     tagdata = request_data('GET', '/tags/values')
     for tags in tagdata['values']:
         if c == tags['category_name']:
             if v == tags['value']:
                 value_uuid = tags['uuid']
                 request_no_response('DELETE', '/tags/values/' + str(value_uuid))
+
+
+@delete.command(help='Delete a Access group by Access Group ID')
+@click.argument('aid')
+def agroup(aid):
+    click.echo("\nI'm deleting your Access Group now")
+    tio.access_groups.delete(aid)
