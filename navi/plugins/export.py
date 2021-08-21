@@ -2,7 +2,7 @@ import click
 from .agent_export import agent_export
 from .consec_export import consec_export
 from .lumin_export import lumin_export
-from .database import new_db_connection
+from .database import db_query
 from .tag_export import tag_export
 from .tag_helper import tag_checker
 from .query_export import query_export
@@ -85,39 +85,32 @@ def group(group_name):
 
 
 @export.command(help="Export all assets by tag; Include ACR and AES into a CSV")
-@click.option('--c', default='', help="Export bytag with the following Category name")
-@click.option('--v', default='', help="Export bytag with the Tag Value; requires --c and Category Name")
-@click.option('--ec', default='', help="Exclude tag from export with Tag Category; requires --ev")
-@click.option('--ev', default='', help="Exclude tag from export with Tag Value; requires --ec")
-def bytag(c, v, ec, ev):
-    if c == '':
-        click.echo("Tag Category is required.  Please use the --c command")
-        exit()
+@click.option('--c', default=None, required=True, help="Export bytag with the following Category name")
+@click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; requires --c and Category Name")
+@click.option('--ec', default=None, help="Exclude tag from export with Tag Category; requires --ev")
+@click.option('--ev', default=None, help="Exclude tag from export with Tag Value; requires --ec")
+@click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
+@click.option('-vulncounts', is_flag=True, help="Export Severity vulnerability Counts per asset. This will take some time...")
+def bytag(c, v, ec, ev, file, vulncounts):
+    new_list = []
 
-    if v == '':
-        click.echo("Tag Value is required. Please use the --v command")
-        exit()
+    tag_assets = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
-        try:
-            new_list = []
-            cur = conn.cursor()
-            cur.execute("SELECT asset_uuid, asset_ip from tags where tag_key='" + c + "' and tag_value='" + v + "';")
+    for asset in tag_assets:
 
-            tag_assets = cur.fetchall()
+        # Check the tag isn't apart of the exclude tag given
+        if ev:
+            check_for_no = tag_checker(asset[0], ec, ev)
+            if check_for_no == 'no':
+                new_list.append(asset[0])
+        else:
+            new_list.append(asset[0])
 
-            for asset in tag_assets:
-                # This will need to change to UUID once the API gets fixed for Lumin; right not it is by IP
-                # for Each IP check to see if it exists in the exclude tag pair.  If it doesn't add it to the list.
-                check_for_no = tag_checker(asset[1], ec, ev)
-                if check_for_no == 'no':
-                    new_list.append(asset[0])
-        except conn.OperationalError:
-            click.echo('Sorry Right now, navi doesn\'t support \' in a tag')
-
-    tag_export(new_list)
+    if vulncounts:
+        # Tell the export to pull verbose data - vunlcounts
+        tag_export(new_list, file, 1)
+    else:
+        tag_export(new_list, file, 0)
 
 
 @export.command(help="Export Webapp Scan Summary into a CSV - WAS V2")

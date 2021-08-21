@@ -1,6 +1,6 @@
 import click
 from .api_wrapper import request_data, tenb_connection
-from .database import new_db_connection
+from .database import db_query
 
 
 def grab_all_tags():
@@ -36,19 +36,11 @@ def update_tag(c, v, tag_list):
 
 
 def tag_checker(uuid, key, value):
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
-        cur = conn.cursor()
-        # This needs to be changed to UUID when the api gets fixed
-        cur.execute("SELECT * from tags where asset_ip='" + uuid + "' and tag_key='" + key + "' and tag_value='" + value + "';")
-
-        rows = cur.fetchall()
-
-        length = len(rows)
-        if length != 0:
-            return 'yes'
-        return 'no'
+    data = db_query("SELECT * from tags where asset_uuid='{}' and tag_key='{}' and tag_value='{}';".format(uuid, key, value))
+    length = len(data)
+    if length != 0:
+        return 'yes'
+    return 'no'
 
 
 def confirm_tag_exists(key, value):

@@ -1,55 +1,44 @@
 import csv
 import click
-from sqlite3 import Error
-from .database import new_db_connection
+from .database import db_query
 from .api_wrapper import tenb_connection
 
 tio = tenb_connection()
 
 
-def tag_export(tag_list):
+def tag_export(tag_list, filename, option):
     click.echo("This export can take some time.  ~300 assets per minute.")
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
 
-        # Create our headers - We will Add these two our list in order
+    # Create our headers - We will Add these two our list in order
+    if option == 1:
         header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
                        "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network', 'ACR', 'AES', 'AWS ID',
                        'Info', 'Low', 'Medium', 'High', 'Critical']
-        cur = conn.cursor()
-        try:
-            cur.execute("SELECT * from assets;")
-        except Error:
-            print("\n No data! \n Please run 'navi update' first.\n")
-            exit()
-        data = cur.fetchall()
+    else:
+        header_list = ["IP Address", "Hostname", "FQDN", "UUID", "First Found", "Last Found", "Operating System",
+                       "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network', 'ACR', 'AES', 'AWS ID']
 
-        # Crete a csv file object
-        with open('bytag_lumin.csv', mode='w') as csv_file:
-            agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+    # Crete a csv file object
+    with open('{}.csv'.format(filename), mode='w') as csv_file:
+        agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
-            # write our Header information first
-            agent_writer.writerow(header_list)
+        # write our Header information first
+        agent_writer.writerow(header_list)
 
-            # Loop through each asset
-            for assets in data:
-                export_list = []
-                if assets[3] in tag_list:
-                    for atr in assets:
-                        # Cycle through the Database and populate the new list
-                        export_list.append(atr)
+        export_list = []
+        for uuid in tag_list:
+            data = db_query("SELECT * from assets where uuid='{}';".format(uuid))
+            export_list.append(data)
+            if option == 1:
+                try:
+                    asset_info = tio.workbenches.asset_info(uuid)
 
-                    asset_id = assets[3]  # Grab the UUID to make API calls
+                    for vuln in asset_info['counts']['vulnerabilities']['severities']:
+                        export_list.append(vuln["count"])  # Add the vuln counts to the new list
 
-                    try:
-                        asset_info = tio.workbenches.asset_info(asset_id)
+                except ConnectionError:
+                    click.echo("Check your API keys or your internet connection")
 
-                        for vuln in asset_info['counts']['vulnerabilities']['severities']:
-                            export_list.append(vuln["count"])  # Add the vuln counts to the new list
-
-                    except ConnectionError:
-                        click.echo("Check your API keys or your internet connection")
-                    # write to the CSV
-                    agent_writer.writerow(export_list)
-        click.echo("Export success! - bytag_lumin.csv")
+            # write to the CSV
+            agent_writer.writerow(export_list)
+        click.echo("\nExport success! - {}.csv\n".format(filename))
