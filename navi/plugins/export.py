@@ -97,14 +97,14 @@ def bytag(c, v, ec, ev, file, vulncounts):
     tag_assets = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
     for asset in tag_assets:
-
+        asset_uuid = asset[0]
         # Check the tag isn't apart of the exclude tag given
         if ev:
-            check_for_no = tag_checker(asset[0], ec, ev)
+            check_for_no = tag_checker(asset_uuid, ec, ev)
             if check_for_no == 'no':
-                new_list.append(asset[0])
+                new_list.append(asset_uuid)
         else:
-            new_list.append(asset[0])
+            new_list.append(asset_uuid)
 
     if vulncounts:
         # Tell the export to pull verbose data - vunlcounts
