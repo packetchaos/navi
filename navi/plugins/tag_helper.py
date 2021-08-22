@@ -29,7 +29,7 @@ def update_tag(c, v, tag_list):
                         payload = {"action": "add", "assets": tag_list, "tags": [tag_uuid]}
                         data = request_data('POST', '/tags/assets/assignments', payload=payload)
                         click.echo("Job UUID : {}".format(data['job_uuid']))
-                    except:
+                    except IndexError:
                         pass
     except:
         pass

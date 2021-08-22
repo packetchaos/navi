@@ -4,8 +4,8 @@ from sqlite3 import Error
 from .database import new_db_connection
 
 
-def compliance_export_csv(name, uuid):
-    file_name = "compliance_data.csv"
+def compliance_export_csv(name, uuid, file_name):
+
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
