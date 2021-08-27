@@ -231,7 +231,8 @@ def create_uuid_list(filename):
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 @click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all):
+@click.option('--query', default='', help="Use a custom query to create a tag.")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -487,5 +488,21 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
+
     if pipe:
         tag_by_uuid(eval(pipe), c, v, d)
+
+    if query:
+
+        if ("uuid" or "asset_uuid") in str(query):
+
+            data = db_query(query)
+
+            for asset in set(data):
+                tag_list.append(asset[0])
+
+            tag_by_uuid(tag_list, c, v, d)
+
+        else:
+            click.echo("\nYou have to return uuids or asset_uuid. \nYour query must have uuid or asset_uuid\n")
+            exit()
