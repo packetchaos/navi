@@ -221,7 +221,7 @@ def create_uuid_list(filename):
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
-@click.option('--group', default='', help="Create a Tag based on a Agent Group - BY Tenable UUID Due To API Limit(500 Agents)")
+@click.option('--group', default='', help="Create a Tag based on a Agent Group")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
 @click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
