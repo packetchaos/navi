@@ -3,19 +3,21 @@ from .api_wrapper import request_data, request_no_response
 
 
 def create_user(username, password, permission, name, email):
+
     payload = {"username": "{}".format(str(username)), "password": str(password), "permissions": permission, "name": name, "email": "{}".format(str(email))}
-    # Using the Delete request because of an API Return issue.
+
     data = request_no_response("POST", "/users", payload=payload)
 
     return data
 
 
 def enable_disable_user(user_id, answer):
+
     if answer == "enable":
         payload = {"enabled": True}
     else:
         payload = {"enabled": False}
-    # Using the Delete request because of an API Return issue.
+
     request_no_response("PUT", "/users/" + str(user_id) + "/enabled", payload=payload)
 
 
@@ -77,10 +79,14 @@ def enable(uid, api, pwd, saml, account):
     if saml:
         payload["saml_permitted"] = True
 
+    if api or pwd or saml:
+        change_auth_settings(uid, payload)
+
     if account:
         enable_disable_user(uid, "enable")
-    else:
-        change_auth_settings(uid, payload)
+
+    if not account and not api and not pwd and not saml:
+        click.echo("\nYou need to specify an option\n\nIf you want to disable an account use the '-account' option\n")
 
 
 @user.command(help="Disable a user by ID or auth settings")
@@ -90,7 +96,9 @@ def enable(uid, api, pwd, saml, account):
 @click.option('-pwd', is_flag=True, help="Enable Password Access")
 @click.option('-saml', is_flag=True, help="Enable SAML Access")
 def disable(uid, account, api, pwd, saml):
+
     payload = {"api_permitted": True, "password_permitted": True, "saml_permitted": True}
+
     if api:
         payload["api_permitted"] = False
 
@@ -100,7 +108,11 @@ def disable(uid, account, api, pwd, saml):
     if saml:
         payload["saml_permitted"] = False
 
+    if api or pwd or saml:
+        change_auth_settings(uid, payload)
+
     if account:
         enable_disable_user(uid, "disable")
-    else:
-        change_auth_settings(uid, payload)
+
+    if not account and not api and not pwd and not saml:
+        click.echo("\nYou need to specify an option\n\nIf you want to disable an account use the '-account' option\n")
