@@ -81,59 +81,59 @@ def display(net):
     click.echo()
 
 
-@network.command(help="Move a Scanner to a New Network")
-@click.option('--net', default='', help="Network Name or Network UUID")
+@network.command(help="Move a Scanner or Assets to a Network")
+@click.option('--net', default='', required=True, help="Network Name or Network UUID")
 @click.option('--scanner', default='', help="Scanner Name or Scanner UUID")
 @click.option('--c', default='', help="Move Assets from This Tag Category")
 @click.option('--v', default='', help="Move Assets from This Tag Value")
-@click.option('--source', default='00000000-0000-0000-0000-000000000000', help="Source Network UUID")
-def move(net, scanner, c, v, source):
-    if net != '':
+@click.option('--source', required=True, default='00000000-0000-0000-0000-000000000000', help="Source Network UUID")
+@click.option('--target', default='', help="Move Assets by subnet(s)")
+def move(net, scanner, c, v, source, target):
+    ip_list = ""
+    if scanner != '':
+        # Here I just want to check to see if its a uuid. If it's not 36 chars long, its not a uuid.
+        if len(net) != 36:
+            network_id = get_network_id(net)
+        else:
+            network_id = net
 
-        if scanner != '':
-            # Here I just want to check to see if its a uuid. If it's not 36 chars long, its not a uuid.
-            if len(net) != 36:
-                network_id = get_network_id(net)
-            else:
-                network_id = net
+        # Scanner UUIDs have two lengths, both over 35. This isn't bullet proof but it's good enough for now.
+        # I expect a lot from users. :)
+        if len(scanner) > 35:
+            # This should be a uuid.
+            scanner_id = scanner
+        else:
+            # Lets grab the uuid
+            scanner_id = get_scanner_id(scanner)
 
-            # Scanner UUIDs have two lengths, both over 35. This isn't bullet proof but it's good enough for now.
-            # I expect a lot from users. :)
-            if len(scanner) > 35:
-                # This should be a uuid.
-                scanner_id = scanner
-            else:
-                # Lets grab the uuid
-                scanner_id = get_scanner_id(scanner)
+        # move the scanner
+        tio.networks.assign_scanners(network_id, scanner_id)
 
-            # move the scanner
-            tio.networks.assign_scanners(network_id, scanner_id)
+    if c != '' and v != '':
+        # First grab all of the UUIDS in the tag and put them in a list
+        click.echo("\nThis feature is limited to 1999 assets; Consider using 'target' option to specify a subnet\n")
+        tag_uuid_list = []
+        tag_data = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
+        for uuid in tag_data:
+            if uuid not in tag_uuid_list:
+                tag_uuid_list.append(uuid[0])
 
-        if c != '' and v != '':
-            # First grab all of the UUIDS in the tag and put them in a list
-            tag_uuid_list = []
-            tag_data = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
-            for uuid in tag_data:
-                if uuid not in tag_uuid_list:
-                    tag_uuid_list.append(uuid[0])
+        # then grab the Scanned IP from the vulns table using the UUID as a Key; then put the IPs in a list
+        ip_list = ""
+        for item in tag_uuid_list:
+            ip_address = db_query("select asset_ip from vulns where asset_uuid='{}'".format(item))
 
-            # then grab the Scanned IP from the vulns table using the UUID as a Key; then put the IPs in a list
-            ip_list = ""
-            for item in tag_uuid_list:
-                ip_address = db_query("select asset_ip from vulns where asset_uuid='{}'".format(item))
+            try:
+                ip = ip_address[0][0]
+                if ip not in ip_list:
+                    ip_list = ip_list + "," + ip
+            except IndexError:
+                pass
 
-                try:
-                    ip = ip_address[0][0]
-                    if ip not in ip_list:
-                        ip_list = ip_list + "," + ip
-                except IndexError:
-                    pass
+    if target:
+        ip_list = ip_list + "," + target
 
-            # Current limit is 1999 assets to be moved at once
-            payload = {"source": source, "destination": net, "targets": ip_list[1:]}
-            request_data("POST", '/api/v2/assets/bulk-jobs/move-to-network', payload=payload)
-            click.echo("\nMoving these assets \n {}".format(ip_list[1:]))
-
-    else:
-        click.echo("\nYou must enter a Network UUID\n")
-        exit()
+    # Current limit is 1999 assets to be moved at once
+    payload = {"source": source, "destination": net, "targets": ip_list[1:]}
+    request_data("POST", '/api/v2/assets/bulk-jobs/move-to-network', payload=payload)
+    click.echo("\nMoving these assets \n {}".format(ip_list[1:]))

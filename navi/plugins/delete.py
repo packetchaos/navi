@@ -116,3 +116,10 @@ def tag(c, v):
 def agroup(aid):
     click.echo("\nI'm deleting your Access Group now")
     tio.access_groups.delete(aid)
+
+
+@delete.command(help='Delete a Network by Network ID')
+@click.argument('nid')
+def network(nid):
+    click.echo("\nI'm deleting your Network now")
+    tio.networks.delete(nid)
