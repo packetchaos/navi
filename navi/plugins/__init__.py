@@ -25,6 +25,8 @@ from .target_group import tgroup
 from .cancel import cancel
 from .migrate import migrate
 from .agents import agent
+from .push import push
+from .ssh import ssh
 
 
 def plugin_loader(group):
@@ -55,4 +57,6 @@ def plugin_loader(group):
     group.add_command(cancel)
     group.add_command(migrate)
     group.add_command(agent)
+    group.add_command(push)
+    group.add_command(ssh)
 
