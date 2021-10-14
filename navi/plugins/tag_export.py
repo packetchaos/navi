@@ -25,10 +25,14 @@ def tag_export(tag_list, filename, option):
         # write our Header information first
         agent_writer.writerow(header_list)
 
-        export_list = []
         for uuid in tag_list:
+            export_list = []
             data = db_query("SELECT * from assets where uuid='{}';".format(uuid))
-            export_list.append(data)
+
+            # SQL gives us a tuple, we need to convert it to a list.
+            for item in data[0]:
+                export_list.append(item)
+
             if option == 1:
                 try:
                     asset_info = tio.workbenches.asset_info(uuid)
@@ -41,4 +45,5 @@ def tag_export(tag_list, filename, option):
 
             # write to the CSV
             agent_writer.writerow(export_list)
+            print("\n{}".format(export_list))
         click.echo("\nExport success! - {}.csv\n".format(filename))
