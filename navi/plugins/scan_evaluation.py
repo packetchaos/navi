@@ -40,7 +40,7 @@ def evaluate():
         # Getting the length of the Category and using it to get the average
         def average_by_policy(name, scan_info):
             # Print the Category to the Screen ( Scanner, Policy, Scan Name)
-            print("\n{:50s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
+            print("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
             print("-" * 20)
 
             # Write the category to the csv for delination
@@ -64,13 +64,13 @@ def evaluate():
                 average = total/length
 
                 # Print results to the screen
-                print("\n{:50s} {:25d} {:10d}".format(scan[0], int(average), length))
+                print("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
 
                 update = [scan[0], average]
 
                 # Send the results as a list to the CSV
                 #agent_writer.writerow(update)
-            print("-" * 100)
+            print("-" * 150)
 
         # Loop through each plugin 19506 and Parse data from it
         for vulns in plugin_data:
@@ -82,10 +82,10 @@ def evaluate():
             parsed_output = plugin_output.split("\n")
 
             # grab the length so we can grab the seconds
-            length = len(parsed_output)
+            plugin_length = len(parsed_output)
 
             # grab the scan duration- second to the last variable
-            duration = parsed_output[length - 2]
+            duration = parsed_output[plugin_length - 2]
 
             # Split at the colon to grab the numerical value
             seconds = duration.split(" : ")
@@ -104,9 +104,9 @@ def evaluate():
                 scan_name = parsed_output[9].split(" : ")[1]
                 scan_policy = parsed_output[10].split(" : ")[1]
                 scanner_ip = parsed_output[11].split(" : ")[1]
-                scan_time = parsed_output[length - 3].split(" : ")[1]
-                max_hosts = parsed_output[length - 8].split(" : ")[1]
-                max_checks = parsed_output[length - 7].split(" : ")[1]
+                scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
+                max_hosts = parsed_output[plugin_length- 8].split(" : ")[1]
+                max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
 
                 if "no" not in parsed_output[14].split(" : ")[1]:
                     rtt = parsed_output[14].split(" : ")[1]
