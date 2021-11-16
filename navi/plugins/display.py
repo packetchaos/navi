@@ -308,10 +308,15 @@ def status():
 
 
 @display.command(help="Display Agent information - Limit 5000 agents")
-def agents():
+@click.option("-uuid", is_flag=True, help="Display Agent information including Agent UUID")
+def agents(uuid):
     try:
-        click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "Group(id)s"))
-        click.echo("-" * 150)
+        if uuid:
+            click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "UUID"))
+            click.echo("-" * 150)
+        else:
+            click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address", "Last Connect Time", "Last Scanned Time", "Status", "Group(id)s"))
+            click.echo("-" * 150)
 
         for agent in tio.agents.list():
             try:
@@ -332,14 +337,25 @@ def agents():
                     groups = groups + ", {}({})".format(group['name'], group['id'])
             except KeyError:
                 pass
-            click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']), width=30),
-                                                                     str(agent['ip']), str(last_connect_time),
-                                                                     str(last_scanned_time), str(agent['status']),
-                                                                     textwrap.shorten(groups[1:], width=60)))
+
+            try:
+                agent_uuid = agent['uuid']
+            except KeyError:
+                agent_uuid = "unknown"
+
+            if uuid:
+                click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']), width=30),
+                                                                         str(agent['ip']), str(last_connect_time),
+                                                                         str(last_scanned_time), str(agent['status']),
+                                                                         textwrap.shorten(agent_uuid, width=60)))
+            else:
+                click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']), width=30),
+                                                                         str(agent['ip']), str(last_connect_time),
+                                                                         str(last_scanned_time), str(agent['status']),
+                                                                         textwrap.shorten(groups[1:], width=60)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
-
 
 @display.command(help="Display Target Groups")
 def tgroups():
