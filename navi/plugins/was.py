@@ -1,5 +1,5 @@
 import click
-from .api_wrapper import request_data
+from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
 import dateutil.parser as dp
 import time
@@ -9,6 +9,9 @@ import textwrap
 from .was_detailed_csv import was_detailed_export
 from .was_v2_export import was_export
 from .database import db_query
+
+
+tio = tenb_connection()
 
 
 def web_app_scanners():
@@ -59,33 +62,27 @@ def was():
     pass
 
 
-@was.command(help="Display the last 30 days of Completed Web Application Scans")
+@was.command(help="Display Web Application Scans")
 def scans():
-    scan_params = {"size": "1000"}
-    scans_data = request_data('GET', '/was/v2/scans', params=scan_params)
-    click.echo("\n{:70s} {:40s} {:14s} {}".format("Target FQDN", "Scan UUID", "Status", "Last Update"))
-    click.echo("-" * 150)
     try:
-        for app_data in scans_data['data']:
-            # Reduce list to last 30 days
-
+        click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
+        click.echo("-" * 150)
+        import pprint
+        for web_scan in tio.scans.list():
             try:
-                target_time = time.time() - (30 * 86400)
-                parsed_time = dp.parse(app_data['started_at'])
-                finish_epoch = parsed_time.timestamp()
-
-                if finish_epoch > target_time:
-                    app_url = app_data['application_uri']
-                    app_scan_id = app_data['scan_id']
-                    app_status = app_data['status']
-                    updated = app_data['updated_at']
-
-                    click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_url), width=70), str(app_scan_id), str(app_status), str(updated)))
-            except TypeError:
+                if web_scan['type'] == "webapp":
+                    try:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(web_scan['name']), str(web_scan['id']), str(web_scan['status']),
+                                                                    str(web_scan['uuid'])))
+                    except KeyError:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(web_scan['name']), str(web_scan['id']), str(web_scan['status']),
+                                                                    "No UUID"))
+            except KeyError:
+                # If there is no scan type we don't care, skip over the record.
                 pass
-        click.echo()
-    except Exception as E:
-        error_msg(E)
+
+    except AttributeError:
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @was.command(help="Start a Web Application Scan")
