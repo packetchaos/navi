@@ -106,8 +106,12 @@ def scans():
         click.echo("-" * 150)
 
         for scan in tio.scans.list():
-            click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
-                                                        str(scan['uuid'])))
+            try:
+                click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                            str(scan['uuid'])))
+            except KeyError:
+                click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                            "No UUID"))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")

@@ -29,7 +29,7 @@ setup(
         'requests',
         'flask',
         'IPy',
-        'pytenable>=1.3',
+        'pytenable>=1.4',
         'arrow>=0.17.0',
         'boto3>=1.17.48',
         'pexpect>=4.8.0'
