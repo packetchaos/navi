@@ -35,6 +35,16 @@ def update_tag(c, v, tag_list):
         pass
 
 
+def remove_tag(tag_uuid, tag_list):
+    click.echo("\nYour tag is being removed from all assets\n")
+    try:
+        payload = {"action": "remove", "assets": tag_list, "tags": [tag_uuid]}
+        data = request_data('POST', '/tags/assets/assignments', payload=payload)
+        click.echo("Job UUID : {}".format(data['job_uuid']))
+    except IndexError:
+        pass
+
+
 def tag_checker(uuid, key, value):
     data = db_query("SELECT * from tags where asset_uuid='{}' and tag_key='{}' and tag_value='{}';".format(uuid, key, value))
     length = len(data)
@@ -57,6 +67,7 @@ def confirm_tag_exists(key, value):
 
 def return_tag_uuid(key, value):
     tag_list = grab_all_tags()
+    print(tag_list)
     try:
         for tag_info in tag_list:
             if str(tag_info[0]).lower() == str(key).lower():
@@ -66,6 +77,7 @@ def return_tag_uuid(key, value):
                     return 'none'
     except Exception as E:
         click.echo(E)
+
 
 
 def tag_msg():

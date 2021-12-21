@@ -2,7 +2,7 @@ import click
 import csv
 from .database import new_db_connection, db_query
 from .api_wrapper import request_data, tenb_connection
-from .tag_helper import update_tag, confirm_tag_exists
+from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid, grab_all_tags, remove_tag
 from sqlite3 import Error
 
 
@@ -232,7 +232,8 @@ def create_uuid_list(filename):
 @click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query):
+@click.option('-remove', is_flag=True, help="Remove this tag from all assets to support ephemeral asset tagging")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -506,3 +507,43 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         else:
             click.echo("\nYou have to return uuids or asset_uuid. \nYour query must have uuid or asset_uuid\n")
             exit()
+
+    if remove:
+        # Grab all of the tags and their UUIDs
+        tag_list = grab_all_tags()
+
+        # Find the UUID of our given tag
+        try:
+            for tag_info in tag_list:
+                # Grab our UUID
+                if str(tag_info[0]).lower() == str(c).lower():
+                    if str(tag_info[1]).lower() == str(v).lower():
+                        new_uuid = str(tag_info[2])
+
+                        # Create an list to store our asset uuids
+                        asset_uuid_list = []
+
+                        # pull all UUIDs for the given tag using the tag
+                        data = db_query("select asset_uuid from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(new_uuid))
+
+                        # Clean up the data into a list
+                        for asset_uuid in data:
+                            asset_uuid_list.append(asset_uuid[0])
+
+                        # Generator to split IPs into 2000 IP chunks
+                        def chunks(l, n):
+                            for i in range(0, len(l), n):
+                                yield l[i:i + n]
+
+                        # Check to see if the List of UUIDs is over 1999 (API Limit)
+                        if len(asset_uuid_list) > 1999:
+
+                            # break the list into 2000 IP chunks
+                            for chunks in chunks(asset_uuid_list, 1999):
+                                remove_tag(new_uuid, chunks)
+                        else:
+                            # If the Chunk is less than 2000, simply update it.
+                            remove_tag(new_uuid, asset_uuid_list)
+
+        except Exception as E:
+            click.echo(E)
