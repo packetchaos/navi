@@ -43,6 +43,8 @@ def remove_tag(tag_uuid, tag_list):
         click.echo("Job UUID : {}".format(data['job_uuid']))
     except IndexError:
         pass
+    except TypeError:
+        print("\nYou may need to update the navi DB.  The Query did not yeild any results\n")
 
 
 def tag_checker(uuid, key, value):
