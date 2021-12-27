@@ -215,6 +215,32 @@ def create_uuid_list(filename):
     return uuids
 
 
+def remove_uuids_from_tag(tag_uuid):
+    # Create an list to store our asset uuids
+    asset_uuid_list = []
+
+    tag_data = db_query("select asset_uuid from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(str(tag_uuid)))
+
+    # Clean up the data into a list
+    for asset_uuid_loop in tag_data:
+        asset_uuid_list.append(asset_uuid_loop[0])
+
+    # Generator to split IPs into 2000 IP chunks
+    def chunks(l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
+
+    # Check to see if the List of UUIDs is over 1999 (API Limit)
+    if len(asset_uuid_list) > 1999:
+
+        # break the list into 2000 IP chunks
+        for chunks in chunks(asset_uuid_list, 1999):
+            remove_tag(str(tag_uuid), chunks)
+    else:
+        # If the Chunk is less than 2000, simply update it.
+        remove_tag(str(tag_uuid), asset_uuid_list)
+
+
 @click.command(help="Create a Tag Category/Value Pair")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
@@ -510,27 +536,21 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
     if remove != '':
 
-        # Create an list to store our asset uuids
-        asset_uuid_list = []
+        if remove == 'byname':
 
-        tag_data = db_query("select asset_uuid from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(str(remove)))
+            # Find the UUID of our given tag
+            tag_list = grab_all_tags()
+            try:
+                for tag_info in tag_list:
+                    # Grab our UUID
+                    if str(tag_info[0]).lower() == str(c).lower():
+                        if str(tag_info[1]).lower() == str(v).lower():
+                            new_uuid = str(tag_info[2])
+                            print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
+                            remove_uuids_from_tag(new_uuid)
 
-        # Clean up the data into a list
-        for asset_uuid_loop in tag_data:
-            asset_uuid_list.append(asset_uuid_loop[0])
+            except Exception as E:
+                click.echo(E)
 
-        # Generator to split IPs into 2000 IP chunks
-        def chunks(l, n):
-            for i in range(0, len(l), n):
-                yield l[i:i + n]
-
-        # Check to see if the List of UUIDs is over 1999 (API Limit)
-        if len(asset_uuid_list) > 1999:
-
-            # break the list into 2000 IP chunks
-            for chunks in chunks(asset_uuid_list, 1999):
-                remove_tag(str(remove), chunks)
         else:
-            # If the Chunk is less than 2000, simply update it.
-            remove_tag(str(remove), asset_uuid_list)
-
+            remove_uuids_from_tag(remove)
