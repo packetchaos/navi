@@ -112,11 +112,34 @@ def create(name, scanner):
 @agent.command(help="Add an agent to a Group")
 @click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to add ")
 @click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
-def add(aid, gid):
-    # Add agent to Group
-    tio.agent_groups.add_agent(gid, aid)
+@click.option("--file", default=None, required=False, help="CSV with UUIDs as the first column.")
+def add(aid, gid, file):
 
-    click.echo("\nYour agent has been added to the Group ID: {}\n".format(gid))
+    if file:
+        import pprint
+        for agent_info in tio.agents.list():
+
+            print(agent_info['uuid'], agent_info['id'])
+
+        import csv
+        with open(file, 'r', newline='') as new_file:
+            agent_list = []
+            add_agents = csv.reader(new_file)
+
+            for rows in add_agents:
+                # UUID will be in the first column
+                agent_list.append(rows[0])
+
+            for agent_info in tio.agents.list():
+                agent_uuid = agent_info['uuid']
+                agent_id = agent_info['id']
+                if agent_uuid in agent_list:
+                    tio.agent_groups.add_agent(gid, agent_id)
+    else:
+        # Add agent to Group
+        tio.agent_groups.add_agent(gid, aid)
+
+        click.echo("\nYour agent has been added to the Group ID: {}\n".format(gid))
 
 
 @agent.command(help="Remove an Agent from a Agent Group")
