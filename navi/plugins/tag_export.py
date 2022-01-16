@@ -19,7 +19,7 @@ def tag_export(tag_list, filename, option):
                        "Mac Address", "Agent-UUID", "last Licensed Scan Date", 'Network', 'ACR', 'AES', 'AWS ID']
 
     # Crete a csv file object
-    with open('{}.csv'.format(filename), mode='w') as csv_file:
+    with open('{}.csv'.format(filename), mode='w', encoding='utf-8') as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
         # write our Header information first

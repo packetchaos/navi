@@ -27,7 +27,7 @@ def lumin_export():
         data = cur.fetchall()
 
         # Crete a csv file object
-        with open('asset_lumin.csv', mode='w') as csv_file:
+        with open('asset_lumin.csv', mode='w', encoding='utf-8') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
             # write our Header information first

@@ -5,7 +5,7 @@ from .api_wrapper import request_data
 
 def was_export():
     # Crete a csv file object
-    with open('was_summary_data.csv', mode='w') as csv_file:
+    with open('was_summary_data.csv', mode='w', encoding='utf-8') as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
         # write our Header information first
         header_list = ["Scan Name", "Target", "High", "Medium", "Low", "Scan Start", "Scan Finish", "Note Title", "Note Message"]

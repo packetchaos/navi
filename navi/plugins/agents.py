@@ -116,7 +116,7 @@ def create(name, scanner):
 def add(aid, gid, file):
 
     if file:
-        import pprint
+        # ignore AID and use the file instead
         for agent_info in tio.agents.list():
 
             print(agent_info['uuid'], agent_info['id'])
@@ -134,6 +134,7 @@ def add(aid, gid, file):
                 agent_uuid = agent_info['uuid']
                 agent_id = agent_info['id']
                 if agent_uuid in agent_list:
+                    # Add agents to the Group
                     tio.agent_groups.add_agent(gid, agent_id)
     else:
         # Add agent to Group

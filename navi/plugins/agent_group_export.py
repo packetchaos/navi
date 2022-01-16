@@ -13,7 +13,7 @@ def agent_group_export(group):
             if group_name == group:
                 group_id = group_info['id']
 
-                with open('agent_group_data.csv', mode='w') as csv_file:
+                with open('agent_group_data.csv', mode='w', encoding='utf-8') as csv_file:
                     agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
                     header_list = ["Agent Name", "IP Address", "Platform", "Last connected", "Last scanned", "Status",

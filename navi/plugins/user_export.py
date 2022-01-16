@@ -7,7 +7,7 @@ def user_export():
 
     # for some reason if a name isn't given no key is created.
     header_list = ["Name", "User Name", "UUID", "Roles", "Total Failed Attempts"]
-    with open('user_data.csv', mode='w') as csv_file:
+    with open('user_data.csv', mode='w', encoding='utf-8') as csv_file:
         user_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
         # write our Header information first
