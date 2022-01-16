@@ -31,7 +31,7 @@ def query_export(query, name):
 
         # Crete a csv file object
 
-        with open('{}.csv'.format(name), mode='w') as csv_file:
+        with open('{}.csv'.format(name), mode='w', encoding='utf-8') as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
             agent_writer.writerow(header)
             # Loop through each asset
