@@ -28,6 +28,7 @@ from .agents import agent
 from .push import push
 from .ssh import ssh
 from .scan_evaluation import evaluate
+from .access import access
 
 
 def plugin_loader(group):
@@ -61,4 +62,5 @@ def plugin_loader(group):
     group.add_command(push)
     group.add_command(ssh)
     group.add_command(evaluate)
+    group.add_command(access)
 
