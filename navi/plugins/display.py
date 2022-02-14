@@ -713,3 +713,25 @@ def audits(name, uuid):
             click.echo(name[0])
 
         click.echo()
+
+
+@display.command(help="Display Permissions")
+def permissions():
+    permission_data = request_data("GET", "/api/v3/access-control/permissions")
+    try:
+        click.echo("\n{:80s} {}".format("Name - Tag Category:Value - [perms]", "Subject(s)"))
+        click.echo("-" * 150)
+
+        for perm in permission_data['permissions']:
+            subject_names = []
+            for names in perm['subjects']:
+                try:
+                    subject_names.append(names['name'])
+                except KeyError:
+                    # Alladmins perm has no name
+                    pass
+            click.echo("{:80s} {}".format(textwrap.shorten(perm['name'], width=80),
+                                          textwrap.shorten("{}".format(subject_names), width=70)))
+        click.echo()
+    except AttributeError:
+        click.echo("\nCheck your permissions or your API keys\n")

@@ -4,28 +4,37 @@ from .api_wrapper import request_data, tenb_connection
 
 
 tio = tenb_connection()
-'''
-1 - Retrieve all Permissions in the container
-    a. Filter this list down to the ones including the CanUse action
-    b. Extract all unique Tag uuids from the object field of the filtered Permission list
-2. Retrieve all Tags in the container
-    a. Filter this list down to the ones whose uuids are not in the list produced in 1b
-    b. Create a new Permission with AllUsers group as the subject, CanUse as the action, and the Tag as the object
-'''
 
 
-def create_permission(name, uuid):
+def create_permission(name, tag_name, uuid, perm_string, perm_type, subject_type):
     payload = {
-        "actions": ["CanUse"],
+        "actions": ["{}".format(perm_string)],
         "objects": [
             {
                 "name": name,
-                "type": "Tag",
+                "type": perm_type,
                 "uuid": str(uuid)
             }
         ],
-        "subjects": [{"type": "AllUsers"}],
-        "name": "{} [CANUSE]".format(name)
+        "subjects": [{"type": subject_type}],
+        "name": "{} : [{}]".format(tag_name, perm_string)
+    }
+    response = request_data("POST", "/api/v3/access-control/permissions", payload=payload)
+    return response
+
+
+def create_granular_permission(tag_name, uuid, perm_string, perm_type, subject_type, subject_name, subject_uuid):
+    payload = {
+        "actions": ["{}".format(perm_string)],
+        "objects": [
+            {
+                "name": tag_name,
+                "type": perm_type,
+                "uuid": str(uuid)
+            }
+        ],
+        "subjects": [{"name": subject_name, "type": subject_type, "uuid": subject_uuid}],
+        "name": "{} : [{}]".format(tag_name, perm_string)
     }
     response = request_data("POST", "/api/v3/access-control/permissions", payload=payload)
     return response
@@ -34,29 +43,75 @@ def create_permission(name, uuid):
 def grab_can_use_tags():
     data = request_data("GET", "/api/v3/access-control/permissions")
 
-    #pprint.pprint(data['permissions'])
     list_of_tag_uuids = []
-    #Filter on just permissions
+    # Filter on just permissions
     for perms in data['permissions']:
         # Need to search for CanView
         if 'CanUse' in str(perms['actions']):
 
             # Extract all Tag UUIDs
-            #pprint.pprint(perms['objects'])
             for tag in perms['objects']:
                 try:
-                    #print(tag['type'])
                     if tag['type'] == 'Tag':
-                        #print(tag['uuid'])
                         list_of_tag_uuids.append(tag['uuid'])
                 except KeyError:
                     pass
     return list_of_tag_uuids
 
 
-@click.command(help="Bulk Change Permissions")
+@click.group(help="Change Access Control Permissions")
 def access():
-    click.confirm("\n This script finds all tags without any permissions and creates a CANUSE permission. Do you want to continue?\n")
+    pass
+
+
+@access.command(help="Change Access Control Permissions using a Tag")
+@click.option('--c', default='', required=True, help="Tag Category name to use")
+@click.option('--v', default='', required=True, help="Tag Value to use")
+@click.option('--uuid', default='', help="The UUID of the User or user group")
+@click.option('--user', default='', help="The User you want to assign to the Permission")
+@click.option('--usergroup', default='', help="The User Group you want to assign to the Permission")
+@click.option('--perm', type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True),
+              required=True)
+def create(c, v, uuid, user, usergroup, perm):
+    # Create the naming format for the tag permission
+    perm_name = "{},{}".format(c, v)
+    try:
+        tag_uuid_raw = db_query("select tag_uuid from tags where tag_key='{}' and tag_value='{}'".format(c, v))
+        tag_uuid = tag_uuid_raw[0][0]
+        if user:
+            if uuid:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_string=perm, perm_type="Tag", subject_type="User",
+                                                  subject_name=user, subject_uuid=uuid)
+                print(resp)
+            else:
+                click.echo("\nPlease supply a User UUID\n Try 'navi display users' if you need a UUID\n")
+
+        elif usergroup:
+            if uuid:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_string=perm, perm_type="Tag", subject_type="UserGroup",
+                                                  subject_name=usergroup, subject_uuid=uuid)
+                print(resp)
+            else:
+                click.echo("Please supply a UserGroup UUID\n Try 'navi display usergroups' if you need a UUID\n")
+        else:
+
+            permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
+                                                    perm_string=perm, perm_type="Tag", subject_type="AllUsers")
+
+            print(permission_response)
+
+    except IndexError:
+        click.echo("\nYour Tag might be incorrect. Or you may need to update assets in navi.  "
+                   "No tag UUID was returned\n")
+        exit()
+
+
+@access.command(help='Find all Tags without Permissions and apply "CanUse" permissions to AllUsers')
+def migrate():
+    click.confirm("\n This script finds all tags without any permissions and creates a CANUSE permission. "
+                  "Do you want to continue?\n")
     unique_ids = []
     new_list_uuids = []
 
@@ -81,6 +136,7 @@ def access():
                 # Add permissions for each tag.
 
                 print(str(key), str(uuid[key]))
-                create_permission(key, uuid[key])
+                create_permission(name=key, tag_name=key, uuid=uuid[key], perm_string="CanUse", perm_type="Tag",
+                                  subject_type="AllUsers")
 
     print()

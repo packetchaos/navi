@@ -120,7 +120,7 @@ def request_data(method, url_mod, **kwargs):
                 click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
                 break
             elif r.status_code == 409:
-                click.echo("API Returned 409")
+                click.echo("API Returned 409\n If you are changing permissions, it could indicate a duplicate request\n")
                 break
             elif r.status_code == 504:
                 click.echo("\nOne of the Threads and an issue during download...Retrying...\n{}".format(r))
