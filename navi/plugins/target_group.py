@@ -71,7 +71,7 @@ def cloud_to_target_group(cloud, days, choice, target_group_name):
     create_target_group(target_group_name, target_ips)
 
 
-@click.command(help="Create a Target Group")
+@click.command(help="Create a Target Group - DEPRECATED IN T.io")
 @click.option('--name', default='', required=True, help="Target Group Name")
 @click.option('--ip', default='', help="Ip(s) or subnet(s) separated by coma")
 @click.option('-aws', is_flag=True, help="Turn AWS assets found by the connector into a Target Group")

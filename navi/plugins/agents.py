@@ -103,10 +103,13 @@ def groups(gid):
 @click.option("--name", default=None, required=True, help="The name of the new Agent Group you want to create")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def create(name, scanner):
-    group_creation = tio.agent_groups.create(name=name, scanner_id=scanner)
-
-    click.echo("\nYour agent group: {} has been created.\n\nHere is the ID: {} and UUID : {}"
-               "\n".format(group_creation['name'], str(group_creation['id']), str(group_creation['uuid'])))
+    try:
+        group_creation = tio.agent_groups.create(name=name, scanner_id=scanner)
+    
+        click.echo("\nYour agent group: {} has been created.\n\nHere is the ID: {} and UUID : {}"
+                   "\n".format(group_creation['name'], str(group_creation['id']), str(group_creation['uuid'])))
+    except AttributeError:
+        click.echo("Check your API Keys")
 
 
 @agent.command(help="Add an agent to a Group")
@@ -147,14 +150,20 @@ def add(aid, gid, file):
 @click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to remove ")
 @click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
 def remove(aid, gid):
-    # Remove an agent from a Group
-    tio.agent_groups.delete_agent(gid, aid)
+    try:
+        # Remove an agent from a Group
+        tio.agent_groups.delete_agent(gid, aid)
 
-    click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
+        click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
+    except AttributeError:
+        click.echo("Check your API Keys")
 
 
 @agent.command(help="Unlink an by Agent ID")
 @click.option("--aid", default=None, required=True, help="The Agent ID of the agent you want to unlink")
 def unlink(aid):
-    tio.agents.unlink(aid)
-    click.echo("\nYour Agent: {} has been unlinked".format(aid))
+    try:
+        tio.agents.unlink(aid)
+        click.echo("\nYour Agent: {} has been unlinked".format(aid))
+    except AttributeError:
+        click.echo("Check your API Keys")

@@ -1,6 +1,7 @@
 import click
 from .database import db_query
 from .api_wrapper import request_data, tenb_connection
+import pprint
 
 
 tio = tenb_connection()
@@ -83,7 +84,7 @@ def create(c, v, uuid, user, usergroup, perm):
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
                                                   perm_string=perm, perm_type="Tag", subject_type="User",
                                                   subject_name=user, subject_uuid=uuid)
-                print(resp)
+                pprint.pprint(resp)
             else:
                 click.echo("\nPlease supply a User UUID\n Try 'navi display users' if you need a UUID\n")
 
@@ -92,7 +93,7 @@ def create(c, v, uuid, user, usergroup, perm):
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
                                                   perm_string=perm, perm_type="Tag", subject_type="UserGroup",
                                                   subject_name=usergroup, subject_uuid=uuid)
-                print(resp)
+                pprint.pprint(resp)
             else:
                 click.echo("Please supply a UserGroup UUID\n Try 'navi display usergroups' if you need a UUID\n")
         else:
@@ -100,7 +101,7 @@ def create(c, v, uuid, user, usergroup, perm):
             permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
                                                     perm_string=perm, perm_type="Tag", subject_type="AllUsers")
 
-            print(permission_response)
+            pprint.pprint(permission_response)
 
     except IndexError:
         click.echo("\nYour Tag might be incorrect. Or you may need to update assets in navi.  "
