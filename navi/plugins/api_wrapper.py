@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.7.16"
+    return "navi-6.7.17"
 
 
 def tenb_connection():
