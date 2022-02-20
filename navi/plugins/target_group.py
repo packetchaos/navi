@@ -71,7 +71,12 @@ def cloud_to_target_group(cloud, days, choice, target_group_name):
     create_target_group(target_group_name, target_ips)
 
 
-@click.command(help="Create a Target Group - DEPRECATED IN T.io")
+@click.group(help="Migrate Target Groups to Scans or Tags and Create Target Groups(Retiring soon)")
+def tgroup():
+    pass
+
+
+@tgroup.command(help="Create a Target Group - Retiring in T.io soon")
 @click.option('--name', default='', required=True, help="Target Group Name")
 @click.option('--ip', default='', help="Ip(s) or subnet(s) separated by coma")
 @click.option('-aws', is_flag=True, help="Turn AWS assets found by the connector into a Target Group")
@@ -80,8 +85,7 @@ def cloud_to_target_group(cloud, days, choice, target_group_name):
 @click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. Requires: aws, gcp, or azure")
 @click.option('-priv', is_flag=True, help="Set the IP(s) to be used as Private")
 @click.option('-pub', is_flag=True, help="Set the IP to be used as Public")
-@click.option('-migrate', is_flag=True, help="Migrate Target Groups to Tags")
-def tgroup(name, ip, aws, gcp, azure, days, priv, pub, migrate):
+def create(name, ip, aws, gcp, azure, days, priv, pub):
     choice = 'PUBLIC'
 
     if priv:
@@ -102,8 +106,13 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub, migrate):
     if azure:
         cloud_to_target_group("AZURE", days, choice, name)
 
-    if migrate:
 
+@tgroup.command(help="Migrate Target Groups to Tags or to Scan Text Targets")
+@click.option('--scan', default='', help="Move Target Group Members in a given scan to the Text Target section of the same scan")
+@click.option('-tags', is_flag=True, help="Migrate All Target Groups to Tags - Target Group Type : Target Group Name")
+def migrate(scan, tags):
+
+    if tags:
         tgroups = request_data('GET', '/target-groups')
 
         for group in tgroups['target_groups']:
@@ -113,7 +122,8 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub, migrate):
             d = "Imported by Script"
             try:
                 if name != 'Default':
-                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d), "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(member)}]}}}
+                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d), "filters":
+                              {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(member)}]}}}
                     data = request_data('POST', '/tags/values', payload=payload)
 
                     value_uuid = data["uuid"]
@@ -123,3 +133,40 @@ def tgroup(name, ip, aws, gcp, azure, days, priv, pub, migrate):
                     print("The Value UUID is : {}\n".format(value_uuid))
             except:
                 pass
+    elif scan:
+        def grab_tg_members():
+            # Grab all members of every target group and put them into a dict for evaluation later
+            tg_member_dict = {}
+            member_data = request_data('GET', '/target-groups')
+
+            for tg in member_data['target_groups']:
+                tg_member = tg['members']
+                tg_member_dict[tg['id']] = tg_member
+            return tg_member_dict
+
+        def get_tg_list():
+            # grab the target list ID from a scan
+            tgs_for_scan = []
+            tg_data = request_data("GET", '/editor/scan/{}'.format(scan))
+            for item in tg_data["settings"]["basic"]["inputs"]:
+                if item["name"] == "Target Groups":
+                    tgs_for_scan = item["default"]  # This maps each scan ID to the list of target group IDs
+            return tgs_for_scan
+
+        text_target_string = ""
+        try:
+            for scan_id in get_tg_list():
+                text_target_string = text_target_string + ",{}".format(grab_tg_members()[scan_id])
+
+            payload = {"settings": {
+                       "target_groups": [],
+                       "text_targets": text_target_string[1:]}}
+
+            update_scan = request_data("PUT", "/scans/{}".format(scan), payload=payload)
+            click.echo("\n{} was updated with the below targets:\n {}".format(update_scan['name'], text_target_string[1:]))
+        except TypeError:
+            exit()
+        except KeyError:
+            click.echo("\nScan doesn't exist or doesn't have a target group assigned\n")
+    else:
+        click.echo("\nYou need to select an option: --scan or -tags\n")
