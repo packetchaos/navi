@@ -10,7 +10,8 @@ def organize_aws_keys(aws_ec2):
     for tags in aws_ec2['Tags']:
         if tags['ResourceType'] == 'instance':
             aws_key = tags['Key']
-            aws_value = tags['Value']
+            # Truncate strings which are longer then 50 chars and add and elipse to signify the trucation.
+            aws_value = tags['Value'][:48] + (tags['Value'][48:] and '..')
             resource_id = tags['ResourceId']
 
             # Tenable IO Requires a Key and a Value; AWS does not.  In this case we just use the key as both
@@ -58,6 +59,8 @@ def migrate(region, a, s):
                 db = db_query("select uuid from assets where aws_id='{}';".format(instance))
                 for record in db:
                     uuid_list.append(record[0])
+            # Dedupe the list of uuids to avoid 500 errors from the api
+            uuid_list = list(dict.fromkeys(uuid_list))
             description = "AWS Tag by Navi"
 
             print("Creating a Tag named - {} : {} - with the following ids {}".format(key, z, w))
