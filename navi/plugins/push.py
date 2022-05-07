@@ -12,7 +12,7 @@ def send_command(shell, cmd, quick):
         shell.expect(PROMPT)
     else:
         shell.sendline(cmd)
-        shell.expect(PROMPT)
+        shell.expect(PROMPT, timeout=300)
         shell.expect(pexpect.TIMEOUT)
 
     response = shell.before
@@ -50,7 +50,7 @@ def scp(user, host, password, filename):
     ssh_new_key_string = 'Are you sure you want to continue connecting'
     scp_login_string = 'scp {} {}@{}:/'.format(filename, user, host)
 
-    shell = pexpect.spawn(scp_login_string)
+    shell = pexpect.spawn(scp_login_string, timeout=300)
 
     return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[P|p]assword:'])
 
@@ -98,14 +98,3 @@ def push(command, target, wait, file):
         click.echo("Please use the 'navi ssh' command to enter your ssh credentials\n "
                    "If you have, then this host may not be a Linux machine or your Credentials are not working\n"
                    "Here is the Error: {}".format(E))
-
-
-
-
-
-
-
-        #send_command(child, "curl -H 'X-Key: 2c1e661ed35a9dc102309f9e199c715bcc8918dea5c0aa32402aea9aaca076f9' 'https://cloud.tenable.com/install/agent?name=bot_test&groups=Linux' | bash")
-    #send_command(child, 'echo second')
-
-

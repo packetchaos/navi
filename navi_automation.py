@@ -7,7 +7,7 @@ import time
 # The structure is there to help you with the command syntax.
 
 start = time.time()
-sys('navi keys --a access_key --s secret_key')
+sys('navi keys --a e702410ef52071f1f0185580a3160aaf7f41c24c28a69f98904a83df805d0cb9 --s 2664a368c1fc3c6e8df38dc781f4e81ef52d5d14f69c2a7fc4f039ce0b0ef856')
 
 sys('echo Adding User Groups')
 # Create User Groups

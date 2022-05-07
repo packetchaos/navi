@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.7.17"
+    return "navi-6.7.18"
 
 
 def tenb_connection():
@@ -127,6 +127,9 @@ def request_data(method, url_mod, **kwargs):
                 break
             else:
                 click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))
+                click.echo(r.request)
+                click.echo(r.headers)
+                click.echo(r.reason)
                 break
         except ConnectionError:
             click.echo("Check your connection...You got a connection error. Retying")

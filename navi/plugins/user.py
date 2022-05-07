@@ -28,10 +28,12 @@ def change_auth_settings(user_id, payload):
 def get_user_id(username):
     data = request_data("GET", "/users")
     user_id = 0
+    user_uuid = 0
     for u in data["users"]:
         if username == u["username"]:
             user_id = u["id"]
-    return user_id
+            user_uuid = u['uuid']
+    return user_id, user_uuid
 
 
 @click.group(help="Enable, Disable or add users")
@@ -52,7 +54,7 @@ def add(username, password, permission, name, email):
         exit()
 
     # Check to see has already been created
-    user_id = get_user_id(username)
+    user_id, user_uuid = get_user_id(username)
 
     if user_id == 0:
         # if the user doesn't exist. Create it.

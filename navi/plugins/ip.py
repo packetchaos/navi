@@ -1,7 +1,7 @@
 import click
 import textwrap
 from sqlite3 import Error
-from .api_wrapper import tenb_connection
+from .api_wrapper import tenb_connection, request_data
 from .database import db_query
 
 
@@ -49,6 +49,11 @@ def vulns_by_uuid(uuid):
         click.echo("")
     except Error as e:
         click.echo(e)
+
+
+def get_attributes(uuid):
+    attr_data = request_data('GET', '/api/v3/assets/{}/attributes'.format(uuid))
+    return attr_data
 
 
 def info_by_uuid(uuid):
@@ -462,7 +467,14 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                         click.echo("{} : {}".format(tags["tag_key"], tags['tag_value']))
                 except KeyError:
                     pass
+                try:
+                    click.echo("\nCustom Attributes:")
+                    click.echo("-" * 15)
+                    for attr in get_attributes(ipaddr)['attributes']:
+                        click.echo("{} : {}".format(attr['name'], attr['value']))
 
+                except KeyError:
+                    pass
                 click.echo("\nVulnerability Counts")
                 click.echo("-" * 15)
 

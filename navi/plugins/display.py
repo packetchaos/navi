@@ -361,6 +361,7 @@ def agents(uuid):
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
 
+
 @display.command(help="Display Target Groups")
 def tgroups():
     try:
@@ -728,10 +729,26 @@ def permissions():
                 try:
                     subject_names.append(names['name'])
                 except KeyError:
-                    # Alladmins perm has no name
+                    # All admins perm has no name
                     pass
             click.echo("{:80s} {}".format(textwrap.shorten(perm['name'], width=80),
                                           textwrap.shorten("{}".format(subject_names), width=70)))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+
+
+@display.command(help="Display custom attributes")
+def attributes():
+    custom_attributes = request_data("GET", "/api/v3/assets/attributes")
+
+    click.echo("\n{:60s} {:50} {}".format("Attribute Name", "Description", "UUID"))
+    click.echo("-" * 150)
+    for attr in custom_attributes['attributes']:
+        attr_name = attr['name']
+        attr_description = attr['description']
+        attr_uuid = attr['id']
+        click.echo("{:60s} {:50} {}".format(attr_name, attr_description, attr_uuid))
+    click.echo()
+
+

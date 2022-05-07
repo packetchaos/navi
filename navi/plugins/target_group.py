@@ -131,8 +131,10 @@ def migrate(scan, tags):
                     print("\nI've created your new Tag - {} : {}\n".format(group_type, name))
                     print("The Category UUID is : {}\n".format(cat_uuid))
                     print("The Value UUID is : {}\n".format(value_uuid))
-            except:
+            except TypeError:
+                click.echo("\nTag has already been created, or there was a name conflict\n")
                 pass
+
     elif scan:
         def grab_tg_members():
             # Grab all members of every target group and put them into a dict for evaluation later
