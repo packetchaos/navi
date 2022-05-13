@@ -26,9 +26,9 @@ def create_permission(name, tag_name, uuid, perm_string, perm_type, subject_type
     return response
 
 
-def create_granular_permission(tag_name, uuid, perm_string, perm_type, subject_type, subject_name, subject_uuid):
+def create_granular_permission(tag_name, uuid, perm_list, perm_type, subject_type, subject_name, subject_uuid):
     payload = {
-        "actions": ["{}".format(perm_string)],
+        "actions": perm_list,
         "objects": [
             {
                 "name": tag_name,
@@ -37,7 +37,7 @@ def create_granular_permission(tag_name, uuid, perm_string, perm_type, subject_t
             }
         ],
         "subjects": [{"name": subject_name, "type": subject_type, "uuid": subject_uuid}],
-        "name": "{} : [{}]".format(tag_name, perm_string)
+        "name": "{} : {}".format(tag_name, perm_list)
     }
     response = request_data("POST", "/api/v3/access-control/permissions", payload=payload)
     return response
@@ -72,12 +72,13 @@ def access():
 @click.option('--v', default='', required=True, help="Tag Value to use")
 @click.option('--user', default='', help="The User you want to assign to the Permission")
 @click.option('--usergroup', default='', help="The User Group you want to assign to the Permission")
-@click.option('--perm', type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True),
+@click.option('--perm', multiple=True, type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True),
               required=True)
 def create(c, v, user, usergroup, perm):
     # Create the naming format for the tag permission
     perm_name = "{},{}".format(c, v)
     try:
+
         tag_uuid = 0
         for tag in tio.tags.list():
 
@@ -89,14 +90,14 @@ def create(c, v, user, usergroup, perm):
         if user:
             user_id, uuid = get_user_id(user)
             resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                              perm_string=perm, perm_type="Tag", subject_type="User",
+                                              perm_list=perm, perm_type="Tag", subject_type="User",
                                               subject_name=user, subject_uuid=uuid)
             pprint.pprint(resp)
 
         elif usergroup:
             group_id, uuid = get_group_id(usergroup)
             resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                              perm_string=perm, perm_type="Tag", subject_type="UserGroup",
+                                              perm_list=perm, perm_type="Tag", subject_type="UserGroup",
                                               subject_name=usergroup, subject_uuid=uuid)
             pprint.pprint(resp)
         else:
