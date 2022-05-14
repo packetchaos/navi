@@ -149,3 +149,25 @@ def insert_apps(conn, apps):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, apps)
+
+
+def insert_fixed(conn, fixed):
+    sql = '''INSERT or IGNORE into fixed(
+                            asset_uuid, 
+                            output, 
+                            plugin_id, 
+                            plugin_name, 
+                            port,
+                            first_found,
+                            last_fixed,
+                            last_found,
+                            severity,
+                            delta,
+                            pass_fail,
+                            state,
+                            special_url
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, fixed)

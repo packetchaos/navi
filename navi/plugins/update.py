@@ -3,6 +3,7 @@ from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
 from .was_data_export import grab_scans
 from .th_compliance_export import compliance_export
+from .fixed_export import fixed_export
 
 
 def threads_check(threads):
@@ -76,3 +77,11 @@ def compliance(threads, days, exid):
         exid = '0'
 
     compliance_export(days, exid, threads)
+
+
+@update.command(help="Update Navi DB with Fixed data for SLA processing")
+@click.option('--c', default='', help="Tag Category name")
+@click.option('--v', default='', help="Tag Value")
+@click.option('--days', default='30', help="Limit the download to X # of days")
+def fixed(c, v, days):
+    fixed_export(c, v, days)

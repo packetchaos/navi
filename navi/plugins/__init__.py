@@ -30,6 +30,8 @@ from .ssh import ssh
 from .scan_evaluation import evaluate
 from .access import access
 from .attribute import attribute
+from .calculate import calculate
+from .sla import sla
 
 
 def plugin_loader(group):
@@ -65,4 +67,6 @@ def plugin_loader(group):
     group.add_command(evaluate)
     group.add_command(access)
     group.add_command(attribute)
+    group.add_command(calculate)
+    group.add_command(sla)
 

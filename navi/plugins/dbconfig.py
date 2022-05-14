@@ -147,3 +147,24 @@ def create_compliance_table():
                             );"""
 
     create_table(compliance_conn, create_compliance)
+
+
+def create_fixed_table():
+    database = r"navi.db"
+    fixed_conn = new_db_connection(database)
+    fixed_table = """CREATE TABLE IF NOT EXISTS fixed (
+                            asset_uuid text,  
+                            output text, 
+                            plugin_id text, 
+                            plugin_name text,  
+                            port text,
+                            first_found text,
+                            last_fixed text,
+                            last_found text,
+                            severity text,
+                            delta text,
+                            pass_fail text,
+                            state text,
+                            special_url text
+                            );"""
+    fixed_conn.execute(fixed_table)

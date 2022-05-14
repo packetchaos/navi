@@ -169,3 +169,9 @@ def vulns(file, severity):
         asset_query = "select * from vulns;"
 
     query_export(asset_query, file)
+
+
+@export.command(help="Export Vulnerabilities that have failed")
+def failures():
+    click.echo("\nExporting ALl vulnerabilities that failed your SLA\n")
+    query_export("select * from fixed where pass_fail=='Fail';", "sla_backlog")
