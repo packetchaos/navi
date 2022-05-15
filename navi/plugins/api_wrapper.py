@@ -27,6 +27,20 @@ def tenb_connection():
         pass
 
 
+def grab_url():
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    with conn:
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT * from url;")
+            rows = cur.fetchall()
+            url = rows[0][1]
+        except Error:
+            url = 'https://cloud.tenable.com'
+    return url
+
+
 def grab_headers():
     database = r"navi.db"
     conn = new_db_connection(database)
@@ -47,7 +61,7 @@ def grab_headers():
 def request_no_response(method, url_mod, **kwargs):
 
     # set the Base URL
-    url = "https://cloud.tenable.com"
+    url = grab_url() #"https://cloud.tenable.com"
 
     # check for params and set to None if not found
     try:
@@ -81,7 +95,7 @@ def request_no_response(method, url_mod, **kwargs):
 def request_data(method, url_mod, **kwargs):
 
     # set the Base URL
-    url = "https://cloud.tenable.com"
+    url = grab_url() #"https://cloud.tenable.com"
 
     # check for params and set to None if not found
     try:

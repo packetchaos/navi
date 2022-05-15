@@ -4,6 +4,7 @@ from .th_vuln_export import vuln_export
 from .was_data_export import grab_scans
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
+from .database import new_db_connection, drop_tables, create_table
 
 
 def threads_check(threads):
@@ -85,3 +86,20 @@ def compliance(threads, days, exid):
 @click.option('--days', default='30', help="Limit the download to X # of days")
 def fixed(c, v, days):
     fixed_export(c, v, days)
+
+
+@update.command(help="Change the Base URL for Navi")
+@click.argument('new_url')
+def url(new_url):
+
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    drop_tables(conn, 'url')
+    create_url_table = """CREATE TABLE IF NOT EXISTS url (name text, url text);"""
+    create_table(conn, create_url_table)
+
+    info = ("Custom URL", new_url)
+    with conn:
+        sql = '''INSERT or IGNORE into url (name, url) VALUES(?,?)'''
+        cur = conn.cursor()
+        cur.execute(sql, info)
