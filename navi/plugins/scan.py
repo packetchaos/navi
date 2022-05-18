@@ -174,8 +174,11 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
             exit()
 
     if policy:
-
+        custom_template = 'ab4bacd2-05f6-425c-9d79-3ba3940ad1c24e51e1f403febe40'
         try:
+            # Change template
+            payload["uuid"] = custom_template
+
             # Add policy to payload
             payload["settings"]["policy_id"] = policy
 
@@ -191,7 +194,7 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
 
         # Add plugins to dictionary
         payload["enabled_plugins"] = [plugin]
-
+    print(payload)
     # create a new scan
     data = request_data('POST', '/scans', payload=payload)
 
