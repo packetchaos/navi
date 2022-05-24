@@ -260,7 +260,9 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--query', default='', help="Use a custom query to create a tag.")
 @click.option('--remove', default='', help="Remove this tag from all assets to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove, cve):
+@click.option('--xrefs', default='', help="Tag by Cross References like CISA")
+@click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove, cve, xrefs, xid):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -276,6 +278,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     if output != '' and plugin == '':
         click.echo("You must supply a plugin")
         exit()
+
+    if xid != '' and xrefs == '':
+        click.echo("You must supply a Cross Reference Type using --xrefs option")
 
     if plugin:
         try:
@@ -575,3 +580,19 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 else:
                     pass
             tag_by_uuid(tag_list, c, v, d)
+
+    if xrefs:
+        if xid:
+            xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
+
+        else:
+            xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%'".format(xrefs))
+
+        for x in xref_data:
+            uuid = x[0]
+            if uuid not in tag_list:
+                tag_list.append(uuid)
+
+            else:
+                pass
+        tag_by_uuid(tag_list, c, v, d)

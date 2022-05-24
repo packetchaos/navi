@@ -314,3 +314,23 @@ def name(plugin_name):
         click.echo("{:8s} {:20} {:45} {:70}".format(vulns[3], vulns[0], str(vulns[1]), textwrap.shorten(str(vulns[2]), 65)))
 
     click.echo()
+
+
+@find.command(help="Find Assets that have a Cross Reference Type and/or ID")
+@click.argument('xref')
+@click.option("--xid", "--xref-id", default='', help="Specify a Cross Reference ID")
+def xrefs(xref, xid):
+    click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
+    click.echo("-" * 150)
+    if xid:
+        xref_data = db_query("select plugin_id, asset_ip, fqdn, asset_uuid, network, xrefs from vulns LEFT JOIN"
+                             " assets ON asset_uuid = uuid where xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xref, xid))
+
+    else:
+        xref_data = db_query("select plugin_id, asset_ip, fqdn, asset_uuid, network, xrefs from vulns LEFT JOIN"
+                             " assets ON asset_uuid = uuid where xrefs LIKE '%{}%'".format(xref))
+
+    for row in xref_data:
+        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[0], row[1], textwrap.shorten(row[2], 46), row[3], row[4]))
+
+    click.echo()

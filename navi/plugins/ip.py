@@ -8,14 +8,22 @@ from .database import db_query
 def plugin_by_ip(ipaddr, plugin):
     try:
         if len(ipaddr) < 17:
-            rows = db_query("SELECT output, cves, score, state from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
         else:
-            rows = db_query("SELECT output, cves, score, state from vulns where asset_uuid=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where asset_uuid=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
 
         for plug in rows:
             click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
             if plug[2] != ' ':
                 click.echo("\nVPR Score: {}".format(plug[2]))
+
+            if plug[4]:
+                click.echo("\nCross References\n")
+                click.echo("-" * 80)
+                for xref in eval(plug[4]):
+                    click.echo("Type: {}".format(xref['type']))
+                    click.echo("ID: {}".format(xref['id']))
+                    click.echo()
 
             click.echo("\nPlugin Output")
             click.echo("-" * 60)

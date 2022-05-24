@@ -120,8 +120,9 @@ def insert_vulns(conn, vulns):
                             state,
                             cves,
                             score,
-                            exploit
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            exploit,
+                            xrefs
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')

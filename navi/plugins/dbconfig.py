@@ -56,7 +56,8 @@ def create_vulns_table():
                             state text,
                             cves text,
                             score text,
-                            exploit text
+                            exploit text,
+                            xrefs text
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)

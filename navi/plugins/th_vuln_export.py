@@ -155,6 +155,13 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(" ")
 
                     try:
+                        xrefs = vulns['plugin']['xrefs']
+
+                        vuln_list.append(str(xrefs))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
                         insert_vulns(vuln_conn, vuln_list)
                     except Error as e:
                         click.echo(e)
