@@ -11,10 +11,10 @@ sys('navi keys --a e702410ef52071f1f0185580a3160aaf7f41c24c28a69f98904a83df805d0
 
 sys('echo Adding User Groups')
 # Create User Groups
-sys('navi usergroup new --name "Linux" >> user_navi.log')
-sys('navi usergroup new --name "Corporate Apps" >> user_navi.log')
-sys('navi usergroup new --name "Custom Apps" >> user_navi.log')
-sys('navi usergroup new --name "Software" >> user_navi.log')
+sys('navi usergroup create --name "Linux" >> user_navi.log')
+sys('navi usergroup create --name "Corporate Apps" >> user_navi.log')
+sys('navi usergroup create --name "Custom Apps" >> user_navi.log')
+sys('navi usergroup create --name "Software" >> user_navi.log')
 
 sys('echo creating users')
 # Create or enable users
@@ -87,9 +87,9 @@ sys('navi update full >> navi_update.log')
 
 sys('echo Access groups')
 # Use a Tag create an access group - For now, assign owners in the UI.
-sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Jira" --usergroup "Corporate Apps" --perm "scanview" >> access_navi.log')
-sys('navi agroup --name "Corporate Apps" -tag --c "Corporate Apps" --v "Confluence" --usergroup "Corporate Apps" --perm "scanview" >> access_navi.log')
-sys('navi agroup --name "Custom Apps" -tag --c "Custom Apps" --v "New host" --usergroup "Custom Apps" --perm "scanview" >> access_navi.log')
+sys('navi access create -tag --c "Corporate Apps" --v "Jira" --usergroup "Corporate Apps" --perm CanView --perm CanScan --perm CanUse >> access_navi.log')
+sys('navi access create -tag --c "Corporate Apps" --v "Confluence" --usergroup "Corporate Apps" --perm CanView --perm CanScan --perm CanUse >> access_navi.log')
+sys('navi access create -tag --c "Custom Apps" --v "New host" --usergroup "Custom Apps" --perm CanView --perm CanScan --perm CanUse >> access_navi.log')
 
 sys('echo Delete then adds troubleshooting Tags')
 # Find Assets that are taking a log time to scan; delete the tag first, so that you always have the latest data for scan issues

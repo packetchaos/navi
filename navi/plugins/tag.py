@@ -259,7 +259,8 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
 @click.option('--remove', default='', help="Remove this tag from all assets to support ephemeral asset tagging")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove):
+@click.option('--cve', default='', help="Tag based on a CVE ID")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove, cve):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -554,3 +555,23 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
         else:
             remove_uuids_from_tag(remove)
+
+    if cve:
+
+        if len(cve) < 10:
+            click.echo("\nThis is likely not a CVE...Try again...\n")
+
+        elif "CVE" not in cve:
+            click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
+
+        else:
+            plugin_data = db_query("SELECT asset_uuid from vulns where cves LIKE '%" + cve + "%';")
+
+            for x in plugin_data:
+                uuid = x[0]
+                if uuid not in tag_list:
+                    tag_list.append(uuid)
+
+                else:
+                    pass
+            tag_by_uuid(tag_list, c, v, d)
