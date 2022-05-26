@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.9.0"
+    return "navi-6.9.1"
 
 
 def tenb_connection():
@@ -21,8 +21,18 @@ def tenb_connection():
             for row in rows:
                 access_key = row[0]
                 secret_key = row[1]
-            tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
-            return tio
+
+            # Check for custom URL
+            try:
+                cur.execute("SELECT * from url;")
+                url_rows = cur.fetchall()
+                url = url_rows[0][1]
+                tio = TenableIO(access_key, secret_key, url=url, vendor='Casey Reid', product='navi', build=navi_version())
+                return tio
+            except Error:
+                tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
+                return tio
+
     except Error:
         pass
 
