@@ -32,6 +32,7 @@ from .access import access
 from .attribute import attribute
 from .calculate import calculate
 from .sla import sla
+from .rules import rules
 
 
 def plugin_loader(group):
@@ -69,4 +70,5 @@ def plugin_loader(group):
     group.add_command(attribute)
     group.add_command(calculate)
     group.add_command(sla)
+    group.add_command(rules)
 
