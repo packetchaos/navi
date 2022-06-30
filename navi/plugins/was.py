@@ -62,27 +62,42 @@ def was():
     pass
 
 
-@was.command(help="Display Web Application Scans")
-def scans():
-    try:
-        click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
-        click.echo("-" * 150)
-        import pprint
-        for web_scan in tio.scans.list():
-            try:
-                if web_scan['type'] == "webapp":
-                    try:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(web_scan['name']), str(web_scan['id']), str(web_scan['status']),
-                                                                    str(web_scan['uuid'])))
-                    except KeyError:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(web_scan['name']), str(web_scan['id']), str(web_scan['status']),
-                                                                    "No UUID"))
-            except KeyError:
-                # If there is no scan type we don't care, skip over the record.
-                pass
+@was.command(help="Display Scan IDs for a given Scan Config")
+@click.argument('config_uuid')
+def scans(config_uuid):
+    params = {"limit": "200", "offset": "0"}
+    was_data = request_data("POST", "/was/v2/configs/{}/scans/search".format(config_uuid), params=params)
 
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
+    click.echo("\n{:70s} {:15s} {:15s} {:40} {}".format("Target FQDN", "Audited URLS", "Found URLS", "Scan_ID", "Status"))
+    click.echo("-" * 150)
+    for app_data in was_data['items']:
+
+        app_url = app_data['application_uri']
+        app_scan_id = app_data['scan_id']
+        try:
+            app_audited_urls = app_data['metadata']['audited_urls']
+        except TypeError:
+            app_audited_urls = 0
+        except KeyError:
+            app_audited_urls = 0
+        try:
+            app_found_urls = app_data['metadata']['found_urls']
+        except TypeError:
+            app_found_urls = 0
+        except KeyError:
+            app_found_urls = 0
+        try:
+            app_status = app_data['status']
+        except KeyError:
+            app_status = "None"
+        try:
+            updated = app_data['updated_at']
+        except KeyError:
+            updated = "None"
+
+        click.echo("{:70s} {:15s} {:15s} {:40} {}".format(textwrap.shorten(str(app_url), width=70), str(app_audited_urls), str(app_found_urls), str(app_scan_id), str(app_status), str(updated)))
+
+    click.echo()
 
 
 @was.command(help="Start a Web Application Scan")
@@ -92,29 +107,26 @@ def start(scan_id):
     request_data('POST', '/was/v2/configs/' + str(scan_id) + '/scans')
 
 
-@was.command(help="Display Details for Web Application Scan")
-@click.argument('scan_id')
-def details(scan_id):
+@was.command(help="Display Details for Web Application Scan by Scan_ID")
+@click.argument('scan_uuid')
+def details(scan_uuid):
+    params = {"limit": "200", "offset": "0"}
+
     try:
-        detail_report_data = request_data('GET', '/was/v2/scans/' + str(scan_id) + '/report')
+        detail_report_data = request_data("POST", "/was/v2/scans/{}/vulnerabilities/search".format(scan_uuid), params=params)
         detail_high = []
         detail_meduim = []
         detail_low = []
-        detail_name = detail_report_data['config']['name']
-        try:
-            detail_target = detail_report_data['scan']['target']
-        except KeyError:
-            detail_target = detail_report_data['config']['settings']['target']
-        click.echo()
-        click.echo(detail_name)
-        click.echo(detail_target)
         click.echo("-" * 40)
         click.echo("\n{:10s} {:45s} {:10s} {:10s} {:10s} {:40s} {:6s} {:10s}".format("Plugin", "Plugin Name", "Severity", "CVSS", "CWE", "WASC", "OWASP", "OWASP-API"))
         click.echo("-" * 150)
-        for detail_finding in detail_report_data['findings']:
-            detail_risk = detail_finding['risk_factor']
+        for detail_finding in detail_report_data['items']:
             detail_plugin_id = detail_finding['plugin_id']
-            plugin_name = detail_finding['name']
+            plugin_data = request_data("GET", "/was/v2/plugins/{}".format(detail_plugin_id))
+
+            detail_risk = plugin_data['risk_factor']
+
+            plugin_name = plugin_data['name']
             cvss = ' '
             cwe = ' '
             wasc = ' '
@@ -127,19 +139,19 @@ def details(scan_id):
             elif detail_risk == 'low':
                 detail_low.append(detail_plugin_id)
             try:
-                cvss = detail_finding['cvss']
+                cvss = plugin_data['cvss']
             except KeyError:
                 pass
             try:
-                cwe = detail_finding['cwe']
+                cwe = plugin_data['cwe']
             except KeyError:
                 pass
             try:
-                wasc = detail_finding['wasc'][0]
+                wasc = plugin_data['wasc'][0]
             except IndexError:
                 pass
 
-            for yr in detail_finding['owasp']:
+            for yr in plugin_data['owasp']:
                 if yr['year'] == "2017":
                     owasp_2017 = yr['category']
                 if yr['year'] == "2019":
@@ -212,107 +224,37 @@ def scan(scan_target, file):
 
 @was.command(help="Display Web Application Configs")
 def configs():
-    params = {"size": "1000"}
-    config_info = request_data('GET', '/was/v2/configs', params=params)
-    click.echo("\n{:80s} {:40s} {}".format("Name", "Config ID", "Last Run"))
+    params = {"limit": "200", "offset": "0"}
+    was_data = request_data("POST", "/was/v2/configs/search", params=params)
+
+    click.echo("\n{:70s} {:40s} {:14s} {}".format("Config Name", "Config ID", "Status", "Last Update"))
     click.echo("-" * 150)
-    for config in config_info['data']:
+    for app_data in was_data['items']:
         try:
-            updated = config['last_scan']['updated_at']
-        except TypeError:
-            updated = "Not Run yet"
-        click.echo("{:80s} {:40s} {}".format(textwrap.shorten(str(config['name']), width=80), str(config['config_id']), str(updated)))
+            app_name = app_data['name']
+            app_scan_id = app_data['config_id']
+            app_status = app_data['last_scan']['status']
+            updated = app_data['updated_at']
+
+            click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_name), width=70), str(app_scan_id), str(app_status), str(updated)))
+        except Exception as E:
+            error_msg(E)
     click.echo()
 
 
 @was.command(help="Display Statistics for Web Application Scan")
 @click.argument('scan_id')
 def stats(scan_id):
-    scan_metadata = request_data('GET', '/was/v2/scans/' + str(scan_id))
-    report = request_data('GET', '/was/v2/scans/' + str(scan_id) + '/report')
-    high = []
-    medium = []
-    low = []
-    name = ''
-    try:
-        name = report['config']['name']
-    except KeyError:
-        print("Scan Did not Finish or your UUID is incorrect.")
-        exit()
-    try:
-        target = report['scan']['target']
-    except KeyError:
-        target = report['config']['settings']['target']
+    params = {"limit": "200", "offset": "0"}
+    was_data = request_data("POST", "/was/v2/scans/{}/vulnerabilities/search".format(scan_id), params=params)
 
-    output = ''
-    click.echo()
-    click.echo(name)
-    click.echo(target)
-    click.echo("-" * 60)
-    click.echo("\nNotes:")
-    click.echo("-" * 60)
-    for note in report['notes']:
-        click.echo(note['title'])
-        click.echo("\t- {}".format(note['message']))
+    for finding in was_data['items']:
+        if str(finding['plugin_id']) == '98000':
 
-    click.echo("\nScan Data Available")
-    click.echo("-" * 40)
+            scan_meta_data = finding['details']['output']
+            print(scan_meta_data)
 
-    try:
-        requests_made = scan_metadata['metadata']['progress']['request_count']
-    except KeyError:
-        requests_made = scan_metadata['metadata']['request_count']
-    except TypeError:
-        requests_made = 0
-
-    try:
-        pages_crawled = scan_metadata['metadata']['progress']['crawled_urls']
-    except KeyError:
-        try:
-            pages_crawled = scan_metadata['metadata']['audited_urls']
-        except KeyError:
-            try:
-                pages_crawled = scan_metadata['metadata']['crawled_urls']
-            except KeyError:
-                pages_crawled = scan_metadata['metadata']['progress']['audited_urls']
-    except TypeError:
-        pages_crawled = 0
-    try:
-        pages_audited = scan_metadata['metadata']['progress']['audited_pages']
-    except KeyError:
-        pages_audited = scan_metadata['metadata']['audited_pages']
-    except TypeError:
-        pages_audited = 0
-
-    click.echo("Requests Made: {}".format(requests_made))
-    click.echo("Pages Crawled: {}".format(pages_crawled))
-    click.echo("Pages Audited: {}".format(pages_audited))
-
-    for finding in report['findings']:
-        risk = finding['risk_factor']
-        plugin_id = finding['plugin_id']
-
-        if plugin_id == 98000:
-            output = finding['output']
-
-        if risk == 'high':
-            high.append(plugin_id)
-        elif risk == 'medium':
-            medium.append(plugin_id)
-        elif risk == 'low':
-            low.append(plugin_id)
-
-    click.echo("\nSeverity Counts")
-    click.echo("-"*20)
-    click.echo("High: {}".format(len(high)))
-    click.echo("Medium: {}".format(len(medium)))
-    click.echo("Low: {}".format(len(low)))
-    click.echo("\nScan Statistics")
-    click.echo("-" * 20)
-    click.echo(output)
-    click.echo()
-
-
+'''
 @was.command(help="Display a Summary of the WAS scans in Tenable.io - Last 30 days")
 def summary():
     # Grab all of the Scans
@@ -378,27 +320,4 @@ def export(d, s):
 
     if not s and not d:
         click.echo("\nYou must specify a selection use -d for Detailed and -s for summary\n")
-
-
-def abort_if_false(ctx, param, value):
-    if not value:
-        ctx.abort()
-
-
-@was.command(help="Launch a Docker Container for WAS Reports using Docker and Flask")
-@click.option("--yes", is_flag=True, callback=abort_if_false, prompt="\nThis function Requires Docker "
-                                                                     "and Launches a Docker container: "
-                                                                     "silentninja/navi:was\n\n Please confirm you wish to "
-                                                                     "launch the docker container.\n\n This will take several"
-                                                                     " minutes\n\n",
-              help="Launch WAS Docker container - silentninja/navi:was")
-def reporter(yes):
-    import os
-    access_key = 0
-    secret_key = 0
-    key_pair = db_query("select * from keys;")
-    for keys in key_pair:
-        access_key = keys[0]
-        secret_key = keys[1]
-
-    os.system("docker run -it -e 'access_key={}' -e 'secret_key={}' -p 5004:5004 silentninja/navi:was".format(access_key, secret_key))
+'''
