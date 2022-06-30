@@ -104,6 +104,40 @@ def parse_data(chunk_data):
             except KeyError:
                 csv_list.append(" ")
 
+            try:
+                csv_list.append(assets['aws_ec2_instance_state'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['aws_ec2_name'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['aws_ec2_region'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['aws_availability_zone'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['gcp_instance_id'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['gcp_project_id'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['gcp_zone'])
+            except KeyError:
+                csv_list.append(" ")
             # Collect and save Tag Data
             try:
                 global tag_id

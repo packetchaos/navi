@@ -75,8 +75,28 @@ def insert_compliance(conn, compliance):
 
 
 def insert_assets(conn, assets):
-    sql = '''INSERT or IGNORE into assets(ip_address, hostname, fqdn, uuid, first_found, last_found, operating_system,
-                       mac_address, agent_uuid, last_licensed_scan_date, network, acr, aes, aws_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    sql = '''INSERT or IGNORE into assets(
+                                          ip_address, 
+                                          hostname, 
+                                          fqdn, 
+                                          uuid, 
+                                          first_found, 
+                                          last_found, 
+                                          operating_system,
+                                          mac_address, 
+                                          agent_uuid, 
+                                          last_licensed_scan_date, 
+                                          network, 
+                                          acr, 
+                                          aes, 
+                                          aws_id,
+                                          aws_ec2_instance_state,
+                                          aws_ec2_name,
+                                          aws_ec2_region,
+                                          aws_availability_zone,
+                                          gcp_instance_id,
+                                          gcp_project_id,
+                                          gcp_zone) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, assets)
@@ -121,8 +141,18 @@ def insert_vulns(conn, vulns):
                             cves,
                             score,
                             exploit,
-                            xrefs
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            xrefs,
+                            synopsis, 
+                            see_also,
+                            solution,
+                            version, 
+                            description, 
+                            cvss3_base_score,
+                            cvss3_temporal_score,
+                            cvss_base_score,
+                            cvss_temporal_score,
+                            OSes
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')

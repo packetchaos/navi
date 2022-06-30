@@ -57,7 +57,17 @@ def create_vulns_table():
                             cves text,
                             score text,
                             exploit text,
-                            xrefs text
+                            xrefs text,
+                            synopsis text, 
+                            see_also text,
+                            solution text,
+                            version text, 
+                            description text, 
+                            cvss3_base_score text,
+                            cvss3_temporal_score text,
+                            cvss_base_score text,
+                            cvss_temporal_score text,
+                            OSes text
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)
@@ -80,7 +90,14 @@ def create_assets_table():
                             network text,
                             acr text,
                             aes text,
-                            aws_id text
+                            aws_id text,
+                            aws_ec2_instance_state text,
+                            aws_ec2_name text,
+                            aws_ec2_region text,
+                            aws_availability_zone text,
+                            gcp_instance_id text,
+                            gcp_project_id text,
+                            gcp_zone text
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)

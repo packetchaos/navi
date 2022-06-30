@@ -162,6 +162,76 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(" ")
 
                     try:
+                        synopsis = vulns['plugin']['synopsis']
+
+                        vuln_list.append(str(synopsis))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        see_also = vulns['plugin']['see_also']
+
+                        vuln_list.append(str(see_also))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        solution = vulns['plugin']['solution']
+
+                        vuln_list.append(str(solution))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        version = vulns['plugin']['version']
+
+                        vuln_list.append(str(version))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        description = vulns['plugin']['description']
+
+                        vuln_list.append(str(description))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        cvss3_base_score = vulns['plugin']['cvss3_base_score']
+
+                        vuln_list.append(str(cvss3_base_score))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        cvss3_temporal_score = vulns['plugin']['cvss3_temporal_score']
+
+                        vuln_list.append(str(cvss3_temporal_score))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        cvss_base_score = vulns['plugin']['cvss_base_score']
+
+                        vuln_list.append(str(cvss_base_score))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        cvss_temporal_score = vulns['plugin']['cvss_temporal_score']
+
+                        vuln_list.append(str(cvss_temporal_score))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        OSes = vulns['asset']['operating_system']
+
+                        vuln_list.append(str(OSes))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
                         insert_vulns(vuln_conn, vuln_list)
                     except Error as e:
                         click.echo(e)
