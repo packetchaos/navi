@@ -17,7 +17,7 @@ def plugin_by_ip(ipaddr, plugin):
             if plug[2] != ' ':
                 click.echo("\nVPR Score: {}".format(plug[2]))
 
-            if plug[4]:
+            if plug[4] != ' ':
                 click.echo("\nCross References\n")
                 click.echo("-" * 80)
                 for xref in eval(plug[4]):
