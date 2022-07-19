@@ -23,6 +23,13 @@ def get_scans_by_owner(owner):
     return scan_data
 
 
+def get_scans():
+    scan_list = []
+    for move_scan in tio.scans.list():
+        scan_list.append(move_scan['id'])
+    return scan_list
+
+
 def get_owner_uuid(owner):
     users = request_data('GET', '/users')
     user_uuid = 0
@@ -344,8 +351,7 @@ def move(a, s, limit, scanid):
     def get_scans():
         move_scan_list = []
         for move_scan in src.scans.list():
-            if move_scan['type'] == 'remote' and move_scan['status'] == 'completed':
-                move_scan_list.append(move_scan['id'])
+            move_scan_list.append(move_scan['id'])
         return move_scan_list
 
     def get_history(move_scan_id):
@@ -411,7 +417,8 @@ def move(a, s, limit, scanid):
 @click.option('--host', default=None, help="T.sc IP Address")
 @click.option('--scanid', default=None, help="Limit the Download to one scan ID")
 @click.option('--repoid', default=None, help="T.sc Repository to import the scan data into")
-def bridge(un, pw, host, scanid, repoid, a, s):
+@click.option('-allscans', is_flag=True, help="Move All remote and completed scans to a single repository")
+def bridge(un, pw, host, scanid, repoid, a, s, allscans):
     from tenable.sc import TenableSC
 
     sc = TenableSC(host)
@@ -421,21 +428,33 @@ def bridge(un, pw, host, scanid, repoid, a, s):
 
     if a and s:
         sc.login(access_key=a, secret_key=s)
+    # Turn into a function, create an if statement with a for loop, looping over every
+    # completed scan.
 
-    try:
-        click.echo("\nExporting your Scan ID: {} now\n".format(scanid))
+    def download_import_scan(sid, repoid):
+        try:
+            click.echo("\nExporting your Scan ID: {} now\n".format(sid))
 
-        with open('{}.nessus'.format(str(scanid)), 'wb') as nessus:
-            tio.scans.export(scanid, fobj=nessus)
+            with open('{}.nessus'.format(str(sid)), 'wb') as nessus:
+                tio.scans.export(sid, fobj=nessus)
 
-        click.echo("Importing your Scan into Repo {} at https://{}\n".format(repoid, host))
+            click.echo("Importing your Scan into Repo {} at https://{}\n".format(repoid, host))
 
-        with open('{}.nessus'.format(str(scanid))) as file:
-            sc.scan_instances.import_scan(file, repoid)
+            with open('{}.nessus'.format(str(sid))) as file:
+                sc.scan_instances.import_scan(file, repoid)
 
-        # delete the scan
-        os.remove('{}.nessus'.format(str(scanid)))
-    except:
-        pass
+            # delete the scan
+            os.remove('{}.nessus'.format(str(sid)))
+        except:
+            pass
+
+    if allscans:
+        # Put all scans into a list
+        scan_ids = get_scans()
+
+        for scan_id in scan_ids:
+            download_import_scan(scan_id, repoid)
+    else:
+        download_import_scan(scanid, repoid)
 
     sc.logout()
