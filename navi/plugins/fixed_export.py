@@ -172,7 +172,6 @@ def fixed_export(category, value, days):
 
                         pass_fail = sla_compare(severity, delta)
                     except ValueError:
-                        #print(plugin_id, last_fixed, first_found, asset_uuid)
                         delta = None
                         pass_fail = None
                 else:
@@ -186,3 +185,4 @@ def fixed_export(category, value, days):
                 data_list = [asset_uuid, output, plugin_id, plugin_name, port, first_found, last_fixed, last_found, severity, delta, pass_fail, state, special_url]
 
                 insert_fixed(fixed_conn, data_list)
+    click.echo("Success!")

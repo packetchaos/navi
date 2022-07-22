@@ -33,6 +33,7 @@ from .attribute import attribute
 from .calculate import calculate
 from .sla import sla
 #from .rules import rules
+from .cve_compare import compare
 
 
 def plugin_loader(group):
@@ -71,4 +72,5 @@ def plugin_loader(group):
     group.add_command(calculate)
     group.add_command(sla)
     #group.add_command(rules)
+    group.add_command(compare)
 
