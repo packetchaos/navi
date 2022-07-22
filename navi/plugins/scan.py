@@ -26,7 +26,8 @@ def get_scans_by_owner(owner):
 def get_scans():
     scan_list = []
     for move_scan in tio.scans.list():
-        scan_list.append(move_scan['id'])
+        if move_scan['status'] == 'completed':
+            scan_list.append(move_scan['id'])
     return scan_list
 
 
@@ -348,10 +349,11 @@ def move(a, s, limit, scanid):
     # Destination Container Keys
     dst = TenableIO(access_key=a, secret_key=s)
 
-    def get_scans():
+    def get_all_scans():
         move_scan_list = []
         for move_scan in src.scans.list():
-            move_scan_list.append(move_scan['id'])
+            if move_scan['status'] == 'completed':
+                move_scan_list.append(move_scan['id'])
         return move_scan_list
 
     def get_history(move_scan_id):
@@ -403,7 +405,7 @@ def move(a, s, limit, scanid):
         scan_mover(single_scan)
     else:
         # Grab all of the 'remote' scans
-        scan_list = get_scans()
+        scan_list = get_all_scans()
         click.echo("Grabbing the list {}\n".format(scan_list))
 
         scan_mover(scan_list)
@@ -415,10 +417,11 @@ def move(a, s, limit, scanid):
 @click.option('--a', default=None, help="T.sc Destination Access Key")
 @click.option('--s', default=None, help="T.sc Destination Secret Key")
 @click.option('--host', default=None, help="T.sc IP Address")
+@click.option('-io', is_flag=True, help="Use T.io as the Host to send T.sc scans to T.io")
 @click.option('--scanid', default=None, help="Limit the Download to one scan ID")
 @click.option('--repoid', default=None, help="T.sc Repository to import the scan data into")
 @click.option('-allscans', is_flag=True, help="Move All remote and completed scans to a single repository")
-def bridge(un, pw, host, scanid, repoid, a, s, allscans):
+def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
     from tenable.sc import TenableSC
 
     sc = TenableSC(host)
@@ -431,30 +434,62 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans):
     # Turn into a function, create an if statement with a for loop, looping over every
     # completed scan.
 
-    def download_import_scan(sid, repoid):
+    def download_import_scan(sid, repo_id):
         try:
             click.echo("\nExporting your Scan ID: {} now\n".format(sid))
 
             with open('{}.nessus'.format(str(sid)), 'wb') as nessus:
                 tio.scans.export(sid, fobj=nessus)
 
-            click.echo("Importing your Scan into Repo {} at https://{}\n".format(repoid, host))
+            click.echo("Importing your Scan into Repo {} at https://{}\n".format(repo_id, host))
 
             with open('{}.nessus'.format(str(sid))) as file:
-                sc.scan_instances.import_scan(file, repoid)
+                sc.scan_instances.import_scan(file, repo_id)
 
             # delete the scan
             os.remove('{}.nessus'.format(str(sid)))
         except:
             pass
 
-    if allscans:
-        # Put all scans into a list
-        scan_ids = get_scans()
+    if io:
+        click.echo("\nThis is going to download all of your Tenable.sc scans and import them into Tenable.io.")
+        click.echo("To cancel this process after it has started, close your terminal\n")
+        if click.confirm('Confirm you want to proceed'):
 
-        for scan_id in scan_ids:
-            download_import_scan(scan_id, repoid)
+            def export_import_sc_scans(sc_scan_id):
+
+                try:
+                    click.echo("\nExporting your Scan ID: {} now\n".format(sc_scan_id))
+
+                    with open('{}.nessus'.format(str(sc_scan_id)), 'wb') as nessus:
+                        sc.scan_instances.export_scan(sc_scan_id, nessus)
+                    nessus.close()
+
+                    click.echo("Importing your Scan to Tenable.io\n".format())
+
+                    with open('{}.nessus'.format(str(sc_scan_id)), 'rb') as file:
+                        tio.scans.import_scan(fobj=file)
+                    file.close()
+
+                    # delete the scan
+                    os.remove('{}.nessus'.format(str(sc_scan_id)))
+                except:
+                    pass
+            if allscans:
+                for sc_scan in sc.scan_instances.list()['usable']:
+                    if sc_scan['status'] == 'Completed':
+                        export_import_sc_scans(sc_scan['id'])
+            else:
+                export_import_sc_scans(scanid)
+
     else:
-        download_import_scan(scanid, repoid)
+        if allscans:
+            # Put all scans into a list
+            scan_ids = get_scans()
+
+            for scan_id in scan_ids:
+                download_import_scan(scan_id, repoid)
+        else:
+            download_import_scan(scanid, repoid)
 
     sc.logout()
