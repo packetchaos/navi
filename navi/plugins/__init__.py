@@ -34,6 +34,7 @@ from .calculate import calculate
 from .sla import sla
 #from .rules import rules
 from .cve_compare import compare
+from .deploy import deploy
 
 
 def plugin_loader(group):
@@ -73,4 +74,4 @@ def plugin_loader(group):
     group.add_command(sla)
     #group.add_command(rules)
     group.add_command(compare)
-
+    group.add_command(deploy)
