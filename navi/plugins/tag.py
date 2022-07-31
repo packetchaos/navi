@@ -2,7 +2,7 @@ import click
 import csv
 from .database import new_db_connection, db_query
 from .api_wrapper import request_data, tenb_connection
-from .tag_helper import update_tag, confirm_tag_exists, return_tag_uuid, grab_all_tags, remove_tag
+from .tag_helper import update_tag, confirm_tag_exists, grab_all_tags, remove_tag
 from sqlite3 import Error
 
 
@@ -116,28 +116,6 @@ def tag_by_ip(ip_list, tag_list, c, v, d):
         click.echo("Duplicate Category")
 
 
-def tag_by_tenable_uuid(tag_list, c, v, d):
-    # Tagging by Tenable UUID is limited to 500 UUIDS
-    # Two problems here.  One: There is no PUT equivalant to chunk tenable UUIDs into groups of 500
-    # two: the UUID returned from the agent endpoints is not the one needed to add a tag to the asset.
-    try:
-        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                   {"asset": {"and": [{"field": "tenable_uuid", "operator": "eq", "value": str(tag_list[1:])}]}}}
-        data = request_data('POST', '/tags/values', payload=payload)
-        try:
-            value_uuid = data["uuid"]
-            cat_uuid = data['category_uuid']
-            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
-            click.echo("The Category UUID is : {}\n".format(cat_uuid))
-            click.echo("The Value UUID is : {}\n".format(value_uuid))
-        except Exception as E:
-            click.echo("Duplicate Tag Category: You may need to delete your tag first\n")
-            click.echo("We could not confirm your tag name, is it named weird?\n")
-            click.echo(E)
-    except:
-        click.echo("Duplicate Category")
-
-
 def tag_by_uuid(tag_list, c, v, d):
 
     # Generator to split IPs into 2000 IP chunks
@@ -194,6 +172,7 @@ def tag_by_uuid(tag_list, c, v, d):
 
 
 def download_csv_by_plugin_id(scan_id, hist_id):
+    # This is for scaling tagging by scan id
     filename = f'{scan_id}-report.csv'
     tio = tenb_connection()
 
@@ -283,6 +262,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         click.echo("You must supply a Cross Reference Type using --xrefs option")
 
     if plugin:
+        d = d + "\nTag by Plugin ID: {}".format(plugin)
         try:
             database = r"navi.db"
             conn = new_db_connection(database)
@@ -291,6 +271,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 # See if we want to refine our search by the output found in this plugin
                 # this needs to have a JOIN statement to reduce the amount
                 if output != "":
+                    d = d + "\nSearching for '{}' in the plugin output".format(output)
                     cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
                 else:
                     cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id=%s;" % plugin)
@@ -311,6 +292,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if port != '':
+        d = d + "\nTag by Port: {}".format(port)
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
@@ -330,6 +312,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if name != '':
+        d = d + "\nTag by Plugin Name: {}".format(name)
         try:
             database = r"navi.db"
             conn = new_db_connection(database)
@@ -352,6 +335,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
+        d = d + "\nTag by Agent Group: {}".format(group)
         from uuid import UUID
 
         try:
@@ -386,6 +370,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
+        d = d + "\nThis asset was tagged because the scantime took over {} mins".format(scantime)
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
@@ -433,6 +418,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if file != '':
+        d = d + "\nTagged using IPs found in a file named:{}".format(file)
         with open(file, 'r', newline='') as new_file:
             add_ips = csv.reader(new_file)
 
@@ -445,6 +431,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_ip(ip_list, tag_list, c, v, d)
 
     if cv != '' and cc != '':
+
         if all:
             match = 'and'
             tag_by_tag(c, v, d, cv, cc, match)
@@ -453,6 +440,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_tag(c, v, d, cv, cc, match)
 
     if scanid:
+        d = d + "\nTag by Scan ID: {}".format(scanid)
         tag_list = []
         try:
             scandata = request_data('GET', '/scans/' + str(scanid))
@@ -526,7 +514,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(eval(pipe), c, v, d)
 
     if query:
-
+        d = d + "\nTag by SQL Query: \n{}".format(query)
         if ("uuid" or "asset_uuid") in str(query):
 
             data = db_query(query)
@@ -562,7 +550,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             remove_uuids_from_tag(remove)
 
     if cve:
-
+        d = d + "\nTag by CVE ID: {}".format(cve)
         if len(cve) < 10:
             click.echo("\nThis is likely not a CVE...Try again...\n")
 
@@ -582,7 +570,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_uuid(tag_list, c, v, d)
 
     if xrefs:
+        d = d + "\nTag by Cross Reference: {}".format(xrefs)
         if xid:
+            d = d + "\n Refined tag search to the follow Cross Reference ID text search: {}".format(xid)
             xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
 
         else:

@@ -656,45 +656,39 @@ def templates(policy, scan):
 def audits(name, uuid):
 
     if name and uuid:
-        data = db_query("SELECT assets.fqdn, compliance.check_name, compliance.status FROM compliance LEFT OUTER JOIN assets ON "
-                        "assets.uuid = compliance.asset_uuid "
-                        "where compliance.audit_file='{}' and compliance.asset_uuid='{}';".format(name, uuid))
+        data = db_query("SELECT asset_uuid, check_name, status FROM compliance where audit_file='{}' "
+                        "and asset_uuid='{}';".format(name, uuid))
 
-        click.echo("{:65} {:65} {}".format("\nFQDN", " Check Name", " Status"))
+        click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
         click.echo("-" * 150)
         click.echo()
         for finding in data:
-            click.echo("{:65} {:65} {}".format(textwrap.shorten(str(finding[0]), width=65),
-                                               textwrap.shorten(str(finding[1]), width=65),
+            click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                               textwrap.shorten(str(finding[1]), width=85),
                                                finding[2]))
         click.echo()
 
     elif name:
-        data = db_query("SELECT assets.fqdn, compliance.check_name, compliance.status FROM compliance LEFT OUTER JOIN assets ON "
-                        "assets.uuid = compliance.asset_uuid "
-                        "where audit_file='{}';".format(name))
+        data = db_query("SELECT asset_uuid, check_name, status FROM compliance where audit_file='{}';".format(name))
 
-        click.echo("{:65} {:65} {}".format("\nFQDN", " Check Name", " Status"))
+        click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
         click.echo("-" * 150)
         click.echo()
-
         for finding in data:
-            click.echo("{:65} {:65} {}".format(textwrap.shorten(str(finding[0]), width=65),
-                                               textwrap.shorten(str(finding[1]), width=65),
+            click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                               textwrap.shorten(str(finding[1]), width=85),
                                                finding[2]))
         click.echo()
 
     elif uuid:
-        data = db_query("SELECT assets.fqdn, compliance.check_name, compliance.status FROM compliance LEFT OUTER JOIN assets ON "
-                        "assets.uuid = compliance.asset_uuid "
-                        "where asset_uuid='{}';".format(uuid))
+        data = db_query("SELECT asset_uuid, check_name, status FROM compliance where asset_uuid='{}';".format(uuid))
 
-        click.echo("{:65} {:65} {}".format("\nFQDN", " Check Name", " Status"))
+        click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
         click.echo("-" * 150)
         click.echo()
         for finding in data:
-            click.echo("{:65} {:65} {}".format(textwrap.shorten(str(finding[0]), width=65),
-                                               textwrap.shorten(str(finding[1]), width=65),
+            click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                               textwrap.shorten(str(finding[1]), width=85),
                                                finding[2]))
         click.echo()
 

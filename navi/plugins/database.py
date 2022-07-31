@@ -1,7 +1,6 @@
 import sqlite3
 from sqlite3 import Error
 import click
-# import time
 
 
 def new_db_connection(db_file):
