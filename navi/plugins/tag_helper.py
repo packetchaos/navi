@@ -81,6 +81,5 @@ def return_tag_uuid(key, value):
         click.echo(E)
 
 
-
 def tag_msg():
     click.echo("Remember to run the update command if you want to use your new tag in navi")
