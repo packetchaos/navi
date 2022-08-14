@@ -1,6 +1,6 @@
 from sqlite3 import Error
 import click
-from .add_helper import add_helper
+from .add_by_file import add_helper
 from .api_wrapper import request_data
 
 

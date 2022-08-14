@@ -44,12 +44,13 @@ def create_granular_permission(tag_name, uuid, perm_list, perm_type, subject_typ
 
 
 def grab_can_use_tags():
+    # This script supports the Migrate command which adds CanUse to ALLUsers
     data = request_data("GET", "/api/v3/access-control/permissions")
 
     list_of_tag_uuids = []
     # Filter on just permissions
     for perms in data['permissions']:
-        # Need to search for CanView
+        # Need to search for CanUse
         if 'CanUse' in str(perms['actions']):
 
             # Extract all Tag UUIDs
@@ -80,6 +81,7 @@ def create(c, v, user, usergroup, perm):
     try:
 
         tag_uuid = 0
+        # Grab the Tag UUID using the value and category given
         for tag in tio.tags.list():
 
             tag_value = tag['value']
@@ -87,6 +89,7 @@ def create(c, v, user, usergroup, perm):
             if c == tag_category and v == tag_value:
                 tag_uuid = tag['uuid']
 
+        # Add permission by User
         if user:
             user_id, uuid = get_user_id(user)
             resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
@@ -94,6 +97,7 @@ def create(c, v, user, usergroup, perm):
                                               subject_name=user, subject_uuid=uuid)
             pprint.pprint(resp)
 
+        # Add permission by UserGroup
         elif usergroup:
             group_id, uuid = get_group_id(usergroup)
             resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
@@ -101,6 +105,7 @@ def create(c, v, user, usergroup, perm):
                                               subject_name=usergroup, subject_uuid=uuid)
             pprint.pprint(resp)
         else:
+            # If no user or Usergroup Assign it to All Users
             permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
                                                     perm_string=perm, perm_type="Tag", subject_type="AllUsers")
 
