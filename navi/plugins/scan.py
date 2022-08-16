@@ -1,7 +1,7 @@
 import click
 import textwrap
 import time
-from .scanners import nessus_scanners
+from .display import get_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
 import os
@@ -156,7 +156,7 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
         click.echo("Here are the available scanners")
         click.echo("Remember, don't pick a Cloud scanner for an internal IP address")
         click.echo("Remember also, don't chose a Webapp scanner for an IP address")
-        nessus_scanners()
+        get_scanners()
         scanner_id = input("What scanner do you want to scan with ?.... ")
 
     click.echo("creating your scan of : {}  Now...".format(targets))
@@ -298,6 +298,18 @@ def details(scan_id):
 @click.argument('scan_id')
 def hosts(scan_id):
     scan_hosts(scan_id)
+
+
+@scan.command(help="Display History index for a Scan ID")
+@click.argument('scan_id')
+def history(scan_id):
+    data = request_data("GET", "/scans/{}/history".format(scan_id))
+    click.echo("\nHistory IDs and Status for scan ID {}".format(scan_id))
+    click.echo("-" * 40)
+    click.echo()
+    for hist in data['history']:
+        print(hist['id'], hist['status'])
+    click.echo()
 
 
 @scan.command(help="Display the Latest scan information")

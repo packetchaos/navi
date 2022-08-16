@@ -4,6 +4,8 @@ from sqlite3 import Error
 from .api_wrapper import tenb_connection, request_data
 from .database import db_query
 
+tio = tenb_connection()
+
 
 def plugin_by_ip(ipaddr, plugin):
     try:
@@ -103,13 +105,13 @@ def cves_by_uuid(uuid):
 @click.command(help="Get Asset details based on IP or UUID")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
-@click.option('-n', is_flag=True, help='Netstat Established(58561) and Listening and Open Ports(14272)')
-@click.option('-p', is_flag=True, help='Patch Information - 66334')
-@click.option('-t', is_flag=True, help='Trace Route - 10287')
-@click.option('-o', is_flag=True, help='Process Information - 70329')
-@click.option('-c', is_flag=True, help='Connection Information - 64582')
-@click.option('-s', is_flag=True, help='Services Running - 22964')
-@click.option('-r', is_flag=True, help='Local Firewall Rules - 56310')
+@click.option('-n', '-netstat', is_flag=True, help='Netstat Established(58561) and Listening and Open Ports(14272)')
+@click.option('-p', '-patch', is_flag=True, help='Patch Information - 66334')
+@click.option('-t', '-tracert', is_flag=True, help='Trace Route - 10287')
+@click.option('-o', '-processes', is_flag=True, help='Process Information - 70329')
+@click.option('-c', '-connections', is_flag=True, help='Connection Information - 64582')
+@click.option('-s', '-services', is_flag=True, help='Services Running - 22964')
+@click.option('-r', '-firewall', is_flag=True, help='Local Firewall Rules - 56310')
 @click.option('-patches', is_flag=True, help='Missing Patches - 38153')
 @click.option('-d', is_flag=True, help="Scan Detail: 19506 plugin output")
 @click.option('-software', is_flag=True, help="Find software installed on Unix(22869) of windows(20811) hosts")
@@ -124,7 +126,6 @@ def cves_by_uuid(uuid):
 @click.pass_context
 def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns,
        info, cves, compliance):
-    tio = tenb_connection()
 
     if d:
         click.echo('\nScan Detail')

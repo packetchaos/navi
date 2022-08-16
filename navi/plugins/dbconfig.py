@@ -11,16 +11,6 @@ def create_keys_table():
     create_table(key_conn, key_table)
 
 
-def create_passwords_table():
-    database = r"navi.db"
-    ssh_conn = new_db_connection(database)
-    ssh_table = """CREATE TABLE IF NOT EXISTS ssh (
-                            username text,
-                            password text
-                            );"""
-    create_table(ssh_conn, ssh_table)
-
-
 def create_diff_table():
     database = r"navi.db"
     diff_conn = new_db_connection(database)

@@ -1,12 +1,10 @@
 import click
 from .agent_export import agent_export
-from .consec_export import consec_export
 from .lumin_export import lumin_export
 from .database import db_query
 from .tag_export import tag_export
 from .tag_helper import tag_checker
 from .query_export import query_export
-from .was_v2_export import was_export
 from .agent_group_export import agent_group_export
 from .user_export import user_export
 from .compliance_export_csv import compliance_export_csv
@@ -29,12 +27,6 @@ def assets(file):
 def agents():
     click.echo("\nExporting your data now. Saving agent_data.csv now...\n")
     agent_export()
-
-
-@export.command(help="Export Container Security Summary into a CSV")
-def consec():
-    click.echo("\nExporting your data now. Saving consec_data.csv now...\n")
-    consec_export()
 
 
 @export.command(help="Export Licensed Assets into a CSV")
@@ -126,12 +118,6 @@ def bytag(c, v, ec, ev, file, vulncounts, severity):
         else:
             # if Severity or vulncounts were not chosen we will export asset data from navi.db
             tag_export(new_list, file, 0)
-
-
-@export.command(help="Export Webapp Scan Summary into a CSV - WAS V2")
-def was():
-    click.echo("\nExporting your data now. Saving was_summary_data.csv now...")
-    was_export()
 
 
 @export.command(help="Export User and Role information into a CSV")

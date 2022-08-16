@@ -2,13 +2,26 @@ import click
 import time
 import arrow
 from .api_wrapper import tenb_connection, navi_version, request_data
-from .scanners import nessus_scanners
 from .database import new_db_connection, db_query
-from .licensed_count import get_licensed
-from sqlite3 import Error
 import textwrap
 
 tio = tenb_connection()
+
+
+def get_licensed():
+    data = request_data('GET', '/workbenches/asset-stats?date_range=90&filter.0.filter=is_licensed&filter.0.quality=eq&filter.0.value=true')
+    number_of_assets = data['scanned']
+    return number_of_assets
+
+def get_scanners():
+    try:
+        click.echo("\n{:35s} {:20} {}".format("Scanner Name", "Scanner ID", "Scanner UUID"))
+        click.echo("-" * 150)
+        for nessus in tio.scanners.list():
+            click.echo("{:35s} {:20} {}".format(str(nessus["name"]), str(nessus["id"]), str(nessus['uuid'])))
+        click.echo()
+    except AttributeError:
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @click.group(help="Display information found in Tenable.io")
@@ -18,7 +31,7 @@ def display():
 
 @display.command(help="Display all of the scanners")
 def scanners():
-    nessus_scanners()
+    get_scanners()
 
 
 @display.command(help="Display  all of the Users")
@@ -40,29 +53,6 @@ def exclusions():
             click.echo("\n{} {}".format("Exclusion Name :", exclusion["name"]))
             click.echo("-" * 150)
             click.echo("{}".format(str(exclusion["members"])))
-        click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
-
-
-@display.command(help="Display all containers and their Vulnerability Scores")
-def containers():
-    try:
-        # Use CS module
-        resp = tio.get('container-security/api/v2/images?limit=1000')
-        data = resp.json()
-
-        click.echo("{:35s} {:35s} {:15s} {:15s} {:10s}".format("Container Name", "Repository ID", "Tag", "Docker ID", "# of Vulns"))
-        click.echo("-" * 150)
-
-        try:
-            for images in data["items"]:
-                click.echo("{:35s} {:35s} {:15s} {:15s} {:10s}".format(images["name"], images["repoName"],
-                                                                       images["tag"], str(images["imageHash"]),
-                                                                       str(images["numberOfVulns"])))
-        except KeyError:
-            pass
-
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -237,36 +227,6 @@ def connectors():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Display Access Groups including a rules snippet")
-def agroups():
-    rules = "Not Rule Based"
-    try:
-        click.echo("\n{:25s} {:40s} {:25} {}".format("Group Name", "Group ID", "Last Updated", "Rules"))
-        click.echo("-" * 150)
-
-        for group in tio.access_groups.list():
-
-            try:
-                updated = group['updated_at']
-            except KeyError:
-                updated = "Not Updated"
-
-            details = tio.access_groups.details(group['id'])
-
-            try:
-                for rule in details['rules']:
-                    rules = str(rule['terms'])
-            except KeyError:
-                rules = "Not Rule Based"
-
-            click.echo("{:25s} {:40s} {:25} {:60s}".format(textwrap.shorten(str(group['name']), width=25),
-                                                           str(group['id']), str(updated),
-                                                           textwrap.shorten(rules, width=60)))
-        click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
-
-
 @display.command(help="Display T.io Status and Account info")
 def status():
     try:
@@ -384,21 +344,19 @@ def licensed():
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("SELECT ip_address, fqdn, last_licensed_scan_date from assets where last_licensed_scan_date !=' ';")
+            cur.execute("SELECT uuid, fqdn, last_licensed_scan_date from assets where last_licensed_scan_date !=' ';")
             data = cur.fetchall()
 
-            click.echo("{:20s} {:65s} {}".format("IP Address", "Full Qualified Domain Name", "Licensed Date"))
+            click.echo("{:40s} {:65s} {}".format("Asset UUID", "Full Qualified Domain Name", "Licensed Date"))
             click.echo("-" * 150)
             click.echo()
             count = 0
             for asset in data:
                 count += 1
-                ipv4 = asset[0]
+                uuid = asset[0]
                 fqdn = asset[1]
                 licensed_date = asset[2]
-                # Don't display Web applications in this output
-                if ipv4 != " ":
-                    click.echo("{:20s} {:65s} {}".format(str(ipv4), str(fqdn), licensed_date))
+                click.echo("{:40s} {:65s} {}".format(str(uuid), str(fqdn), licensed_date))
         click.echo("\nTotal: {}".format(count))
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -436,23 +394,6 @@ def categories():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
-
-
-@display.command(help="Display saved SMTP information")
-def smtp():
-    try:
-        database = r"navi.db"
-        conn = new_db_connection(database)
-        with conn:
-            cur = conn.cursor()
-            cur.execute("SELECT server, port, from_email from smtp;")
-            data = cur.fetchall()
-            for settings in data:
-                click.echo("\nYour email server: {}".format(settings[0]))
-                click.echo("The email port is: {}".format(settings[1]))
-                click.echo("Your email is: {}\n".format(settings[2]))
-    except Error:
-        click.echo("\nYou have no SMTP information saved.\n")
 
 
 @display.command(help="Display Assets discovered by the Tenable Cloud Connectors")
@@ -608,7 +549,7 @@ def exports(a, v):
     click.echo()
 
 
-@display.command(help="Display Authorization information for each user")
+@display.command(help="Display Authorization information for a user given a User ID")
 @click.argument('uid')
 def auth(uid):
     info = request_data("GET", "/users/{}/authorizations".format(uid))
@@ -744,5 +685,3 @@ def attributes():
         attr_uuid = attr['id']
         click.echo("{:60s} {:50} {}".format(attr_name, attr_description, attr_uuid))
     click.echo()
-
-
