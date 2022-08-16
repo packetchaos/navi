@@ -20,6 +20,12 @@ def create_hist_list(filename):
     from csv import DictReader
     time_asset_list = []
     with open(filename) as fobj:
+        scan_name = "No Scan"
+        scan_policy = "No Policy"
+        scanner_ip = "No Scanner"
+        max_hosts = " "
+        max_checks = ""
+        avg = 0
         for row in DictReader(fobj):
             plugin_output = row['Plugin Output']
             asset_uuid = row['Asset UUID']
@@ -69,15 +75,17 @@ def create_hist_list(filename):
         total = 0
         for mins in time_asset_list:
             total += mins[1]
-
-        avg = total / len(time_asset_list)
-        click.echo("\nScan Name: {}".format(scan_name))
-        click.echo("Scanner Policy: {}".format(scan_policy))
-        click.echo("Scanner IP: {}\n".format(scanner_ip))
-        click.echo("Max Hosts: {}".format(max_hosts))
-        click.echo("Max Checks: {}\n".format(max_checks))
-        click.echo("Total Time for Scan: {} Minutes".format(int(total)))
-        click.echo("Average Minutes per Asset: {}\n".format(int(avg)))
+        try:
+            avg = total / len(time_asset_list)
+            click.echo("\nScan Name: {}".format(scan_name))
+            click.echo("Scanner Policy: {}".format(scan_policy))
+            click.echo("Scanner IP: {}\n".format(scanner_ip))
+            click.echo("Max Hosts: {}".format(max_hosts))
+            click.echo("Max Checks: {}\n".format(max_checks))
+            click.echo("Total Time for Scan: {} Minutes".format(int(total)))
+            click.echo("Average Minutes per Asset: {}\n".format(int(avg)))
+        except ZeroDivisionError:
+            click.echo("\nScan history had No data.\n")
 
 
 def get_last_history_id(scanid):
