@@ -36,7 +36,10 @@ def display(aid):
                 click.echo("\nAgent Connection information")
                 click.echo("----------------------------\n")
                 click.echo("Last Connect Time: {}".format(agent_details['last_connect']))
-                click.echo("Last Scan Time: {}".format(agent_details['last_scanned']))
+                try:
+                    click.echo("Last Scan Time: {}".format(agent_details['last_scanned']))
+                except:
+                    click.echo("Not Scanned Yet")
                 click.echo("Restart Pending: {}".format(agent_details['restart_pending']))
                 click.echo("Status: {}".format(agent_details['status']))
 
@@ -86,13 +89,13 @@ def groups(gid):
     else:
         click.echo("\n*** To see group membership use: navi agent groups --gid <group id> ***\n")
         try:
-            click.echo("\n{:45} {:40} {:10}".format("Group Name", "Group UUID", "Group ID"))
+            click.echo("\n{:45s} {:40s} {:10}".format("Group Name", "Group UUID", "Group ID"))
             click.echo("-" * 150)
 
             group_list = tio.agent_groups.list()
 
             for group in group_list:
-                click.echo("{:45} {:40} {:10}".format(str(group['name']), str(group['uuid']), str(group['id'])))
+                click.echo("{:45s} {:40s} {:10}".format(str(group['name']), str(group['uuid']), str(group['id'])))
 
             click.echo()
         except AttributeError:
