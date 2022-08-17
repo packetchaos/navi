@@ -2,7 +2,7 @@ import click
 from .api_wrapper import request_data, tenb_connection
 from .database import new_db_connection, db_query
 
-# pytenable - No TTL Days / Change Age-out policy
+
 tio = tenb_connection()
 
 

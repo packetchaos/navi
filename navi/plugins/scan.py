@@ -135,11 +135,11 @@ def scan():
 @scan.command(help="Quickly Scan a Target")
 @click.argument('targets')
 @click.option('--plugin', default='', help="Plugin required for Remediation Scan")
-@click.option('--cred', default='', help="UUID of your intended credentials")
+@click.option('--cred', default='', help="Scan using a UUID of your intended credentials")
 @click.option('-discovery', is_flag=True, help="Scan using the Discovery Template")
 @click.option('--custom', default='', help="Scan using a custom Scan Template")
-@click.option('--scanner', default='', help="Scanner ID")
-@click.option('--policy', default='', help="Use Policy ID")
+@click.option('--scanner', default='', help="Scan using a specific Scanner ID")
+@click.option('--policy', default='', help="Scan using a custom Policy by Policy ID")
 def create(targets, plugin, cred, discovery, custom, scanner, policy):
     # If a Template isn't chosen we will assume a Basic Network scan
     template = '731a8e52-3ea6-a291-ec0a-d2ff0619c19d7bd788d6be818b65'
@@ -215,37 +215,37 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
     click.echo("I started your scan, your scan ID is: {}".format(scan_id))
 
 
-@scan.command(help="Start a valid Scan")
+@scan.command(help="Start a valid Scan by Scan ID")
 @click.argument('scan_id')
 def start(scan_id):
     tio.scans.launch(scan_id)
 
 
-@scan.command(help="Get Scan Status")
+@scan.command(help="Get Scan Status by Scan ID")
 @click.argument('Scan_id')
 def status(scan_id):
     click.echo("\nLast Status update : {}\n".format(tio.scans.status(scan_id)))
 
 
-@scan.command(help="Resume a paused Scan")
+@scan.command(help="Resume a paused Scan by Scan ID")
 @click.argument('scan_id')
 def resume(scan_id):
     tio.scans.resume(scan_id)
 
 
-@scan.command(help="Pause a running Scan")
+@scan.command(help="Pause a running Scan by Scan ID")
 @click.argument('Scan_id')
 def pause(scan_id):
     tio.scans.pause(scan_id)
 
 
-@scan.command(help="Stop a Running Scan")
+@scan.command(help="Stop a Running Scan by Scan ID")
 @click.argument('scan_id')
 def stop(scan_id):
     tio.scans.stop(scan_id)
 
 
-@scan.command(help="Change Ownership")
+@scan.command(help="Change scan ownership using user logins")
 @click.option('--owner', default='', help='Current Owner login.')
 @click.option('--new', default='', help='New Owner login.')
 @click.option('--who', default='', help="Check what scans a user owns")
@@ -253,6 +253,7 @@ def stop(scan_id):
 def change(owner, new, who, v):
 
     if who:
+        # This should be moved to display commands.
         who_scans = get_scans_by_owner(who)
 
         click.echo("\n{:80s} {:10} {}".format("Scan Name", "Scan ID", "Scan Owner"))
@@ -348,7 +349,7 @@ def latest():
         error_msg(E)
 
 
-@scan.command(help="Move Scans")
+@scan.command(help="Move Scans from one T.io container to another")
 @click.option('--a', default=None, help="T.io Destination Access Key")
 @click.option('--s', default=None, help="T.io Destination Secret Key")
 @click.option('--limit', default=1, help="Limit History download to a number of completed scans; default is 1")
@@ -423,7 +424,7 @@ def move(a, s, limit, scanid):
         scan_mover(scan_list)
 
 
-@scan.command(help="Export scans from T.io and Import them into T.sc")
+@scan.command(help="Export and Import scans between T.io and T.sc")
 @click.option('--un', default=None, help="T.sc User Name")
 @click.option('--pw', default=None, help="T.sc password")
 @click.option('--a', default=None, help="T.sc Destination Access Key")

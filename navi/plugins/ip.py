@@ -122,10 +122,11 @@ def cves_by_uuid(uuid):
 @click.option('-vulns', is_flag=True, help="Display all vulnerabilities and their plugin IDs")
 @click.option('-info', is_flag=True, help="Display all info plugins and their IDs")
 @click.option('-cves', is_flag=True, help="Display all cves found on the asset")
-@click.option('-compliance', is_flag=True, help="Display all Compliance info for a given asset UUID")
+@click.option('-compliance', '-audits', is_flag=True, help="Display all Compliance info for a given asset UUID")
 @click.pass_context
 def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns,
        info, cves, compliance):
+
 
     if d:
         click.echo('\nScan Detail')
@@ -567,7 +568,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 click.echo("{:85} {:8} {}".format(textwrap.shorten(check_name, width=80), status,
                                                   textwrap.shorten(audit_file, width=60)))
         else:
-            click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\n")
+            click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\nPlease re-run your command using one of the below UUIDs")
             uuid_data = db_query("SELECT uuid, fqdn from assets where ip_address='{}';".format(ipaddr))
 
             click.echo("{:45}{}".format("UUID", "FQDN"))

@@ -13,6 +13,7 @@ def get_licensed():
     number_of_assets = data['scanned']
     return number_of_assets
 
+
 def get_scanners():
     try:
         click.echo("\n{:35s} {:20} {}".format("Scanner Name", "Scanner ID", "Scanner UUID"))
