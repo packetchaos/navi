@@ -1,7 +1,6 @@
 import click
 from .database import db_query
 from .api_wrapper import request_data, tenb_connection
-import pprint
 import csv
 # Grab all 19506 Data
 
@@ -105,10 +104,7 @@ def download_csv_by_plugin_id(scan_id, hist_id):
     create_hist_list(filename)
 
 
-@click.command(help="Evaluate Scan times")
-@click.option("--scanid", default="", help="A Scan ID you want to evaluate")
-@click.option("--histid", default="", help="A Specific History ID")
-def evaluate(scanid, histid):
+def evaluate_a_scan(scanid, histid):
 
     if scanid:
         if histid:

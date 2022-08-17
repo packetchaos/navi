@@ -17,7 +17,6 @@ from .target_group import tgroup
 from .cancel import cancel
 from .migrate import migrate
 from .agents import agent
-from .scan_evaluation import evaluate
 from .access import access
 from .attribute import attribute
 from .calculate import calculate
@@ -47,7 +46,6 @@ def plugin_loader(group):
     group.add_command(cancel)
     group.add_command(migrate)
     group.add_command(agent)
-    group.add_command(evaluate)
     group.add_command(access)
     group.add_command(attribute)
     group.add_command(calculate)

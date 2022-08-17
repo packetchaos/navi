@@ -1,9 +1,11 @@
 import click
 import textwrap
 import time
+import datetime
 from .display import get_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
+from .scan_evaluation import evaluate_a_scan
 import os
 
 tio = tenb_connection()
@@ -301,15 +303,18 @@ def hosts(scan_id):
     scan_hosts(scan_id)
 
 
-@scan.command(help="Display History index for a Scan ID")
+@scan.command(help="Display History index for a Scan ID that is NOT archived(older than 35 days)")
 @click.argument('scan_id')
 def history(scan_id):
     data = request_data("GET", "/scans/{}/history".format(scan_id))
     click.echo("\nHistory IDs and Status for scan ID {}".format(scan_id))
     click.echo("-" * 40)
-    click.echo()
+    click.echo("\n{:15s} {:15s} {:20s} {:20s}".format("History ID", "Scan Status", "Start time", "End Time"))
+    click.echo("-" * 72)
     for hist in data['history']:
-        print(hist['id'], hist['status'])
+        if not hist['is_archived']:
+            click.echo("{:15s} {:15s} {:20} {:20}".format(str(hist['id']), hist['status'], str(datetime.datetime.fromtimestamp(hist['time_start'])),
+                       str(datetime.datetime.fromtimestamp(hist['time_end']))))
     click.echo()
 
 
@@ -506,3 +511,10 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
             download_import_scan(scanid, repoid)
 
     sc.logout()
+
+
+@scan.command(help="Evaluate Scan times")
+@click.option("--scanid", default="", help="A Scan ID you want to evaluate")
+@click.option("--histid", default="", help="A Specific History ID")
+def evaluate(scanid, histid):
+    evaluate_a_scan(scanid, histid)
