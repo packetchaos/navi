@@ -39,3 +39,5 @@ def add_helper(file, source):
                 click.echo("Your Import ID is : {}".format(data['asset_import_job_uuid']))
     except Error as e:
         click.echo(e)
+    except TypeError:
+        click.echo("\nCheck your permissions or your API keys\n")

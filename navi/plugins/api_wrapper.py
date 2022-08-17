@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-6.10.7"
+    return "navi-7.0.1"
 
 
 def tenb_connection():
@@ -147,7 +147,7 @@ def request_data(method, url_mod, **kwargs):
                 click.echo("API Returned 409\n If you are changing permissions, it could indicate a duplicate request\n")
                 break
             elif r.status_code == 504:
-                click.echo("\nOne of the Threads and an issue during download...Retrying...\n{}".format(r))
+                click.echo("\nOne of the Threads had an issue during download...Retrying...\n If got this error while importing assets you may not have proper permissions{}".format(r))
                 break
             else:
                 click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))

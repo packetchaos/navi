@@ -27,7 +27,7 @@ def find():
 
 @find.command(help="Find Assets where a plugin fired using the plugin ID")
 @click.argument('plugin_id')
-@click.option('--o', default='', help='Find Assets based on the text in the output')
+@click.option('--o', '--output', default='', help='Find Assets based on the text in the output')
 def plugin(plugin_id, o):
     if not str.isdigit(plugin_id):
         click.echo("You didn't enter a number")

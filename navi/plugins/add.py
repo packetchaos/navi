@@ -54,3 +54,5 @@ def add(ip, mac, netbios, fqdn, hostname, file, source):
             click.echo("\nYou need to supply some information\n")
     except Error:
         click.echo("\nCheck your permissions or your API keys\n")
+    except TypeError:
+        click.echo("\nCheck your permissions or your API keys\n")
