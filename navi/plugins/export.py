@@ -1,8 +1,6 @@
 import click
 from .agent_export import agent_export
-from .lumin_export import lumin_export
 from .database import db_query
-from .tag_export import tag_export
 from .tag_helper import tag_checker
 from .query_export import query_export
 from .agent_group_export import agent_group_export
@@ -66,9 +64,8 @@ def group(group_name):
 @click.option('--ec', default=None, help="Exclude tag from export with Tag Category; requires --ev")
 @click.option('--ev', default=None, help="Exclude tag from export with Tag Value; requires --ec")
 @click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
-@click.option('-vulncounts', is_flag=True, help="Export Severity vulnerability Counts per asset. This will take some time...")
 @click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'], case_sensitive=False), multiple=True)
-def bytag(c, v, ec, ev, file, vulncounts, severity):
+def bytag(c, v, ec, ev, file, severity):
     new_list = []
 
     tag_assets = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
@@ -83,25 +80,24 @@ def bytag(c, v, ec, ev, file, vulncounts, severity):
         else:
             new_list.append(asset_uuid)
 
-    if vulncounts:
-        # Tell the export to pull verbose data - vunlcounts
-        tag_export(new_list, file, 1)
-    else:
-        if severity:
-            # If Severity is chosen then we will export vuln details
-            if len(severity) == 1:
-                # multiple choice values are returned as a tuple.
-                # Here I break it out and put it in the format needed for sql
-                asset_query = "select * from vulns where severity in ('{}');".format(severity[0])
-                query_export(asset_query, file)
-            else:
-                # Here I just send the tuple in the query
-                asset_query = "select * from vulns where severity in {};".format(severity)
-                query_export(asset_query, file)
-
+    if severity:
+        # If Severity is chosen then we will export vuln details
+        if len(severity) == 1:
+            # multiple choice values are returned as a tuple.
+            # Here I break it out and put it in the format needed for sql
+            new_list = tuple(new_list)
+            asset_query = "select * from vulns where severity in ('{}') and asset_uuid in {};".format(severity[0], new_list)
+            print(asset_query)
+            query_export(asset_query, file)
         else:
-            # if Severity or vulncounts were not chosen we will export asset data from navi.db
-            tag_export(new_list, file, 0)
+            new_list = tuple(new_list)
+            # Here I just send the tuple in the query
+            asset_query = "select * from vulns where severity in {} and asset_uuid in {};".format(severity, new_list)
+            query_export(asset_query, file)
+    else:
+        new_list = tuple(new_list)
+        asset_query = "select * from assets where uuid in {}".format(new_list)
+        query_export(asset_query, file)
 
 
 @export.command(help="Export User and Role information into a CSV")
