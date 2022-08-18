@@ -4,6 +4,7 @@ import arrow
 from .api_wrapper import tenb_connection, navi_version, request_data
 from .database import new_db_connection, db_query
 import textwrap
+from .sla import print_sla
 
 tio = tenb_connection()
 
@@ -686,3 +687,8 @@ def attributes():
         attr_uuid = attr['id']
         click.echo("{:60s} {:50} {}".format(attr_name, attr_description, attr_uuid))
     click.echo()
+
+
+@display.command(help="Display curent SLA")
+def sla():
+    print_sla()

@@ -4,6 +4,7 @@ from .database import new_db_connection, insert_fixed, db_query, drop_tables
 from .dbconfig import create_fixed_table
 import datetime
 import arrow
+import time
 
 tio = tenb_connection()
 
@@ -45,8 +46,11 @@ def sla_compare(severity, seconds):
 
 
 def compare_and_return_delta(last_fixed, first_found):
-    # Turns Last_fixed and First found into Unix timestamps and returns the delta
-    new_time = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%S.%f%z')) - datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+    if last_fixed is None:
+        new_time = time.time() - datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+    else:
+        # Turns Last_fixed and First found into Unix timestamps and returns the delta
+        new_time = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%S.%f%z')) - datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
 
     return new_time
 
@@ -105,7 +109,6 @@ def fixed_export(category, value, days):
                 plugin_name = vulns['plugin']['name']
 
                 first_found = vulns['first_found']
-
                 try:
                     last_fixed = vulns['last_fixed']
                 except KeyError:
@@ -119,19 +122,10 @@ def fixed_export(category, value, days):
                     output = None
 
                 severity = vulns['severity']
-
-                if last_fixed is not None:
-                    try:
-                        delta = compare_and_return_delta(last_fixed, first_found)
-
-                        pass_fail = sla_compare(severity, delta)
-                    except ValueError:
-                        #print(plugin_id, last_fixed, first_found, asset_uuid)
-                        delta = None
-                        pass_fail = None
-                else:
-                    delta = None
-                    pass_fail = None
+                # Get the delta from today's date or ast fixed from the time it was first found
+                delta = compare_and_return_delta(last_fixed, first_found)
+                # Compare that data against the current sla
+                pass_fail = sla_compare(severity, delta)
 
                 state = vulns['state']
 
@@ -165,18 +159,10 @@ def fixed_export(category, value, days):
                     output = None
 
                 severity = vulns['severity']
-
-                if last_fixed is not None:
-                    try:
-                        delta = compare_and_return_delta(last_fixed, first_found)
-
-                        pass_fail = sla_compare(severity, delta)
-                    except ValueError:
-                        delta = None
-                        pass_fail = None
-                else:
-                    delta = None
-                    pass_fail = None
+                # Get the delta from today's date or ast fixed from the time it was first found
+                delta = compare_and_return_delta(last_fixed, first_found)
+                # Compare that data against the current sla
+                pass_fail = sla_compare(severity, delta)
 
                 state = vulns['state']
 

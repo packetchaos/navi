@@ -143,5 +143,5 @@ def vulns(file, severity):
 
 @export.command(help="Export Vulnerabilities that have failed")
 def failures():
-    click.echo("\nExporting ALl vulnerabilities that failed your SLA\n")
-    query_export("select * from fixed where pass_fail=='Fail' and state!='FIXED';", "sla_backlog")
+    click.echo("\nExporting ALl vulnerabilities that failed your SLA\n This requires you run 'navi update fixed'")
+    query_export("select * from fixed where pass_fail=='Fail' and state !='FIXED';", "sla_backlog")
