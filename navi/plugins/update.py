@@ -1,7 +1,6 @@
 import click
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
-from .was_data_export import grab_scans
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .database import new_db_connection, drop_tables, create_table
@@ -59,11 +58,6 @@ def vulns(threads, days, exid):
         exid = '0'
 
     vuln_export(days, exid, threads)
-
-
-@update.command(help="Update the Was Data")
-def was():
-    grab_scans()
 
 
 @update.command(help="Update the Compliance data")
