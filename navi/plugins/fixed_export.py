@@ -47,10 +47,25 @@ def sla_compare(severity, seconds):
 
 def compare_and_return_delta(last_fixed, first_found):
     if last_fixed is None:
-        new_time = time.time() - datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+        try:
+            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+        except ValueError:
+            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%SZ'))
+
+        new_time = time.time() - unix_first_found
     else:
         # Turns Last_fixed and First found into Unix timestamps and returns the delta
-        new_time = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%S.%f%z')) - datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+        try:
+            unix_last_fixed = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%S.%f%z'))
+        except ValueError:
+            unix_last_fixed = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%SZ'))
+
+        try:
+            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
+        except ValueError:
+            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%SZ'))
+
+        new_time = unix_last_fixed - unix_first_found
 
     return new_time
 
