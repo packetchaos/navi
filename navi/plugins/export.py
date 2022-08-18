@@ -37,22 +37,6 @@ def licensed(file):
     query_export(licensed_query, file)
 
 
-@export.command(help="Export All Asset data including ACR and AES into a CSV")
-@click.option("-v", is_flag=True, help="Include ACR Drivers.  This will make a call per asset!")
-@click.option('--file', default="lumin_data", help="Name of the file excluding 'csv'")
-def lumin(v, file):
-
-    if v:
-        click.echo("\nExporting your data now. This could take some time.  300 Assets per minute max.")
-        click.echo("Saving {}.csv now...\n".format(file))
-        lumin_export()
-    else:
-        click.echo("\nExporting your data now.")
-        click.echo("Saving {}.csv now...\n".format(file))
-        asset_query = "select * from assets;"
-        query_export(asset_query, file)
-
-
 @export.command(help="Export All assets of a given network")
 @click.argument('network_uuid')
 @click.option('--file', default="network_data", help="Name of the file excluding 'csv'")
@@ -69,7 +53,7 @@ def query(statement, file):
     query_export(statement, file)
 
 
-@export.command(help='Export Agents by Group name - API limits 5000 Agents')
+@export.command(help='Export Agents by Group name')
 @click.argument('group_name')
 def group(group_name):
     click.echo("\nExporting your data now.  Saving agent_group_data.csv now...")
@@ -130,7 +114,7 @@ def users():
 @click.option('--name', default=None, help="Exact name of the Audit file to be exported.  Use 'navi display audits' to "
                                            "get the right name")
 @click.option('--uuid', default=None, help="UUID of the Asset for your export")
-@click.option('--file', default="compliance_data", help="Name of the file excluding '.csv'")
+@click.option('--file', default="compliance_data.csv", help="Name of the file excluding '.csv'")
 def compliance(name, uuid, file):
     click.echo("\nExporting your requested Compliance data into a CSV\n")
     compliance_export_csv(name, uuid, file)
@@ -160,4 +144,4 @@ def vulns(file, severity):
 @export.command(help="Export Vulnerabilities that have failed")
 def failures():
     click.echo("\nExporting ALl vulnerabilities that failed your SLA\n")
-    query_export("select * from fixed where pass_fail=='Fail';", "sla_backlog")
+    query_export("select * from fixed where pass_fail=='Fail' and state!='FIXED';", "sla_backlog")
