@@ -41,7 +41,11 @@ def plugin(plugin_id, o):
                                    "asset_uuid = uuid where plugin_id='" + plugin_id + "' and output LIKE '%" + o + "%';")
 
             for row in plugin_data:
-                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
+                try:
+                    fqdn = row[2]
+                except:
+                    fqdn = " "
+                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0], textwrap.shorten(fqdn, 46), row[1], row[3]))
 
         else:
             find_by_plugin(plugin_id)
@@ -65,7 +69,11 @@ def cve(cve_id):
                                "assets ON asset_uuid = uuid where cves LIKE '%" + cve_id + "%';")
 
         for row in plugin_data:
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(row[2], 46), row[1], row[4]))
+            try:
+                fqdn = row[2]
+            except:
+                fqdn = " "
+            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(fqdn, 46), row[1], row[4]))
 
         click.echo()
 
@@ -80,7 +88,11 @@ def exploit():
                            " assets ON asset_uuid = uuid where exploit = 'True';")
 
     for row in plugin_data:
-        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(row[2], 46), row[1], row[4]))
+        try:
+            fqdn = row[2]
+        except:
+            fqdn = " "
+        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(fqdn, 46), row[1], row[4]))
 
     click.echo()
 
@@ -96,7 +108,11 @@ def output(out_put):
                            " assets ON asset_uuid = uuid where output LIKE '%" + str(out_put) + "%';")
 
     for row in plugin_data:
-        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[4], row[0], textwrap.shorten(row[2], 46), row[1], row[3]))
+        try:
+            fqdn = row[2]
+        except:
+            fqdn = " "
+        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[4], row[0], textwrap.shorten(fqdn, 46), row[1], row[3]))
 
     click.echo()
 
@@ -277,7 +293,12 @@ def port(open_port):
         click.echo("-" * 150)
 
         for vulns in data:
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(vulns[0]), vulns[1], textwrap.shorten(vulns[3], 46),
+            try:
+                fqdn = vulns[3]
+            except:
+                fqdn = " "
+
+            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(vulns[0]), vulns[1], textwrap.shorten(fqdn, 46),
                                                               vulns[2], vulns[4]))
 
         click.echo()
@@ -322,6 +343,7 @@ def name(plugin_name):
 def xrefs(xref, xid):
     click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
     click.echo("-" * 150)
+
     if xid:
         xref_data = db_query("select plugin_id, asset_ip, fqdn, asset_uuid, network, xrefs from vulns LEFT JOIN"
                              " assets ON asset_uuid = uuid where xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xref, xid))
@@ -331,6 +353,11 @@ def xrefs(xref, xid):
                              " assets ON asset_uuid = uuid where xrefs LIKE '%{}%'".format(xref))
 
     for row in xref_data:
-        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[0], row[1], textwrap.shorten(row[2], 46), row[3], row[4]))
+        try:
+            fqdn = row[2]
+        except:
+            fqdn = " "
+
+        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[0], row[1], textwrap.shorten(fqdn, 46), row[3], row[4]))
 
     click.echo()
