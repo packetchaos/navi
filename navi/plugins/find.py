@@ -308,17 +308,9 @@ def port(open_port):
 
 @find.command(help="Find Assets using a custom SQL query.")
 @click.argument('statement')
-@click.option('-pipe', is_flag=True, help="Used to pipe results to another query: returns a list of UUIDs.")
-def query(statement, pipe):
+def query(statement):
     data = db_query(statement)
-
-    if pipe:
-        data_list = []
-        for record in data:
-            data_list.append(record[0])
-        click.echo(data_list)
-    else:
-        pprint.pprint(data)
+    pprint.pprint(data)
 
 
 @find.command(help="Find Assets where a plugin fired with TEXT found in a plugin name")

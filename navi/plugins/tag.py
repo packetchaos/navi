@@ -234,14 +234,13 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
-@click.option('--pipe', default='', help="Create a Tag based on a pipe from a 'navi find query -pipe' command")
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
 @click.option('--remove', default='', help="Remove this tag from all assets to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, pipe, all, query, remove, cve, xrefs, xid):
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -509,9 +508,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
         except Exception as E:
             click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
-
-    if pipe:
-        tag_by_uuid(eval(pipe), c, v, d)
 
     if query:
         d = d + "\nTag by SQL Query: \n{}".format(query)
