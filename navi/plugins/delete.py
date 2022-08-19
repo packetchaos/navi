@@ -29,13 +29,6 @@ def scan(tid):
     tio.scans.delete(str(tid))
 
 
-@delete.command(help='Delete an access group by access group UUID')
-@click.argument('tid')
-def agroup(tid):
-    click.echo("\nI'm deleting your Access Group Now")
-    tio.access_groups.delete(str(tid))
-
-
 @delete.command(help='Delete a target-group by target-group ID')
 @click.argument('tid')
 def tgroup(tid):
@@ -57,13 +50,6 @@ def asset(tid):
     tio.assets.delete(str(tid))
 
 
-@delete.command(help='Delete a container by: \'/repository/image/tag\'')
-@click.argument('tid')
-def container(tid):
-    click.echo("\nI'm deleting your container")
-    request_no_response('DELETE', '/container-security/api/v2/images/' + str(tid))
-
-
 @delete.command(help='Delete Tag Value by Value UUID')
 @click.argument('tid')
 def value(tid):
@@ -76,13 +62,6 @@ def value(tid):
 def category(tid):
     click.echo("\nI'm Deleting your Category")
     tio.tags.delete_category(str(tid))
-
-
-@delete.command(help='Delete repository from Container Security by Docker ID')
-@click.argument('tid')
-def repository(tid):
-    click.echo("\nI'm Deleting your Repository")
-    request_no_response('delete', '/container-security/api/v2/' + str(tid))
 
 
 @delete.command(help='Delete a user by User ID - Not UUID')
@@ -109,13 +88,6 @@ def tag(c, v):
             if v == tags['value']:
                 value_uuid = tags['uuid']
                 request_no_response('DELETE', '/tags/values/' + str(value_uuid))
-
-
-@delete.command(help='Delete a Access group by Access Group ID')
-@click.argument('aid')
-def agroup(aid):
-    click.echo("\nI'm deleting your Access Group now")
-    tio.access_groups.delete(aid)
 
 
 @delete.command(help='Delete a Network by Network ID')
