@@ -1,12 +1,69 @@
 import click
 from .api_wrapper import tenb_connection
-from .database import new_db_connection, insert_fixed, db_query, drop_tables
+from .database import new_db_connection, insert_fixed, db_query, drop_tables, create_table
 from .dbconfig import create_fixed_table
 import dateutil.parser as dp
 import arrow
 import time
 
+
 tio = tenb_connection()
+
+
+def print_sla():
+    try:
+        sla_data = db_query("select * from sla;")
+        click.echo("\nHere is your Current SLA data")
+
+        critical, high, medium, low = sla_data[0]
+
+        click.echo("\n     Critical SLA: {}".format(critical))
+        click.echo("     High SLA: {}".format(high))
+        click.echo("     Medium SLA: {}".format(medium))
+        click.echo("     Low SLA: {}\n".format(low))
+    except:
+        # on failure, lets set the defaults.
+        critical = 7
+        high = 14
+        medium = 30
+        low = 180
+        reset_sla(critical, high, medium, low)
+
+
+def reset_sla(critical, high, medium, low):
+    print("\n Resetting your SLA\n")
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    drop_tables(conn, 'sla')
+
+    create_sla_table = """CREATE TABLE IF NOT EXISTS sla (
+                                critical text,
+                                high text,
+                                medium text, 
+                                low text 
+                                );"""
+    create_table(conn, create_sla_table)
+
+    sla_info = (critical, high, medium, low)
+    with conn:
+        sql = '''INSERT or IGNORE into sla(critical, high, medium, low) VALUES(?,?,?,?)'''
+        cur = conn.cursor()
+        cur.execute(sql, sla_info)
+
+
+def check_sla():
+    # Check to see if the SLA database has been created; if so, display the sla
+    try:
+        data = db_query("select * from sla;")
+        print_sla()
+    except:
+        # on failure, lets set the defaults.
+        critical = 7
+        high = 14
+        medium = 30
+        low = 180
+        reset_sla(critical, high, medium, low)
+        print_sla()
 
 
 def sla_compare(severity, seconds):
@@ -99,6 +156,7 @@ def calculate_sla(severity):
 
 
 def fixed_export(category, value, days):
+    check_sla()
     database = r"navi.db"
     fixed_conn = new_db_connection(database)
 
