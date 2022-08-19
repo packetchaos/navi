@@ -2,7 +2,7 @@ import click
 from .api_wrapper import tenb_connection
 from .database import new_db_connection, insert_fixed, db_query, drop_tables
 from .dbconfig import create_fixed_table
-import datetime
+import dateutil.parser as dp
 import arrow
 import time
 
@@ -46,26 +46,22 @@ def sla_compare(severity, seconds):
 
 
 def compare_and_return_delta(last_fixed, first_found):
+
     if last_fixed is None:
-        try:
-            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
-        except ValueError:
-            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%SZ'))
+        parsed_first_found = dp.parse(first_found)
+        first_found_in_seconds = parsed_first_found.timestamp()
 
-        new_time = time.time() - unix_first_found
+        current_time = time.time()
+
+        new_time = current_time - first_found_in_seconds
     else:
-        # Turns Last_fixed and First found into Unix timestamps and returns the delta
-        try:
-            unix_last_fixed = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%S.%f%z'))
-        except ValueError:
-            unix_last_fixed = datetime.datetime.timestamp(datetime.datetime.strptime(last_fixed, '%Y-%m-%dT%H:%M:%SZ'))
+        parsed_first_found = dp.parse(first_found)
+        first_found_in_seconds = parsed_first_found.timestamp()
 
-        try:
-            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%S.%f%z'))
-        except ValueError:
-            unix_first_found = datetime.datetime.timestamp(datetime.datetime.strptime(first_found, '%Y-%m-%dT%H:%M:%SZ'))
+        parsed_last_fixed = dp.parse(last_fixed)
+        last_fixed__in_seconds = parsed_last_fixed.timestamp()
 
-        new_time = unix_last_fixed - unix_first_found
+        new_time = last_fixed__in_seconds - first_found_in_seconds
 
     return new_time
 
