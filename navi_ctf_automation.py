@@ -9,7 +9,7 @@ import time
 start = time.time()
 
 # Replace 'access_key and secret_key with your keys
-sys('navi keys --a <ACCESS KEY> --s <Secret Key>')
+sys('navi keys --a <Your ACCESS KEY> --s <YOUR SECRET KEY>')
 
 # Update the navi database for tagging on vulns
 sys('navi update full')
@@ -35,7 +35,7 @@ sys('navi user add --username "blackwidow@tenable.com" --password "Dietcoke\!123
 sys('navi user add --username "vison@tenable.com" --password "Dietcoke\!12345" --permission 16 --name "Vision" --email "vison@tenable.com"')
 sys('navi user add --username "captain_america@tenable.com" --password "Dietcoke\!12345" --permission 64 --name "Captain America" --email "captain_america@tenable.com"')
 sys('navi user add --username "hulk@tenable.com" --password "Dietcoke\!12345" --permission 16 --name "The Hulk" --email "hulk@tenable.com"')
-sys('navi user add --username "spiderman@tenable.com" --password "Dietcoke\!12345" --permission 16 --name "Dr strange" --email "spiderman@tenable.com"')
+sys('navi user add --username "hawkeye@tenable.com" --password "Dietcoke\!12345" --permission 16 --name "Dr strange" --email "hawkeye@tenable.com"')
 
 sys('echo Waiting 30 seconds for T.io to process user and usergroup creation')
 time.sleep(30)
@@ -48,7 +48,7 @@ sys('navi usergroup add --user "blackwidow@tenable.com" --name "Custom Apps"')
 sys('navi usergroup add --user "thor@tenable.com" --name "Corporate Apps"')
 sys('navi usergroup add --user "vison@tenable.com" --name "Networking Systems"')
 sys('navi usergroup add --user "hulk@tenable.com" --name "Corporate Systems"')
-sys('navi usergroup add --user "spiderman@tenable.com" --name "Corporate Security"')
+sys('navi usergroup add --user "hawkeye@tenable.com" --name "Corporate Security"')
 
 # Tag assets based on Vulnerability Data
 sys('navi tag --c "Custom Apps" --v "Jenkins" --plugin 22869 --output jenkins')
@@ -113,7 +113,6 @@ sys('navi access create --c "IoT" --v "Ipad or Iphone" --usergroup "IoT Devices"
 sys('navi access create --c "IoT" --v "Raspberry Pi" --usergroup "IoT Devices" --perm CanUse --perm CanView --perm CanScan')
 sys('navi access create --c "IoT" --v "Nintendo" --usergroup "IoT Devices" --perm CanUse --perm CanView --perm CanScan')
 sys('navi access create --c "IoT" --v "Chrome Cast" --usergroup "IoT Devices" --perm CanUse --perm CanView --perm CanScan')
-
 finish = time.time()
 
 total = finish - start
