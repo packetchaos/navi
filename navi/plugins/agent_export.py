@@ -7,7 +7,7 @@ tio = tenb_connection()
 
 def agent_export():
 
-    with open('agent_data.csv', mode='w', encoding='utf-8') as csv_file:
+    with open('agent_data.csv', mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
         header_list = ["Agent Name", "IP Address", "Platform", "Last connected", "Last scanned", "Status", "Plugin Feed ID"]

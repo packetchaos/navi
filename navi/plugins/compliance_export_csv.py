@@ -43,7 +43,7 @@ def compliance_export_csv(name, uuid, file_name):
                        "status"]
 
         # Crete a csv file object
-        with open(file_name, mode='w', encoding='utf-8') as csv_file:
+        with open(file_name, mode='w', encoding='utf-8', newline="") as csv_file:
             compliance_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
             compliance_writer.writerow(header_list)
