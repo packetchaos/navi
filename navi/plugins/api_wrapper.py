@@ -7,7 +7,7 @@ from tenable.io import TenableIO
 
 
 def navi_version():
-    return "navi-7.0.2"
+    return "navi-7.1.0"
 
 
 def tenb_connection():
@@ -139,6 +139,9 @@ def request_data(method, url_mod, **kwargs):
             elif r.status_code == 400:
                 click.echo("\nThe object you tried to create may already exist\n")
                 click.echo("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
+                click.echo(r.request)
+                click.echo(r.headers)
+                click.echo(r.reason)
                 break
             elif r.status_code == 403:
                 click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))

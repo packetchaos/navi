@@ -230,7 +230,12 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(str(OSes))
                     except KeyError:
                         vuln_list.append(" ")
-
+                    try:
+                        special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns/vulnerability-details/{}/details".format(asset_uuid, plugin_id)
+                        vuln_list.append(special_url)
+                    except:
+                        special_url = None
+                        vuln_list.append(special_url)
                     try:
                         insert_vulns(vuln_conn, vuln_list)
                     except Error as e:
@@ -245,7 +250,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads):
+def vuln_export(days, ex_uuid, threads, category, value):
     start = time.time()
 
     database = r"navi.db"
@@ -264,7 +269,15 @@ def vuln_export(days, ex_uuid, threads):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": ['open', 'reopened']}}
+
+    if category is None:
+        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": ['open', 'reopened']}}
+    else:
+        if value is None:
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": ['open', 'reopened']}}
+        else:
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": ['open', 'reopened'],
+                                                      "tag.{}".format(category): "{}".format(value)}}
     try:
 
         if ex_uuid == '0':

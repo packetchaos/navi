@@ -21,43 +21,54 @@ def update():
 
 @update.command(help="Perform a full update (30d Vulns / 90d Assets); Delete the current Database")
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
-def full(threads):
+@click.option('--days', default=None, help="Limit the download to X # of days")
+@click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
+@click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
+def full(threads, days, c, v):
 
     if threads:
         threads_check(threads)
 
     exid = '0'
 
-    vuln_export(30, exid, threads)
-    asset_export(90, exid, threads)
+    if days is None:
+        vuln_export(30, exid, threads, c, v)
+        asset_export(90, exid, threads, c, v)
+    else:
+        vuln_export(days, exid, threads, c, v)
+        asset_export(days, exid, threads, c, v)
 
 
 @update.command(help="Update the Asset Table")
 @click.option('--days', default='90', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
-def assets(threads, days, exid):
+@click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
+@click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
+def assets(threads, days, exid, c, v):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    asset_export(days, exid, threads)
+    asset_export(days, exid, threads, c, v)
 
 
 @update.command(help="Update the vulns Table")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
-def vulns(threads, days, exid):
+@click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
+@click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
+def vulns(threads, days, exid, c, v):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads)
+    vuln_export(days, exid, threads, c, v)
 
 
 @update.command(help="Update the Compliance data")

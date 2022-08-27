@@ -138,6 +138,14 @@ def parse_data(chunk_data):
                 csv_list.append(assets['gcp_zone'])
             except KeyError:
                 csv_list.append(" ")
+
+            try:
+                special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns".format(asset_id)
+                csv_list.append(special_url)
+            except:
+                special_url = None
+                csv_list.append(special_url)
+
             # Collect and save Tag Data
             try:
                 global tag_id
@@ -175,7 +183,7 @@ def parse_data(chunk_data):
     asset_conn.close()
 
 
-def asset_export(days, ex_uuid, threads):
+def asset_export(days, ex_uuid, threads, category, value):
     start = time.time()
 
     # Crete a new connection to our database
@@ -191,7 +199,13 @@ def asset_export(days, ex_uuid, threads):
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
-    pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit)}}
+    if category is None:
+        pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit)}}
+    else:
+        if value is None:
+            pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit)}}
+        else:
+            pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit), "tag.{}".format(category): value}}
     try:
 
         if ex_uuid == '0':

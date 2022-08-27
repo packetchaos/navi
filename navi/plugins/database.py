@@ -95,7 +95,8 @@ def insert_assets(conn, assets):
                                           aws_availability_zone,
                                           gcp_instance_id,
                                           gcp_project_id,
-                                          gcp_zone) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                                          gcp_zone,
+                                          url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, assets)
@@ -150,8 +151,9 @@ def insert_vulns(conn, vulns):
                             cvss3_temporal_score,
                             cvss_base_score,
                             cvss_temporal_score,
-                            OSes
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            OSes,
+                            url
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')

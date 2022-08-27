@@ -57,7 +57,8 @@ def create_vulns_table():
                             cvss3_temporal_score text,
                             cvss_base_score text,
                             cvss_temporal_score text,
-                            OSes text
+                            OSes text,
+                            url text
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)
@@ -87,7 +88,8 @@ def create_assets_table():
                             aws_availability_zone text,
                             gcp_instance_id text,
                             gcp_project_id text,
-                            gcp_zone text
+                            gcp_zone text,
+                            url text
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)

@@ -87,7 +87,6 @@ def bytag(c, v, ec, ev, file, severity):
             # Here I break it out and put it in the format needed for sql
             new_list = tuple(new_list)
             asset_query = "select * from vulns where severity in ('{}') and asset_uuid in {};".format(severity[0], new_list)
-            print(asset_query)
             query_export(asset_query, file)
         else:
             new_list = tuple(new_list)
