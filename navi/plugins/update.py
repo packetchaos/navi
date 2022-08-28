@@ -61,14 +61,16 @@ def assets(threads, days, exid, c, v):
 @click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
-def vulns(threads, days, exid, c, v):
+@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
+              help='Isolate your update to a partiular finding state')
+def vulns(threads, days, exid, c, v, state):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v)
+    vuln_export(days, exid, threads, c, v, list(state))
 
 
 @update.command(help="Update the Compliance data")
