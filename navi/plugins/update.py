@@ -24,7 +24,9 @@ def update():
 @click.option('--days', default=None, help="Limit the download to X # of days")
 @click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
-def full(threads, days, c, v):
+@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
+              help='Isolate your update to a partiular finding state')
+def full(threads, days, c, v, state):
 
     if threads:
         threads_check(threads)
@@ -32,10 +34,10 @@ def full(threads, days, c, v):
     exid = '0'
 
     if days is None:
-        vuln_export(30, exid, threads, c, v)
+        vuln_export(30, exid, threads, c, v, state)
         asset_export(90, exid, threads, c, v)
     else:
-        vuln_export(days, exid, threads, c, v)
+        vuln_export(days, exid, threads, c, v, state)
         asset_export(days, exid, threads, c, v)
 
 
