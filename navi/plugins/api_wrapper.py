@@ -4,10 +4,11 @@ from sqlite3 import Error
 from json import JSONDecodeError
 from .database import new_db_connection
 from tenable.io import TenableIO
+import time
 
 
 def navi_version():
-    return "navi-7.1.1"
+    return "navi-7.1.2"
 
 
 def tenb_connection():
@@ -121,6 +122,8 @@ def request_data(method, url_mod, **kwargs):
 
     # Retry the download three times
     for x in range(1, 3):
+        # Small pause between retries
+        time.sleep(2.5)
         try:
             r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
             if r.status_code == 200:
@@ -135,7 +138,7 @@ def request_data(method, url_mod, **kwargs):
                 return r.json()
             elif r.status_code == 429:
                 click.echo("\nToo many requests at a time...\n{}".format(r))
-                break
+                continue
             elif r.status_code == 400:
                 click.echo("\nThe object you tried to create may already exist\n")
                 click.echo("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
@@ -151,13 +154,13 @@ def request_data(method, url_mod, **kwargs):
                 break
             elif r.status_code == 504:
                 click.echo("\nOne of the Threads had an issue during download...Retrying...\n If got this error while importing assets you may not have proper permissions{}".format(r))
-                break
+                continue
             else:
                 click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))
                 click.echo(r.request)
                 click.echo(r.headers)
                 click.echo(r.reason)
-                break
+                continue
         except ConnectionError:
             click.echo("Check your connection...You got a connection error. Retying")
             continue

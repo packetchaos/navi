@@ -127,6 +127,15 @@ def tag_by_uuid(tag_list, c, v, d):
     if not tag_list:
         click.echo("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
         exit()
+    elif tag_list == 'manual':
+        # Create the Tag
+        payload = {"category_name": str(c), "value": str(v), "description": str(d)}
+        data = request_data('POST', '/tags/values', payload=payload)
+        value_uuid = data["uuid"]
+        cat_uuid = data['category_uuid']
+        click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+        click.echo("The Category UUID is : {}\n".format(cat_uuid))
+        click.echo("The Value UUID is : {}\n".format(value_uuid))
     else:
         # Before updating confirm if the tag exists
         answer = confirm_tag_exists(c, v)
@@ -240,7 +249,8 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--cve', default='', help="Tag based on a CVE ID")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid):
+@click.option('-manual', is_flag=True, help="Create a tag and value with now assets associated")
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid, manual):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -582,3 +592,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             else:
                 pass
         tag_by_uuid(tag_list, c, v, d)
+
+    if manual:
+        tag_by_uuid("manual", c, v, d)

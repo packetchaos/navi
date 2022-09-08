@@ -76,12 +76,14 @@ def create_hist_list(filename):
             total += mins[1]
         try:
             avg = total / len(time_asset_list)
+            est_scan_total = int(total)/int(max_hosts)
             click.echo("\nScan Name: {}".format(scan_name))
             click.echo("Scanner Policy: {}".format(scan_policy))
             click.echo("Scanner IP: {}\n".format(scanner_ip))
             click.echo("Max Hosts: {}".format(max_hosts))
             click.echo("Max Checks: {}\n".format(max_checks))
-            click.echo("Total Time for Scan: {} Minutes".format(int(total)))
+            click.echo("Total Assets scanned: {}\n".format(len(time_asset_list)))
+            click.echo("Total Est. Time for Scan: {} Minutes".format(int(est_scan_total)))
             click.echo("Average Minutes per Asset: {}\n".format(int(avg)))
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
