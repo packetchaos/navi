@@ -77,6 +77,11 @@ def create_hist_list(filename):
         try:
             avg = total / len(time_asset_list)
             est_scan_total = int(total)/int(max_hosts)
+            click.echo()
+            click.echo("*" * 100)
+            click.echo("\nTotal Scan estimate based on a single scanner. "
+                       "\nDivide the current total displayed by the number of scanners for accuracy.\n")
+            click.echo("*" * 100)
             click.echo("\nScan Name: {}".format(scan_name))
             click.echo("Scanner Policy: {}".format(scan_policy))
             click.echo("Scanner IP: {}\n".format(scanner_ip))
