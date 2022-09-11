@@ -306,16 +306,27 @@ def hosts(scan_id):
 @scan.command(help="Display History index for a Scan ID that is NOT archived(older than 35 days)")
 @click.argument('scan_id')
 def history(scan_id):
-    data = request_data("GET", "/scans/{}/history".format(scan_id))
-    click.echo("\nHistory IDs and Status for scan ID {}".format(scan_id))
-    click.echo("-" * 40)
-    click.echo("\n{:15s} {:15s} {:20s} {:20s}".format("History ID", "Scan Status", "Start time", "End Time"))
-    click.echo("-" * 72)
-    for hist in data['history']:
-        if not hist['is_archived']:
-            click.echo("{:15s} {:15s} {:20} {:20}".format(str(hist['id']), hist['status'], str(datetime.datetime.fromtimestamp(hist['time_start'])),
-                       str(datetime.datetime.fromtimestamp(hist['time_end']))))
-    click.echo()
+    try:
+        total = 0
+        data_list = []
+        data = request_data("GET", "/scans/{}/history".format(scan_id))
+        click.echo("\nHistory IDs and Status for scan ID {}".format(scan_id))
+        click.echo("-" * 40)
+        click.echo("\n{:15s} {:15s} {:20s} {:20s} {}".format("History ID", "Scan Status", "Start time", "End Time", "Duration (H:M:S)"))
+        click.echo("-" * 100)
+        for hist in data['history']:
+            if not hist['is_archived']:
+                duration = hist['time_end'] - hist['time_start']
+                data_list.append(duration)
+                total += duration
+                click.echo("{:15s} {:15s} {:20} {:20} {}".format(str(hist['id']), hist['status'],
+                                                                 str(datetime.datetime.fromtimestamp(hist['time_start'])),
+                                                                 str(datetime.datetime.fromtimestamp(hist['time_end'])),
+                                                                 str(datetime.timedelta(seconds=duration))))
+        click.echo()
+        click.echo("\nAverage Scan time: {}\n\n".format(datetime.timedelta(seconds=(total / len(data_list)))))
+    except KeyError:
+        click.echo("\nTry another Scan ID; This one isn't working")
 
 
 @scan.command(help="Display the Latest scan information")

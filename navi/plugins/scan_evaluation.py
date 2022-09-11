@@ -2,6 +2,7 @@ import click
 from .database import db_query
 from .api_wrapper import request_data, tenb_connection
 import csv
+import datetime
 # Grab all 19506 Data
 
 tio = tenb_connection()
@@ -15,9 +16,23 @@ def grab_hop_count(uuid):
     return hop_count_data
 
 
-def create_hist_list(filename):
+def create_hist_list(filename, scanid, histid):
     from csv import DictReader
     time_asset_list = []
+    delta = None
+    scan_processing_total = None
+    # Let's get the scatime with scan processing
+    scan_history = request_data("GET", "/scans/{}/history".format(scanid))
+
+    for hist in scan_history['history']:
+        if not hist['is_archived']:
+            if str(hist['id']) == str(histid):
+                scan_start = hist['time_start']
+                scan_end = hist['time_end']
+                scan_processing_total = scan_end - scan_start
+                delta = str(datetime.timedelta(seconds=scan_processing_total))
+
+    # Open the file and parse the 19506 plugin
     with open(filename) as fobj:
         scan_name = "No Scan"
         scan_policy = "No Policy"
@@ -51,7 +66,7 @@ def create_hist_list(filename):
                 try:
                     # convert seconds into minutes
 
-                    minutes = int(final_number) / 60
+                    seconds = int(final_number)
 
                     # Grab data pair and split it at the colon and grab the values
                     scan_name = parsed_output[9].split(" : ")[1]
@@ -65,18 +80,19 @@ def create_hist_list(filename):
                         rtt = parsed_output[14].split(" : ")[1]
                     else:
                         rtt = parsed_output[12].split(" : ")[1]
-                    time_asset_list.append((asset_uuid, minutes))
+                    time_asset_list.append((asset_uuid, seconds))
                 except IndexError:
                     # This error occurs when an old scanner is used.
                     # the 19506 plugin filled with an error indicating the need for an upgrade
                     pass
 
         total = 0
-        for mins in time_asset_list:
-            total += mins[1]
+        for secs in time_asset_list:
+            total += secs[1]
         try:
             avg = total / len(time_asset_list)
             est_scan_total = int(total)/int(max_hosts)
+            processing = scan_processing_total - est_scan_total
             click.echo()
             click.echo("*" * 100)
             click.echo("\nTotal Scan estimate based on a single scanner. "
@@ -87,9 +103,14 @@ def create_hist_list(filename):
             click.echo("Scanner IP: {}\n".format(scanner_ip))
             click.echo("Max Hosts: {}".format(max_hosts))
             click.echo("Max Checks: {}\n".format(max_checks))
-            click.echo("Total Assets scanned: {}\n".format(len(time_asset_list)))
-            click.echo("Total Est. Time for Scan: {} Minutes".format(int(est_scan_total)))
-            click.echo("Average Minutes per Asset: {}\n".format(int(avg)))
+            click.echo("{} {}\n".format("Total Assets scanned: ", len(time_asset_list)))
+            click.echo("{:40} {}".format("Scan Stats", "H: M: S"))
+            click.echo("-" * 60)
+            click.echo()
+            click.echo("{:40} {}".format("Scan Time + T.io Processing:", delta))
+            click.echo("{:40} {}".format("Est. T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
+            click.echo("{:40} {} ".format("Est. Scan Time: ", str(datetime.timedelta(seconds=est_scan_total))))
+            click.echo("{:40} {}\n".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=avg))))
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
 
@@ -108,7 +129,7 @@ def download_csv_by_plugin_id(scan_id, hist_id):
     with open(filename, 'wb') as fobj:
         tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
                          format='csv', fobj=fobj, history_id=hist_id)
-    create_hist_list(filename)
+    create_hist_list(filename, scan_id, hist_id)
 
 
 def evaluate_a_scan(scanid, histid):
