@@ -16,7 +16,7 @@ def grab_hop_count(uuid):
     return hop_count_data
 
 
-def create_hist_list(filename, scanid, histid):
+def parse_19506_from_file(filename, scanid, histid):
     from csv import DictReader
     time_asset_list = []
     delta = None
@@ -37,6 +37,7 @@ def create_hist_list(filename, scanid, histid):
         scan_name = "No Scan"
         scan_policy = "No Policy"
         scanner_ip = "No Scanner"
+        scanner_list = []
         max_hosts = " "
         max_checks = ""
         avg = 0
@@ -64,22 +65,16 @@ def create_hist_list(filename, scanid, histid):
 
             if final_number != 'unknown':
                 try:
-                    # convert seconds into minutes
-
                     seconds = int(final_number)
 
                     # Grab data pair and split it at the colon and grab the values
                     scan_name = parsed_output[9].split(" : ")[1]
                     scan_policy = parsed_output[10].split(" : ")[1]
                     scanner_ip = parsed_output[11].split(" : ")[1]
-                    scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
+                    if scanner_ip not in scanner_list:
+                        scanner_list.append(scanner_ip)
                     max_hosts = parsed_output[plugin_length- 8].split(" : ")[1]
                     max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
-
-                    if "no" not in parsed_output[14].split(" : ")[1]:
-                        rtt = parsed_output[14].split(" : ")[1]
-                    else:
-                        rtt = parsed_output[12].split(" : ")[1]
                     time_asset_list.append((asset_uuid, seconds))
                 except IndexError:
                     # This error occurs when an old scanner is used.
@@ -91,17 +86,19 @@ def create_hist_list(filename, scanid, histid):
             total += secs[1]
         try:
             avg = total / len(time_asset_list)
-            est_scan_total = int(total)/int(max_hosts)
+            # All 19506 plugin data
+            # divided by number of Max hosts(concurrency)
+            # divided by the number of scanners
+            est_scan_total = (int(total) / int(max_hosts)) / len(scanner_list)
             processing = scan_processing_total - est_scan_total
             click.echo()
-            click.echo("*" * 100)
-            click.echo("\nTotal Scan estimate based on a single scanner. "
-                       "\nDivide the current total displayed by the number of scanners for accuracy.\n")
-            click.echo("*" * 100)
             click.echo("\nScan Name: {}".format(scan_name))
             click.echo("Scanner Policy: {}".format(scan_policy))
-            click.echo("Scanner IP: {}\n".format(scanner_ip))
-            click.echo("Max Hosts: {}".format(max_hosts))
+            click.echo("\nTotal Scanners Used: {}".format(len(scanner_list)))
+            for scanner in scanner_list:
+                click.echo("Scanner IP: {}".format(scanner))
+
+            click.echo("\nMax Hosts: {}".format(max_hosts))
             click.echo("Max Checks: {}\n".format(max_checks))
             click.echo("{} {}\n".format("Total Assets scanned: ", len(time_asset_list)))
             click.echo("{:40} {}".format("Scan Stats", "H: M: S"))
@@ -117,8 +114,13 @@ def create_hist_list(filename, scanid, histid):
 
 def get_last_history_id(scanid):
     data = request_data("GET", "/scans/{}/history".format(scanid))
-
-    return data['history'][0]['id']
+    for scans in data['history']:
+        if not scans['is_archived']:
+            if scans['status'] == 'completed':
+                return scans['id']
+            else:
+                click.echo("\nNo completed Scan to evaluate\n")
+                exit()
 
 
 def download_csv_by_plugin_id(scan_id, hist_id):
@@ -129,7 +131,7 @@ def download_csv_by_plugin_id(scan_id, hist_id):
     with open(filename, 'wb') as fobj:
         tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
                          format='csv', fobj=fobj, history_id=hist_id)
-    create_hist_list(filename, scan_id, hist_id)
+    parse_19506_from_file(filename, scan_id, hist_id)
 
 
 def evaluate_a_scan(scanid, histid):

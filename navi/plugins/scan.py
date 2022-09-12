@@ -108,16 +108,17 @@ def scan_details(scan_id):
 def scan_hosts(scan_id):
     try:
         data = request_data('GET', '/scans/' + str(scan_id))
-
+        host_list = []
         try:
             click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
-            click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Critical", "High", "Medium", "Low"))
+            click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Score", "Critical", "High", "Medium", "Low"))
             click.echo("-"*150)
             for host in data['hosts']:
-
-                click.echo("{:20s} {:45s} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']), str(host['critical']), str(host['high']), str(host['medium']), str(host['low'])))
+                host_list.append(host)
+                click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']), str(host['score']), str(host['critical']), str(host['high']), str(host['medium']), str(host['low'])))
 
             click.echo()
+            click.echo("\nTotal Assets Scanned: {}\n".format(len(host_list)))
         except KeyError:
             click.echo("There was an Error.  It could be the scan was Aborted, canceled or Archived.\n")
             click.echo("Status: {}".format(data['info']['status']))
@@ -327,6 +328,8 @@ def history(scan_id):
         click.echo("\nAverage Scan time: {}\n\n".format(datetime.timedelta(seconds=(total / len(data_list)))))
     except KeyError:
         click.echo("\nTry another Scan ID; This one isn't working")
+    except ZeroDivisionError:
+        click.echo("\nTry another Scan ID; This one is archived, imported or was canceled")
 
 
 @scan.command(help="Display the Latest scan information")
