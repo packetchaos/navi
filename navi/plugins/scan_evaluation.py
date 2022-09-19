@@ -3,6 +3,7 @@ from .database import db_query
 from .api_wrapper import request_data, tenb_connection
 import csv
 import datetime
+import time
 # Grab all 19506 Data
 
 tio = tenb_connection()
@@ -18,19 +19,22 @@ def grab_hop_count(uuid):
 
 def parse_19506_from_file(filename, scanid, histid):
     from csv import DictReader
-    time_asset_list = []
-    delta = None
-    scan_processing_total = None
+    total_assets_scanned_list = []
+    reported_scan_duration = None
+    total_reported_scan_duration = None
+    reported_scan_end = None
+    reported_scan_start = None
     # Let's get the scatime with scan processing
     scan_history = request_data("GET", "/scans/{}/history".format(scanid))
 
     for hist in scan_history['history']:
         if not hist['is_archived']:
             if str(hist['id']) == str(histid):
-                scan_start = hist['time_start']
-                scan_end = hist['time_end']
-                scan_processing_total = scan_end - scan_start
-                delta = str(datetime.timedelta(seconds=scan_processing_total))
+                reported_scan_start = hist['time_start']
+                reported_scan_end = hist['time_end']
+                total_reported_scan_duration = reported_scan_end - reported_scan_start
+                # Simple Delta from Tenable.io reported Scan times
+                reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
 
     # Open the file and parse the 19506 plugin
     with open(filename) as fobj:
@@ -40,7 +44,10 @@ def parse_19506_from_file(filename, scanid, histid):
         scanner_list = []
         max_hosts = " "
         max_checks = ""
-        avg = 0
+        asset_average_scantime = 0
+        start_scan_timestamp_list = []
+        timestamp_plus_duration_list = []
+
         for row in DictReader(fobj):
             plugin_output = row['Plugin Output']
             asset_uuid = row['Asset UUID']
@@ -55,16 +62,18 @@ def parse_19506_from_file(filename, scanid, histid):
             duration = parsed_output[plugin_length - 2]
 
             # Split at the colon to grab the numerical value
-            seconds = duration.split(" : ")
+            intial_seconds = duration.split(" : ")
 
             # split to remove "secs"
-            number = seconds[1].split(" ")
+            number = intial_seconds[1].split(" ")
 
             # grab the number for our minute calculation
             final_number = number[0]
 
+            # For an unknown reason, the scanner will print unknown for some assets leaving no way to calulate the time.
             if final_number != 'unknown':
                 try:
+                    # Numerical value in seconds parsed from the plugin
                     seconds = int(final_number)
 
                     # Grab data pair and split it at the colon and grab the values
@@ -73,41 +82,76 @@ def parse_19506_from_file(filename, scanid, histid):
                     scanner_ip = parsed_output[11].split(" : ")[1]
                     if scanner_ip not in scanner_list:
                         scanner_list.append(scanner_ip)
-                    max_hosts = parsed_output[plugin_length- 8].split(" : ")[1]
+                    max_hosts = parsed_output[plugin_length - 8].split(" : ")[1]
                     max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
-                    time_asset_list.append((asset_uuid, seconds))
+                    # Grabbing the start time from the plugin
+                    scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
+                    # Set the pattern to convert into epoch
+                    pattern = '%Y/%m/%d %H:%M'
+                    # Convert to Epoch. Need to remove the TimeZone which is 4 chars
+                    epoch = int(time.mktime(time.strptime(scan_time[:-4], pattern)))
+                    # Add to list to calculate the first asset scanned
+                    start_scan_timestamp_list.append(epoch)
+                    # Add epoch and seconds to get end time.  This will be used to find the last asset scanned
+                    timestamp_plus_duration_list.append(epoch + seconds)
+                    # All assets and 19506 seconds in a tuple
+                    total_assets_scanned_list.append((asset_uuid, seconds))
                 except IndexError:
                     # This error occurs when an old scanner is used.
                     # the 19506 plugin filled with an error indicating the need for an upgrade
                     pass
 
+        # calculate the total for AVG calc
         total = 0
-        for secs in time_asset_list:
+        for secs in total_assets_scanned_list:
             total += secs[1]
+
         try:
-            avg = total / len(time_asset_list)
-            # All 19506 plugin data
-            # divided by number of Max hosts(concurrency)
-            # divided by the number of scanners
-            est_scan_total = (int(total) / int(max_hosts)) / len(scanner_list)
-            processing = scan_processing_total - est_scan_total
-            click.echo()
+            # Avg scantime per assset
+            asset_average_scantime = total / len(total_assets_scanned_list)
+
+            # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest scan date in 19506
+            total_calculated_scan_duration = (max(timestamp_plus_duration_list) - min(start_scan_timestamp_list))
+
+            # Processing time therefore is the reported duration - the total scan duration
+            processing = total_reported_scan_duration - total_calculated_scan_duration
+
+            logest_scanned = max(total_assets_scanned_list, key=lambda uuid: uuid[1])
+            shortest_scanned = min(total_assets_scanned_list, key=lambda uuid: uuid[1])
+
+            click.echo("*" * 100)
+            click.echo("\nThis data is derived from the 19506 plugins found in the {}"
+                       "\nThe start time stamp(s) and the duration(s) were used to calculate the total scantime(s)\n".format(filename))
+            click.echo("*" * 100)
+
             click.echo("\nScan Name: {}".format(scan_name))
             click.echo("Scanner Policy: {}".format(scan_policy))
-            click.echo("\nTotal Scanners Used: {}".format(len(scanner_list)))
-            for scanner in scanner_list:
-                click.echo("Scanner IP: {}".format(scanner))
+
+            # We can't count cloud scanners; so let's not try
+            if "tenable.io Scanner" in scanner_list:
+                click.echo("\nScanned Using Tenable Cloud Scanners".format(len(scanner_list)))
+            else:
+                click.echo("\nTotal Scanners Used: {}".format(len(scanner_list)))
+
+                for scanner in scanner_list:
+                    click.echo("Scanner IP: {}".format(scanner))
 
             click.echo("\nMax Hosts: {}".format(max_hosts))
             click.echo("Max Checks: {}\n".format(max_checks))
-            click.echo("{} {}\n".format("Total Assets scanned: ", len(time_asset_list)))
-            click.echo("{:40} {}".format("Scan Stats", "H: M: S"))
+            click.echo("{} {}\n".format("Total Assets scanned: ", len(total_assets_scanned_list)))
+
+            click.echo("{:40} {:10} {}".format("Scan Stats", "H: M: S", "Asset"))
             click.echo("-" * 60)
-            click.echo()
-            click.echo("{:40} {}".format("Scan Time + T.io Processing:", delta))
-            click.echo("{:40} {}".format("Est. T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
-            click.echo("{:40} {} ".format("Est. Scan Time: ", str(datetime.timedelta(seconds=est_scan_total))))
-            click.echo("{:40} {}\n".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=avg))))
+            click.echo("{:40} {:10}".format("Total Reported Scan Duration:", reported_scan_duration))
+            click.echo("{:40} {:10}".format("T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
+            click.echo("{:40} {:10}".format("Actual Scan Duration: ", str(datetime.timedelta(seconds=total_calculated_scan_duration))))
+            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=logest_scanned[1])), logest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ", str(datetime.timedelta(seconds=shortest_scanned[1])), shortest_scanned[0]))
+            click.echo("{:40} {}\n".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=asset_average_scantime))))
+
+            click.echo("\nFirst asset scanned started at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(min(start_scan_timestamp_list)))))
+            click.echo("Last asset finished scanning at: {}\n\n".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(max(timestamp_plus_duration_list)))))
+
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
 
@@ -124,7 +168,9 @@ def get_last_history_id(scanid):
 
 
 def download_csv_by_plugin_id(scan_id, hist_id):
+
     filename = f'{scan_id}-report.csv'
+    click.echo("\nDownloading scan {} details into a csv called {} for parsing and manual auditing\n".format(scan_id, filename))
     tio = tenb_connection()
 
     # Stream the report to disk
