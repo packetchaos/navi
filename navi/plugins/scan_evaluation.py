@@ -86,10 +86,23 @@ def parse_19506_from_file(filename, scanid, histid):
                     max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
                     # Grabbing the start time from the plugin
                     scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
-                    # Set the pattern to convert into epoch
-                    pattern = '%Y/%m/%d %H:%M'
-                    # Convert to Epoch. Need to remove the TimeZone which is 4 chars
-                    epoch = int(time.mktime(time.strptime(scan_time[:-4], pattern)))
+
+                    # Some timezone abrivations are not parseable with strptime. removing the timezone for those we can't
+                    # parse
+                    try:
+                        # Set the pattern to convert into epoch
+                        pattern = '%Y/%m/%d %H:%M %Z'
+                        # Convert to Epoch
+                        epoch = int(time.mktime(time.strptime(scan_time, pattern)))
+                    except ValueError:
+                        pattern = '%Y/%m/%d %H:%M'
+                        # Split the time to remove the timezone 2-6 chars
+                        time_less_timezone = scan_time.split(" ")
+                        # merge the data and time for calculation
+                        new_time = "{} {}".format(time_less_timezone[0], time_less_timezone[1])
+                        # Convert to Epoch
+                        epoch = int(time.mktime(time.strptime(new_time, pattern)))
+
                     # Add to list to calculate the first asset scanned
                     start_scan_timestamp_list.append(epoch)
                     # Add epoch and seconds to get end time.  This will be used to find the last asset scanned
@@ -116,7 +129,7 @@ def parse_19506_from_file(filename, scanid, histid):
             # Processing time therefore is the reported duration - the total scan duration
             processing = total_reported_scan_duration - total_calculated_scan_duration
 
-            logest_scanned = max(total_assets_scanned_list, key=lambda uuid: uuid[1])
+            longest_scanned = max(total_assets_scanned_list, key=lambda uuid: uuid[1])
             shortest_scanned = min(total_assets_scanned_list, key=lambda uuid: uuid[1])
 
             click.echo("*" * 100)
@@ -145,7 +158,7 @@ def parse_19506_from_file(filename, scanid, histid):
             click.echo("{:40} {:10}".format("Total Reported Scan Duration:", reported_scan_duration))
             click.echo("{:40} {:10}".format("T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
             click.echo("{:40} {:10}".format("Actual Scan Duration: ", str(datetime.timedelta(seconds=total_calculated_scan_duration))))
-            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=logest_scanned[1])), logest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=longest_scanned[1])), longest_scanned[0]))
             click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ", str(datetime.timedelta(seconds=shortest_scanned[1])), shortest_scanned[0]))
             click.echo("{:40} {}\n".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=asset_average_scantime))))
 
