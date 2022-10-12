@@ -4,7 +4,7 @@ from .api_wrapper import request_data, tenb_connection
 import csv
 import datetime
 import time
-# Grab all 19506 Data
+
 
 tio = tenb_connection()
 
@@ -22,9 +22,8 @@ def parse_19506_from_file(filename, scanid, histid):
     total_assets_scanned_list = []
     reported_scan_duration = None
     total_reported_scan_duration = None
-    reported_scan_end = None
-    reported_scan_start = None
-    # Let's get the scatime with scan processing
+
+    # Let's get the scan time with scan processing
     scan_history = request_data("GET", "/scans/{}/history".format(scanid))
 
     for hist in scan_history['history']:
@@ -70,7 +69,7 @@ def parse_19506_from_file(filename, scanid, histid):
             # grab the number for our minute calculation
             final_number = number[0]
 
-            # For an unknown reason, the scanner will print unknown for some assets leaving no way to calulate the time.
+            # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
             if final_number != 'unknown':
                 try:
                     # Numerical value in seconds parsed from the plugin
@@ -87,14 +86,15 @@ def parse_19506_from_file(filename, scanid, histid):
                     # Grabbing the start time from the plugin
                     scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
 
-                    # Some timezone abrivations are not parseable with strptime. removing the timezone for those we can't
-                    # parse
+                    # Some timezone abrivations are not parseable with strptime.
+                    # removing the timezone for those we can't parse
                     try:
                         # Set the pattern to convert into epoch
                         pattern = '%Y/%m/%d %H:%M %Z'
                         # Convert to Epoch
                         epoch = int(time.mktime(time.strptime(scan_time, pattern)))
                     except ValueError:
+                        # timezone couldn't be used. lets remove it and calculate what we can
                         pattern = '%Y/%m/%d %H:%M'
                         # Split the time to remove the timezone 2-6 chars
                         time_less_timezone = scan_time.split(" ")
@@ -120,7 +120,7 @@ def parse_19506_from_file(filename, scanid, histid):
             total += secs[1]
 
         try:
-            # Avg scantime per assset
+            # Avg scan time per asset
             asset_average_scantime = total / len(total_assets_scanned_list)
 
             # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest scan date in 19506
@@ -178,18 +178,21 @@ def get_last_history_id(scanid):
             else:
                 click.echo("\nNo completed Scan to evaluate\n")
                 exit()
+        else:
+            click.echo("\nNo completed Scan to evaluate\n")
+            exit()
 
 
 def download_csv_by_plugin_id(scan_id, hist_id):
-
     filename = f'{scan_id}-report.csv'
-    click.echo("\nDownloading scan {} details into a csv called {} for parsing and manual auditing\n".format(scan_id, filename))
-    tio = tenb_connection()
+    click.echo("\nDownloading scan {} details into a csv called {} for "
+               "parsing and manual auditing\n".format(scan_id, filename))
 
     # Stream the report to disk
     with open(filename, 'wb') as fobj:
         tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
                          format='csv', fobj=fobj, history_id=hist_id)
+
     parse_19506_from_file(filename, scan_id, hist_id)
 
 
@@ -197,11 +200,16 @@ def evaluate_a_scan(scanid, histid):
 
     if scanid:
         if histid:
+            # use the scan id and hist id to download and parse
             download_csv_by_plugin_id(scanid, histid)
         else:
+            # grab the last useable histid
             historyid = get_last_history_id(scanid)
+            # download and parse
             download_csv_by_plugin_id(scanid, historyid)
     else:
+        # Since no scanid was provided we assume the user wants stats on all scans
+
         # Pull all 19506 Plugins from the DB
         plugin_data = db_query("select asset_uuid, output from vulns where plugin_id='19506';")
 
@@ -211,13 +219,10 @@ def evaluate_a_scan(scanid, histid):
         scan_name_dict = {}
 
         # Open a CSV for export
-        with open('evaluate.csv', mode='w') as csv_file:
+        with open('evaluate.csv', mode='w', encoding='utf-8', newline="") as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
             header_list = ["asset uuid", "Scan Name", "Scan Policy", "Scanner IP", "Scan Time", "Max Checks", "Max Hosts", "Minutes", "RTT", "Hop Count"]
-
-            # Metics Header
-            #header_list = ["Policy/Scanner/Scan", "Average per Asset in mins"]
 
             # Write the header to the csv
             agent_writer.writerow(header_list)
@@ -228,9 +233,6 @@ def evaluate_a_scan(scanid, histid):
                 # Print the Category to the Screen ( Scanner, Policy, Scan Name)
                 click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
                 click.echo("-" * 20)
-
-                # Write the category to the csv for delination
-                #agent_writer.writerow([name])
 
                 # Cycle through each category
                 for scan in scan_info.items():
@@ -252,10 +254,6 @@ def evaluate_a_scan(scanid, histid):
                     # Print results to the screen
                     click.echo("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
 
-                    update = [scan[0], average]
-
-                    # Send the results as a list to the CSV
-                    #agent_writer.writerow(update)
                 click.echo("-" * 150)
 
             # Loop through each plugin 19506 and Parse data from it
