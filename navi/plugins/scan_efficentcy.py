@@ -4,6 +4,7 @@ import datetime
 import time
 from csv import DictReader
 from .api_wrapper import tenb_connection
+import textwrap
 
 tio = tenb_connection()
 
@@ -249,13 +250,13 @@ def display_data(scanid):
                    "\nThe start time stamps and the durations were used to calculate the total scan times"
                    "\nThe file Trending_report_scan_{}.csv has all of the available data, including links to assets and scan history\n".format(scanid, scanid))
         click.echo("*" * 100)
-        click.echo("\n{:25} {:25} {:15} {:15} {:15} {:15} {:15} {:25}".format("Scan Start", "Scanner IP(s)", "Assets", "Reported",
+        click.echo("\n{:20} {:25} {:10} {:20} {:20} {:20} {:20} {:25}".format("Scan Start", "Scanner IP(s)", "Assets", "Reported",
                                                                               "Indexing", "Duration", "Average",
                                                                               "Longest Asset time"))
         click.echo("-" * 150)
 
         for detail in DictReader(trend_file):
-            click.echo("{:25} {:25} {:15} {:15} {:15} {:15} {:15} {:25}".format(str(detail["Scan Start"]), str(detail["Scanner IP"]),
+            click.echo("{:20} {:25} {:10} {:20} {:20} {:20} {:20} {:25}".format(str(detail["Scan Start"]), textwrap.shorten(str(detail["Scanner IP"]), width=25),
                                                                                 str(detail["Total Assets"]), str(detail["Reported Time"]),
                                                                                 str(detail["Indexing Time"]), str(detail["Scan Duration"]),
                                                                                 detail["Average Scan Duration"], str(detail["Longest Asset time"])))
