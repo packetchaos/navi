@@ -205,7 +205,7 @@ def trend_by_scan_id(scanid):
         trend_writer.writerow(header)
 
         for hist in tio.scans.history(scanid):  # scan_hist['history']:
-            if hist['is_archived']:
+            if not hist['is_archived']:
                 if hist['status'] == 'completed':
                     # Lets get the Reported Scan Duration
                     reported_scan_start = hist['time_start']
