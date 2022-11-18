@@ -248,8 +248,8 @@ def configs():
             updated = app_data['updated_at']
 
             click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_name), width=70), str(app_scan_id), str(app_status), str(updated)))
-        except Exception as E:
-            error_msg(E)
+        except:
+            pass
     click.echo()
 
 
