@@ -23,6 +23,8 @@ from .sla import sla
 #from .rules import rules
 from .cve_compare import compare
 from .deploy import deploy
+from .was import was
+from .agroup import agroup
 
 
 def plugin_loader(group):
@@ -51,3 +53,5 @@ def plugin_loader(group):
     #group.add_command(rules)
     group.add_command(compare)
     group.add_command(deploy)
+    group.add_command(was)
+    group.add_command(agroup)
