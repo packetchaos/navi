@@ -166,7 +166,6 @@ def insert_apps(conn, apps):
              uuid, 
              target, 
              scan_completed_time,
-             pages_audited,
              pages_crawled,
              requests_made, 
              critical_count,
@@ -176,8 +175,10 @@ def insert_apps(conn, apps):
              info_count,
              owasp,
              tech_list,
-             config_id)
-     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+             config_id,
+             notes,
+             asset_uuid)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, apps)
@@ -203,3 +204,30 @@ def insert_fixed(conn, fixed):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, fixed)
+
+
+def insert_plugins(conn, plugins):
+    sql2 = '''INSERT or IGNORE into plugins(
+            scan_uuid,
+            name,
+            cves,
+            description, 
+            family, 
+            output,
+            owasp,
+            payload,
+            plugin_id,
+            plugin_mod_date,
+            plugin_pub_date,
+            proof,
+            request_headers,
+            response_headers,
+            risk_factor,
+            solution,
+            url,
+            xrefs,
+            see_also)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur2 = conn.cursor()
+    cur2.execute('pragma journal_mode=wal;')
+    cur2.execute(sql2, plugins)

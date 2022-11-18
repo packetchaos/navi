@@ -119,7 +119,6 @@ def create_apps_table():
                             uuid text PRIMARY KEY, 
                             target text, 
                             scan_completed_time text,
-                            pages_audited text,
                             pages_crawled text,
                             requests_made text, 
                             critical_count text,
@@ -129,7 +128,9 @@ def create_apps_table():
                             info_count text,
                             owasp text,
                             tech_list text,
-                            config_id text
+                            config_id text,
+                            notes text,
+                            asset_uuid text
                             );"""
     app_conn.execute('pragma journal_mode=wal;')
 
@@ -178,3 +179,32 @@ def create_fixed_table():
                             special_url text
                             );"""
     fixed_conn.execute(fixed_table)
+
+
+def create_plugins_table():
+    database = r"navi.db"
+    app_conn = new_db_connection(database)
+    create_plugins = """CREATE TABLE IF NOT EXISTS plugins (
+                            scan_uuid text,
+                            name text,
+                            cves text,
+                            description text, 
+                            family text, 
+                            output text,
+                            owasp text,
+                            payload text,
+                            plugin_id text,
+                            plugin_mod_date text,
+                            plugin_pub_date text,
+                            proof text,
+                            request_headers text,
+                            response_headers text,
+                            risk_factor text,
+                            solution text,
+                            url text,
+                            xrefs text,
+                            see_also text
+                            );"""
+    app_conn.execute('pragma journal_mode=wal;')
+
+    create_table(app_conn, create_plugins)

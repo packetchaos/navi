@@ -249,7 +249,7 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--cve', default='', help="Tag based on a CVE ID")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
-@click.option('-manual', is_flag=True, help="Create a tag and value with now assets associated")
+@click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid, manual):
     # start a blank list
     tag_list = []
@@ -594,4 +594,4 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if manual:
-        tag_by_uuid("manual", c, v, d)
+        tag_by_uuid(manual, c, v, d)

@@ -4,6 +4,7 @@ from .th_vuln_export import vuln_export
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .database import new_db_connection, drop_tables, create_table
+from .was_export import grab_scans
 
 
 def threads_check(threads):
@@ -36,9 +37,11 @@ def full(threads, days, c, v, state):
     if days is None:
         vuln_export(30, exid, threads, c, v, state)
         asset_export(90, exid, threads, c, v)
+        grab_scans()
     else:
         vuln_export(days, exid, threads, c, v, state)
         asset_export(days, exid, threads, c, v)
+        grab_scans()
 
 
 @update.command(help="Update the Asset Table")
@@ -112,3 +115,8 @@ def url(new_url):
         sql = '''INSERT or IGNORE into url (name, url) VALUES(?,?)'''
         cur = conn.cursor()
         cur.execute(sql, info)
+
+
+@update.command(help="Update the Navi DB with WAS data")
+def was():
+    grab_scans()
