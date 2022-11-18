@@ -1,7 +1,5 @@
 import click
 from .api_wrapper import request_data, tenb_connection
-from .error_msg import error_msg
-import dateutil.parser as dp
 import time
 import uuid
 import csv
@@ -60,7 +58,7 @@ def was():
     pass
 
 
-@was.command(help="Display Scan IDs for a given Scan Config [STEP TWO]")
+@was.command(help="[STEP TWO] - Display Scan IDs for a given Scan Config")
 @click.argument('config_uuid')
 def scans(config_uuid):
     params = {"limit": "200", "offset": "0"}
@@ -105,7 +103,7 @@ def start(scan_id):
     request_data('POST', '/was/v2/configs/' + str(scan_id) + '/scans')
 
 
-@was.command(help="Display Details for Web Application Scan by Scan_ID [STEP THREE]")
+@was.command(help=" [STEP THREE] - Display Details for a Web Application Scan")
 @click.argument('scan_uuid')
 @click.option('--plugin', default='', help="Get Plugin output, response headers and request headers")
 def details(scan_uuid, plugin):
@@ -232,7 +230,7 @@ def scan(scan_target, file):
         create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=scan_target)
 
 
-@was.command(help="Display Web Application Configs [STEP ONE]")
+@was.command(help="[STEP ONE] - Display Web Application Configs")
 def configs():
     # This doesn't hit the database to provide visibility in to all status' not just completed
     params = {"limit": "200", "offset": "0"}
