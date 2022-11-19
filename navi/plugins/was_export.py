@@ -1,7 +1,7 @@
 from .dbconfig import create_apps_table, new_db_connection, create_plugins_table
 from .database import insert_apps, insert_plugins, drop_tables
 from .api_wrapper import request_data
-
+import click
 
 def plugin_parser(plugin_output):
     tech_list = []
@@ -215,6 +215,8 @@ def download_data(uuid, asset):
 
 
 def grab_scans():
+    click.echo("\nDownloading all Completed Scans for the last 35 days.\n"
+               "This will take some time.\n")
     database = r"navi.db"
     app_conn = new_db_connection(database)
     app_conn.execute('pragma journal_mode=wal;')
@@ -227,12 +229,13 @@ def grab_scans():
     create_plugins_table()
 
     data = request_data('POST', '/was/v2/configs/search?limit=200&offset=0')
+    for configs in data['items']:
+        config_id = configs['config_id']
+        was_config_data = request_data("POST", "/was/v2/configs/{}/scans/search".format(config_id))
+        # Ignore all scans that have not completed
 
-    for scanids in data['items']:
-        if scanids['last_scan']:
-            was_scan_id = scanids['last_scan']['scan_id']
-            status = scanids['last_scan']['status']
-            # Ignore all scans that have not completed
-            if status == 'completed':
-                asset_uuid = scanids['last_scan']['asset_id']
+        for scanids in was_config_data['items']:
+            if scanids['status'] == 'completed':
+                asset_uuid = scanids['asset_id']
+                was_scan_id = scanids['scan_id']
                 download_data(was_scan_id, asset_uuid)

@@ -37,11 +37,9 @@ def full(threads, days, c, v, state):
     if days is None:
         vuln_export(30, exid, threads, c, v, state)
         asset_export(90, exid, threads, c, v)
-        grab_scans()
     else:
         vuln_export(days, exid, threads, c, v, state)
         asset_export(days, exid, threads, c, v)
-        grab_scans()
 
 
 @update.command(help="Update the Asset Table")
