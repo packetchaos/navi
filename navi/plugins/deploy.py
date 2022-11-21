@@ -36,9 +36,10 @@ def tag_center():
 
 
 @deploy.command(help="Deploy Navi Was Reporter using a Docker container: navigate to http://localhost:5004")
-def was_reporter():
+@click.option("--days", default=60, help="Limit the amount of data being downloaded/reported")
+def was_reporter(days):
     a, s = grab_keys()
-    command = "docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" --mount type=bind,source=$(pwd),target=/usr/src/app/data silentninja/navi:was".format(a,s)
+    command = "docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e {} --mount type=bind,source=$(pwd),target=/usr/src/app/data silentninja/navi:was".format(a,s,days)
     if click.confirm('This command downloads the silentninja/navi:was docker container and runs it on port 5004 using the current navi database. Deploy?'):
         try:
             os.system(command)
