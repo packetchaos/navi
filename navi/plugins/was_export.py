@@ -2,6 +2,8 @@ from .dbconfig import create_apps_table, new_db_connection, create_plugins_table
 from .database import insert_apps, insert_plugins, drop_tables
 from .api_wrapper import request_data
 import click
+import time
+import datetime
 
 def plugin_parser(plugin_output):
     tech_list = []
@@ -214,9 +216,9 @@ def download_data(uuid, asset):
     return
 
 
-def grab_scans():
-    click.echo("\nDownloading all Completed Scans for the last 35 days.\n"
-               "This will take some time.\n")
+def grab_scans(days):
+    click.echo("\nDownloading all Completed Scans for the last {} days.\n"
+               "This will take some time.\n".format(days))
     database = r"navi.db"
     app_conn = new_db_connection(database)
     app_conn.execute('pragma journal_mode=wal;')
@@ -227,7 +229,6 @@ def grab_scans():
     create_apps_table()
 
     create_plugins_table()
-
     data = request_data('POST', '/was/v2/configs/search?limit=200&offset=0')
     for configs in data['items']:
         config_id = configs['config_id']
@@ -235,7 +236,16 @@ def grab_scans():
         # Ignore all scans that have not completed
 
         for scanids in was_config_data['items']:
+            day = 86400
+            new_limit = day * int(days)
+            day_limit = time.time() - new_limit
+
             if scanids['status'] == 'completed':
                 asset_uuid = scanids['asset_id']
                 was_scan_id = scanids['scan_id']
-                download_data(was_scan_id, asset_uuid)
+                finalized_at = scanids['finalized_at']
+                epoch = datetime.datetime.strptime(finalized_at, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+
+                if epoch >= day_limit:
+                    download_data(was_scan_id, asset_uuid)
+
