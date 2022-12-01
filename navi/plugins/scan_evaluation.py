@@ -63,15 +63,15 @@ def parse_19506_from_file(filename, scanid, histid):
             # Split at the colon to grab the numerical value
             intial_seconds = duration.split(" : ")
 
-            # split to remove "secs"
-            number = intial_seconds[1].split(" ")
-
-            # grab the number for our minute calculation
-            final_number = number[0]
-
             # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
-            if final_number != 'unknown':
+            if intial_seconds != 'unknown':
                 try:
+                    # split to remove "secs"
+                    number = intial_seconds[1].split(" ")
+
+                    # grab the number for our minute calculation
+                    final_number = number[0]
+
                     # Numerical value in seconds parsed from the plugin
                     seconds = int(final_number)
 
