@@ -116,6 +116,6 @@ def url(new_url):
 
 
 @update.command(help="Update the Navi DB with WAS data")
-@click.option('--days', default='', help="Limit the data downloaded a number of days")
+@click.option('--days', default='30', help="Limit the data downloaded a number of days")
 def was(days):
     grab_scans(days)
