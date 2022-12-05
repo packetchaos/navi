@@ -67,8 +67,11 @@ def scans(config_uuid):
     click.echo("\n{:70s} {:15s} {:15s} {:40} {}".format("Target FQDN", "Audited URLS", "Found URLS", "Scan_ID", "Status"))
     click.echo("-" * 150)
     for app_data in was_data['items']:
+        try:
+            app_url = app_data['application_uri']
+        except KeyError:
+            app_url = "API issue occurred"
 
-        app_url = app_data['application_uri']
         app_scan_id = app_data['scan_id']
         try:
             app_audited_urls = app_data['metadata']['audited_urls']

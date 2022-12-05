@@ -236,16 +236,37 @@ def grab_scans(days):
         # Ignore all scans that have not completed
 
         for scanids in was_config_data['items']:
-            day = 86400
-            new_limit = day * int(days)
-            day_limit = time.time() - new_limit
 
-            if scanids['status'] == 'completed':
-                asset_uuid = scanids['asset_id']
-                was_scan_id = scanids['scan_id']
-                finalized_at = scanids['finalized_at']
-                epoch = datetime.datetime.strptime(finalized_at, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+            # check and skip parent records; parent records don't have an asset_uuid
+            try:
 
-                if epoch >= day_limit:
-                    download_data(was_scan_id, asset_uuid)
+                day = 86400
+                new_limit = day * int(days)
+                day_limit = time.time() - new_limit
 
+                if scanids['status'] == 'completed' and scanids['template_name'] == 'scan':
+                    try:
+                        asset_uuid = scanids['asset_id']
+                    except KeyError:
+                        asset_uuid = "NO ID Found"
+
+                    try:
+                        uri = scanids['application_uri']
+                    except KeyError:
+                        uri = "NOPE"
+
+                    if uri != "NOPE":
+                        was_scan_id = scanids['scan_id']
+                        finalized_at = scanids['finalized_at']
+                        try:
+                            epoch = datetime.datetime.strptime(finalized_at, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+
+                            if epoch >= day_limit:
+
+                                download_data(was_scan_id, asset_uuid)
+                        except TypeError:
+                            pass
+                else:
+                    pass
+            except KeyError:
+                pass
