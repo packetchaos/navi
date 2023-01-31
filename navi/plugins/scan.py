@@ -529,7 +529,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
 
 
 @scan.command(help="Evaluate Scan times")
-@click.option("--scanid", default="", help="A Scan ID you want to evaluate")
+@click.option("--scanid", default=None, required=True,  help="A Scan ID you want to evaluate")
 @click.option("--histid", default="", help="A Specific History ID")
 @click.option("-full", is_flag=True, help="Evaluate entire available history")
 def evaluate(scanid, histid, full):

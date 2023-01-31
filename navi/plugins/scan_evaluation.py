@@ -1,4 +1,5 @@
 import click
+from csv import DictReader
 from .database import db_query
 from .api_wrapper import request_data, tenb_connection
 import csv
@@ -18,7 +19,7 @@ def grab_hop_count(uuid):
 
 
 def parse_19506_from_file(filename, scanid, histid):
-    from csv import DictReader
+    # Set Total Vars
     total_assets_scanned_list = []
     reported_scan_duration = None
     total_reported_scan_duration = None
@@ -32,6 +33,7 @@ def parse_19506_from_file(filename, scanid, histid):
                 reported_scan_start = hist['time_start']
                 reported_scan_end = hist['time_end']
                 total_reported_scan_duration = reported_scan_end - reported_scan_start
+
                 # Simple Delta from Tenable.io reported Scan times
                 reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
 
@@ -46,6 +48,7 @@ def parse_19506_from_file(filename, scanid, histid):
         asset_average_scantime = 0
         start_scan_timestamp_list = []
         timestamp_plus_duration_list = []
+        assets_skipped = 0
 
         for row in DictReader(fobj):
             plugin_output = row['Plugin Output']
@@ -79,6 +82,7 @@ def parse_19506_from_file(filename, scanid, histid):
                     scan_name = parsed_output[9].split(" : ")[1]
                     scan_policy = parsed_output[10].split(" : ")[1]
                     scanner_ip = parsed_output[11].split(" : ")[1]
+                    # Enumerate all scanners for per/scanner stats
                     if scanner_ip not in scanner_list:
                         scanner_list.append(scanner_ip)
                     max_hosts = parsed_output[plugin_length - 8].split(" : ")[1]
@@ -86,14 +90,15 @@ def parse_19506_from_file(filename, scanid, histid):
                     # Grabbing the start time from the plugin
                     scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
 
-                    # Some timezone abrivations are not parseable with strptime.
+                    # Some timezone abbreviations are not parseable with strptime.
                     # removing the timezone for those we can't parse
                     try:
                         # Set the pattern to convert into epoch
-                        pattern = '%Y/%m/%d %H:%M %Z'
+                        pattern = '%Y/%m/%d %H:%M %z'
                         # Convert to Epoch
-                        epoch = int(time.mktime(time.strptime(scan_time, pattern)))
+                        plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
                     except ValueError:
+                        print(scan_time)
                         # timezone couldn't be used. lets remove it and calculate what we can
                         pattern = '%Y/%m/%d %H:%M'
                         # Split the time to remove the timezone 2-6 chars
@@ -101,27 +106,57 @@ def parse_19506_from_file(filename, scanid, histid):
                         # merge the data and time for calculation
                         new_time = "{} {}".format(time_less_timezone[0], time_less_timezone[1])
                         # Convert to Epoch
-                        epoch = int(time.mktime(time.strptime(new_time, pattern)))
+                        plugin_scan_time_epoch = int(time.mktime(time.strptime(new_time, pattern)))
+
+                    # Export time pattern
+                    new_pattern = '%Y-%m-%dT%H:%M:%S'
 
                     # Add to list to calculate the first asset scanned
-                    start_scan_timestamp_list.append(epoch)
+                    start_scan_timestamp_list.append(plugin_scan_time_epoch)
+
                     # Add epoch and seconds to get end time.  This will be used to find the last asset scanned
-                    timestamp_plus_duration_list.append(epoch + seconds)
+                    timestamp_plus_duration_list.append(plugin_scan_time_epoch + seconds)
+
+                    pltfm_start = row['Host Start'].split(".")[0]
+                    pltfm_end = row['Host End'].split(".")[0]
+
+                    new_start = time.mktime(time.strptime(pltfm_start, new_pattern))
+                    new_end = time.mktime(time.strptime(pltfm_end, new_pattern))
+
+                    # Platform End time in epoch minus the start time epoch
+                    total_duration = new_end - new_start
+
+                    # Total duration minus the length of the scan
+                    indexing_time = total_duration - seconds
+
                     # All assets and 19506 seconds in a tuple
-                    total_assets_scanned_list.append((asset_uuid, seconds))
+                    total_assets_scanned_list.append((asset_uuid, row['Host Start'], scan_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
+
+                    #pprint.pprint(total_assets_scanned_list)
+
                 except IndexError:
+                    # Print to confirm
+                    click.echo(plugin_output)
                     # This error occurs when an old scanner is used.
                     # the 19506 plugin filled with an error indicating the need for an upgrade
+                    assets_skipped += 1
                     pass
+            else:
+                # Print plugin output to identify an unknown plugin structure/response
+                click.echo(plugin_output)
 
         # calculate the total for AVG calc
         total = 0
-        for secs in total_assets_scanned_list:
-            total += secs[1]
+        index_total = 0
+        for assets_scanned in total_assets_scanned_list:
+            total += assets_scanned[3]
+            index_total += assets_scanned[4]
 
         try:
             # Avg scan time per asset
             asset_average_scantime = total / len(total_assets_scanned_list)
+
+            asset_average_indextime = index_total / len(total_assets_scanned_list)
 
             # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest scan date in 19506
             total_calculated_scan_duration = (max(timestamp_plus_duration_list) - min(start_scan_timestamp_list))
@@ -129,12 +164,16 @@ def parse_19506_from_file(filename, scanid, histid):
             # Processing time therefore is the reported duration - the total scan duration
             processing = total_reported_scan_duration - total_calculated_scan_duration
 
-            longest_scanned = max(total_assets_scanned_list, key=lambda uuid: uuid[1])
-            shortest_scanned = min(total_assets_scanned_list, key=lambda uuid: uuid[1])
+            longest_scanned = max(total_assets_scanned_list, key=lambda uuid: uuid[3])
+            shortest_scanned = min(total_assets_scanned_list, key=lambda uuid: uuid[3])
+
+            longest_index = max(total_assets_scanned_list, key=lambda uuid: uuid[4])
+            shortest_index = min(total_assets_scanned_list, key=lambda uuid: uuid[4])
 
             click.echo("*" * 100)
-            click.echo("\nThis data is derived from the 19506 plugins found in the {}"
-                       "\nThe start time stamp(s) and the duration(s) were used to calculate the total scantime(s)\n".format(filename))
+            click.echo("This data is derived from the 19506 plugins found in the {}"
+                       "\nThe start time stamp(s) and the duration(s) were used to calculate the total scan time(s)\n"
+                       "For manual examination of the details please check out the the file: {}-parsing.csv".format(filename, scanid))
             click.echo("*" * 100)
 
             click.echo("\nScan Name: {}".format(scan_name))
@@ -151,22 +190,39 @@ def parse_19506_from_file(filename, scanid, histid):
 
             click.echo("\nMax Hosts: {}".format(max_hosts))
             click.echo("Max Checks: {}\n".format(max_checks))
-            click.echo("{} {}\n".format("Total Assets scanned: ", len(total_assets_scanned_list)))
+            click.echo("{} {}".format("Total Assets scanned: ", len(total_assets_scanned_list)))
+            click.echo("{} {}\n".format("Number of Assets skipped", assets_skipped))
 
             click.echo("{:40} {:10} {}".format("Scan Stats", "H: M: S", "Asset"))
             click.echo("-" * 60)
             click.echo("{:40} {:10}".format("Total Reported Scan Duration:", reported_scan_duration))
-            click.echo("{:40} {:10}".format("T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
-            click.echo("{:40} {:10}".format("Actual Scan Duration: ", str(datetime.timedelta(seconds=total_calculated_scan_duration))))
-            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=longest_scanned[1])), longest_scanned[0]))
-            click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ", str(datetime.timedelta(seconds=shortest_scanned[1])), shortest_scanned[0]))
-            click.echo("{:40} {}\n".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=asset_average_scantime))))
+            click.echo("{:40} {:10}".format("Total T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
+            click.echo("{:40} {:10}\n".format("Actual Scan Duration: ", str(datetime.timedelta(seconds=total_calculated_scan_duration))))
+            click.echo("Asset Stats")
+            click.echo("-" * 40)
+            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=longest_scanned[3])), longest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ", str(datetime.timedelta(seconds=shortest_scanned[3])), shortest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Longest Asset Index: ", str(datetime.timedelta(seconds=longest_index[4])), longest_index[0]))
+            click.echo("{:40} {:10} {}\n".format("Shortest Asset Index: ", str(datetime.timedelta(seconds=shortest_index[4])), shortest_index[0]))
+            click.echo("Averages Stats")
+            click.echo("-" * 40)
+            click.echo("{:40} {}".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=asset_average_scantime))))
+            click.echo("{:40} {}\n".format("Average processing per Asset:", str(datetime.timedelta(seconds=asset_average_indextime))))
 
             click.echo("\nFirst asset scanned started at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(min(start_scan_timestamp_list)))))
             click.echo("Last asset finished scanning at: {}\n\n".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(max(timestamp_plus_duration_list)))))
 
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
+
+    with open("13-parsing.csv", mode='w', encoding='utf-8', newline="") as csv_file:
+        agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration", "Total_duration",  "Platform_end", "IP Address"]
+
+        agent_writer.writerow(header)
+        # Loop through each asset
+        for assets in total_assets_scanned_list:
+            agent_writer.writerow(assets)
 
 
 def get_last_history_id(scanid):
@@ -192,7 +248,7 @@ def download_csv_by_plugin_id(scan_id, hist_id):
     with open(filename, 'wb') as fobj:
         tio.scans.export(scan_id, ('plugin.id', 'eq', '19506'),
                          format='csv', fobj=fobj, history_id=hist_id)
-
+    # Now parse the data
     parse_19506_from_file(filename, scan_id, hist_id)
 
 
@@ -203,7 +259,7 @@ def evaluate_a_scan(scanid, histid):
             # use the scan id and hist id to download and parse
             download_csv_by_plugin_id(scanid, histid)
         else:
-            # grab the last useable histid
+            # grab the last usable histid
             historyid = get_last_history_id(scanid)
             # download and parse
             download_csv_by_plugin_id(scanid, historyid)
