@@ -98,7 +98,7 @@ def parse_19506_from_file(filename, scanid, histid):
                         # Convert to Epoch
                         plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
                     except ValueError:
-                        print(scan_time)
+
                         # timezone couldn't be used. lets remove it and calculate what we can
                         pattern = '%Y/%m/%d %H:%M'
                         # Split the time to remove the timezone 2-6 chars
