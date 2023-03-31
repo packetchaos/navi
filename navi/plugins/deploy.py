@@ -51,7 +51,7 @@ def was_reporter(days):
 @deploy.command(help="Deploy Navi Scantime Tagging solution")
 def scantags():
     a, s = grab_keys()
-    command = "docker run -d -e \"access_key={}\" -e \"secret_key={}\" --mount type=bind,source=$(pwd),target=/usr/src/app packetchaos/scantags".format(a,s)
+    command = "docker run -d -e \"access_key={}\" -e \"secret_key={}\" packetchaos/scantags".format(a,s)
     if click.confirm('This command downloads the packetchaos/scantags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
@@ -66,7 +66,7 @@ def scantags():
 @click.option('--targets', default=None, help='The subnet(s) you want to run the discovery scan on.')
 def discoverythenvulnscan(trigger, fire, targets):
     a, s = grab_keys()
-    command = "docker run -it -e \"access_key={}\" -e \"secret_key={}\" -e \"trigger={}\" -e \"fire={}\" -e \"targets={}\" --mount type=bind,source=$(pwd),target=/usr/src/app packetchaos/discoverythenvulnscan".format(a, s, trigger, fire, targets)
+    command = "docker run -it -e \"access_key={}\" -e \"secret_key={}\" -e \"trigger={}\" -e \"fire={}\" -e \"targets={}\" packetchaos/discoverythenvulnscan".format(a, s, trigger, fire, targets)
     if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
@@ -78,7 +78,7 @@ def discoverythenvulnscan(trigger, fire, targets):
 @deploy.command(help="Deploy Navi Critical Tags Docker solution")
 def critical_tags():
     a, s = grab_keys()
-    command = "docker run -d -e \"access_key={}\" -e \"secret_key={}\" --mount type=bind,source=$(pwd),target=/usr/src/app packetchaos/critical_tags".format(a,s)
+    command = "docker run -it -e \"access_key={}\" -e \"secret_key={}\" packetchaos/critical_tags".format(a,s)
     if click.confirm('This command downloads the packetchaos/critical_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
