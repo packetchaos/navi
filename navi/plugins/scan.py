@@ -96,7 +96,9 @@ def scan_details(scan_id):
 
             for vulns in data['vulnerabilities']:
                 if vulns['severity'] != 0:
-                    click.echo("{:10s} {:128s} {}".format(str(vulns['plugin_id']), textwrap.shorten(str(vulns['plugin_name']), 128), vulns['count']))
+                    click.echo("{:10s} {:128s} {}".format(str(vulns['plugin_id']),
+                                                          textwrap.shorten(str(vulns['plugin_name']), 128),
+                                                          vulns['count']))
             click.echo()
         except TypeError:
             click.echo("Check the scan ID")
@@ -112,11 +114,18 @@ def scan_hosts(scan_id):
         host_list = []
         try:
             click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
-            click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Score", "Critical", "High", "Medium", "Low"))
-            click.echo("-"*150)
+            click.echo(
+                "{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Score", "Critical",
+                                                                          "High", "Medium", "Low"))
+            click.echo("-" * 150)
             for host in data['hosts']:
                 host_list.append(host)
-                click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']), str(host['score']), str(host['critical']), str(host['high']), str(host['medium']), str(host['low'])))
+                click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']),
+                                                                                    str(host['score']),
+                                                                                    str(host['critical']),
+                                                                                    str(host['high']),
+                                                                                    str(host['medium']),
+                                                                                    str(host['low'])))
 
             click.echo()
             click.echo("\nTotal Assets Scanned: {}\n".format(len(host_list)))
@@ -221,8 +230,12 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
 
 @scan.command(help="Start a valid Scan by Scan ID")
 @click.argument('scan_id')
-def start(scan_id):
-    tio.scans.launch(scan_id)
+@click.option('--targets', default=None, help="Start the scan with alternative targets")
+def start(scan_id, targets):
+    if targets is None:
+        tio.scans.launch(scan_id)
+    else:
+        tio.scans.launch(scan_id, targets=targets)
 
 
 @scan.command(help="Get Scan Status by Scan ID")
@@ -255,7 +268,6 @@ def stop(scan_id):
 @click.option('--who', default='', help="Check what scans a user owns")
 @click.option('-v', is_flag=True, help="Verbose output")
 def change(owner, new, who, v):
-
     if who:
         # This should be moved to display commands.
         who_scans = get_scans_by_owner(who)
@@ -314,7 +326,8 @@ def history(scan_id):
         data = request_data("GET", "/scans/{}/history".format(scan_id))
         click.echo("\nHistory IDs and Status for scan ID {}".format(scan_id))
         click.echo("-" * 40)
-        click.echo("\n{:15s} {:15s} {:20s} {:20s} {}".format("History ID", "Scan Status", "Start time", "End Time", "Duration (H:M:S)"))
+        click.echo("\n{:15s} {:15s} {:20s} {:20s} {}".format("History ID", "Scan Status", "Start time", "End Time",
+                                                             "Duration (H:M:S)"))
         click.echo("-" * 100)
         for hist in data['history']:
             if not hist['is_archived']:
@@ -322,7 +335,8 @@ def history(scan_id):
                 data_list.append(duration)
                 total += duration
                 click.echo("{:15s} {:15s} {:20} {:20} {}".format(str(hist['id']), hist['status'],
-                                                                 str(datetime.datetime.fromtimestamp(hist['time_start'])),
+                                                                 str(datetime.datetime.fromtimestamp(
+                                                                     hist['time_start'])),
                                                                  str(datetime.datetime.fromtimestamp(hist['time_end'])),
                                                                  str(datetime.timedelta(seconds=duration))))
         click.echo()
@@ -464,6 +478,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
 
     if a and s:
         sc.login(access_key=a, secret_key=s)
+
     # Turn into a function, create an if statement with a for loop, looping over every
     # completed scan.
 
@@ -508,6 +523,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
                     os.remove('{}.nessus'.format(str(sc_scan_id)))
                 except:
                     pass
+
             if allscans:
                 for sc_scan in sc.scan_instances.list()['usable']:
                     if sc_scan['status'] == 'Completed':
@@ -529,7 +545,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
 
 
 @scan.command(help="Evaluate Scan times")
-@click.option("--scanid", default=None, required=True,  help="A Scan ID you want to evaluate")
+@click.option("--scanid", default=None, help="A Scan ID you want to evaluate")
 @click.option("--histid", default="", help="A Specific History ID")
 @click.option("-full", is_flag=True, help="Evaluate entire available history")
 def evaluate(scanid, histid, full):
