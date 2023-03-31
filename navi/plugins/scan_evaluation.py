@@ -265,7 +265,10 @@ def evaluate_a_scan(scanid, histid):
             download_csv_by_plugin_id(scanid, historyid)
     else:
         # Since no scanid was provided we assume the user wants stats on all scans
-
+        click.echo("*" * 100)
+        click.echo("\nThis command uses the 19506 plugin data found in the navi.db\n"
+                   "Run a navi update command to refresh the database.\n")
+        click.echo("*" * 100)
         # Pull all 19506 Plugins from the DB
         plugin_data = db_query("select asset_uuid, output from vulns where plugin_id='19506';")
 
@@ -330,8 +333,12 @@ def evaluate_a_scan(scanid, histid):
                 # Split at the colon to grab the numerical value
                 seconds = duration.split(" : ")
 
-                # split to remove "secs"
-                number = seconds[1].split(" ")
+                try:
+                    # split to remove "secs"
+                    number = seconds[1].split(" ")
+                except:
+                    # No plugin Data for this asset
+                    pass
 
                 # grab the number for our minute calculation
                 final_number = number[0]
