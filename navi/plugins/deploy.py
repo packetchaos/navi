@@ -85,3 +85,15 @@ def critical_tags():
 
         except os.error:
             click.echo("You might not have Docker installed")
+
+
+@deploy.command(help="Deploy Navi Agent Group Tagging solution")
+def agent_group_tags():
+    a, s = grab_keys()
+    command = "docker run -d packetchaos/agent_group_tags {} {}".format(a,s)
+    if click.confirm('This command downloads the packetchaos/agent_group_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+        try:
+            os.system(command)
+
+        except os.error:
+            click.echo("You might not have Docker installed")
