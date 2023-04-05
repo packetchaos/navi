@@ -87,7 +87,7 @@ def critical_tags():
             click.echo("You might not have Docker installed")
 
 
-@deploy.command(help="Deploy Navi Agent Group Tagging solution")
+@deploy.command(help="Tag each asset by the agent group membership")
 def agent_group_tags():
     a, s = grab_keys()
     command = "docker run -d packetchaos/agent_group_tags {} {}".format(a,s)
@@ -99,7 +99,7 @@ def agent_group_tags():
             click.echo("You might not have Docker installed")
 
 
-@deploy.command(help="Deploy Navi Open Port Tagging solution")
+@deploy.command(help="Tag each asset by the ports found open")
 def port_tagging():
     a, s = grab_keys()
     command = "docker run -d packetchaos/port_tagging {} {}".format(a,s)
