@@ -109,3 +109,15 @@ def port_tagging():
 
         except os.error:
             click.echo("You might not have Docker installed")
+
+
+@deploy.command(help="Deploy the All tags solution.  Deploy all tags from all the navi services")
+def all_tags():
+    a, s = grab_keys()
+    command = "docker run -d packetchaos/all_tags {} {}".format(a,s)
+    if click.confirm('This command downloads the packetchaos/all_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+        try:
+            os.system(command)
+
+        except os.error:
+            click.echo("You might not have Docker installed")
