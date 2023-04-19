@@ -229,6 +229,22 @@ def remove_uuids_from_tag(tag_uuid):
         remove_tag(str(tag_uuid), asset_uuid_list)
 
 
+def download_tag_remove(scanid, new_hist, c, v, d):
+    try:
+        # To reduce API calls lets just download the csv
+        filename = download_csv_by_plugin_id(scanid, new_hist)
+        tag_list = create_uuid_list(filename)
+        tag_by_uuid(tag_list, c, v, d)
+
+        import os
+        os.remove(filename)
+
+    except TypeError:
+        click.echo("Check the scan ID")
+    except KeyError:
+        click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
+
+
 @click.command(help="Create a Tag Category/Value Pair")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
@@ -243,6 +259,7 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
+@click.option('--histid', default=None, help="Focus on a specific scan history; Requires --scanid")
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
 @click.option('--remove', default='', help="Remove this tag from all assets to support ephemeral asset tagging")
@@ -250,7 +267,7 @@ def remove_uuids_from_tag(tag_uuid):
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid, manual):
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid, manual, histid):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -269,6 +286,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
     if xid != '' and xrefs == '':
         click.echo("You must supply a Cross Reference Type using --xrefs option")
+
+    if histid and not scanid:
+        click.echo("you need a scanID as well.")
 
     if plugin:
         d = d + "\nTag by Plugin ID: {}".format(plugin)
@@ -451,73 +471,59 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     if scanid:
         d = d + "\nTag by Scan ID: {}".format(scanid)
         tag_list = []
-        try:
-            scandata = request_data('GET', '/scans/' + str(scanid))
+        if histid:
+            download_tag_remove(scanid, histid, c, v, d)
+        else:
+            try:
+                scandata = request_data('GET', '/scans/' + str(scanid))
 
-            status = scandata['history'][0]['status']
+                status = scandata['history'][0]['status']
 
-            if status == 'completed':
-                try:
-                    for host in scandata['hosts']:
-                        tag_list.append(host['uuid'])
+                if status == 'completed':
+                    try:
+                        for host in scandata['hosts']:
+                            tag_list.append(host['uuid'])
 
-                    # This method is to get around the 5000 row return limit in IO.
-                    if len(tag_list) >= 4999:
+                        # This method is to get around the 5000 row return limit in IO.
+                        if len(tag_list) >= 4999:
 
-                        click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
-                        click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
-                        hist_id = scandata['history'][0]['history_id']
-                        filename = download_csv_by_plugin_id(scanid, hist_id)
-                        tag_list = create_uuid_list(filename)
-                        tag_by_uuid(tag_list, c, v, d)
+                            click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
+                            click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
+                            hist_id = scandata['history'][0]['history_id']
+                            download_tag_remove(scanid, hist_id, c, v, d)
+                        else:
+                            # Scans under 5000 would just use the current tag_list
+                            tag_by_uuid(tag_list, c, v, d)
+                    except TypeError:
+                        click.echo("Check the scan ID")
+                    except KeyError:
+                        click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
+                else:
+                    # cycle trough history until you reach completed
+                    hist = 1
+                    new_scan_data = None
+                    new_hist = 0
 
-                        import os
-                        os.remove(filename)
-                    else:
-                        # Scans under 5000 would just use the current tag_list
-                        tag_by_uuid(tag_list, c, v, d)
-                except TypeError:
-                    click.echo("Check the scan ID")
-                except KeyError:
-                    click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
-            else:
-                # cycle trough history until you reach completed
-                hist = 1
-                new_scan_data = None
-                new_hist = 0
+                    # if you got here the first scan has not completed
+                    while status != 'completed':
+                        # call the scan history again to check the next Status
+                        # continue to do so until one says completed
+                        new_scan_data = request_data('GET', '/scans/' + str(scanid))
+                        status = new_scan_data['history'][hist]['status']
 
-                # if you got here the first scan has not completed
-                while status != 'completed':
-                    # call the scan history again to check the next Status
-                    # continue to do so until one says completed
-                    new_scan_data = request_data('GET', '/scans/' + str(scanid))
-                    status = new_scan_data['history'][hist]['status']
+                        # Grab the history of the completed asset
+                        new_hist = new_scan_data['history'][hist]['history_id']
 
-                    # Grab the history of the completed asset
-                    new_hist = new_scan_data['history'][hist]['history_id']
+                        # To limit the amount of called to a minimum
+                        # Use a while loop and increase the history ID by 1 until completed is found
+                        hist = hist + 1
 
-                    # To limit the amount of called to a minimum
-                    # Use a while loop and increase the history ID by 1 until completed is found
-                    hist = hist + 1
+                    download_tag_remove(scanid, new_hist, c, v, d)
 
-                try:
-                    # To reduce API calls lets just download the csv
-                    filename = download_csv_by_plugin_id(scanid, new_hist)
-                    tag_list = create_uuid_list(filename)
-                    tag_by_uuid(tag_list, c, v, d)
-
-                    import os
-                    os.remove(filename)
-
-                except TypeError:
-                    click.echo("Check the scan ID")
-                except KeyError:
-                    click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
-
-        except IndexError:
-            click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
-        except Exception as E:
-            click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
+            except IndexError:
+                click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
+            except Exception as E:
+                click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
 
     if query:
         d = d + "\nTag by SQL Query: \n{}".format(query)
