@@ -350,6 +350,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state):
         db_query("CREATE INDEX vulns_plugin_id on vulns (plugin_id);")
         db_query("CREATE INDEX vulns_ports on vulns (port);")
         db_query("CREATE INDEX vulns_uuid on vulns (asset_uuid);")
+        db_query("CREATE INDEX vulns_cves on vulns (cves);")
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")

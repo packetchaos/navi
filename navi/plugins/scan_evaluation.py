@@ -50,6 +50,8 @@ def parse_19506_from_file(filename, scanid, histid):
         timestamp_plus_duration_list = []
         assets_skipped = 0
 
+        plugin_dict = {}
+
         for row in DictReader(fobj):
             plugin_output = row['Plugin Output']
             asset_uuid = row['Asset UUID']
@@ -57,94 +59,102 @@ def parse_19506_from_file(filename, scanid, histid):
             # split the output by return
             parsed_output = plugin_output.split("\n")
 
-            # grab the length so we can grab the seconds
-            plugin_length = len(parsed_output)
+            # put everything but warnings into a dictionary
+            for info_line in parsed_output:
 
-            # grab the scan duration- second to the last variable
-            duration = parsed_output[plugin_length - 2]
-
-            # Split at the colon to grab the numerical value
-            intial_seconds = duration.split(" : ")
-
-            # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
-            if intial_seconds != 'unknown':
                 try:
-                    # split to remove "secs"
-                    number = intial_seconds[1].split(" ")
+                    new_split = info_line.split(" : ")
+                    plugin_dict[new_split[0]] = new_split[1]
 
-                    # grab the number for our minute calculation
-                    final_number = number[0]
-
-                    # Numerical value in seconds parsed from the plugin
-                    seconds = int(final_number)
-
-                    # Grab data pair and split it at the colon and grab the values
-                    scan_name = parsed_output[9].split(" : ")[1]
-                    scan_policy = parsed_output[10].split(" : ")[1]
-                    scanner_ip = parsed_output[11].split(" : ")[1]
-                    # Enumerate all scanners for per/scanner stats
-                    if scanner_ip not in scanner_list:
-                        scanner_list.append(scanner_ip)
-                    max_hosts = parsed_output[plugin_length - 8].split(" : ")[1]
-                    max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
-                    # Grabbing the start time from the plugin
-                    scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
-
-                    # Some timezone abbreviations are not parseable with strptime.
-                    # removing the timezone for those we can't parse
-                    try:
-                        # Set the pattern to convert into epoch
-                        pattern = '%Y/%m/%d %H:%M %z'
-                        # Convert to Epoch
-                        plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
-                    except ValueError:
-
-                        # timezone couldn't be used. lets remove it and calculate what we can
-                        pattern = '%Y/%m/%d %H:%M'
-                        # Split the time to remove the timezone 2-6 chars
-                        time_less_timezone = scan_time.split(" ")
-                        # merge the data and time for calculation
-                        new_time = "{} {}".format(time_less_timezone[0], time_less_timezone[1])
-                        # Convert to Epoch
-                        plugin_scan_time_epoch = int(time.mktime(time.strptime(new_time, pattern)))
-
-                    # Export time pattern
-                    new_pattern = '%Y-%m-%dT%H:%M:%S'
-
-                    # Add to list to calculate the first asset scanned
-                    start_scan_timestamp_list.append(plugin_scan_time_epoch)
-
-                    # Add epoch and seconds to get end time.  This will be used to find the last asset scanned
-                    timestamp_plus_duration_list.append(plugin_scan_time_epoch + seconds)
-
-                    pltfm_start = row['Host Start'].split(".")[0]
-                    pltfm_end = row['Host End'].split(".")[0]
-
-                    new_start = time.mktime(time.strptime(pltfm_start, new_pattern))
-                    new_end = time.mktime(time.strptime(pltfm_end, new_pattern))
-
-                    # Platform End time in epoch minus the start time epoch
-                    total_duration = new_end - new_start
-
-                    # Total duration minus the length of the scan
-                    indexing_time = total_duration - seconds
-
-                    # All assets and 19506 seconds in a tuple
-                    total_assets_scanned_list.append((asset_uuid, row['Host Start'], scan_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
-
-                    #pprint.pprint(total_assets_scanned_list)
-
-                except IndexError:
-                    # Print to confirm
-                    click.echo(plugin_output)
-                    # This error occurs when an old scanner is used.
-                    # the 19506 plugin filled with an error indicating the need for an upgrade
-                    assets_skipped += 1
+                except:
+                    # Skip warnings
                     pass
-            else:
-                # Print plugin output to identify an unknown plugin structure/response
-                click.echo(plugin_output)
 
+            try:
+                # Split at the colon to grab the numerical value
+                intial_seconds = plugin_dict['Scan duration']#duration.split(" : ")
+
+                # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                if intial_seconds != 'unknown':
+
+                    try:
+                        # split to remove "secs"
+                        number = intial_seconds[1].split(" ")
+
+                        # grab the number for our minute calculation
+                        final_number = number[0]
+
+                        # Numerical value in seconds parsed from the plugin
+                        seconds = int(final_number)
+
+                        # Grab data pair and split it at the colon and grab the values
+                        scan_name = plugin_dict['Scan name']#parsed_output[9].split(" : ")[1]
+                        scan_policy = plugin_dict['Scan policy used'] #parsed_output[10].split(" : ")[1]
+                        scanner_ip = plugin_dict['Scanner IP']#parsed_output[11].split(" : ")[1]
+                        # Enumerate all scanners for per/scanner stats
+                        if scanner_ip not in scanner_list:
+                            scanner_list.append(scanner_ip)
+                        max_hosts = plugin_dict['Max hosts']#parsed_output[plugin_length - 8].split(" : ")[1]
+                        max_checks = plugin_dict['Max checks']#parsed_output[plugin_length - 7].split(" : ")[1]
+                        # Grabbing the start time from the plugin
+                        scan_time = plugin_dict['Scan Start Date']#parsed_output[plugin_length - 4].split(" : ")[1]
+
+                        # Some timezone abbreviations are not parseable with strptime.
+                        # removing the timezone for those we can't parse
+                        try:
+                            # Set the pattern to convert into epoch
+                            pattern = '%Y/%m/%d %H:%M %z'
+                            # Convert to Epoch
+                            plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
+                        except ValueError:
+
+                            # timezone couldn't be used. lets remove it and calculate what we can
+                            pattern = '%Y/%m/%d %H:%M'
+                            # Split the time to remove the timezone 2-6 chars
+                            time_less_timezone = scan_time.split(" ")
+                            # merge the data and time for calculation
+                            new_time = "{} {}".format(time_less_timezone[0], time_less_timezone[1])
+                            # Convert to Epoch
+                            plugin_scan_time_epoch = int(time.mktime(time.strptime(new_time, pattern)))
+
+                        # Export time pattern
+                        new_pattern = '%Y-%m-%dT%H:%M:%S'
+
+                        # Add to list to calculate the first asset scanned
+                        start_scan_timestamp_list.append(plugin_scan_time_epoch)
+
+                        # Add epoch and seconds to get end time.  This will be used to find the last asset scanned
+                        timestamp_plus_duration_list.append(plugin_scan_time_epoch + seconds)
+
+                        pltfm_start = row['Host Start'].split(".")[0]
+                        pltfm_end = row['Host End'].split(".")[0]
+
+                        new_start = time.mktime(time.strptime(pltfm_start, new_pattern))
+                        new_end = time.mktime(time.strptime(pltfm_end, new_pattern))
+
+                        # Platform End time in epoch minus the start time epoch
+                        total_duration = new_end - new_start
+
+                        # Total duration minus the length of the scan
+                        indexing_time = total_duration - seconds
+
+                        # All assets and 19506 seconds in a tuple
+                        total_assets_scanned_list.append((asset_uuid, row['Host Start'], scan_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
+
+                        #pprint.pprint(total_assets_scanned_list)
+
+                    except IndexError:
+                        # This error occurs when an old scanner is used.
+                        # the 19506 plugin filled with an error indicating the need for an upgrade
+                        assets_skipped += 1
+                        pass
+                else:
+                    # Print plugin output to identify an unknown plugin structure/response
+                    click.echo(plugin_output)
+            except KeyError as E:
+                # If there is no scan duration, skip the asset.
+                assets_skipped += 1
+                pass
         # calculate the total for AVG calc
         total = 0
         index_total = 0

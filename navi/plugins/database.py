@@ -231,3 +231,14 @@ def insert_plugins(conn, plugins):
     cur2 = conn.cursor()
     cur2.execute('pragma journal_mode=wal;')
     cur2.execute(sql2, plugins)
+
+
+def insert_epss(conn, epss):
+    sql = '''INSERT or IGNORE into epss(
+                            cve,
+                            epss,
+                            percentile
+    ) VALUES(?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, epss)

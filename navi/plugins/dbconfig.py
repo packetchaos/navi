@@ -111,6 +111,18 @@ def create_tag_table():
     create_table(tag_conn, create_tags_table)
 
 
+def create_epss_table():
+    database = r"navi.db"
+    tag_conn = new_db_connection(database)
+    create_tags_table = """CREATE TABLE IF NOT EXISTS epss (
+                        cve text PRIMARY KEY,
+                        epss text,
+                        percentile
+                        );"""
+    tag_conn.execute('pragma journal_mode=wal;')
+    create_table(tag_conn, create_tags_table)
+
+
 def create_apps_table():
     database = r"navi.db"
     app_conn = new_db_connection(database)
