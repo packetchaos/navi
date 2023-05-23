@@ -4,7 +4,7 @@ from .database import db_query
 from .api_wrapper import request_data, tenb_connection
 import csv
 import datetime
-import time
+import time, pprint
 
 
 tio = tenb_connection()
@@ -79,11 +79,11 @@ def parse_19506_from_file(filename, scanid, histid):
 
                     try:
                         # split to remove "secs"
-                        number = intial_seconds[1].split(" ")
-
+                        number = intial_seconds.split(" ")
+                        print(number)
                         # grab the number for our minute calculation
                         final_number = number[0]
-
+                        print(final_number)
                         # Numerical value in seconds parsed from the plugin
                         seconds = int(final_number)
 
@@ -106,6 +106,7 @@ def parse_19506_from_file(filename, scanid, histid):
                             pattern = '%Y/%m/%d %H:%M %z'
                             # Convert to Epoch
                             plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
+
                         except ValueError:
 
                             # timezone couldn't be used. lets remove it and calculate what we can
@@ -141,7 +142,7 @@ def parse_19506_from_file(filename, scanid, histid):
                         # All assets and 19506 seconds in a tuple
                         total_assets_scanned_list.append((asset_uuid, row['Host Start'], scan_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
 
-                        #pprint.pprint(total_assets_scanned_list)
+                        # pprint.pprint(total_assets_scanned_list)
 
                     except IndexError:
                         # This error occurs when an old scanner is used.
