@@ -26,19 +26,21 @@ def update():
 @click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
 @click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
-              help='Isolate your update to a partiular finding state')
-def full(threads, days, c, v, state):
-
+              help='Isolate your update to a particular finding state')
+@click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
+              type=click.Choice(["critical", "high", "medium", "low", "info"]),
+              help='Isolate your update to a particular finding state')
+def full(threads, days, c, v, state, severity):
     if threads:
         threads_check(threads)
 
     exid = '0'
 
     if days is None:
-        vuln_export(30, exid, threads, c, v, state)
+        vuln_export(30, exid, threads, c, v, list(state), list(severity))
         asset_export(90, exid, threads, c, v)
     else:
-        vuln_export(days, exid, threads, c, v, state)
+        vuln_export(days, exid, threads, c, v, list(state), list(severity))
         asset_export(days, exid, threads, c, v)
 
 
@@ -66,14 +68,17 @@ def assets(threads, days, exid, c, v):
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
 @click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
               help='Isolate your update to a partiular finding state')
-def vulns(threads, days, exid, c, v, state):
+@click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
+              type=click.Choice(["critical", "high", "medium", "low", "info"]),
+              help='Isolate your update to a particular finding state')
+def vulns(threads, days, exid, c, v, state, severity):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v, list(state))
+    vuln_export(days, exid, threads, c, v, list(state), list(severity))
 
 
 @update.command(help="Update the Compliance data")
@@ -101,7 +106,6 @@ def fixed(c, v, days):
 @update.command(help="Change the Base URL for Navi")
 @click.argument('new_url')
 def url(new_url):
-
     database = r"navi.db"
     conn = new_db_connection(database)
     drop_tables(conn, 'url')

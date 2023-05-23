@@ -250,7 +250,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads, category, value, state):
+def vuln_export(days, ex_uuid, threads, category, value, state, severity):
     start = time.time()
 
     database = r"navi.db"
@@ -271,12 +271,12 @@ def vuln_export(days, ex_uuid, threads, category, value, state):
     day_limit = time.time() - new_limit
 
     if category is None:
-        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state}}
+        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity}}
     else:
         if value is None:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state}}
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity}}
         else:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity,
                                                       "tag.{}".format(category): "{}".format(value)}}
     try:
 
