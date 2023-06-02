@@ -72,7 +72,7 @@ def parse_19506_from_file(filename, scanid, histid):
 
             try:
                 # Split at the colon to grab the numerical value
-                intial_seconds = plugin_dict['Scan duration']#duration.split(" : ")
+                intial_seconds = plugin_dict['Scan duration']
 
                 # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
                 if intial_seconds != 'unknown':
@@ -80,24 +80,24 @@ def parse_19506_from_file(filename, scanid, histid):
                     try:
                         # split to remove "secs"
                         number = intial_seconds.split(" ")
-                        print(number)
+
                         # grab the number for our minute calculation
                         final_number = number[0]
-                        print(final_number)
+
                         # Numerical value in seconds parsed from the plugin
                         seconds = int(final_number)
 
                         # Grab data pair and split it at the colon and grab the values
-                        scan_name = plugin_dict['Scan name']#parsed_output[9].split(" : ")[1]
-                        scan_policy = plugin_dict['Scan policy used'] #parsed_output[10].split(" : ")[1]
-                        scanner_ip = plugin_dict['Scanner IP']#parsed_output[11].split(" : ")[1]
+                        scan_name = plugin_dict['Scan name']
+                        scan_policy = plugin_dict['Scan policy used']
+                        scanner_ip = plugin_dict['Scanner IP']
                         # Enumerate all scanners for per/scanner stats
                         if scanner_ip not in scanner_list:
                             scanner_list.append(scanner_ip)
-                        max_hosts = plugin_dict['Max hosts']#parsed_output[plugin_length - 8].split(" : ")[1]
-                        max_checks = plugin_dict['Max checks']#parsed_output[plugin_length - 7].split(" : ")[1]
+                        max_hosts = plugin_dict['Max hosts']
+                        max_checks = plugin_dict['Max checks']
                         # Grabbing the start time from the plugin
-                        scan_time = plugin_dict['Scan Start Date']#parsed_output[plugin_length - 4].split(" : ")[1]
+                        scan_time = plugin_dict['Scan Start Date']
 
                         # Some timezone abbreviations are not parseable with strptime.
                         # removing the timezone for those we can't parse
