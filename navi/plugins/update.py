@@ -29,7 +29,7 @@ def update():
               help='Isolate your update to a particular finding state')
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
-              help='Isolate your update to a particular finding state')
+              help='Isolate your update to a particular finding severity')
 def full(threads, days, c, v, state, severity):
     if threads:
         threads_check(threads)

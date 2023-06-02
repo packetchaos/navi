@@ -267,7 +267,8 @@ def download_tag_remove(scanid, new_hist, c, v, d):
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
-def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid, manual, histid):
+def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
+        manual, histid):
     # start a blank list
     tag_list = []
     ip_list = ""

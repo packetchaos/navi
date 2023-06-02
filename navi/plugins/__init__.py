@@ -25,6 +25,8 @@ from .cve_compare import compare
 from .deploy import deploy
 from .was import was
 from .agroup import agroup
+from .tagrule import tagrule
+from .exclusions import exclude
 
 
 def plugin_loader(group):
@@ -55,3 +57,5 @@ def plugin_loader(group):
     group.add_command(deploy)
     group.add_command(was)
     group.add_command(agroup)
+    group.add_command(tagrule)
+    group.add_command(exclude)
