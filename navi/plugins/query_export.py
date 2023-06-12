@@ -23,7 +23,7 @@ def query_export(query, name):
         # Create Header list
         header = []
 
-        # Pull the row data out to popluate the headers
+        # Pull the row data out to populate the headers
         for desc in descripts:
             header.append(desc[0])
 
@@ -33,7 +33,7 @@ def query_export(query, name):
 
         with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-            agent_writer.writerow(header)
+            agent_writer.writerow(str(header))
             # Loop through each asset
             for assets in data:
-                agent_writer.writerow(assets)
+                agent_writer.writerow(str(assets))
