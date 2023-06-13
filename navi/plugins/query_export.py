@@ -36,4 +36,4 @@ def query_export(query, name):
             agent_writer.writerow(str(header))
             # Loop through each asset
             for assets in data:
-                agent_writer.writerow(str(assets))
+                agent_writer.writerow(assets)

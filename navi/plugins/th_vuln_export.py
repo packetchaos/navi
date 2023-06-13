@@ -69,7 +69,7 @@ def parse_data(chunk_data, chunk_number):
 
                     try:
                         output = vulns['output']
-                        vuln_list.append(output)
+                        vuln_list.append(str(output))
                     except KeyError:
                         vuln_list.append(" ")
 

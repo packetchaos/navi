@@ -8,10 +8,10 @@ from .was_export import grab_scans
 
 
 def threads_check(threads):
-    if threads != 10:  # Limit the amount of threads to avoid issues
+    if threads != 20:  # Limit the amount of threads to avoid issues
         click.echo("\nUsing {} thread(s) at your request".format(threads))
-        if threads not in range(1, 11):
-            click.echo("Enter a value between 1 and 10")
+        if threads not in range(1, 21):
+            click.echo("Enter a value between 1 and 20")
             exit()
 
 
@@ -21,7 +21,7 @@ def update():
 
 
 @update.command(help="Perform a full update (30d Vulns / 90d Assets); Delete the current Database")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--days', default=None, help="Limit the download to X # of days")
 @click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
@@ -47,7 +47,7 @@ def full(threads, days, c, v, state, severity):
 @update.command(help="Update the Asset Table")
 @click.option('--days', default='90', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
 def assets(threads, days, exid, c, v):
@@ -63,7 +63,7 @@ def assets(threads, days, exid, c, v):
 @update.command(help="Update the vulns Table")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
 @click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
@@ -84,7 +84,7 @@ def vulns(threads, days, exid, c, v, state, severity):
 @update.command(help="Update the Compliance data")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-10)")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
 def compliance(threads, days, exid):
     if threads:
         threads_check(threads)
