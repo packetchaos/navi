@@ -27,6 +27,7 @@ from .was import was
 from .agroup import agroup
 from .tagrule import tagrule
 from .exclusions import exclude
+from .sgroup import sgroup
 
 
 def plugin_loader(group):
@@ -59,3 +60,4 @@ def plugin_loader(group):
     group.add_command(agroup)
     group.add_command(tagrule)
     group.add_command(exclude)
+    group.add_command(sgroup)

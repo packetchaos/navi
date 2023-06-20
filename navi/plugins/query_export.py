@@ -33,7 +33,7 @@ def query_export(query, name):
 
         with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-            agent_writer.writerow(str(header))
+            agent_writer.writerow(header)
             # Loop through each asset
             for assets in data:
                 agent_writer.writerow(assets)

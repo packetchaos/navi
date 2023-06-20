@@ -18,10 +18,9 @@ def get_scanner_id(scanner_name):
 def get_network_id(network_name):
     # Receive network name, convert to lower-case, then look up the network's uuid
     for net in tio.networks.list():
-        if str(network_name).lower() == str(net['name']).lower():
-            return network['uuid']
-        else:
-            return 'NONE'
+        if network_name.lower() == str(net['name']).lower():
+            return net['uuid']
+    return 'None'
 
 
 @click.group(help="Create, Change Networks or Display Assets in a network")
@@ -31,20 +30,33 @@ def network():
 
 @network.command(help="Change the Asset Age Out of a network")
 @click.option("--age", default='', required=True, help="Change the Asset Age Out - 90days or more")
-@click.option("--net", default='', required=True, help="Select Network ID")
-def change(age, net):
+@click.option("--net", default='', help="Enter the Network ID")
+@click.option("--name", default='', help="Enter the Network name")
+def change(age, net, name):
     click.echo("\nChanging the age to {}\n".format(age))
+    print(name)
 
-    if age != '' and net != '' and len(net) == 36:
+    if age != '':
         if 1 <= int(age) <= 365:
-            network_data = request_data('GET', '/networks/' + net)
-            name = network_data['name']
-            payload = {"assets_ttl_days": age, "name": name, "description": "TTL adjusted by navi"}
-            request_data('PUT', '/networks/' + net, payload=payload)
+            if net:
+                if name:
+                    click.echo("choose net OR name, not both")
+                    exit()
+
+                if len(net) == 36:
+                    network_data = request_data('GET', '/networks/' + net)
+                    net_name = network_data['name']
+                    payload = {"assets_ttl_days": age, "name": net_name, "description": "TTL adjusted by navi"}
+                    request_data('PUT', '/networks/' + net, payload=payload)
+                else:
+                    click.echo("Check the UUID length")
+            if name:
+                payload = {"assets_ttl_days": age, "name": name, "description": "TTL adjusted by navi"}
+                request_data('PUT', '/networks/{}'.format(get_network_id(name)), payload=payload)
         else:
             click.echo("Asset Age Out number must between 1 and 365")
     else:
-        click.echo("Please enter a Age value and a network UUID")
+        click.echo("Please enter a Age value")
 
 
 @network.command(help="Create a new Network")
