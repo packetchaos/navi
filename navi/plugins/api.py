@@ -10,11 +10,15 @@ from .error_msg import error_msg
 @click.option('--limit', default=50, help="Change API Request Limit")
 @click.option('--offset', default=0, help="Change API Request Offset")
 @click.option('-post', is_flag=True, help="Use POST instead of GET")
-def api(url, raw, limit, offset, post):
+@click.option('--payload', help="Used for Automation; Receives a well crafted payload in json")
+def api(url, raw, limit, offset, post, payload):
     params = {"limit": limit, "offset": offset}
     try:
         if post:
-            data = request_data('POST', url, params=params)
+            if payload:
+                data = request_data('POST', url, params=params, payload=payload)
+            else:
+                data = request_data('POST', url, params=params)
         else:
             data = request_data('GET', url, params=params)
 

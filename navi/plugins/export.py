@@ -6,6 +6,7 @@ from .query_export import query_export
 from .agent_group_export import agent_group_export
 from .user_export import user_export
 from .compliance_export_csv import compliance_export_csv
+from .query_export_32K import export_query
 
 
 @click.group(help="Export Tenable.io Data")
@@ -47,8 +48,12 @@ def network(network_uuid, file):
 @export.command(help='Export assets by query to the vuln db')
 @click.argument('statement')
 @click.option('--file', default="query_data", help="Name of the file excluding 'csv'")
-def query(statement, file):
-    query_export(statement, file)
+@click.option('-fix', is_flag=True, help="Fix for Vuln Outputs with over 32K chars")
+def query(statement, file, fix):
+    if fix:
+        export_query(statement, file)
+    else:
+        query_export(statement, file)
 
 
 @export.command(help='Export Agents by Group name')
