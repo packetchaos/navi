@@ -42,7 +42,7 @@ def export_query(query, name):
                 new_list = []
                 for deets in list(assets):
                     # Check for length
-                    if len(deets) > 31999:
+                    if len(str(deets)) > 31999:
                         number += 1
 
                         with open("extra_data_{}.txt".format(number), mode='w', encoding='utf-8') as text_file:
