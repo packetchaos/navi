@@ -64,6 +64,7 @@ def confirm_tag_exists(key, value):
                 if str(tag_info[1]).lower() == str(value).lower():
                     return 'yes'
     except Exception as E:
+        print("\nSomething went wrong with checking the tag")
         click.echo(E)
 
 

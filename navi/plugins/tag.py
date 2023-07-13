@@ -4,6 +4,7 @@ from .database import new_db_connection, db_query
 from .api_wrapper import request_data, tenb_connection
 from .tag_helper import update_tag, confirm_tag_exists, grab_all_tags, remove_tag
 from sqlite3 import Error
+import pprint
 
 
 def tag_by_tag(c, v, d, cv, cc, match):
@@ -18,56 +19,77 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
     # Is this the parent tag new or current?
     if parent_answer == 'yes':
-
+        print("I found the parent")
         # Does the Child Tag Exist?
         child_answer = confirm_tag_exists(cc, cv)
 
         # Is the child tag new or current?
         if child_answer == 'yes':
-
+            print("I found the child")
             # Update the tag parent tag with the new child tag
             click.echo("Your tag is being updated\n")
 
             try:
+
                 # Need to grab the Tag UUID of our Parent Tag so we can get more details
                 tag_data = request_data('GET', '/tags/values')
+
                 for value in tag_data['values']:
-                    if value['category_name'] == str(c):
-                        if value['value'] == str(v):
+                    if str(value['category_name']).lower() == str(c).lower():
+                        if str(value['value']).lower() == str(v).lower():
                             try:
                                 tag_uuid = value['uuid']
-
+                                #print(tag_uuid)
                                 # Get filter details
                                 current_rule_set = request_data("GET", "/tags/values/" + tag_uuid)
+                                print("Current Rule set")
+                                pprint.pprint(current_rule_set)
+                                print()
 
+                                new_dict = eval(current_rule_set['filters']['asset'])
+                                print(new_dict['and'])
+                                rules_list = []
+
+                                for val in new_dict['and']:
+                                    print(val['value'][0])
+
+                                #print(rule_set_dict)
+
+                                '''
                                 # The filter is a string in the API, pull out the dictionary representation and
                                 filter_string = current_rule_set['filters']['asset']
+
+
 
                                 # Turn the string into a dictionary
                                 rule_set_dict = eval(filter_string)
 
-                                # Identify 'or' vs 'and' and set the current filter list to our 'rule_list'
-                                try:
-                                    rules_list = rule_set_dict['and']
-                                    match = 'and'
-                                except KeyError:
-                                    rules_list = rule_set_dict['or']
-                                    match = 'or'
+                                print(rule_set_dict)
 
-                                rules_list.append({"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)})
+                                # Identify 'or' vs 'and' and set the current filter list to our 'rule_list'
+                                
+                                '''
                             except Exception as F:
+                                print("first error")
                                 click.echo(F)
+
+
+                                #rules_list.append({"field": "tag.{}".format(str(cc)), "operator": "set-has", "value": str(cv)})
+                                #print("New rules {} \n".format(rules_list))
+
 
                 payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters": {"asset": {str(match): rules_list}}}
                 # Update the Parent Tag with the new child tag information
-                data = request_data('PUT', '/tags/values/' + tag_uuid, payload=payload)
+                print(payload)
+                #data = request_data('PUT', '/tags/values/' + tag_uuid, payload=payload)
 
-                value_uuid = data["uuid"]
-                cat_uuid = data['category_uuid']
-                click.echo("\nI've Updated your Tag - {} : {}\n".format(c, v))
-                click.echo("The Category UUID is : {}\n".format(cat_uuid))
-                click.echo("The Value UUID is : {}\n".format(value_uuid))
+                #value_uuid = data["uuid"]
+                #cat_uuid = data['category_uuid']
+                #click.echo("\nI've Updated your Tag - {} : {}\n".format(c, v))
+                #click.echo("The Category UUID is : {}\n".format(cat_uuid))
+                #click.echo("The Value UUID is : {}\n".format(value_uuid))
             except Exception as E:
+                print("Second error")
                 click.echo(E)
         else:
             click.echo("The Child Tag does not exist")
@@ -125,7 +147,7 @@ def tag_by_uuid(tag_list, c, v, d):
 
     # We Want to bail if the result is 0 Assets
     if not tag_list:
-        click.echo("\nYour tag resulted in 0 Assets, therefore the tag wasn't created\n")
+        click.echo("\nYour tag {}:{} resulted in 0 Assets, therefore the tag wasn't created\n".format(c,v))
         exit()
     elif tag_list == 'manual':
         # Create the Tag
