@@ -78,7 +78,7 @@ def discoverythenvulnscan(trigger, fire, targets):
 @deploy.command(help="Deploy Navi Dependency Scan solution")
 @click.option('--trigger', default=None, help="The Scan ID you want to use as the the Trigger Scan, or the first scan in the chain.")
 @click.option('--fire', default=None, help="The scan ID you want to use for your Vuln Scan")
-def discoverythenvulnscan(trigger, fire):
+def dependency_scan(trigger, fire):
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} packetchaos/dependency_scan".format(a, s, trigger, fire, targets)
     if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
