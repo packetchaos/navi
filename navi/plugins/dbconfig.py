@@ -89,6 +89,12 @@ def create_assets_table():
                             gcp_instance_id text,
                             gcp_project_id text,
                             gcp_zone text,
+                            azure_location text,
+                            azure_resource_group text,
+                            azure_resource_id text,
+                            azure_subscription_id text,
+                            azure_type text,
+                            azure_vm_id text,
                             url text
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
