@@ -1,5 +1,6 @@
 from .api_wrapper import tenb_connection, request_data
 import click
+import csv
 
 tio = tenb_connection()
 
@@ -12,8 +13,9 @@ tio = tenb_connection()
 @click.option('--action', default='', help="Type of operator")
 @click.option('--value', default='', help="Filter value")
 @click.option('--multi', default='', help="A well crafted pytenable list of tuples")
+@click.option('--file', default='', help="Create a tag rule by IP addresses found in a CSV")
 @click.option('-any', is_flag=True, help="Change the default from 'and' to 'or")
-def tagrule(c, v, filter, action, value, d, multi, any):
+def tagrule(c, v, filter, action, value, d, multi, any, file):
     if c == '':
         click.echo("Category is required.  Please use the --c command")
         exit()
@@ -22,7 +24,7 @@ def tagrule(c, v, filter, action, value, d, multi, any):
         click.echo("Value is required. Please use the --v command")
         exit()
 
-    if multi == '' and filter == '':
+    if multi == '' and filter == '' and file == '':
         click.echo("\nYou need to select an individual 'filter' or 'multi' for multiple filters\n")
         exit()
 
@@ -55,3 +57,34 @@ def tagrule(c, v, filter, action, value, d, multi, any):
         else:
             click.echo("You must have an Action if you are going to use a filter")
             exit()
+
+    if file:
+        ip_list = ''
+        for_length = []
+        if file != '':
+            d = d + "\nTagged using IPs found in a file named:{}".format(file)
+            with open(file, 'r', newline='') as new_file:
+                add_ips = csv.reader(new_file)
+
+                for row in add_ips:
+                    for ips in row:
+                        ip_list = ip_list + "," + ips
+                        for_length.append(ips)
+        try:
+            payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
+                      {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+            data = request_data('POST', '/tags/values', payload=payload)
+            try:
+                value_uuid = data["uuid"]
+                cat_uuid = data['category_uuid']
+                click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+                click.echo("The Category UUID is : {}\n".format(cat_uuid))
+                click.echo("The Value UUID is : {}\n".format(value_uuid))
+                click.echo("{} IPs added to the Tag".format(str(len(for_length))))
+            except Exception as E:
+                click.echo(E)
+        except Exception as F:
+            click.echo("\nEnsure your IP list is not more than 1024.  If so, use the 'navi add' command")
+            click.echo("This will add each IP in the list. Then run 'navi update assets'")
+            click.echo("Finally, use the tag --file option to tag known IPs in the navi.db")
+            click.echo(F)

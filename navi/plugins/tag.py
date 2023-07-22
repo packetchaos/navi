@@ -117,27 +117,6 @@ def tag_by_tag(c, v, d, cv, cc, match):
             click.echo("Your Child Tag doesn't exist.\n You need to create a Child tag before adding it to a parent")
 
 
-def tag_by_ip(ip_list, tag_list, c, v, d):
-    # Tagging by IP is limited to 2000 Assets and is only used by the file command
-    try:
-        payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                   {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
-        data = request_data('POST', '/tags/values', payload=payload)
-        try:
-            value_uuid = data["uuid"]
-            cat_uuid = data['category_uuid']
-            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
-            click.echo("The Category UUID is : {}\n".format(cat_uuid))
-            click.echo("The Value UUID is : {}\n".format(value_uuid))
-            click.echo("{} IPs added to the Tag".format(str(len(tag_list))))
-        except Exception as E:
-            click.echo("Duplicate Tag Category: You may need to delete your tag first\n")
-            click.echo("We could not confirm your tag name, is it named weird?\n")
-            click.echo(E)
-    except:
-        click.echo("Duplicate Category")
-
-
 def tag_by_uuid(tag_list, c, v, d):
 
     # Generator to split IPs into 2000 IP chunks
@@ -478,9 +457,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 for ips in row:
                     # need to look grab UUIDS per IP for the ablity to update Tags
                     tag_list.append(ips)
-                    ip_list = ip_list + "," + ips
 
-        tag_by_ip(ip_list, tag_list, c, v, d)
+        uuid_list = []
+        for assets in tag_list:
+            asset_uuid = db_query("select distinct asset_uuid from vulns where asset_ip='{}'".format(assets.strip()))
+            if asset_uuid:
+                uuid_list.append(asset_uuid[0][0])
+
+        tag_by_uuid(uuid_list, c, v, d)
 
     if cv != '' and cc != '':
 
