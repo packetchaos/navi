@@ -114,8 +114,8 @@ def create_tag_table():
 def create_epss_table():
     database = r"navi.db"
     epss_conn = new_db_connection(database)
-    create_score_table = """CREATE TABLE IF NOT EXISTS score (
-                        cve text,
+    create_score_table = """CREATE TABLE IF NOT EXISTS epss (
+                        cve text PRIMARY KEY,
                         epss_value text,
                         percentile text
                         );"""

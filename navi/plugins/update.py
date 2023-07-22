@@ -5,6 +5,7 @@ from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .database import new_db_connection, drop_tables, create_table
 from .was_export import grab_scans
+from .epss import update_navi_with_epss
 
 
 def threads_check(threads):
@@ -123,3 +124,12 @@ def url(new_url):
 @click.option('--days', default='30', help="Limit the data downloaded a number of days")
 def was(days):
     grab_scans(days)
+
+
+@update.command(help="Populate Navi DB with EPSS data")
+@click.option('--day', '--d', default='1', help="Day of the Month")
+@click.option('--month', default='1', help="Monthy of the year")
+@click.option('--year', default='2023', help="Year of your desire")
+@click.option('--file', default='', help="Current file name with epss scores")
+def epss(day, month, year, file):
+    update_navi_with_epss(day, month, year, file)
