@@ -140,6 +140,36 @@ def parse_data(chunk_data):
                 csv_list.append(" ")
 
             try:
+                csv_list.append(assets['azure_location'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['azure_resource_group'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['azure_resource_id'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['azure_subscription_id'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['azure_type'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(assets['azure_vm_id'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
                 special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns".format(asset_id)
                 csv_list.append(special_url)
             except:

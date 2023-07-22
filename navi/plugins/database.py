@@ -96,7 +96,13 @@ def insert_assets(conn, assets):
                                           gcp_instance_id,
                                           gcp_project_id,
                                           gcp_zone,
-                                          url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                                          azure_location,
+                                          azure_resource_group,
+                                          azure_resource_id,
+                                          azure_subscription_id,
+                                          azure_type,
+                                          azure_vm_id,
+                                          url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, assets)
