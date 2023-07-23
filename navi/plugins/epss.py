@@ -1,36 +1,42 @@
 import requests
 import click
+import gzip
+import shutil
 import csv
 from .dbconfig import create_epss_table, new_db_connection
 from .database import insert_epss, drop_tables
 
-epss_data_name = 'epss_scores-2023-01-07.csv'
 
-
-def request_new_data(day, month, year, file):
+def request_new_data(day, month, year):
+    epss_data_name = "epss_scores-{}-{}-{}.csv".format(year, month, day)
     # URL structure https://epss.cyentia.com/epss_scores-YYYY-MM-DD.csv.gz
     epss_url = "https://epss.cyentia.com/epss_scores-{}-{}-{}.csv.gz".format(year, month, day)
 
     epss_data = requests.request('GET', epss_url)
 
-    with open(epss_data_name, 'wb') as zfile:
+    click.echo("\nDownloading {} from {}\n".format(epss_data_name, epss_url))
+    with open("{}.gz".format(epss_data_name), 'wb') as zfile:
         zfile.write(epss_data.content)
 
-    # Need code to unzip gzip
+    click.echo("\nUnzipping the file now\n")
+    with gzip.open("{}.gz".format(epss_data_name), 'rb') as zip_ref:
+        with open("{}".format(epss_data_name), 'wb') as csv_ref:
+            shutil.copyfileobj(zip_ref, csv_ref)
+
+    return epss_data_name
 
 
-def update_navi_with_epss(day, month, year, file):
-    click.echo("Not yet ready.  Releasing in a few weeks!")
-    '''
-    #request_new_data(day, month, year, file)
-    # Open the file
-    # Write each CVSS Data in each folder to a db
+def update_navi_with_epss(day, month, year):
+    click.echo("\nNot yet ready.  Releasing in a few weeks!")
+    click.echo("\nParsing the csv and importing values into the table epss\n")
+    epss_csv_file = request_new_data(day, month, year)
+
     database = r"navi.db"
     epss_conn = new_db_connection(database)
     drop_tables(epss_conn, 'epss')
     create_epss_table()
 
-    with open(epss_data_name, 'r') as epss_csv:
+    with open(epss_csv_file, 'r') as epss_csv:
         reader = csv.reader(epss_csv)
         header_one = next(reader)
         header_two = next(reader)
@@ -39,5 +45,5 @@ def update_navi_with_epss(day, month, year, file):
             for row in reader:
                 new_list = [str(row[0]), str(row[1]), str(row[2])]
                 insert_epss(epss_conn, new_list)
-    '''
+
 

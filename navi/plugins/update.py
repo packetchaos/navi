@@ -130,6 +130,5 @@ def was(days):
 @click.option('--day', '--d', default='1', help="Day of the Month")
 @click.option('--month', default='1', help="Monthy of the year")
 @click.option('--year', default='2023', help="Year of your desire")
-@click.option('--file', default='', help="Current file name with epss scores")
-def epss(day, month, year, file):
-    update_navi_with_epss(day, month, year, file)
+def epss(day, month, year):
+    update_navi_with_epss(day, month, year)
