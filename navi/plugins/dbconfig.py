@@ -58,6 +58,8 @@ def create_vulns_table():
                             cvss_base_score text,
                             cvss_temporal_score text,
                             OSes text,
+                            publication_date text,
+                            patch_publication_date text,
                             url text
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')

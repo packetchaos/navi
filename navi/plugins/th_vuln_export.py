@@ -230,6 +230,21 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(str(OSes))
                     except KeyError:
                         vuln_list.append(" ")
+
+                    try:
+                        pub_date = vulns['plugin']['publication_date']
+
+                        vuln_list.append(str(pub_date))
+                    except KeyError:
+                        vuln_list.append(" ")
+
+                    try:
+                        patch_date = vulns['plugin']['patch_publication_date']
+
+                        vuln_list.append(str(patch_date))
+                    except KeyError:
+                        vuln_list.append(" ")
+
                     try:
                         special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns/vulnerability-details/{}/details".format(asset_uuid, plugin_id)
                         vuln_list.append(special_url)
