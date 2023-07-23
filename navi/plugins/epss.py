@@ -27,23 +27,27 @@ def request_new_data(day, month, year):
 
 
 def update_navi_with_epss(day, month, year):
-    click.echo("\nNot yet ready.  Releasing in a few weeks!")
     click.echo("\nParsing the csv and importing values into the table epss\n")
-    epss_csv_file = request_new_data(day, month, year)
+    try:
+        epss_csv_file = request_new_data(day, month, year)
+        database = r"navi.db"
+        epss_conn = new_db_connection(database)
+        drop_tables(epss_conn, 'epss')
+        create_epss_table()
 
-    database = r"navi.db"
-    epss_conn = new_db_connection(database)
-    drop_tables(epss_conn, 'epss')
-    create_epss_table()
+        with open(epss_csv_file, 'r') as epss_csv:
+            reader = csv.reader(epss_csv)
+            header_one = next(reader)
+            header_two = next(reader)
+            with epss_conn:
 
-    with open(epss_csv_file, 'r') as epss_csv:
-        reader = csv.reader(epss_csv)
-        header_one = next(reader)
-        header_two = next(reader)
-        with epss_conn:
+                for row in reader:
+                    new_list = [str(row[0]), str(row[1]), str(row[2])]
+                    insert_epss(epss_conn, new_list)
+    except Exception as E:
+        click.echo(E)
+        click.echo("\nBe sure you are using YYYY, MM, and DD values and not single digit values.\n")
 
-            for row in reader:
-                new_list = [str(row[0]), str(row[1]), str(row[2])]
-                insert_epss(epss_conn, new_list)
+
 
 
