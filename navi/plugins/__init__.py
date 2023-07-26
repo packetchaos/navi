@@ -28,6 +28,8 @@ from .agroup import agroup
 from .tagrule import tagrule
 from .exclusions import exclude
 from .sgroup import sgroup
+from .push import push
+from .ssh import ssh
 
 
 def plugin_loader(group):
@@ -61,3 +63,5 @@ def plugin_loader(group):
     group.add_command(tagrule)
     group.add_command(exclude)
     group.add_command(sgroup)
+    group.add_command(push)
+    group.add_command(ssh)

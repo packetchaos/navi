@@ -228,3 +228,14 @@ def create_plugins_table():
     app_conn.execute('pragma journal_mode=wal;')
 
     create_table(app_conn, create_plugins)
+
+
+def create_passwords_table():
+    database = r"navi.db"
+    ssh_conn = new_db_connection(database)
+    ssh_table = """CREATE TABLE IF NOT EXISTS ssh (
+                            username text,
+                            password text
+                            );"""
+    create_table(ssh_conn, ssh_table)
+

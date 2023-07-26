@@ -50,6 +50,7 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
         if action:
             if value:
                 rule_tuple = (filter, action, [value])
+                print(rule_tuple)
                 tio.tags.create(c, v, filters=[rule_tuple], description=d)
             else:
                 click.echo("You must have a value if you are going to use a filter")
@@ -72,7 +73,7 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
                         for_length.append(ips)
         try:
             payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                      {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(ip_list[1:])}]}}}
+                      {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": [str(ip_list[1:])]}]}}}
             data = request_data('POST', '/tags/values', payload=payload)
             try:
                 value_uuid = data["uuid"]
