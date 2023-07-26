@@ -35,22 +35,16 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
             temp_dict = {"field": os[0], "operator": os[1], "value": os[2]}
             filter_list.append(temp_dict)
             # issue with tenable.io API - Or turns in to a string value seperated by a comma
-            # issue with pytenable - appends " when you add * so *centos* becomes "*centos*"
+            # issue with tenable.io API - appends " when you add * so *centos* becomes "*centos*"
         if any:
             tio.tags.create(c, v, filters=eval(multi), filter_type="or", description=d)
         else:
             tio.tags.create(c, v, filters=eval(multi), description=d)
-        #payload = {"filters": {"asset": {"or": filter_list}}, "category_name": str(c), "value": str(v), "description": str(d)}
-        import pprint
-        #pprint.pprint(payload)
-        #data = request_data('POST', '/tags/values', payload=payload)
-        #print(data)
 
     if filter:
         if action:
             if value:
                 rule_tuple = (filter, action, [value])
-                print(rule_tuple)
                 tio.tags.create(c, v, filters=[rule_tuple], description=d)
             else:
                 click.echo("You must have a value if you are going to use a filter")
