@@ -2,7 +2,8 @@ try:
     import pexpect
     from pexpect import pxssh
 except ImportError:
-    print("\nInformation: Navi push will not work on this system!\n")
+    #print("\nInformation: Navi push will not work on this system!\n")
+    pass
 import click
 from .database import db_query
 
