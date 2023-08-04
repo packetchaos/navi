@@ -189,11 +189,12 @@ def connectors():
 
         click.echo("\n{:11s} {:40s} {:40s} {:30s} {}".format("Type", "Connector Name", "Connector ID", "Last Sync", "Schedule"))
         click.echo("-" * 150)
-
+        schedule = "None"
         for conn in data["connectors"]:
-            schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
-
             try:
+                schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
+
+
                 last_sync = conn['last_sync_time']
             except KeyError:
                 last_sync = "Hasn't synced"
