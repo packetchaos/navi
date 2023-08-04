@@ -1,5 +1,8 @@
-import pexpect
-from pexpect import pxssh
+try:
+    import pexpect
+    from pexpect import pxssh
+except ImportError:
+    print("\nInformation: Navi push will not work on this system!\n")
 import click
 from .database import db_query
 
@@ -52,27 +55,30 @@ def scp(user, host, password, filename):
     ssh_new_key_string = 'Are you sure you want to continue connecting'
     scp_login_string = 'scp {} {}@{}:/'.format(filename, user, host)
 
-    shell = pexpect.spawn(scp_login_string, timeout=300)
+    try:
+        shell = pexpect.spawn(scp_login_string, timeout=300)
 
-    return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[P|p]assword:'])
+        return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[P|p]assword:'])
 
-    if return_code == 0:
-        print("error connecting")
-        exit()
-
-    if return_code == 1:
-        shell.sendline('yes')
-        second_return_code = shell.expect([pexpect.TIMEOUT, '[P|p]assword:'])
-
-        if second_return_code == 0:
+        if return_code == 0:
             print("error connecting")
-            return
+            exit()
 
-    shell.sendline(password)
-    shell.expect(pexpect.EOF)
-    response = shell.before
-    print(response.decode('utf-8'))
-    print()
+        if return_code == 1:
+            shell.sendline('yes')
+            second_return_code = shell.expect([pexpect.TIMEOUT, '[P|p]assword:'])
+
+            if second_return_code == 0:
+                print("error connecting")
+                return
+
+        shell.sendline(password)
+        shell.expect(pexpect.EOF)
+        response = shell.before
+        print(response.decode('utf-8'))
+        print()
+    except:
+        print("\nThis Feature has been disabled.  You're system doesn't allow for pexpect.spawn\n")
 
 
 @click.command(help="Push a command to a linux target")
