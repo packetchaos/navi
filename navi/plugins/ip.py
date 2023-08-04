@@ -2,7 +2,7 @@ import click
 import textwrap
 from sqlite3 import Error
 from .api_wrapper import tenb_connection, request_data
-from .database import db_query
+from .database import db_query, new_db_connection
 
 tio = tenb_connection()
 
@@ -87,17 +87,41 @@ def info_by_uuid(uuid):
 
 
 def cves_by_uuid(uuid):
+
     try:
         data = db_query("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
-        click.echo("\n{:10s} {}".format("Plugin", "CVEs"))
+        click.echo("\n{:10s} {:60} {:>15} {:>15} {:>15}".format("Plugin", "CVEs", "Avg EPSS", "Total EPSS", "Top EPSS"))
         click.echo("-"*150)
 
         for vulns in data:
             plugin_id = vulns[0]
             cves = vulns[1]
-            click.echo("{:10s} {}".format(plugin_id, textwrap.shorten(cves, 140)))
-        click.echo("")
+            try:
+                total = 0
+                epss_list = []
+
+                for cve in eval(cves):
+                    database = r"navi.db"
+                    conn = new_db_connection(database)
+                    with conn:
+                        cur = conn.cursor()
+
+                        cur.execute("select epss_value from epss where cve='{}'".format(cve))
+                        epss_value = cur.fetchall()
+                        epss_list.append(eval(epss_value[0][0]))
+                        total += total + eval(epss_value[0][0])
+
+                average = total/len(epss_list)
+                top = max(epss_list)
+                click.echo("{:10s} {:60} {:15} {:15} {:15}".format(plugin_id, textwrap.shorten(cves, 140), average, total, top))
+            except:
+                average = "No EPSS"
+                total = "No EPSS"
+                top = "No EPSS"
+                click.echo("{:10s} {:60} {:>15} {:>15} {:>15}".format(plugin_id, textwrap.shorten(cves, 140), average, total, top))
+
+
     except IndexError:
         click.echo("Something went wrong")
 
@@ -535,9 +559,7 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 click.echo("-" * 26)
                 cves_by_uuid(assets[0])
         else:
-            data = db_query("select uuid from assets where uuid='{}'".format(ipaddr))
             click.echo("\nAsset UUID: {}".format(ipaddr))
-            click.echo("Asset IP: {}".format(data[0]))
             click.echo("-" * 26)
             cves_by_uuid(ipaddr)
 

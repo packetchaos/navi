@@ -246,7 +246,6 @@ def insert_plugins(conn, plugins):
 
 
 def insert_epss(conn2, epss_data):
-    print("Should be inserting {}".format(epss_data))
     sql_epss = '''INSERT or IGNORE into epss(
                             cve,
                             epss_value,
