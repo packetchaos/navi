@@ -230,12 +230,12 @@ def asset_export(days, ex_uuid, threads, category, value):
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
     if category is None:
-        pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit)}}
+        pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
     else:
         if value is None:
-            pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit)}}
+            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
         else:
-            pay_load = {"chunk_size": 1000, "filters": {"updated_at": int(day_limit), "tag.{}".format(category): value}}
+            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit), "tag.{}".format(category): value}}
     try:
 
         if ex_uuid == '0':
