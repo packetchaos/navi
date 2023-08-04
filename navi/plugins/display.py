@@ -155,38 +155,14 @@ def assets(tag):
     else:
         try:
             click.echo("\nBelow are the assets found in the last 30 days")
-            click.echo("\n{:16} {:65} {:40} {:6} {}".format("IP Address", "FQDN", "UUID", "AES", "Sources"))
+            click.echo("\n{:16} {:65} {:40} {:6}".format("IP Address", "FQDN", "UUID", "AES"))
             click.echo("-" * 150)
+            asset_data = db_query("select ip_address, fqdn, uuid, aes from assets;")
+            for asset in asset_data:
 
-            count = 0
-            for asset in tio.workbenches.assets():
-                count += 1
-                sources = ""
-                try:
-                    exposure_score = str(asset["exposure_score"])
-                except KeyError:
-                    exposure_score = "- -"
+                click.echo("{:16} {:65} {:40} {:6} ".format(asset[0], asset[1], asset[2], asset[3]))
 
-                try:
-                    uuid = asset["id"]
-                except IndexError:
-                    uuid = " - - - - - - - "
-                try:
-                    fqdn = asset["fqdn"][0]
-                except IndexError:
-                    fqdn = " - - - - - - - "
-
-                try:
-                    ipv4 = asset["ipv4"][0]
-                except IndexError:
-                    ipv4 = " - - - - - - - "
-
-                for source in asset["sources"]:
-                    sources += ", {}".format(str(source['name']))
-
-                click.echo("{:16} {:65} {:40} {:6} {}".format(ipv4, fqdn, uuid, exposure_score, sources[1:]))
-
-            click.echo("\nTotal: {}".format(count))
+            click.echo("\nTotal: {}\n\n".format(len(asset_data)))
         except AttributeError:
             click.echo("\nCheck your permissions or your API keys\n")
 
@@ -393,37 +369,6 @@ def categories():
             category_name = cats['name']
             category_uuid = cats['uuid']
             click.echo("{:31s} {}".format(str(category_name), str(category_uuid)))
-        click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
-
-
-@display.command(help="Display Assets discovered by the Tenable Cloud Connectors")
-def cloud():
-    try:
-        click.echo("\n{:13s} {:15s} {:50s} {:40} {}".format("Source", "IP", "FQDN", "UUID", "First seen"))
-        click.echo("-" * 150)
-
-        for cloud_assets in tio.workbenches.assets(('sources', 'set-has', 'AWS'), ('sources', 'set-has', 'GCP'),
-                                                   ('sources', 'set-has', 'AZURE'), filter_type="or", age=90):
-            for source in cloud_assets['sources']:
-                if source['name'] != 'NESSUS_SCAN':
-
-                    try:
-                        asset_ip = cloud_assets['ipv4'][0]
-                    except IndexError:
-                        asset_ip = "No Ip found"
-
-                    uuid = cloud_assets['id']
-
-                    try:
-                        asset_fqdn = cloud_assets['fqdn'][0]
-                    except IndexError:
-                        asset_fqdn = "NO FQDN found"
-
-                    click.echo("{:13s} {:15s} {:50s} {:40s} {}".format(str(source['name']), str(asset_ip),
-                                                                       str(asset_fqdn), str(uuid),
-                                                                       str(source['first_seen'])))
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
