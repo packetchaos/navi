@@ -62,7 +62,7 @@ def cve(cve_id):
         click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
 
     else:
-        click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
+        click.echo("\n{:8s} {:>8} {:16s} {:40s} {:38s} {}".format("Plugin", "EPSS", "IP Address", "FQDN", "UUID", "Network UUID"))
         click.echo("-" * 150)
 
         plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, plugin_id, network from vulns LEFT JOIN "
@@ -73,7 +73,14 @@ def cve(cve_id):
                 fqdn = row[2]
             except:
                 fqdn = " "
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[3], row[0], textwrap.shorten(fqdn, 46), row[1], row[4]))
+
+            try:
+                epss_data_raw = db_query("select epss_value from epss where cve='{}'".format(cve_id))
+                epss_data = str(epss_data_raw[0][0])
+            except:
+                epss_data = 'No EPSS'
+
+            click.echo("{:8s} {:>8} {:16s} {:40s} {:38s} {} ".format(row[3], epss_data, row[0], textwrap.shorten(fqdn, 40), row[1], row[4]))
 
         click.echo()
 

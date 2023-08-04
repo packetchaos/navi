@@ -35,6 +35,28 @@ def plugin_by_ip(ipaddr, plugin):
                 click.echo("CVEs attached to this plugin")
                 click.echo("-" * 80)
                 click.echo("{}\n".format(plug[1]))
+
+                total = 0
+                epss_list = []
+                try:
+                    for cve in eval(plug[1]):
+                        database = r"navi.db"
+                        conn = new_db_connection(database)
+                        with conn:
+                            cur = conn.cursor()
+
+                            cur.execute("select epss_value from epss where cve='{}'".format(cve))
+                            epss_value = cur.fetchall()
+                            epss_list.append(eval(epss_value[0][0]))
+                            total += total + eval(epss_value[0][0])
+
+                    average = total/len(epss_list)
+                    top = max(epss_list)
+                    click.echo("{:>15} {:>15} {:>15}".format("EPSS Average", "EPSS Max", "EPSS Total"))
+                    click.echo("-" * 80)
+                    click.echo("{:>15} {:>15} {:>15}".format(average, top, total))
+                except:
+                    pass
         click.echo()
     except IndexError:
         click.echo("No information found for this plugin")

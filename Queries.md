@@ -161,3 +161,5 @@ Vulnerability Total
 
     navi find query "select count(*) from vulns where severity !='info';"
 
+### Export Vuln data along EPSS data by cve
+    navi export query "select e.epss_value, v.* from vulns v inner JOIN epss e ON v.cves LIKE '%'|| e.cve ||'%' where v.cves LIKE '%CVE-1999-0632%';"
