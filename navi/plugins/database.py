@@ -24,23 +24,27 @@ def create_table(conn, table_information):
 
 
 def db_query(statement):
-    # start = time.time()
-    database = r"navi.db"
-    query_conn = new_db_connection(database)
-    with query_conn:
-        cur = query_conn.cursor()
-        cur.execute('pragma journal_mode=wal;')
-        cur.execute('pragma cache_size=-10000;')
-        cur.execute('PRAGMA synchronous = OFF')
-        cur.execute('pragma threads=4')
-        cur.execute(statement)
+    try:
+        # start = time.time()
+        database = r"navi.db"
+        query_conn = new_db_connection(database)
+        with query_conn:
+            cur = query_conn.cursor()
+            cur.execute('pragma journal_mode=wal;')
+            cur.execute('pragma cache_size=-10000;')
+            cur.execute('PRAGMA synchronous = OFF')
+            cur.execute('pragma threads=4')
+            cur.execute(statement)
 
-        data = cur.fetchall()
-        # end = time.time()
-        # total = end - start
-    query_conn.close()
-    # click.echo("Sql Query took: {} seconds".format(total))
-    return data
+            data = cur.fetchall()
+            # end = time.time()
+            # total = end - start
+        query_conn.close()
+        # click.echo("Sql Query took: {} seconds".format(total))
+        return data
+    except Error as e:
+        click.echo("\nRun navi update...Got a DB issue\n\nHere is the error:\n{}\n\n".format(e))
+        exit()
 
 
 def get_last_update_id():
