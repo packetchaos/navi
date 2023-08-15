@@ -372,8 +372,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
             offset = 0
             total = 0
+            limit = 5000
             while offset <= total:
-                querystring = {"limit": "5000", "offset": offset}
+                querystring = {"limit": limit, "offset": offset}
                 group_data = request_data('GET', '/scanners/1/agent-groups', params=querystring)
 
                 for agent_group in group_data['groups']:
@@ -394,7 +395,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                                 tag_list.append(tag_uuid[0][0])
                             except IndexError:
                                 pass
-                offset = offset + 5000
+                offset += 5000
+                limit += 5000
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
 
