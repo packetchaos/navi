@@ -149,6 +149,9 @@ def parse_19506_from_file(filename, scanid, histid):
                         # the 19506 plugin filled with an error indicating the need for an upgrade
                         assets_skipped += 1
                         pass
+                    except ValueError:
+                        pass
+                        assets_skipped += 1
                 else:
                     # Print plugin output to identify an unknown plugin structure/response
                     click.echo(plugin_output)
@@ -339,7 +342,7 @@ def evaluate_a_scan(scanid, histid):
                 plugin_length = len(parsed_output)
 
                 # grab the scan duration- second to the last variable
-                duration = parsed_output[plugin_length - 2]
+                duration = parsed_output[plugin_length - 3]
 
                 # Split at the colon to grab the numerical value
                 seconds = duration.split(" : ")
