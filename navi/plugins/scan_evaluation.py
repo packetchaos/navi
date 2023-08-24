@@ -290,7 +290,7 @@ def evaluate_a_scan(scanid, histid):
         scan_policy_dict = {}
         scanner_dict = {}
         scan_name_dict = {}
-
+        scanner_list = []
         # Open a CSV for export
         with open('evaluate.csv', mode='w', encoding='utf-8', newline="") as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
@@ -331,49 +331,42 @@ def evaluate_a_scan(scanid, histid):
 
             # Loop through each plugin 19506 and Parse data from it
             for vulns in plugin_data:
-
+                plugin_dict = {}
                 # Output is the second item in the tuple from the DB
                 plugin_output = vulns[1]
 
                 # split the output by return
                 parsed_output = plugin_output.split("\n")
 
-                # grab the length so we can grab the seconds
-                plugin_length = len(parsed_output)
-
-                # grab the scan duration- second to the last variable
-                duration = parsed_output[plugin_length - 3]
-
-                # Split at the colon to grab the numerical value
-                seconds = duration.split(" : ")
-
-                try:
-                    # split to remove "secs"
-                    number = seconds[1].split(" ")
-                except:
-                    # No plugin Data for this asset
-                    pass
-
-                # grab the number for our minute calculation
-                final_number = number[0]
-
-                if final_number != 'unknown':
+                for info_line in parsed_output:
                     try:
-                        # convert seconds into minutes
-                        minutes = int(final_number) / 60
+                        new_split = info_line.split(" : ")
+                        plugin_dict[new_split[0]] = new_split[1]
 
+                    except:
+                        pass
+
+                intial_seconds = plugin_dict['Scan duration']
+
+                # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                if intial_seconds != 'unknown':
+                    try:
+                        # Numerical value in seconds parsed from the plugin
+                        seconds = int(intial_seconds[:-3])
+
+                        minutes = seconds / 60
                         # Grab data pair and split it at the colon and grab the values
-                        scan_name = parsed_output[9].split(" : ")[1]
-                        scan_policy = parsed_output[10].split(" : ")[1]
-                        scanner_ip = parsed_output[11].split(" : ")[1]
-                        scan_time = parsed_output[plugin_length - 3].split(" : ")[1]
-                        max_hosts = parsed_output[plugin_length- 8].split(" : ")[1]
-                        max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
-
-                        if "no" not in parsed_output[14].split(" : ")[1]:
-                            rtt = parsed_output[14].split(" : ")[1]
-                        else:
-                            rtt = parsed_output[12].split(" : ")[1]
+                        scan_name = plugin_dict['Scan name']
+                        scan_policy = plugin_dict['Scan policy used']
+                        scanner_ip = plugin_dict['Scanner IP']
+                        # Enumerate all scanners for per/scanner stats
+                        if scanner_ip not in scanner_list:
+                            scanner_list.append(scanner_ip)
+                        max_hosts = plugin_dict['Max hosts']
+                        max_checks = plugin_dict['Max checks']
+                        # Grabbing the start time from the plugin
+                        start_time = plugin_dict['Scan Start Date']
+                        rtt = plugin_dict['Ping RTT']
 
                         try:
                             # Grab the last line in the Trace route Plugin output
@@ -382,7 +375,7 @@ def evaluate_a_scan(scanid, histid):
                         except IndexError:
                             hopcount = "Unknown"
 
-                        parsed_data_organized = [vulns[0], scan_name, scan_policy, scanner_ip, scan_time, max_checks, max_hosts, minutes, rtt, hopcount]
+                        parsed_data_organized = [vulns[0], scan_name, scan_policy, scanner_ip, start_time, max_checks, max_hosts, minutes, rtt, hopcount]
 
                         agent_writer.writerow(parsed_data_organized)
 

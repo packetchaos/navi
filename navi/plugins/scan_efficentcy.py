@@ -10,43 +10,41 @@ tio = tenb_connection()
 
 
 def parse_19506(plugin_output):
+    plugin_dict = {}
+    scanner_list = []
     """
             Parse 19506 output and return a list of data
     """
     # split the output by return
     parsed_output = plugin_output.split("\n")
 
-    # grab the length so we can grab the seconds
-    plugin_length = len(parsed_output)
+    for info_line in parsed_output:
+        try:
+            new_split = info_line.split(" : ")
+            plugin_dict[new_split[0]] = new_split[1]
 
-    # grab the scan duration- second to the last variable
-    duration = parsed_output[plugin_length - 2]
-
-    # Split at the colon to grab the numerical value
-    intial_seconds = duration.split(" : ")
-
-    # split to remove "secs"
-    number = intial_seconds[1].split(" ")
-
-    # grab the number for our calculation
-    final_number = number[0]
+        except:
+            pass
+    intial_seconds = plugin_dict['Scan duration'][:-3]
 
     # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
-    if final_number != 'unknown':
+    if intial_seconds != 'unknown':
         try:
             # Numerical value in seconds parsed from the plugin
-            seconds = int(final_number)
+            seconds = int(intial_seconds)
 
             # Grab data pair and split it at the colon and grab the values
-            scan_name = parsed_output[9].split(" : ")[1]
-            scan_policy = parsed_output[10].split(" : ")[1]
-            scanner_ip = parsed_output[11].split(" : ")[1]
-            max_hosts = parsed_output[plugin_length - 8].split(" : ")[1]
-            max_checks = parsed_output[plugin_length - 7].split(" : ")[1]
-
+            scan_name = plugin_dict['Scan name']
+            scan_policy = plugin_dict['Scan policy used']
+            scanner_ip = plugin_dict['Scanner IP']
+            # Enumerate all scanners for per/scanner stats
+            if scanner_ip not in scanner_list:
+                scanner_list.append(scanner_ip)
+            max_hosts = plugin_dict['Max hosts']
+            max_checks = plugin_dict['Max checks']
             # Grabbing the start time from the plugin
-            start_time = parsed_output[plugin_length - 3].split(" : ")[1]
-            output_list = [scan_name, scan_policy, scanner_ip, max_hosts, max_checks, start_time, seconds]
+            start_time = plugin_dict['Scan Start Date']
+            output_list = [scan_name, scan_policy, scanner_list, max_hosts, max_checks, start_time, seconds]
 
             return output_list
         except IndexError:
