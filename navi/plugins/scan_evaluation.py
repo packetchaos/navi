@@ -74,7 +74,7 @@ def parse_19506_from_file(filename, scanid, histid):
 
             try:
                 try:
-                    intial_seconds = plugin_dict['Scan duration'][:-3]
+                    intial_seconds = plugin_dict['Scan duration']
                 except KeyError:
                     intial_seconds = 'unknown'
 
@@ -83,7 +83,7 @@ def parse_19506_from_file(filename, scanid, histid):
                     try:
                         # Numerical value in seconds parsed from the plugin
                         try:
-                            seconds = int(intial_seconds)
+                            seconds = int(intial_seconds[:-3])
                         except ValueError:
                             seconds = 0
                         # Grab data pair and split it at the colon and grab the values
@@ -366,7 +366,7 @@ def evaluate_a_scan(scanid, histid):
                     except:
                         pass
                 try:
-                    intial_seconds = plugin_dict['Scan duration'][:-3]
+                    intial_seconds = plugin_dict['Scan duration']
                 except KeyError:
                     intial_seconds = 'unknown'
 
@@ -375,7 +375,7 @@ def evaluate_a_scan(scanid, histid):
                     try:
                         # Numerical value in seconds parsed from the plugin
                         try:
-                            seconds = int(intial_seconds)
+                            seconds = int(intial_seconds[:-3])
                             minutes = seconds / 60
                         except ValueError:
                             minutes = 0

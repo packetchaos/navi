@@ -26,7 +26,7 @@ def parse_19506(plugin_output):
         except:
             pass
     try:
-        intial_seconds = plugin_dict['Scan duration'][:-3]
+        intial_seconds = plugin_dict['Scan duration']
     except KeyError:
         intial_seconds = 'unknown'
 
@@ -35,7 +35,7 @@ def parse_19506(plugin_output):
         try:
             try:
                 # Numerical value in seconds parsed from the plugin
-                seconds = int(intial_seconds)
+                seconds = int(intial_seconds[:-3])
             except ValueError:
                 seconds = 0
             try:
