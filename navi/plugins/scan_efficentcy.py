@@ -33,11 +33,11 @@ def parse_19506(plugin_output):
         # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
     if intial_seconds != 'unknown':
         try:
-            # Numerical value in seconds parsed from the plugin
-            seconds = int(intial_seconds)
-
-            minutes = seconds / 60
-            # Grab data pair and split it at the colon and grab the values
+            try:
+                # Numerical value in seconds parsed from the plugin
+                seconds = int(intial_seconds)
+            except ValueError:
+                seconds = 0
             try:
                 scan_name = plugin_dict['Scan name']
             except KeyError:
