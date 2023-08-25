@@ -26,6 +26,20 @@ def get_scanners():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
+def compare_dates(given_date):
+    today = arrow.now()
+    try:
+        given_date = arrow.get(given_date)
+        days_difference = (today - given_date).days
+
+        if days_difference > 35:
+            return "no"
+        else:
+            return "yes"
+    except ValueError:
+        print("Invalid date format")
+
+
 @click.group(help="Display information found in Tenable.io")
 def display():
     pass
@@ -91,19 +105,32 @@ def running():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@display.command(help="Display all Scans")
-def scans():
+@display.command(help="Display Scans")
+@click.option("-a", is_flag=True, help="Display all scans")
+def scans(a):
     try:
         click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
         click.echo("-" * 150)
 
-        for scan in tio.scans.list():
-            try:
-                click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
-                                                            str(scan['uuid'])))
-            except KeyError:
-                click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
-                                                            "No UUID"))
+        if a:
+            for scan in tio.scans.list():
+                    try:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                                    str(scan['uuid'])))
+                    except KeyError:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                                    "No UUID"))
+        else:
+            for scan in tio.scans.list():
+                if str(compare_dates(scan['last_modification_date'])) == 'yes':
+                    try:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                                    str(scan['uuid'])))
+                    except KeyError:
+                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                                                                    "No UUID"))
+                else:
+                    pass
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
@@ -160,7 +187,7 @@ def assets(tag):
             asset_data = db_query("select ip_address, fqdn, uuid, aes from assets;")
             for asset in asset_data:
 
-                click.echo("{:16} {:65} {:40} {:6} ".format(asset[0], asset[1], asset[2], asset[3]))
+                click.echo("{:16} {:65} {:40} {:6} ".format(asset[0], asset[1], asset[2], str(asset[3])))
 
             click.echo("\nTotal: {}\n\n".format(len(asset_data)))
         except AttributeError:

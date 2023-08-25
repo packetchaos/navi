@@ -151,34 +151,37 @@ def details(scan_uuid, plugin):
         click.echo()
 
     else:
-        detail_report_data = db_query("select * from plugins where scan_uuid='{}'".format(scan_uuid))
-        detail_high = []
-        detail_meduim = []
-        detail_low = []
-        click.echo("-" * 40)
-        click.echo("\n{:10s} {:60s} {:10}".format("Plugin", "Plugin Name", "Severity"))
-        click.echo("-" * 150)
-        for detail_finding in detail_report_data:
-            detail_plugin_id = detail_finding[8]
-            detail_risk = detail_finding[14]
-            plugin_name = detail_finding[1]
+        try:
+            detail_report_data = db_query("select * from plugins where scan_uuid='{}'".format(scan_uuid))
+            detail_high = []
+            detail_meduim = []
+            detail_low = []
+            click.echo("-" * 40)
+            click.echo("\n{:10s} {:60s} {:10}".format("Plugin", "Plugin Name", "Severity"))
+            click.echo("-" * 150)
+            for detail_finding in detail_report_data:
+                detail_plugin_id = detail_finding[8]
+                detail_risk = detail_finding[14]
+                plugin_name = detail_finding[1]
 
-            if detail_risk == 'high':
-                detail_high.append(detail_plugin_id)
-            elif detail_risk == 'medium':
-                detail_meduim.append(detail_plugin_id)
-            elif detail_risk == 'low':
-                detail_low.append(detail_plugin_id)
+                if detail_risk == 'high':
+                    detail_high.append(detail_plugin_id)
+                elif detail_risk == 'medium':
+                    detail_meduim.append(detail_plugin_id)
+                elif detail_risk == 'low':
+                    detail_low.append(detail_plugin_id)
 
-            click.echo("{:10s} {:60s} {:10} ".format(str(detail_plugin_id), textwrap.shorten(str(plugin_name), width=60),
-                                                 str(detail_risk)))
+                click.echo("{:10s} {:60s} {:10} ".format(str(detail_plugin_id), textwrap.shorten(str(plugin_name), width=60),
+                                                     str(detail_risk)))
 
-        click.echo("\nSeverity Counts")
-        click.echo("-" * 20)
-        click.echo("High: {}".format(len(detail_high)))
-        click.echo("Medium: {}".format(len(detail_meduim)))
-        click.echo("Low: {}".format(len(detail_low)))
-        click.echo()
+            click.echo("\nSeverity Counts")
+            click.echo("-" * 20)
+            click.echo("High: {}".format(len(detail_high)))
+            click.echo("Medium: {}".format(len(detail_meduim)))
+            click.echo("Low: {}".format(len(detail_low)))
+            click.echo()
+        except:
+            click.echo("\nRun navi update was to populate it with data.  This command requires it.")
 
 
 @was.command(help="Scan a Web Application Target")

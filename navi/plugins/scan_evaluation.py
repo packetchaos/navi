@@ -12,10 +12,12 @@ tio = tenb_connection()
 
 def grab_hop_count(uuid):
     # grab the output of 10287 - Trace Route
-    hop_count_data = db_query("select output from vulns where asset_uuid='{}' and plugin_id='10287';".format(uuid))
-
-    # Send the raw data back
-    return hop_count_data
+    try:
+        hop_count_data = db_query("select output from vulns where asset_uuid='{}' and plugin_id='10287';".format(uuid))
+        # Send the raw data back
+        return hop_count_data
+    except:
+        return "none"
 
 
 def parse_19506_from_file(filename, scanid, histid):
@@ -71,33 +73,49 @@ def parse_19506_from_file(filename, scanid, histid):
                     pass
 
             try:
-                # Split at the colon to grab the numerical value
-                intial_seconds = plugin_dict['Scan duration']
+                try:
+                    intial_seconds = plugin_dict['Scan duration'][:-3]
+                except KeyError:
+                    intial_seconds = 'unknown'
 
                 # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
                 if intial_seconds != 'unknown':
-
                     try:
-                        # split to remove "secs"
-                        number = intial_seconds.split(" ")
-
-                        # grab the number for our minute calculation
-                        final_number = number[0]
-
                         # Numerical value in seconds parsed from the plugin
-                        seconds = int(final_number)
+                        seconds = int(intial_seconds)
 
+                        minutes = seconds / 60
                         # Grab data pair and split it at the colon and grab the values
-                        scan_name = plugin_dict['Scan name']
-                        scan_policy = plugin_dict['Scan policy used']
-                        scanner_ip = plugin_dict['Scanner IP']
-                        # Enumerate all scanners for per/scanner stats
-                        if scanner_ip not in scanner_list:
-                            scanner_list.append(scanner_ip)
-                        max_hosts = plugin_dict['Max hosts']
-                        max_checks = plugin_dict['Max checks']
+                        try:
+                            scan_name = plugin_dict['Scan name']
+                        except KeyError:
+                            scan_name = "none"
+                        try:
+                            scan_policy = plugin_dict['Scan policy used']
+                        except KeyError:
+                            scan_policy = "none"
+                        try:
+                            scanner_ip = plugin_dict['Scanner IP']
+                            # Enumerate all scanners for per/scanner stats
+                            if scanner_ip not in scanner_list:
+                                scanner_list.append(scanner_ip)
+                        except KeyError:
+                            scanner_list = "none"
+
+                        try:
+                            max_hosts = plugin_dict['Max hosts']
+                        except KeyError:
+                            max_hosts = "none"
+                        try:
+                            max_checks = plugin_dict['Max checks']
+                        except KeyError:
+                            max_checks = "none"
+
                         # Grabbing the start time from the plugin
-                        scan_time = plugin_dict['Scan Start Date']
+                        try:
+                            start_time = plugin_dict['Scan Start Date']
+                        except KeyError:
+                            start_time = "none"
 
                         # Some timezone abbreviations are not parseable with strptime.
                         # removing the timezone for those we can't parse
@@ -105,14 +123,14 @@ def parse_19506_from_file(filename, scanid, histid):
                             # Set the pattern to convert into epoch
                             pattern = '%Y/%m/%d %H:%M %z'
                             # Convert to Epoch
-                            plugin_scan_time_epoch = int(time.mktime(time.strptime(scan_time, pattern)))
+                            plugin_scan_time_epoch = int(time.mktime(time.strptime(start_time, pattern)))
 
                         except ValueError:
 
                             # timezone couldn't be used. lets remove it and calculate what we can
                             pattern = '%Y/%m/%d %H:%M'
                             # Split the time to remove the timezone 2-6 chars
-                            time_less_timezone = scan_time.split(" ")
+                            time_less_timezone = start_time.split(" ")
                             # merge the data and time for calculation
                             new_time = "{} {}".format(time_less_timezone[0], time_less_timezone[1])
                             # Convert to Epoch
@@ -140,7 +158,7 @@ def parse_19506_from_file(filename, scanid, histid):
                         indexing_time = total_duration - seconds
 
                         # All assets and 19506 seconds in a tuple
-                        total_assets_scanned_list.append((asset_uuid, row['Host Start'], scan_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
+                        total_assets_scanned_list.append((asset_uuid, row['Host Start'], start_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
 
                         # pprint.pprint(total_assets_scanned_list)
 
@@ -229,7 +247,7 @@ def parse_19506_from_file(filename, scanid, histid):
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
 
-    with open("13-parsing.csv", mode='w', encoding='utf-8', newline="") as csv_file:
+    with open("{}-parsing.csv".format(scanid), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
         header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration", "Total_duration",  "Platform_end", "IP Address"]
 
@@ -246,10 +264,10 @@ def get_last_history_id(scanid):
             if scans['status'] == 'completed':
                 return scans['id']
             else:
-                click.echo("\nNo completed Scan to evaluate\n")
+                click.echo("\nNo completed Scan to evaluate or the scan is older than 35 days\n")
                 exit()
         else:
-            click.echo("\nNo completed Scan to evaluate\n")
+            click.echo("\nNo completed Scan to evaluate or the scan is older than 35 days\n")
             exit()
 
 
@@ -332,6 +350,7 @@ def evaluate_a_scan(scanid, histid):
             # Loop through each plugin 19506 and Parse data from it
             for vulns in plugin_data:
                 plugin_dict = {}
+
                 # Output is the second item in the tuple from the DB
                 plugin_output = vulns[1]
 
@@ -345,28 +364,53 @@ def evaluate_a_scan(scanid, histid):
 
                     except:
                         pass
-
-                intial_seconds = plugin_dict['Scan duration']
+                try:
+                    intial_seconds = plugin_dict['Scan duration'][:-3]
+                except KeyError:
+                    intial_seconds = 'unknown'
 
                 # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
                 if intial_seconds != 'unknown':
                     try:
                         # Numerical value in seconds parsed from the plugin
-                        seconds = int(intial_seconds[:-3])
+                        seconds = int(intial_seconds)
 
                         minutes = seconds / 60
                         # Grab data pair and split it at the colon and grab the values
-                        scan_name = plugin_dict['Scan name']
-                        scan_policy = plugin_dict['Scan policy used']
-                        scanner_ip = plugin_dict['Scanner IP']
-                        # Enumerate all scanners for per/scanner stats
-                        if scanner_ip not in scanner_list:
-                            scanner_list.append(scanner_ip)
-                        max_hosts = plugin_dict['Max hosts']
-                        max_checks = plugin_dict['Max checks']
+                        try:
+                            scan_name = plugin_dict['Scan name']
+                        except KeyError:
+                            scan_name = "none"
+                        try:
+                            scan_policy = plugin_dict['Scan policy used']
+                        except KeyError:
+                            scan_policy = "none"
+                        try:
+                            scanner_ip = plugin_dict['Scanner IP']
+                            # Enumerate all scanners for per/scanner stats
+                            if scanner_ip not in scanner_list:
+                                scanner_list.append(scanner_ip)
+                        except KeyError:
+                            scanner_list = "none"
+                            scanner_ip= "none"
+                        try:
+                            max_hosts = plugin_dict['Max hosts']
+                        except KeyError:
+                            max_hosts = "none"
+                        try:
+                            max_checks = plugin_dict['Max checks']
+                        except KeyError:
+                            max_checks = "none"
+
                         # Grabbing the start time from the plugin
-                        start_time = plugin_dict['Scan Start Date']
-                        rtt = plugin_dict['Ping RTT']
+                        try:
+                            start_time = plugin_dict['Scan Start Date']
+                        except KeyError:
+                            start_time = "none"
+                        try:
+                            rtt = plugin_dict['Ping RTT']
+                        except KeyError:
+                            rtt = "none"
 
                         try:
                             # Grab the last line in the Trace route Plugin output

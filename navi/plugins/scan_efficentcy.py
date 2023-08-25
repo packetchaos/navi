@@ -25,25 +25,53 @@ def parse_19506(plugin_output):
 
         except:
             pass
-    intial_seconds = plugin_dict['Scan duration'][:-3]
+    try:
+        intial_seconds = plugin_dict['Scan duration'][:-3]
+    except KeyError:
+        intial_seconds = 'unknown'
 
-    # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+        # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
     if intial_seconds != 'unknown':
         try:
             # Numerical value in seconds parsed from the plugin
             seconds = int(intial_seconds)
 
+            minutes = seconds / 60
             # Grab data pair and split it at the colon and grab the values
-            scan_name = plugin_dict['Scan name']
-            scan_policy = plugin_dict['Scan policy used']
-            scanner_ip = plugin_dict['Scanner IP']
-            # Enumerate all scanners for per/scanner stats
-            if scanner_ip not in scanner_list:
-                scanner_list.append(scanner_ip)
-            max_hosts = plugin_dict['Max hosts']
-            max_checks = plugin_dict['Max checks']
+            try:
+                scan_name = plugin_dict['Scan name']
+            except KeyError:
+                scan_name = "none"
+            try:
+                scan_policy = plugin_dict['Scan policy used']
+            except KeyError:
+                scan_policy = "none"
+            try:
+                scanner_ip = plugin_dict['Scanner IP']
+                # Enumerate all scanners for per/scanner stats
+                if scanner_ip not in scanner_list:
+                    scanner_list.append(scanner_ip)
+            except KeyError:
+                scanner_list = "none"
+            try:
+                max_hosts = plugin_dict['Max hosts']
+            except KeyError:
+                max_hosts = "none"
+            try:
+                max_checks = plugin_dict['Max checks']
+            except KeyError:
+                max_checks = "none"
+
             # Grabbing the start time from the plugin
-            start_time = plugin_dict['Scan Start Date']
+            try:
+                start_time = plugin_dict['Scan Start Date']
+            except KeyError:
+                start_time = "none"
+            try:
+                rtt = plugin_dict['Ping RTT']
+            except KeyError:
+                rtt = "none"
+
             output_list = [scan_name, scan_policy, scanner_list, max_hosts, max_checks, start_time, seconds]
 
             return output_list
