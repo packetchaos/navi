@@ -413,37 +413,41 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             data = cur.fetchall()
             try:
                 for vulns in data:
-
-                    output = vulns[2]
+                    plugin_dict = {}
+                    plugin_output = vulns[2]
 
                     # split the output by return
-                    parsed_output = output.split("\n")
+                    parsed_output = plugin_output.split("\n")
 
-                    # grab the length so we can grab the seconds
-                    length = len(parsed_output)
-
-                    # grab the scan duration- second to the last variable
-                    duration = parsed_output[length - 2]
-
-                    # Split at the colon to grab the numerical value
-                    seconds = duration.split(" : ")
-
-                    # split to remove "secs"
-                    number = seconds[1].split(" ")
-
-                    # grab the number for our minute calculation
-                    final_number = number[0]
-
-                    # convert seconds into minutes
-                    minutes = int(final_number) / 60
-
-                    # grab assets that match the criteria
-                    if minutes > int(scantime):
+                    for info_line in parsed_output:
                         try:
-                            ip_list = ip_list + "," + str(vulns[0])
-                            tag_list.append(vulns[1])
-                        except ValueError:
+                            new_split = info_line.split(" : ")
+                            plugin_dict[new_split[0]] = new_split[1]
+
+                        except:
                             pass
+                    try:
+                        intial_seconds = plugin_dict['Scan duration']
+                    except KeyError:
+                        intial_seconds = 'unknown'
+
+                    # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                    if intial_seconds != 'unknown':
+
+                        # Numerical value in seconds parsed from the plugin
+                        try:
+                            seconds = int(intial_seconds[:-3])
+                            minutes = seconds / 60
+                        except ValueError:
+                            minutes = 0
+
+                        # grab assets that match the criteria
+                        if minutes > int(scantime):
+                            try:
+                                ip_list = ip_list + "," + str(vulns[0])
+                                tag_list.append(vulns[1])
+                            except ValueError:
+                                pass
                 click.echo()
             except ValueError:
                 pass
