@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-7.3.16"
+    return "navi-7.3.17"
 
 
 def tenb_connection():
