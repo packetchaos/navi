@@ -5,10 +5,14 @@ from json import JSONDecodeError
 from .database import new_db_connection
 from tenable.io import TenableIO
 import time
+import urllib3
+
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def navi_version():
-    return "navi-7.3.17"
+    return "navi-7.3.17.1"
 
 
 def tenb_connection():
@@ -28,10 +32,10 @@ def tenb_connection():
                 cur.execute("SELECT * from url;")
                 url_rows = cur.fetchall()
                 url = url_rows[0][1]
-                tio = TenableIO(access_key, secret_key, url=url, vendor='Casey Reid', product='navi', build=navi_version())
+                tio = TenableIO(access_key, secret_key, url=url, ssl_verify=False, vendor='Casey Reid', product='navi', build=navi_version())
                 return tio
             except Error:
-                tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
+                tio = TenableIO(access_key, secret_key, vendor='Casey Reid', ssl_verify=False, product='navi', build=navi_version())
                 return tio
 
     except Error:
@@ -87,7 +91,7 @@ def request_no_response(method, url_mod, **kwargs):
         payload = None
 
     try:
-        r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
+        r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=False)
         if r.status_code == 200:
             click.echo("Success!\n")
         elif r.status_code == 404:
@@ -125,7 +129,7 @@ def request_data(method, url_mod, **kwargs):
         # Small pause between retries
         time.sleep(2.5)
         try:
-            r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
+            r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=False)
             if r.status_code == 200:
                 return r.json()
 
