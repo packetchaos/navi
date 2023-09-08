@@ -49,7 +49,7 @@ def was_reporter(days):
 
 
 @deploy.command(help="Deploy Navi Scantime Tagging solution")
-def scantags():
+def scan_tags():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/scantags".format(a,s)
     if click.confirm('This command downloads the packetchaos/scantags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
@@ -64,7 +64,7 @@ def scantags():
 @click.option('--trigger', default=None, help="The Scan ID you want to use as the the Trigger Scan, or the first scan in the chain.")
 @click.option('--fire', default=None, help="The scan ID you want to use for your Vuln Scan")
 @click.option('--targets', default=None, help='The subnet(s) you want to run the discovery scan on.')
-def discoverythenvulnscan(trigger, fire, targets):
+def discovery_then_vulnscan(trigger, fire, targets):
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} -e targets={} packetchaos/discovery_then_vulnscan".format(a, s, trigger, fire, targets)
     if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
@@ -139,10 +139,22 @@ def all_tags():
 
 @deploy.command(help="Deploy the User Tags solution")
 @click.option('--user', required=True, help="The Scan policy ID you want to use as the the Trigger Scan, or the first scan in the chain.")
-def usertags(user):
+def user_tags(user):
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} -e user={} packetchaos/usertags".format(a, s, user)
     if click.confirm('This command downloads the packetchaos/usertags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+        try:
+            os.system(command)
+
+        except os.error:
+            click.echo("You might not have Docker installed")
+
+
+@deploy.command(help="Deploy Navi Mitre Tags Docker solution")
+def mitre_tags():
+    a, s = grab_keys()
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/mitre_tags".format(a,s)
+    if click.confirm('This command downloads the packetchaos/mitre_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
