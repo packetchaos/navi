@@ -30,7 +30,7 @@ from .exclusions import exclude
 from .sgroup import sgroup
 from .push import push
 from .ssh import ssh
-#from .automate import automate
+#from .automation import automate
 
 
 def plugin_loader(group):

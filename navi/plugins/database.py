@@ -43,7 +43,7 @@ def db_query(statement):
         # click.echo("Sql Query took: {} seconds".format(total))
         return data
     except Error as e:
-        click.echo("\nRun navi update...Got a DB issue\n\nHere is the error:\n{}\n\n".format(e))
+        #click.echo("\nRun navi update...Got a DB issue\n\nHere is the error:\n{}\n\n".format(e))
         exit()
 
 
