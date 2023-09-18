@@ -115,12 +115,12 @@ def scan_hosts(scan_id):
         try:
             click.echo("\nHosts Found by Scan ID : {}\n".format(scan_id))
             click.echo(
-                "{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s} ".format("IP Address", "UUID", "Score", "Critical",
+                "{:60s} {:40s} {:10} {:10s} {:10s} {:10s} {:10s} ".format("Host Name", "UUID", "Score", "Critical",
                                                                           "High", "Medium", "Low"))
             click.echo("-" * 150)
             for host in data['hosts']:
                 host_list.append(host)
-                click.echo("{:20s} {:45s} {:10} {:10s} {:10s} {:10s} {:10s}".format(host['hostname'], str(host['uuid']),
+                click.echo("{:60s} {:40s} {:10} {:10s} {:10s} {:10s} {:10s}".format(textwrap.shorten(host['hostname'], width=60), str(host['uuid']),
                                                                                     str(host['score']),
                                                                                     str(host['critical']),
                                                                                     str(host['high']),

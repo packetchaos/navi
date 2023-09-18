@@ -109,25 +109,25 @@ def running():
 @click.option("-a", is_flag=True, help="Display all scans")
 def scans(a):
     try:
-        click.echo("\n{:60s} {:10s} {:30s} {}".format("Scan Name", "Scan ID", "Status", "UUID"))
+        click.echo("\n{:80s} {:5s} {:10s} {:40}".format("Scan Name", "ID", "Status", "UUID"))
         click.echo("-" * 150)
 
         if a:
             for scan in tio.scans.list():
                     try:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
                                                                     str(scan['uuid'])))
                     except KeyError:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
                                                                     "No UUID"))
         else:
             for scan in tio.scans.list():
                 if str(compare_dates(scan['last_modification_date'])) == 'yes':
                     try:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
                                                                     str(scan['uuid'])))
                     except KeyError:
-                        click.echo("{:60s} {:10s} {:30s} {}".format(str(scan['name']), str(scan['id']), str(scan['status']),
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
                                                                     "No UUID"))
                 else:
                     pass
@@ -166,7 +166,7 @@ def assets(tag):
         data = db_query("select ip_address, fqdn, aes, acr from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(tag))
 
         click.echo("\nBelow are the assets that are apart of the Tag")
-        click.echo("\n{:36} {:65} {:6} {}".format("IP Address", "FQDN", "AES", "ACR"))
+        click.echo("\n{:16} {:80} {:6} {}".format("IP Address", "FQDN", "AES", "ACR"))
         click.echo("-" * 150)
         try:
             for asset in data:
@@ -175,19 +175,19 @@ def assets(tag):
                 exposure_score = str(asset[2])
                 acr = str(asset[3])
 
-                click.echo("{:36} {:65} {:6} {}".format(ipv4, fqdn, exposure_score, acr))
+                click.echo("{:36} {:80} {:6} {}".format(ipv4, textwrap.shorten(fqdn, width=65), exposure_score, acr))
             click.echo()
         except TypeError:
             click.echo("\nThe Tag has no assets or the tag hasn't finished being processed by T.io\n")
     else:
         try:
             click.echo("\nBelow are the assets found in the last 30 days")
-            click.echo("\n{:16} {:65} {:40} {:6}".format("IP Address", "FQDN", "UUID", "AES"))
+            click.echo("\n{:16} {:80} {:40} {:6}".format("IP Address", "FQDN", "UUID", "AES"))
             click.echo("-" * 150)
             asset_data = db_query("select ip_address, fqdn, uuid, aes from assets;")
             for asset in asset_data:
 
-                click.echo("{:16} {:65} {:40} {:6} ".format(asset[0], asset[1], asset[2], str(asset[3])))
+                click.echo("{:16} {:80} {:40} {:6} ".format(asset[0], textwrap.shorten(asset[1], width=65), asset[2], str(asset[3])))
 
             click.echo("\nTotal: {}\n\n".format(len(asset_data)))
         except AttributeError:
