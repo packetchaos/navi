@@ -175,7 +175,7 @@ def assets(tag):
                 exposure_score = str(asset[2])
                 acr = str(asset[3])
 
-                click.echo("{:36} {:80} {:6} {}".format(ipv4, textwrap.shorten(fqdn, width=65), exposure_score, acr))
+                click.echo("{:16} {:80} {:6} {}".format(ipv4, textwrap.shorten(fqdn, width=80), exposure_score, acr))
             click.echo()
         except TypeError:
             click.echo("\nThe Tag has no assets or the tag hasn't finished being processed by T.io\n")
@@ -187,7 +187,7 @@ def assets(tag):
             asset_data = db_query("select ip_address, fqdn, uuid, aes from assets;")
             for asset in asset_data:
 
-                click.echo("{:16} {:80} {:40} {:6} ".format(asset[0], textwrap.shorten(asset[1], width=65), asset[2], str(asset[3])))
+                click.echo("{:16} {:80} {:40} {:6} ".format(asset[0], textwrap.shorten(asset[1], width=80), asset[2], str(asset[3])))
 
             click.echo("\nTotal: {}\n\n".format(len(asset_data)))
         except AttributeError:
