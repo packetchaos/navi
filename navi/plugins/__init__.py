@@ -30,6 +30,8 @@ from .exclusions import exclude
 from .sgroup import sgroup
 from .push import push
 from .ssh import ssh
+from .mail import mail
+from .smtp import smtp
 #from .automation import automate
 
 
@@ -67,3 +69,5 @@ def plugin_loader(group):
     group.add_command(push)
     group.add_command(ssh)
     #group.add_command(automate)
+    group.add_command(mail)
+    group.add_command(smtp)
