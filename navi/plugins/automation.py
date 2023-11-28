@@ -1,10 +1,13 @@
+import click
 import re
 import random
+import time
 import string
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, Dict, Tuple
+from os import system as cmd
 
 PASSWORD_LENGTH = 20
 
@@ -40,18 +43,22 @@ def strip_whitespace(value):
         value = re.sub('[ ]*,[ ]*', ',', value.strip())
     return value
 
+
 def generate_password(length=PASSWORD_LENGTH):
     special_chars = '`~!@#$%^&*()-_+='
     password_chars = string.digits + string.ascii_letters + special_chars
     return "".join(random.choices(password_chars, k=length))
 
+
 def insert_password(user):
     user['password'] = generate_password()
     return user
 
+
 def username_to_lower(user):
     user['username'] = user['username'].lower()
     return user
+
 
 def str_to_api_name(name):
     if name.startswith('tags') or name.endswith('tags'):
@@ -59,7 +66,7 @@ def str_to_api_name(name):
     return name
 
 
-def parse_filter_name(column_name: str, asset_tag_filters: dict) -> tuple[dict, str]:
+def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, str]:
     '''split value into (filter_name, operator)
 
     The filter column name will be either:
@@ -94,7 +101,7 @@ def parse_filter_name(column_name: str, asset_tag_filters: dict) -> tuple[dict, 
 
 def build_filters(columns, asset_tag_filters: dict):
     '''Build the filter statement based on multiple columns.'''
-    header_fields=('category', 'value', 'filter_type')
+    header_fields = ('category', 'value', 'filter_type')
     # filter items are all k, v pairs execept
     filter_values = {k: v for k, v in columns.items() if k not in header_fields}
     filters = []
@@ -157,7 +164,7 @@ def process_groups_from_users(records):
     return group_commands
 
 
-def post_process_sheets(sheets: dict[str,list], asset_tag_filters: dict = None, action: str = None):
+def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None, action: str = None):
     '''Process sheets to do things build filters from columns and identify groups within user records
 
     Args:
@@ -204,9 +211,163 @@ def post_process_sheets(sheets: dict[str,list], asset_tag_filters: dict = None, 
     return sheets
 
 
-def main():
-    ws = Excel('tio-config.xlsx', sheet_names='users')
-    _records = ws.get_records()
+@click.command(help="Automate Navi tasks from a Spreadsheet")
+@click.option('--sheet', required=True, type=click.Choice(['users', 'networks', 'agent_groups',
+                                                           'tags_fqdn', 'tags_ipv4', 'exclusions',
+                                                           'advanced_tags', 'scanner_groups'], case_sensitive=False),
+              multiple=True)
+def automate(sheet):
+    try:
+        ws = Excel('tio-config.xlsx', sheet_names=sheet)
+        _records = ws.get_records()
+    except:
+        click.echo("\nYou need to save the 'tio-config.xlsx' file to begin the automation process.\n")
+        exit()
 
-if __name__ == '__main__':
-    main()
+    if 'users' in sheet:
+        print("Creating Groups")
+        print("-" * 30)
+        for group in _records['groups']:
+            time.sleep(1)
+            if group['action'] == 'create':
+                cmd("navi usergroup create --name \"{}\"".format(group['record']['name']))
+
+        print("\nCreating users")
+        print("-" * 30)
+        for user in _records['users']:
+            time.sleep(1)
+            cmd("navi user add --username \"{}\" --password \"{}\" --permission {} --name \"{}\" --email \"{}\"".format(
+                user['record']['username'], user['record']['password'], user['record']['permissions'],
+                user['record']['name'], user['record']['email']))
+
+        print("\nWait two mins")
+        time.sleep(120)
+        print("\nAdding Users to Groups")
+        print("-" * 30)
+
+        for group in _records['groups']:
+            time.sleep(1)
+            if group['action'] == 'add_user':
+
+                # Now add the user to the group
+                print("navi usergroup add --name \"{}\" --user \"{}\"".format(group['record']['group_name'], group['record']['username']))
+
+    if 'networks' in sheet:
+        print("\nCreating networks")
+        print("-" * 30)
+        for net in _records['networks']:
+            time.sleep(1)
+            cmd("navi network new --name \"{}\" --d \"{}\"".format(net['record']['network_name'], net['record']['description']))
+
+        print("\nWait two mins")
+        time.sleep(120)
+        print("\nAdjusting TTL per network")
+        print("-" * 30)
+        for net in _records['networks']:
+            cmd("navi network change --name \"{}\" --age {}".format(net['record']['network_name'], net['record']['assets_ttl_days']))
+
+    if 'agent_groups' in sheet:
+        print("\nCreating Agent groups")
+        print("-" * 30)
+
+        for agp in _records['agent_groups']:
+            time.sleep(1)
+            cmd("navi agent create --name \"{}\" ".format(agp['record']['group_name']))
+
+    if "tags_for_os" in sheet:
+        print("\nCreating OS Tags")
+        print("-" * 30)
+        for tag in _records['tags']:
+            # Here we are looking for multiple values and a comma was easiest. :)
+            if "," in tag['record']['operating_system']:
+
+                ops_list = str(tag['record']['operating_system']).split(",")
+                filter_list = []
+
+                for ops in ops_list:
+                    time.sleep(1)
+                    # API bug not allowing for 'wc' in the UI.
+                    cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eg\" --filter \"operating_system\" --value \"{}\"".format(
+                        tag['record']['tag_category'], ops, ops))
+
+                print("Pausing")
+                time.sleep(120)
+                print("Updating assets and tags tables")
+                print('navi update assets')
+                for ops in ops_list:
+                    time.sleep(1)
+                    cmd("navi tag --c \"{}\" --v \"{}\" --cc \"{}\" --cv \"{}\"".format(
+                        str(tag['record']['tag_category']), str(tag['record']['tag_value']), str(tag['record']['tag_category']), str(ops)))
+
+                #cmd("navi tagrule --c \"{}\" --v \"{}\" --multi \"{}\" -any".format(tag['record']['tag_category'],
+                #tag['record']['tag_value'],
+                #filter_list))
+
+            else:
+                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" --value \"{}\"".format(
+                    tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['operating_system']))
+
+    if "tags_fqdn" in sheet:
+        print("\nCreating FQDN Tags")
+        print("-" * 30)
+        for tag in _records['tags']:
+
+            if "," in tag['record']['fqdn']:
+                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"fqdn\" --value \"{}\"".format(
+                    tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
+            else:
+                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"match\" --filter \"fqdn\" --value \"{}\"".format(
+                    tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
+
+        click.echo("Done")
+
+    if "tags_ipv4" in sheet:
+        print("\nCreating IPv4 Tags")
+        print("-" * 30)
+        for tag in _records['tags']:
+
+            if "," in tag['record']['ipv4']:
+                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"ipv4\" --value \"{}\"".format(
+              tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+            else:
+                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"ipv4\" --value \"{}\"".format(
+              tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+
+        click.echo("Done")
+
+    if 'exclusions' in sheet:
+        print("\nCreating Exclusions")
+        print("-" * 30)
+
+        for exc in _records['exclusions']:
+            cmd("navi exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
+                exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
+                exc['record']['end_time'], exc['record']['frequency'], exc['record']['day_of_month']))
+
+            print()
+
+    if 'advanced_tags' in sheet:
+        print("\nUpdating navi to refresh the db")
+        cmd("navi update full")
+        print("\nCreating Advanced Tags")
+        print("-" * 30)
+
+        for ad in _records['tags']:
+            time.sleep(1)
+            if ad['record']['option'] == 'output':
+                cmd("navi tag --c \"{}\" --v \"{}\" --{} \"{}\" --{} \"{}\"".format(
+                    ad['record']['tag_category'], ad['record']['tag_value'], ad['record']['method'],
+                    ad['record']['search_string'], ad['record']['option'], ad['record']['option_text']))
+            else:
+                cmd("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
+                                                                              ad['record']['tag_value'],
+                                                                              ad['record']['method'],
+                                                                              ad['record']['search_string']))
+
+    if 'scanner_groups' in sheet:
+        print("\nCreating Scanner groups")
+        print("-" * 30)
+        for sg in _records['scanner_groups']:
+            time.sleep(1)
+            cmd("navi sgroup create --name \"{}\"".format(sg['record']['name']))
+
