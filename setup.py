@@ -9,7 +9,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='navi pro',
-    version='7.5.3',
+    version='7.5.4',
     description="A command-line interface to Tenable.io",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -26,8 +26,8 @@ setup(
     ],
     install_requires=[
         'Click>=7.0',
-        'requests>=2.26.0',
-        'flask>=1.1.1',
+        'requests>=2.26',
+        'flask>=1.1.4',
         'IPy>=1.0',
         'pytenable>=1.4.3',
         'arrow>=0.17.0',
@@ -38,7 +38,7 @@ setup(
         'numpy>=1.19.5',
         'matplotlib>=3.2.1'
     ],
-    python_requires='>=3.0',
+    python_requires='>=3.9',
     extras_require={
     },
     entry_points={
