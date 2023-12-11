@@ -218,7 +218,7 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
               multiple=True)
 def automate(sheet):
     try:
-        ws = Excel('tio-config.xlsx', sheet_names=sheet)
+        ws = Excel(r'tio-config.xlsx', sheet_names=sheet)
         _records = ws.get_records()
     except:
         click.echo("\nYou need to save the 'tio-config.xlsx' file to begin the automation process.\n")
