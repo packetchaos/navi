@@ -223,6 +223,7 @@ def automate(sheet, name):
         _records = ws.get_records()
     except Exception as E:
         click.echo("\nYou need to save the 'tio-config.xlsx' file to begin the automation process.\n")
+        click.echo("\nIf you are using python3.9 you will need to safe the file as an XLS instead of XLSX")
         print(E)
         exit()
 
