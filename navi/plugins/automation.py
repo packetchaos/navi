@@ -212,16 +212,18 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
 
 
 @click.command(help="Automate Navi tasks from a Spreadsheet")
+@click.option('--name', default='tio-config.xls', help='Name of the excel file')
 @click.option('--sheet', required=True, type=click.Choice(['users', 'networks', 'agent_groups',
                                                            'tags_fqdn', 'tags_ipv4', 'exclusions',
                                                            'advanced_tags', 'scanner_groups'], case_sensitive=False),
               multiple=True)
-def automate(sheet):
+def automate(sheet, name):
     try:
-        ws = Excel(r'tio-config.xlsx', sheet_names=sheet)
+        ws = Excel(name, sheet_names=sheet)
         _records = ws.get_records()
-    except:
+    except Exception as E:
         click.echo("\nYou need to save the 'tio-config.xlsx' file to begin the automation process.\n")
+        print(E)
         exit()
 
     if 'users' in sheet:
