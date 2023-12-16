@@ -1,9 +1,10 @@
 import click
-from .api_wrapper import request_data, tenb_connection
+from .api_wrapper import request_data, tenb_connection, grab_headers
 import time
 import uuid
 import csv
 import textwrap
+import json
 from .database import db_query
 
 
@@ -186,7 +187,8 @@ def details(scan_uuid, plugin):
 
 @was.command(help="Scan a Web Application Target")
 @click.argument('scan_target')
-@click.option('--file', is_flag=True, help="File name of the CSV containing Web Apps for bulk scan creation")
+@click.option('--file', is_flag=True,
+              help="File name of the CSV containing Web Apps for bulk scan creation")
 def scan(scan_target, file):
     click.echo("\nChoose your Scan Template")
     click.echo("1.   Web App Overview")
@@ -229,7 +231,8 @@ def scan(scan_target, file):
                     scan_name = "navi Created Scan of : " + str(app)
                     # strip for white spaces
                     application = app.strip()
-                    create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template, target=application)
+                    create_was_scan(owner_id=user_uuid, scanner_id=scanner_id, name=scan_name, temp_id=template,
+                                    target=application)
                     time.sleep(2)
     else:
         click.echo("\nCreating your scan now for site: " + str(scan_target))
@@ -251,7 +254,8 @@ def configs():
             app_status = app_data['last_scan']['status']
             updated = app_data['updated_at']
 
-            click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_name), width=70), str(app_scan_id), str(app_status), str(updated)))
+            click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_name), width=70),
+                                                        str(app_scan_id), str(app_status), str(updated)))
         except:
             pass
     click.echo()
@@ -268,6 +272,33 @@ def stats(scan_id):
 
             scan_meta_data = finding['details']['output']
             print(scan_meta_data)
+
+
+@was.command(help="Export scan data")
+@click.argument('scanid')
+def export(scanid):
+    was_data = request_data("GET", "/was/v2/scans/{}/report".format(scanid))
+    click.echo("\nDownloading your scan and saving it as {}-export.json\n")
+    with open('{}-export.json'.format(scanid), 'w', encoding='utf-8') as f:
+
+        json.dump(was_data, f, ensure_ascii=False)
+
+
+@was.command(help="Import scan data")
+@click.argument('filename')
+def upload(filename):
+    try:
+        import requests
+        url= "https://cloud.tenable.com/api/v3/was/import"
+
+        files = {"Filedata": ("{}".format(filename), open("{}".format(filename), "rb"), "application/json")}
+
+        response = requests.post(url, files=files, headers=grab_headers())
+
+        click.echo("\nUploading your scan {} now\n{}\n".format(filename, response))
+    except Exception as E:
+        click.echo(E)
+
 
 '''
 @was.command(help="CSV Export")
