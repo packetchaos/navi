@@ -373,4 +373,3 @@ def automate(sheet, name):
         for sg in _records['scanner_groups']:
             time.sleep(1)
             cmd("navi sgroup create --name \"{}\"".format(sg['record']['name']))
-

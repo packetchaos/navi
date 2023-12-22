@@ -362,7 +362,7 @@ def latest():
             # need to identify type to compare against pvs and agent scans
             scan_type = str(x["type"])
             # don't capture the PVS or Agent data in latest
-            while scan_type not in ['pvs', 'agent', 'webapp', 'lce']:
+            while scan_type not in ['pvs', 'agent', 'webapp', 'lce', 'disabled']:
                 # put scans in a list to find the latest
                 time_list.append(epoch_time)
                 # put the time and id into a dictionary
@@ -379,6 +379,9 @@ def latest():
         epock_latest = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime(grab_time))
         click.echo("\nThe last Scan run was at {}".format(epock_latest))
         scan_details(str(grab_uuid))
+    except KeyError:
+        # some old imported scans do not have a type?
+        pass
     except Exception as E:
         error_msg(E)
 
@@ -456,6 +459,52 @@ def move(a, s, limit, scanid):
         click.echo("Grabbing the list {}\n".format(scan_list))
 
         scan_mover(scan_list)
+
+
+@scan.command(help="Import/upload nessus scans to TIO")
+@click.argument('filename')
+def upload(filename):
+    with open('{}'.format(str(filename)), 'rb') as file:
+        tio.scans.import_scan(fobj=file)
+    file.close()
+
+
+@scan.command(help="Export/Download nessus scans")
+@click.option('--limit', default='1', help="Limit History download to a number of completed scans; default is 1")
+@click.option('--scanid', default=None, multiple=True, help="Limit the Download to one scan ID")
+def download(limit, scanid):
+    def get_history(move_scan_id):
+        move_limit = 0
+        move_history_list = []
+
+        for scan_instance in tio.scans.history(scan_id=move_scan_id):
+
+            # Change the limit to how many scan histories you want to pull.
+            if move_limit == limit:
+                break
+
+            if scan_instance['status'] == "completed":
+                move_limit = move_limit + 1
+                move_history_list.append(scan_instance['id'])
+        return move_history_list
+
+    for history_ids in scanid:
+
+        # pull the last X(limit) scan jobs
+        history_list = get_history(history_ids)
+        click.echo("Here is the history for {}:\n {}\n".format(history_ids, history_list))
+
+        # iterate over each scan history
+        for move_scans in history_list:
+            scan_name = "{}_{}".format(history_ids, move_scans)
+
+            click.echo("Exporting Scan ID:{}, with history_id: {} now\n".format(history_ids, move_scans))
+
+            # export the scan
+            with open('{}.nessus'.format(str(scan_name)), 'wb') as nessus:
+                tio.scans.export(history_ids, fobj=nessus)
+
+            nessus.close()
 
 
 @scan.command(help="Export and Import scans between T.io and T.sc")
