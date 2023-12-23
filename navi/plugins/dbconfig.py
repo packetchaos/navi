@@ -22,6 +22,15 @@ def create_diff_table():
                         exid text);"""
     create_table(diff_conn, diff_table)
 
+def create_software_table():
+    database = r"navi.db"
+    soft_conn = new_db_connection(database)
+    soft_table = """CREATE TABLE IF NOT EXISTS software (
+                        asset_id text,
+                        software_string text,
+                        plugin_id text);"""
+    soft_conn.execute('pragma journal_mode=wal;')
+    create_table(soft_conn, soft_table)
 
 def create_vulns_table():
     database = r"navi.db"
