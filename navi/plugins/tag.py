@@ -5,6 +5,7 @@ from .api_wrapper import request_data, tenb_connection
 from .tag_helper import update_tag, confirm_tag_exists, grab_all_tags, remove_tag
 from sqlite3 import Error
 import pprint
+from datetime import datetime
 
 
 def tag_by_tag(c, v, d, cv, cc, match):
@@ -268,8 +269,9 @@ def download_tag_remove(scanid, new_hist, c, v, d):
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
+@click.option('--missed', default='', help="Tag Agents that missed authentication in given number of days")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid):
+        manual, histid, missed):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -614,3 +616,23 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
     if manual:
         tag_by_uuid(manual, c, v, d)
+
+    if missed:
+        try:
+            missed_data = db_query("select uuid, last_licensed_scan_date from assets where agent_uuid !='None';")
+
+            for assets in missed_data:
+                last_scanned_date = assets[1]
+
+                new_date = datetime.fromisoformat(last_scanned_date[:-1])
+
+                today = datetime.utcnow()
+                delta = today - new_date
+
+                if delta.days >= int(missed):
+                    tag_list.append(assets[0])
+        except:
+            click.echo("\nMake sure you are submitting an Integer\n")
+
+
+        tag_by_uuid(tag_list, c, v, d)

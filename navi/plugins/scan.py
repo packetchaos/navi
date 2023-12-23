@@ -470,7 +470,7 @@ def upload(filename):
 
 
 @scan.command(help="Export/Download nessus scans")
-@click.option('--limit', default='1', help="Limit History download to a number of completed scans; default is 1")
+@click.option('--limit', default=1, help="Limit History download to a number of completed scans; default is 1")
 @click.option('--scanid', default=None, multiple=True, help="Limit the Download to one scan ID")
 def download(limit, scanid):
     def get_history(move_scan_id):

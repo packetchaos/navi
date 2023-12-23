@@ -1,6 +1,8 @@
 import click
 from .api_wrapper import tenb_connection
+from .database import db_query
 import textwrap
+import pprint
 
 tio = tenb_connection()
 
@@ -170,3 +172,42 @@ def unlink(aid):
         click.echo("\nYour Agent: {} has been unlinked".format(aid))
     except AttributeError:
         click.echo("Check your API Keys")
+
+
+@agent.command(help="Create a Agent group based on a Tag")
+@click.option('--c', default=None, help="Tag Category")
+@click.option('--v', default=None, help="Tag Value")
+@click.option('--group', default=None, help="New Agent group name")
+@click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
+def bytag(c, v, group, scanner):
+    data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
+                    "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
+    temp_agents = []
+
+    def get_group_id():
+        agent_group_id = None
+        for agent_groups in tio.agent_groups.list():
+            if agent_groups['name'] == group:
+                agent_group_id = agent_groups['id']
+        return agent_group_id
+
+    # Grab a current Group ID
+    group_id_test = get_group_id()
+    # If None is returned create a new Group and set the group id
+    if group_id_test is None:
+        group_creation = tio.agent_groups.create(name=group, scanner_id=scanner)
+        group_id = group_creation['id']
+    else:
+        group_id = group_id_test
+
+    for assets in data:
+        asset_uuid = assets[0]
+        temp_agents.append(asset_uuid)
+    print(temp_agents)
+    for agents in tio.agents.list():
+        agent_uuid = agents['uuid']
+        agent_id = agents['id']
+        print(agent_id, agent_uuid)
+        if agent_uuid in temp_agents:
+            print(group_id,agent_id)
+            tio.agent_groups.add_agent(group_id, agent_id)
