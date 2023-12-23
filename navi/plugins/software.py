@@ -14,8 +14,10 @@ def generate():
     new_conn = new_db_connection(database)
     drop_tables(new_conn, "software")
     create_software_table()
-    massive_list_of_software = []
-    sft_uuid_pairs = []
+    #massive_list_of_software = []
+    #sft_uuid_pairs = []
+    uuid_list = []
+    soft_dict = {}
     software_data = db_query("select output, asset_uuid from vulns where plugin_id='22869'")
 
     # 22869 Parser
@@ -26,18 +28,32 @@ def generate():
                 pkg_name = str(pkg).split(" ")[-1]
                 # print(pkg_name)
                 if pkg_name != "the":
-                    massive_list_of_software.append(pkg_name)
-                    sft_uuid_pairs.append([host[1], pkg_name, "22869"])
+                    #massive_list_of_software.append(pkg_name)
+                    #sft_uuid_pairs.append([host[1], pkg_name, "22869"])
+
+                    if pkg_name not in soft_dict:
+                        soft_dict[pkg_name] = [host[1]]
+                    else:
+                        soft_dict[pkg_name].append(host[1])
 
         except IndexError:
             pkg_name = str(str(host).split("|")[2]).split(" ")[2]
-            massive_list_of_software.append(pkg_name)
+            #massive_list_of_software.append(pkg_name)
+            if pkg_name not in soft_dict:
+                soft_dict[pkg_name] = [host[1]]
+            else:
+                soft_dict[pkg_name].append(host[1])
+
     with new_conn:
-        for sft in sft_uuid_pairs:
-            insert_software(new_conn, sft)
+        new_list = []
+        for item in soft_dict.items():
+            #print(item[1])
+            # Save the uuid list as a string
+            new_list = [item[0], str(item[1]), "22869"]
+            insert_software(new_conn, new_list)
 
     # pprint.pprint(set(massive_list_of_software))
-    total = len(set(massive_list_of_software))
+    total = len(soft_dict)
     asset_evaluated = db_query("select count(output) from vulns where plugin_id='22869'")[0][0]
     assets_not_evaluated = len(set(db_query("select asset_uuid from vulns where plugin_id !='22869'")))
     #pprint.pprint(sft_uuid_pairs)
