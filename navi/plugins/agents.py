@@ -180,6 +180,7 @@ def unlink(aid):
 @click.option('--group', default=None, help="New Agent group name")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def bytag(c, v, group, scanner):
+    from uuid import UUID
     data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
                     "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
     temp_agents = []
@@ -195,19 +196,24 @@ def bytag(c, v, group, scanner):
     group_id_test = get_group_id()
     # If None is returned create a new Group and set the group id
     if group_id_test is None:
+        click.echo("\nGroup wasn't found, creating new group\n")
         group_creation = tio.agent_groups.create(name=group, scanner_id=scanner)
         group_id = group_creation['id']
     else:
         group_id = group_id_test
+        click.echo("\nGroup was found! Group ID is:"+ str(group_id))
 
     for assets in data:
         asset_uuid = assets[0]
         temp_agents.append(asset_uuid)
-    print(temp_agents)
+
+    click.echo("\nRetrieving agents from T.VM and comparing it to the navi database."
+               "\nMake sure you have updated recently in case nothing get's moved\n")
     for agents in tio.agents.list():
-        agent_uuid = agents['uuid']
+
+        #Convert agent UUID to hex to look up in db
+        agent_uuid = UUID(agents['uuid']).hex
         agent_id = agents['id']
-        print(agent_id, agent_uuid)
-        if agent_uuid in temp_agents:
-            print(group_id,agent_id)
+        tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(agent_uuid))
+        if tag_uuid[0][0] in temp_agents:
             tio.agent_groups.add_agent(group_id, agent_id)
