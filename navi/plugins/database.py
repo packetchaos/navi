@@ -119,6 +119,12 @@ def insert_tags(conn, tags):
     cur.execute(sql, tags)
 
 
+def insert_software(conn, software):
+    sql = '''INSERT or IGNORE into software(asset_uuid, software_string, plugin_id) VALUES(?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, software)
+
 def drop_tables(conn, table):
     try:
         drop_table = '''DROP TABLE {}'''.format(table)
