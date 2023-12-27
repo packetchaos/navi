@@ -1,5 +1,4 @@
 import click
-import pprint
 from .api_wrapper import tenb_connection
 from .database import db_query
 import datetime
@@ -23,7 +22,6 @@ def exclude(name, members, start, end, freq, day, c, v):
         if v is None:
             click.echo("You must enter a Value if you are going to Exclude by tag.")
         if v:
-            print(freq)
             data = db_query("select asset_ip from tags where "
                             "tag_key ='" + str(c) + "' and tag_value = '" + str(v) + "';")
             members_list = []
@@ -38,7 +36,7 @@ def exclude(name, members, start, end, freq, day, c, v):
                                                     frequency=freq,
                                                     members=members_list,
                                                     day_of_month=day,
-                                                    description="Created by Tag: {}:{}".format(c,v))
+                                                    description="Created using Navi; IPs by Tag: {}:{}".format(c, v))
 
             click.echo(exclude_request)
     else:
@@ -52,5 +50,6 @@ def exclude(name, members, start, end, freq, day, c, v):
                                                     , end_time=datetime.datetime.strptime
                                                     (end, '%Y-%m-%d %H:%M'),
                                                     frequency=freq, members=list(members.split(",")),
-                                                    day_of_month=day, description="Created by Navi")
+                                                    day_of_month=day,
+                                                    description="Created using Navi: manually entered via the CLI")
             click.echo(exclude_request)
