@@ -215,12 +215,13 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
 @click.option('--sheet', required=True, type=click.Choice(['users', 'networks', 'agent_groups',
                                                            'tags_fqdn', 'tags_ipv4', 'exclusions',
-                                                           'advanced_tags', 'scanner_groups'], case_sensitive=False),
+                                                           'advanced_tags', 'scanner_groups', 'permissions'], case_sensitive=False),
               multiple=True)
 def automate(sheet, name):
     try:
         ws = Excel(name, sheet_names=sheet)
         _records = ws.get_records()
+
     except Exception as E:
         click.echo("\nYou need to save the 'tio-config.xlsx' file to begin the automation process.\n")
         click.echo("\nIf you are using python3.9 you will need to safe the file as an XLS instead of XLSX")
@@ -373,3 +374,19 @@ def automate(sheet, name):
         for sg in _records['scanner_groups']:
             time.sleep(1)
             cmd("navi sgroup create --name \"{}\"".format(sg['record']['name']))
+
+    if 'permissions' in sheet:
+        print("\nCreating Permissions")
+        print("-" * 30)
+        for perms in _records['permissions']:
+            #pprint.pprint(perms)
+            if perms['record']['user']:
+
+                cmd("navi access create --c \"{}\" --v \"{}\" --user \"{}\" --permlist \"{}\"".format(
+                    perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['user'],
+                    perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
+
+            if perms['record']['usergroup']:
+                cmd("navi access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
+                    perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['usergroup'],
+                    perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))

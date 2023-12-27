@@ -73,9 +73,10 @@ def access():
 @click.option('--v', default='', required=True, help="Tag Value to use")
 @click.option('--user', default='', help="The User you want to assign to the Permission")
 @click.option('--usergroup', default='', help="The User Group you want to assign to the Permission")
-@click.option('--perm', multiple=True, type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True),
-              required=True)
-def create(c, v, user, usergroup, perm):
+@click.option('--perm', multiple=True,
+              type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True))
+@click.option('--permlist', default='', help='Added all perms in a comma delimited string to support automation')
+def create(c, v, user, usergroup, perm, permlist):
     # Create the naming format for the tag permission
     perm_name = "{},{}".format(c, v)
     try:
@@ -92,24 +93,42 @@ def create(c, v, user, usergroup, perm):
         # Add permission by User
         if user:
             user_id, uuid = get_user_id(user)
-            resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                              perm_list=perm, perm_type="Tag", subject_type="User",
-                                              subject_name=user, subject_uuid=uuid)
-            pprint.pprint(resp)
+            if permlist:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_list=list(str(permlist).split(",")), perm_type="Tag", subject_type="User",
+                                                  subject_name=user, subject_uuid=uuid)
+                pprint.pprint(resp)
+            else:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_list=perm, perm_type="Tag", subject_type="User",
+                                                  subject_name=user, subject_uuid=uuid)
+                pprint.pprint(resp)
 
         # Add permission by UserGroup
         elif usergroup:
             group_id, uuid = get_group_id(usergroup)
-            resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                              perm_list=perm, perm_type="Tag", subject_type="UserGroup",
-                                              subject_name=usergroup, subject_uuid=uuid)
-            pprint.pprint(resp)
+
+            if permlist:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_list=list(str(permlist).split(",")), perm_type="Tag", subject_type="UserGroup",
+                                                  subject_name=usergroup, subject_uuid=uuid)
+                pprint.pprint(resp)
+            else:
+                resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
+                                                  perm_list=perm, perm_type="Tag", subject_type="UserGroup",
+                                                  subject_name=usergroup, subject_uuid=uuid)
+                pprint.pprint(resp)
         else:
             # If no user or Usergroup Assign it to All Users
-            permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
-                                                    perm_string=perm, perm_type="Tag", subject_type="AllUsers")
+            if permlist:
+                permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
+                                                        perm_string=list(str(permlist).split(",")), perm_type="Tag", subject_type="AllUsers")
+                pprint.pprint(permission_response)
+            else:
+                permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
+                                                        perm_string=perm, perm_type="Tag", subject_type="AllUsers")
 
-            pprint.pprint(permission_response)
+                pprint.pprint(permission_response)
 
     except IndexError:
         click.echo("\nYour Tag might be incorrect. Or you may need to update assets in navi.  "
