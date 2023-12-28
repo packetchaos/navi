@@ -30,7 +30,7 @@ def get_user_id(username):
     user_id = 0
     user_uuid = 0
     for u in data["users"]:
-        if username == u["username"]:
+        if username.lower() == u["username"]:
             user_id = u["id"]
             user_uuid = u['uuid']
     return user_id, user_uuid

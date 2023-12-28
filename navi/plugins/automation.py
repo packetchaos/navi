@@ -254,21 +254,24 @@ def automate(sheet, name):
             if group['action'] == 'add_user':
 
                 # Now add the user to the group
-                print("navi usergroup add --name \"{}\" --user \"{}\"".format(group['record']['group_name'], group['record']['username']))
+                cmd("navi usergroup add --name \"{}\" --user \"{}\"".format(group['record']['group_name'],
+                                                                            group['record']['username']))
 
     if 'networks' in sheet:
         print("\nCreating networks")
         print("-" * 30)
         for net in _records['networks']:
             time.sleep(1)
-            cmd("navi network new --name \"{}\" --d \"{}\"".format(net['record']['network_name'], net['record']['description']))
+            cmd("navi network new --name \"{}\" --d \"{}\"".format(net['record']['network_name'],
+                                                                   net['record']['description']))
 
         print("\nWait two mins")
         time.sleep(120)
         print("\nAdjusting TTL per network")
         print("-" * 30)
         for net in _records['networks']:
-            cmd("navi network change --name \"{}\" --age {}".format(net['record']['network_name'], net['record']['assets_ttl_days']))
+            cmd("navi network change --name \"{}\" --age {}".format(net['record']['network_name'],
+                                                                    net['record']['assets_ttl_days']))
 
     if 'agent_groups' in sheet:
         print("\nCreating Agent groups")
@@ -379,14 +382,14 @@ def automate(sheet, name):
         print("\nCreating Permissions")
         print("-" * 30)
         for perms in _records['permissions']:
-            #pprint.pprint(perms)
             if perms['record']['user']:
-
+                print("\nCreating User permission based on tag: {}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
                 cmd("navi access create --c \"{}\" --v \"{}\" --user \"{}\" --permlist \"{}\"".format(
                     perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['user'],
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
 
             if perms['record']['usergroup']:
+                print("\nCreating UserGroup permission based on tag: {}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
                 cmd("navi access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
                     perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['usergroup'],
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
