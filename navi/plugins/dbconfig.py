@@ -28,8 +28,7 @@ def create_software_table():
     soft_conn = new_db_connection(database)
     soft_table = """CREATE TABLE IF NOT EXISTS software (
                         asset_uuid text,
-                        software_string text,
-                        plugin_id text);"""
+                        software_string text);"""
     soft_conn.execute('pragma journal_mode=wal;')
     create_table(soft_conn, soft_table)
 

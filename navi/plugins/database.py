@@ -120,16 +120,18 @@ def insert_tags(conn, tags):
 
 
 def insert_software(conn, software):
-    sql = '''INSERT or IGNORE into software(asset_uuid, software_string, plugin_id) VALUES(?,?,?)'''
+    sql = '''INSERT or IGNORE into software(software_string, asset_uuid) VALUES(?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, software)
+
 
 def update_software(conn, software, asset_list):
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute('UPDATE software SET asset_uuid=? WHERE software_string=?', (str()))
+
 
 def drop_tables(conn, table):
     try:
