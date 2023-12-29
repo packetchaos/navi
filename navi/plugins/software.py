@@ -22,14 +22,16 @@ def parse_22869(soft_dict):
                 # Some output has "ii" in it after the split
                 if "  ii  " in pkg_name:
                     #print(count, eval(pkg_name)[0][5:])
-                    new_name = eval(pkg_name)[0][5:]
+                    new_name = eval(pkg_name)[0][7:]
+
                     if pkg_name not in soft_dict:
                         soft_dict[new_name] = [asset_uuid]
                     else:
                         soft_dict[new_name].append(asset_uuid)
                 else:
                     # pull out the software package
-                    new_name = eval(pkg_name)[0]
+                    new_name = eval(pkg_name)[0][2:]
+
                     if pkg_name not in soft_dict:
                         soft_dict[new_name] = [asset_uuid]
                     else:
@@ -130,7 +132,7 @@ def generate():
     parse_22869(soft_dict)
 
     # Grab 20811 Data
-    parse_20811(soft_dict)
+    #parse_20811(soft_dict)
 
     # Grab 83911 Data
     #parse_83991(soft_dict)
