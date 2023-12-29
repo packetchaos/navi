@@ -45,7 +45,7 @@ def strip_whitespace(value):
 
 
 def generate_password(length=PASSWORD_LENGTH):
-    special_chars = '`~!@#$%^&*()-_+='
+    special_chars = '~!@#$%^&*()-_+='
     password_chars = string.digits + string.ascii_letters + special_chars
     return "".join(random.choices(password_chars, k=length))
 
@@ -213,11 +213,12 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
 
 @click.command(help="Automate Navi tasks from a Spreadsheet")
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
+@click.option('-v', is_flag=True, help="enable Verbosity and print navi commands to the screen")
 @click.option('--sheet', required=True, type=click.Choice(['users', 'networks', 'agent_groups',
                                                            'tags_fqdn', 'tags_ipv4', 'exclusions',
                                                            'advanced_tags', 'scanner_groups', 'permissions'], case_sensitive=False),
               multiple=True)
-def automate(sheet, name):
+def automate(sheet, name, v):
     try:
         ws = Excel(name, sheet_names=sheet)
         _records = ws.get_records()
@@ -234,12 +235,20 @@ def automate(sheet, name):
         for group in _records['groups']:
             time.sleep(1)
             if group['action'] == 'create':
+                if v:
+                    print("navi usergroup create --name \"{}\"".format(group['record']['name']))
+
                 cmd("navi usergroup create --name \"{}\"".format(group['record']['name']))
 
         print("\nCreating users")
         print("-" * 30)
         for user in _records['users']:
             time.sleep(1)
+            if v:
+                print("navi user add --username \"{}\" --password \"{}\" --permission {} --name \"{}\" --email \"{}\"".format(
+                    user['record']['username'], user['record']['password'], user['record']['permissions'],
+                    user['record']['name'], user['record']['email']))
+
             cmd("navi user add --username \"{}\" --password \"{}\" --permission {} --name \"{}\" --email \"{}\"".format(
                 user['record']['username'], user['record']['password'], user['record']['permissions'],
                 user['record']['name'], user['record']['email']))
@@ -252,7 +261,9 @@ def automate(sheet, name):
         for group in _records['groups']:
             time.sleep(1)
             if group['action'] == 'add_user':
-
+                if v:
+                    print("navi usergroup add --name \"{}\" --user \"{}\"".format(group['record']['group_name'],
+                                                                                group['record']['username']))
                 # Now add the user to the group
                 cmd("navi usergroup add --name \"{}\" --user \"{}\"".format(group['record']['group_name'],
                                                                             group['record']['username']))
@@ -262,6 +273,9 @@ def automate(sheet, name):
         print("-" * 30)
         for net in _records['networks']:
             time.sleep(1)
+            if v:
+                print("navi network new --name \"{}\" --d \"{}\"".format(net['record']['network_name'],
+                                                                       net['record']['description']))
             cmd("navi network new --name \"{}\" --d \"{}\"".format(net['record']['network_name'],
                                                                    net['record']['description']))
 
@@ -270,6 +284,9 @@ def automate(sheet, name):
         print("\nAdjusting TTL per network")
         print("-" * 30)
         for net in _records['networks']:
+            if v:
+                print("navi network change --name \"{}\" --age {}".format(net['record']['network_name'],
+                                                                        net['record']['assets_ttl_days']))
             cmd("navi network change --name \"{}\" --age {}".format(net['record']['network_name'],
                                                                     net['record']['assets_ttl_days']))
 
@@ -279,6 +296,9 @@ def automate(sheet, name):
 
         for agp in _records['agent_groups']:
             time.sleep(1)
+            if v:
+                print("navi agent create --name \"{}\" ".format(agp['record']['group_name']))
+
             cmd("navi agent create --name \"{}\" ".format(agp['record']['group_name']))
 
     if "tags_for_os" in sheet:
@@ -293,6 +313,10 @@ def automate(sheet, name):
 
                 for ops in ops_list:
                     time.sleep(1)
+                    if v:
+                        print("navi tagrule --c \"{}\" --v \"{}\" --action \"eg\" --filter \"operating_system\" --value \"{}\"".format(
+                            tag['record']['tag_category'], ops, ops))
+
                     # API bug not allowing for 'wc' in the UI.
                     cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eg\" --filter \"operating_system\" --value \"{}\"".format(
                         tag['record']['tag_category'], ops, ops))
@@ -303,14 +327,24 @@ def automate(sheet, name):
                 print('navi update assets')
                 for ops in ops_list:
                     time.sleep(1)
+                    if v:
+                        print("navi tag --c \"{}\" --v \"{}\" --cc \"{}\" --cv \"{}\"".format(
+                            str(tag['record']['tag_category']), str(tag['record']['tag_value']),
+                            str(tag['record']['tag_category']), str(ops)))
+
                     cmd("navi tag --c \"{}\" --v \"{}\" --cc \"{}\" --cv \"{}\"".format(
-                        str(tag['record']['tag_category']), str(tag['record']['tag_value']), str(tag['record']['tag_category']), str(ops)))
+                        str(tag['record']['tag_category']), str(tag['record']['tag_value']),
+                        str(tag['record']['tag_category']), str(ops)))
 
                 #cmd("navi tagrule --c \"{}\" --v \"{}\" --multi \"{}\" -any".format(tag['record']['tag_category'],
                 #tag['record']['tag_value'],
                 #filter_list))
 
             else:
+                if v:
+                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" --value \"{}\"".format(
+                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['operating_system']))
+
                 cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" --value \"{}\"".format(
                     tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['operating_system']))
 
@@ -320,9 +354,17 @@ def automate(sheet, name):
         for tag in _records['tags']:
 
             if "," in tag['record']['fqdn']:
+                if v:
+                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"fqdn\" --value \"{}\"".format(
+                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
+
                 cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"fqdn\" --value \"{}\"".format(
                     tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
             else:
+                if v:
+                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"match\" --filter \"fqdn\" --value \"{}\"".format(
+                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
+
                 cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"match\" --filter \"fqdn\" --value \"{}\"".format(
                     tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['fqdn']))
 
@@ -334,9 +376,17 @@ def automate(sheet, name):
         for tag in _records['tags']:
 
             if "," in tag['record']['ipv4']:
+                if v:
+                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"ipv4\" --value \"{}\"".format(
+                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+
                 cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"ipv4\" --value \"{}\"".format(
               tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
             else:
+                if v:
+                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"ipv4\" --value \"{}\"".format(
+                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+
                 cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"ipv4\" --value \"{}\"".format(
               tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
 
@@ -347,6 +397,11 @@ def automate(sheet, name):
         print("-" * 30)
 
         for exc in _records['exclusions']:
+            if v:
+                print("navi exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
+                    exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
+                    exc['record']['end_time'], exc['record']['frequency'], exc['record']['day_of_month']))
+
             cmd("navi exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
                 exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
                 exc['record']['end_time'], exc['record']['frequency'], exc['record']['day_of_month']))
@@ -362,10 +417,21 @@ def automate(sheet, name):
         for ad in _records['tags']:
             time.sleep(1)
             if ad['record']['option'] == 'output':
+                if v:
+                    print("navi tag --c \"{}\" --v \"{}\" --{} \"{}\" --{} \"{}\"".format(
+                        ad['record']['tag_category'], ad['record']['tag_value'], ad['record']['method'],
+                        ad['record']['search_string'], ad['record']['option'], ad['record']['option_text']))
+
                 cmd("navi tag --c \"{}\" --v \"{}\" --{} \"{}\" --{} \"{}\"".format(
                     ad['record']['tag_category'], ad['record']['tag_value'], ad['record']['method'],
                     ad['record']['search_string'], ad['record']['option'], ad['record']['option_text']))
             else:
+                if v:
+                    print("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
+                                                                                ad['record']['tag_value'],
+                                                                                ad['record']['method'],
+                                                                                ad['record']['search_string']))
+
                 cmd("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
                                                                               ad['record']['tag_value'],
                                                                               ad['record']['method'],
@@ -376,6 +442,9 @@ def automate(sheet, name):
         print("-" * 30)
         for sg in _records['scanner_groups']:
             time.sleep(1)
+            if v:
+                print("navi sgroup create --name \"{}\"".format(sg['record']['name']))
+
             cmd("navi sgroup create --name \"{}\"".format(sg['record']['name']))
 
     if 'permissions' in sheet:
@@ -383,13 +452,25 @@ def automate(sheet, name):
         print("-" * 30)
         for perms in _records['permissions']:
             if perms['record']['user']:
-                print("\nCreating User permission based on tag: {}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
+                print("\nCreating User permission based on tag: {}:{}".format(perms['record']['Tag Category'],
+                                                                              perms['record']['Tag Value']))
+                if v:
+                    print("navi access create --c \"{}\" --v \"{}\" --user \"{}\" --permlist \"{}\"".format(
+                        perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['user'],
+                        perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
+
                 cmd("navi access create --c \"{}\" --v \"{}\" --user \"{}\" --permlist \"{}\"".format(
                     perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['user'],
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
 
             if perms['record']['usergroup']:
                 print("\nCreating UserGroup permission based on tag: {}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
+
+                if v:
+                    print("navi access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
+                        perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['usergroup'],
+                        perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
+
                 cmd("navi access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
                     perms['record']['Tag Category'], perms['record']['Tag Value'], perms['record']['usergroup'],
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
