@@ -4,6 +4,7 @@ from .database import db_query, insert_software, drop_tables
 import pprint
 import textwrap
 
+
 @click.group(help="Generate a report of software in your environment")
 def software():
     pass
@@ -73,6 +74,7 @@ def parse_83991(soft_dict):
                         else:
                             soft_dict[item].append(host[-1])
 
+
 def display_stats():
     total = db_query("select count(software_string) from software;")[0][0]
     asset_total = db_query("select count(distinct asset_uuid) from vulns;")[0][0]
@@ -81,9 +83,7 @@ def display_stats():
     assets_without_data = db_query("select hostname, uuid, ip_address from assets where  ip_address !=' ' and "
                                    "uuid not in (select asset_uuid from vulns "
                                    "where plugin_id ='22869' or plugin_id ='20811')")
-    # pprint.pprint(sft_uuid_pairs)
-    # print("*" * 150)
-    # print()
+
     print("\nUnique Software total is:", total)
     print("\nAssets evaluated:", asset_total)
     print("\nAssets with Software: ", assets_with_data)
@@ -123,8 +123,6 @@ def generate():
     new_conn = new_db_connection(database)
     drop_tables(new_conn, "software")
     create_software_table()
-    #massive_list_of_software = []
-    #sft_uuid_pairs = []
     uuid_list = []
     soft_dict = {}
 
@@ -132,7 +130,7 @@ def generate():
     parse_22869(soft_dict)
 
     # Grab 20811 Data
-    #parse_20811(soft_dict)
+    parse_20811(soft_dict)
 
     # Grab 83911 Data
     #parse_83991(soft_dict)
