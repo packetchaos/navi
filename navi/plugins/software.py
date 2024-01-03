@@ -78,19 +78,24 @@ def display_stats():
                                    "uuid not in (select asset_uuid from vulns "
                                    "where plugin_id ='22869' or plugin_id ='20811')")
 
-    print("\nUnique Software total is:", total)
-    print("\nAssets evaluated:", asset_total)
-    print("\nAssets with Software: ", assets_with_data)
-    print("\nAssets Without Software Plugins: ", len(assets_without_data))
+    click.echo("\nUnique Software total is: " + str(total))
+    click.echo("\nAssets evaluated: " + str(asset_total))
+    click.echo("\nAssets with Software: " + str(assets_with_data))
+    click.echo("\nAssets Without Software Plugins: " + str(len(assets_without_data)))
+    click.echo()
 
 
 @software.command(help="Display stats on Software")
 @click.option('-missing', is_flag=True, help="Display assets missing software enumeration")
 @click.option('-stats', is_flag=True, help="Display General Stats")
-@click.option('--counts', default='None',
+@click.option('--greaterthan', default=None,
               help="Display Software installed Greater than or equal to the number entered")
-def display(missing, stats, counts):
+@click.option('--lessthan', default=None,
+              help="Display Software installed less than or equal to the number entered")
+def display(missing, stats, greaterthan, lessthan):
+
     if missing:
+        click.echo("\nThese Assets do not have plugin 22869 nor 20811\n")
         assets_without_data = db_query("select hostname, uuid, ip_address, acr, aes from assets where "
                                        "ip_address !=' ' and uuid not in "
                                        "(select asset_uuid from vulns "
@@ -112,14 +117,37 @@ def display(missing, stats, counts):
     if stats:
         display_stats()
 
-    if counts:
-        all_data = db_query("select * from software;")
-        click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
-        click.echo('-' * 150)
-        for wares in all_data:
-            length = len(eval(wares[0]))
-            if int(length) >= int(counts):
-                click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
+    if greaterthan:
+        try:
+            click.echo()
+            click.echo("*"*50)
+            click.echo("Below is the Software found {} times or more".format(greaterthan))
+            click.echo("*" * 50)
+            all_data = db_query("select * from software;")
+            click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
+            click.echo('-' * 150)
+            for wares in all_data:
+                length = len(eval(wares[0]))
+                if int(length) >= int(greaterthan):
+                    click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
+        except:
+            click.echo("\nRun navi sofware Generate\n Or check your input\n")
+        click.echo()
+
+    if lessthan:
+        try:
+            click.echo("*" * 50)
+            click.echo("Below is the Software found {} times or less".format(greaterthan))
+            click.echo("*" * 50)
+            all_data = db_query("select * from software;")
+            click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
+            click.echo('-' * 150)
+            for wares in all_data:
+                length = len(eval(wares[0]))
+                if int(length) <= int(lessthan):
+                    click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
+        except:
+            click.echo("\nRun navi sofware Generate\n Or check your input\n")
         click.echo()
 
 
@@ -137,9 +165,6 @@ def generate():
     # Grab 20811 Data
     parse_20811(soft_dict)
 
-    # Grab 83911 Data
-    #parse_83991(soft_dict)
-
     with new_conn:
         new_list = []
         for item in soft_dict.items():
@@ -147,6 +172,5 @@ def generate():
             new_list = [item[0], str(item[1])]
             insert_software(new_conn, new_list)
 
-    #pprint.pprint(set(massive_list_of_software))
     display_stats()
 
