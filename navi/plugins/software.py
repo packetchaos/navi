@@ -18,19 +18,16 @@ def parse_22869(soft_dict):
         for pkg in str(data[0]).splitlines():
             pkg_name = str(pkg.split("|"))
             if "packages installed" not in pkg_name:
-                # Some output has "ii" in it after the split
-                if "  ii  " in pkg_name:
-                    new_name = eval(pkg_name)[0][7:]
-                    if pkg_name not in soft_dict:
-                        soft_dict[new_name] = [asset_uuid]
-                    else:
-                        soft_dict[new_name].append(asset_uuid)
-                else:
-                    new_name = eval(pkg_name)[0][2:]
-                    if pkg_name not in soft_dict:
-                        soft_dict[new_name] = [asset_uuid]
-                    else:
-                        soft_dict[new_name].append(asset_uuid)
+                string_list = str(eval(pkg_name)[0]).split()
+                try:
+                    if len(string_list[0]) == 2:
+                        new_name = "{}-{}".format(string_list[1], string_list[2])
+                        if pkg_name not in soft_dict:
+                            soft_dict[new_name] = [asset_uuid]
+                        else:
+                            soft_dict[new_name].append(asset_uuid)
+                except:
+                    pass
 
 
 def parse_20811(soft_dict):
@@ -58,11 +55,10 @@ def parse_83991(soft_dict):
     for host in software_data:
         for pkg in host:
             pkg_string = str(pkg).splitlines()
-            list = eval(str(pkg_string))
-            for item in list[:-1]:
+            new_list = eval(str(pkg_string))
+            for item in new_list[:-1]:
                 if "  Location" not in item:
                     if "Error" not in item:
-
                         if item not in soft_dict:
                             soft_dict[item] = [host[-1]]
                         else:
@@ -169,7 +165,7 @@ def generate():
         new_list = []
         for item in soft_dict.items():
             # Save the uuid list as a string
-            new_list = [item[0], str(item[1])]
+            new_list = [item[0], str(item[1]).strip()]
             insert_software(new_conn, new_list)
 
     display_stats()

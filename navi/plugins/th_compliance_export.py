@@ -45,7 +45,7 @@ def parse_data(chunk_data, chunk_number):
 
                     try:
                         actual_value = finding['actual_value']
-                        finding_list.append(actual_value)
+                        finding_list.append(str(actual_value))
                     except KeyError:
                         finding_list.append(" ")
 

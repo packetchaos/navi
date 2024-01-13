@@ -70,8 +70,21 @@ def insert_update_info(conn, diff):
 
 
 def insert_compliance(conn, compliance):
-    sql = '''INSERT or IGNORE into compliance(asset_uuid, actual_value, audit_file, check_id, check_info, check_name, 
-                    expected_value, first_seen, last_seen, plugin_id, reference, see_also, solution, status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    sql = '''INSERT or IGNORE into compliance(
+                                              asset_uuid, 
+                                              actual_value, 
+                                              audit_file, 
+                                              check_id, 
+                                              check_info, 
+                                              check_name,
+                                              expected_value, 
+                                              first_seen, 
+                                              last_seen, 
+                                              plugin_id, 
+                                              reference, 
+                                              see_also, 
+                                              solution, 
+                                              status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mod=wal;')
     cur.execute(sql, compliance)
