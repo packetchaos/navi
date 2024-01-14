@@ -36,7 +36,6 @@ setup(
         'typing-extensions>=4.0.1',
         'pandas>=1.1.5',
         'numpy>=1.19.5',
-        'matplotlib>=3.2.1',
         'xlrd>=2.0.1'
     ],
     python_requires='>=3.9',
