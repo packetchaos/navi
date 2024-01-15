@@ -22,10 +22,17 @@ def parse_22869(soft_dict):
                 try:
                     if len(string_list[0]) == 2:
                         new_name = "{}-{}".format(string_list[1], string_list[2])
-                        if pkg_name not in soft_dict:
+                        if new_name not in soft_dict:
                             soft_dict[new_name] = [asset_uuid]
                         else:
                             soft_dict[new_name].append(asset_uuid)
+                    else:
+                        new_name = str(string_list[0]).strip()
+                        if new_name not in soft_dict:
+                            soft_dict[new_name] = [asset_uuid]
+                        else:
+                            soft_dict[new_name].append(asset_uuid)
+
                 except:
                     pass
 
