@@ -16,7 +16,7 @@ def threads_check(threads):
             exit()
 
 
-@click.group(help="Update the local Navi repository - saved in your current dir")
+@click.group(help="Update the local Navi DB, Change Base URL, and update EPSS")
 def update():
     pass
 

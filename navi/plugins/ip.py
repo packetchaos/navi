@@ -359,200 +359,204 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
         else:
             data = db_query("select uuid from assets where uuid='{}'".format(ipaddr))
 
-        for assets in data:
-            asset_data = tio.workbenches.asset_info(str(assets[0]))
-
-            try:
-                asset_id = asset_data['id']
-
-                click.echo("\nTenable ID")
-                click.echo("--------------")
-                click.echo(asset_id)
-
-                click.echo("\nNetwork Name")
-                click.echo("--------------")
-                click.echo(asset_data['network_name'])
-
-                click.echo("\nIdentities")
-                click.echo("--------------")
-                try:
-                    for netbioss in asset_data['netbios_name']:
-                        click.echo("Netbios - {}".format(netbioss))
-                except KeyError:
-                    pass
-                try:
-                    for fqdns in asset_data['fqdns']:
-                        click.echo("FQDN - {}".format(fqdns))
-                except KeyError:
-                    pass
+        try:
+            for assets in data:
+                asset_data = tio.workbenches.asset_info(str(assets[0]))
 
                 try:
-                    for hosts in asset_data['hostname']:
-                        click.echo("Host Name - {}".format(hosts))
-                except KeyError:
-                    pass
+                    asset_id = asset_data['id']
 
-                try:
-                    for agentname in asset_data['agent_name']:
-                        click.echo("Agent Name - {}".format(agentname))
-                except KeyError:
-                    pass
-
-                try:
-                    for awsid in asset_data['aws_ec2_instance_id']:
-                        click.echo("AWS EC2 Instance ID - {}".format(awsid))
-                except KeyError:
-                    pass
-
-                try:
-                    for awsamiid in asset_data['aws_ec2_ami_id']:
-                        click.echo("AWS EC2 AMI ID - {}".format(awsamiid))
-                except KeyError:
-                    pass
-
-                try:
-                    for awsname in asset_data['aws_ec2_name']:
-                        click.echo("AWS EC2 Name - {}".format(awsname))
-                except KeyError:
-                    pass
-
-                click.echo("\nOperating Systems")
-                click.echo("--------------")
-                try:
-                    for oss in asset_data['operating_system']:
-                        click.echo(oss)
-                except KeyError:
-                    pass
-
-                try:
-                    click.echo("\nIP Addresses:")
+                    click.echo("\nTenable ID")
                     click.echo("--------------")
-                    for ips in asset_data['ipv4']:
-                        click.echo(ips)
-                except KeyError:
-                    pass
+                    click.echo(asset_id)
 
-                try:
-                    click.echo("\nMac Addresses:")
+                    click.echo("\nNetwork Name")
                     click.echo("--------------")
-                    for macs in asset_data['mac_address']:
-                        click.echo(macs)
-                except KeyError:
-                    pass
+                    click.echo(asset_data['network_name'])
 
-                try:
-                    click.echo("\nCloud Information:")
+                    click.echo("\nIdentities")
                     click.echo("--------------")
-                    for zone in asset_data['aws_availability_zone']:
-                        click.echo("AWS Availability Zone - {}".format(zone))
-                except KeyError:
-                    pass
+                    try:
+                        for netbioss in asset_data['netbios_name']:
+                            click.echo("Netbios - {}".format(netbioss))
+                    except KeyError:
+                        pass
+                    try:
+                        for fqdns in asset_data['fqdns']:
+                            click.echo("FQDN - {}".format(fqdns))
+                    except KeyError:
+                        pass
 
-                try:
-                    for groupname in asset_data['aws_ec2_instance_group_name']:
-                        click.echo("AWS Instance group Name - {}".format(groupname))
-                except KeyError:
-                    pass
+                    try:
+                        for hosts in asset_data['hostname']:
+                            click.echo("Host Name - {}".format(hosts))
+                    except KeyError:
+                        pass
 
-                try:
-                    for zone in asset_data['aws_availability_zone']:
-                        click.echo("AWS Availability Zone - {}".format(zone))
-                except KeyError:
-                    pass
-                try:
-                    for statename in asset_data['aws_ec2_instance_state_name']:
-                        click.echo("AWS Instance State - {}".format(statename))
-                except KeyError:
-                    pass
-                try:
-                    for instatncetype in asset_data['aws_ec2_instance_type']:
-                        click.echo("AWS Instance Type - {}".format(instatncetype))
-                except KeyError:
-                    pass
-                try:
-                    for region in asset_data['aws_region']:
-                        click.echo("AWS Region - {}".format(region))
-                except KeyError:
-                    pass
+                    try:
+                        for agentname in asset_data['agent_name']:
+                            click.echo("Agent Name - {}".format(agentname))
+                    except KeyError:
+                        pass
 
-                try:
-                    for subnet in asset_data['aws_subnet_id']:
-                        click.echo("AWS Subnet ID - {}".format(subnet))
-                except KeyError:
-                    pass
-                try:
-                    for vpc in asset_data['aws_vpc_id']:
-                        click.echo("AWS VPC ID - {}".format(vpc))
-                except KeyError:
-                    pass
-                try:
-                    for azureid in asset_data['azure_resource_id']:
-                        click.echo("Azure Resource ID - {}".format(azureid))
-                except KeyError:
-                    pass
-                try:
-                    for vmid in asset_data['azure_vm_id']:
-                        click.echo("Azure VM ID - {}".format(vmid))
-                except KeyError:
-                    pass
+                    try:
+                        for awsid in asset_data['aws_ec2_instance_id']:
+                            click.echo("AWS EC2 Instance ID - {}".format(awsid))
+                    except KeyError:
+                        pass
 
-                try:
-                    for gcpid in asset_data['gcp_instance_id']:
-                        click.echo("GCP Instance ID - {}".format(gcpid))
-                except KeyError:
-                    pass
-                try:
-                    for projectid in asset_data['gcp_project_id']:
-                        click.echo("GCP Project ID- {}".format(projectid))
-                except KeyError:
-                    pass
-                try:
-                    for gcpzone in asset_data['gcp_zone']:
-                        click.echo("GCP Zone - {}".format(gcpzone))
-                except KeyError:
-                    pass
-                try:
-                    click.echo("\nSources:")
+                    try:
+                        for awsamiid in asset_data['aws_ec2_ami_id']:
+                            click.echo("AWS EC2 AMI ID - {}".format(awsamiid))
+                    except KeyError:
+                        pass
+
+                    try:
+                        for awsname in asset_data['aws_ec2_name']:
+                            click.echo("AWS EC2 Name - {}".format(awsname))
+                    except KeyError:
+                        pass
+
+                    click.echo("\nOperating Systems")
+                    click.echo("--------------")
+                    try:
+                        for oss in asset_data['operating_system']:
+                            click.echo(oss)
+                    except KeyError:
+                        pass
+
+                    try:
+                        click.echo("\nIP Addresses:")
+                        click.echo("--------------")
+                        for ips in asset_data['ipv4']:
+                            click.echo(ips)
+                    except KeyError:
+                        pass
+
+                    try:
+                        click.echo("\nMac Addresses:")
+                        click.echo("--------------")
+                        for macs in asset_data['mac_address']:
+                            click.echo(macs)
+                    except KeyError:
+                        pass
+
+                    try:
+                        click.echo("\nCloud Information:")
+                        click.echo("--------------")
+                        for zone in asset_data['aws_availability_zone']:
+                            click.echo("AWS Availability Zone - {}".format(zone))
+                    except KeyError:
+                        pass
+
+                    try:
+                        for groupname in asset_data['aws_ec2_instance_group_name']:
+                            click.echo("AWS Instance group Name - {}".format(groupname))
+                    except KeyError:
+                        pass
+
+                    try:
+                        for zone in asset_data['aws_availability_zone']:
+                            click.echo("AWS Availability Zone - {}".format(zone))
+                    except KeyError:
+                        pass
+                    try:
+                        for statename in asset_data['aws_ec2_instance_state_name']:
+                            click.echo("AWS Instance State - {}".format(statename))
+                    except KeyError:
+                        pass
+                    try:
+                        for instatncetype in asset_data['aws_ec2_instance_type']:
+                            click.echo("AWS Instance Type - {}".format(instatncetype))
+                    except KeyError:
+                        pass
+                    try:
+                        for region in asset_data['aws_region']:
+                            click.echo("AWS Region - {}".format(region))
+                    except KeyError:
+                        pass
+
+                    try:
+                        for subnet in asset_data['aws_subnet_id']:
+                            click.echo("AWS Subnet ID - {}".format(subnet))
+                    except KeyError:
+                        pass
+                    try:
+                        for vpc in asset_data['aws_vpc_id']:
+                            click.echo("AWS VPC ID - {}".format(vpc))
+                    except KeyError:
+                        pass
+                    try:
+                        for azureid in asset_data['azure_resource_id']:
+                            click.echo("Azure Resource ID - {}".format(azureid))
+                    except KeyError:
+                        pass
+                    try:
+                        for vmid in asset_data['azure_vm_id']:
+                            click.echo("Azure VM ID - {}".format(vmid))
+                    except KeyError:
+                        pass
+
+                    try:
+                        for gcpid in asset_data['gcp_instance_id']:
+                            click.echo("GCP Instance ID - {}".format(gcpid))
+                    except KeyError:
+                        pass
+                    try:
+                        for projectid in asset_data['gcp_project_id']:
+                            click.echo("GCP Project ID- {}".format(projectid))
+                    except KeyError:
+                        pass
+                    try:
+                        for gcpzone in asset_data['gcp_zone']:
+                            click.echo("GCP Zone - {}".format(gcpzone))
+                    except KeyError:
+                        pass
+                    try:
+                        click.echo("\nSources:")
+                        click.echo("-" * 15)
+                        for source in asset_data['sources']:
+                            click.echo(source['name'])
+                    except KeyError:
+                        pass
+                    try:
+                        click.echo("\nTags:")
+                        click.echo("-" * 15)
+                        for tags in asset_data['tags']:
+                            click.echo("{} : {}".format(tags["tag_key"], tags['tag_value']))
+                    except KeyError:
+                        pass
+                    try:
+                        click.echo("\nCustom Attributes:")
+                        click.echo("-" * 15)
+                        for attr in get_attributes(ipaddr)['attributes']:
+                            click.echo("{} : {}".format(attr['name'], attr['value']))
+
+                    except KeyError:
+                        pass
+                    click.echo("\nVulnerability Counts")
                     click.echo("-" * 15)
-                    for source in asset_data['sources']:
-                        click.echo(source['name'])
+
+                    asset_info = tio.workbenches.asset_info(asset_id)
+
+                    for vuln in asset_info['counts']['vulnerabilities']['severities']:
+                        click.echo("{} : {}".format(vuln["name"], vuln["count"]))
+
+                    try:
+                        click.echo("\nAsset Exposure Score : {}".format(asset_info['exposure_score']))
+                        click.echo("\nAsset Criticality Score : {}".format(asset_info['acr_score']))
+                    except KeyError:
+                        pass
+
+                    click.echo("\nLast Authenticated Scan Date - {}".format(asset_data['last_authenticated_scan_date']))
+                    click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
+                    click.echo("-" * 50)
+                    click.echo("-" * 50)
                 except KeyError:
                     pass
-                try:
-                    click.echo("\nTags:")
-                    click.echo("-" * 15)
-                    for tags in asset_data['tags']:
-                        click.echo("{} : {}".format(tags["tag_key"], tags['tag_value']))
-                except KeyError:
-                    pass
-                try:
-                    click.echo("\nCustom Attributes:")
-                    click.echo("-" * 15)
-                    for attr in get_attributes(ipaddr)['attributes']:
-                        click.echo("{} : {}".format(attr['name'], attr['value']))
-
-                except KeyError:
-                    pass
-                click.echo("\nVulnerability Counts")
-                click.echo("-" * 15)
-
-                asset_info = tio.workbenches.asset_info(asset_id)
-
-                for vuln in asset_info['counts']['vulnerabilities']['severities']:
-                    click.echo("{} : {}".format(vuln["name"], vuln["count"]))
-
-                try:
-                    click.echo("\nAsset Exposure Score : {}".format(asset_info['exposure_score']))
-                    click.echo("\nAsset Criticality Score : {}".format(asset_info['acr_score']))
-                except KeyError:
-                    pass
-
-                click.echo("\nLast Authenticated Scan Date - {}".format(asset_data['last_authenticated_scan_date']))
-                click.echo("\nLast Licensed Scan Date - {}".format(asset_data['last_licensed_scan_date']))
-                click.echo("-" * 50)
-                click.echo("-" * 50)
-            except KeyError:
-                pass
+        except:
+            click.echo("\nWorkbench data couldn't be received, this could mean the asset UUID or IP doesn't exist "
+                       "or was recently deleted.\n")
 
     if vulns:
         if len(ipaddr) < 17:
@@ -607,7 +611,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
 
     if compliance:
         if len(ipaddr) > 16:
-            compliance_data = db_query("SELECT check_name, status, audit_file from compliance where asset_uuid='{}';".format(ipaddr))
+            compliance_data = db_query("SELECT check_name, status, audit_file from compliance "
+                                       "where asset_uuid='{}';".format(ipaddr))
             click.echo("{:84} {:8} {}".format("Check Name", "Status", "Audit File"))
             click.echo("-" * 150)
             for finding in compliance_data:
@@ -617,7 +622,8 @@ def ip(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound,
                 click.echo("{:85} {:8} {}".format(textwrap.shorten(check_name, width=80), status,
                                                   textwrap.shorten(audit_file, width=60)))
         else:
-            click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\nPlease re-run your command using one of the below UUIDs")
+            click.echo("\nCompliance info requires a UUID\n\nFor simplicity I pulled the UUID(s) with this IP\nPlease "
+                       "re-run your command using one of the below UUIDs")
             uuid_data = db_query("SELECT asset_uuid, asset_hostname from vulns where asset_uuid='{}';".format(ipaddr))
 
             click.echo("{:45}{}".format("UUID", "FQDN"))

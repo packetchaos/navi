@@ -21,16 +21,18 @@ def grab_keys():
     return access_key, secret_key
 
 
-@click.group(help="Deploy a Navi front-end using Docker")
+@click.group(help="Deploy Navi Services using prebuilt Docker Containersr")
 def deploy():
     pass
 
 
 @deploy.command(help="Deploy Navi Tag Center using a Docker container: navigate to http://localhost:5000")
 def tag_center():
-    if click.confirm('This command downloads the packetchaos/tag-center docker container and runs it on port 5000 using the current navi database. Deploy?'):
+    if click.confirm('This command downloads the packetchaos/tag-center docker container and runs it on port 5000 '
+                     'using the current navi database. Deploy?'):
         try:
-            os.system("docker run -d -p 5000:5000 --mount type=bind,source=\"$(pwd)\",target=/usr/src/app/data packetchaos/tag-center")
+            os.system("docker run -d -p 5000:5000 --mount type=bind,source=\"$(pwd)\",target=/usr/src/app/data "
+                      "packetchaos/tag-center")
         except os.error:
             click.echo("You might not have Docker installed")
 

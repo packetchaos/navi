@@ -140,7 +140,7 @@ def scan_hosts(scan_id):
         error_msg(E)
 
 
-@click.group(help="Create and Control Scans")
+@click.group(help="Create and Control Scans, Evaluate Scan Times and Move Scans")
 def scan():
     pass
 
