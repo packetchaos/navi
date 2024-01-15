@@ -32,7 +32,7 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
             try:
 
-                # Need to grab the Tag UUID of our Parent Tag so we can get more details
+                # Need to grab the Tag UUID of our Parent Tag, so we can get more details
                 tag_data = request_data('GET', '/tags/values')
 
                 for value in tag_data['values']:
@@ -40,7 +40,7 @@ def tag_by_tag(c, v, d, cv, cc, match):
                         if str(value['value']).lower() == str(v).lower():
                             try:
                                 tag_uuid = value['uuid']
-                                #print(tag_uuid)
+
                                 # Get filter details
                                 current_rule_set = request_data("GET", "/tags/values/" + tag_uuid)
                                 print("Current Rule set")
@@ -53,8 +53,6 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
                                 for val in new_dict['and']:
                                     print(val['value'][0])
-
-                                #print(rule_set_dict)
 
                                 '''
                                 # The filter is a string in the API, pull out the dictionary representation and
@@ -166,7 +164,8 @@ def tag_by_uuid(tag_list, c, v, d):
             # Check to see if the List of UUIDs is over 1999 (API Limit)
             if len(tag_list) > 1999:
                 try:
-                    click.echo("Your Tag list was over 2000 IPs.  Splitting the UUIDs into chunks and updating the tags now")
+                    click.echo("Your Tag list was over 2000 IPs.  "
+                               "Splitting the UUIDs into chunks and updating the tags now")
                     # Break the UUIDs into Chunks and update the tag per chunk
                     for chunks in chunks(tag_list, 1999):
                         update_tag(c, v, chunks)
@@ -206,10 +205,11 @@ def create_uuid_list(filename):
 
 
 def remove_uuids_from_tag(tag_uuid):
-    # Create an list to store our asset uuids
+    # Create a list to store our asset uuids
     asset_uuid_list = []
 
-    tag_data = db_query("select asset_uuid from assets LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(str(tag_uuid)))
+    tag_data = db_query("select asset_uuid from assets LEFT JOIN tags ON "
+                        "uuid == asset_uuid where tag_uuid=='{}';".format(str(tag_uuid)))
 
     # Clean up the data into a list
     for asset_uuid_loop in tag_data:
@@ -305,7 +305,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 # this needs to have a JOIN statement to reduce the amount
                 if output != "":
                     d = d + "\nSearching for '{}' in the plugin output".format(output)
-                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
+                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='"
+                                + plugin + "' and output LIKE '%" + output + "%';")
                 else:
                     cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id=%s;" % plugin)
 
@@ -330,7 +331,12 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("SELECT asset_uuid from vulns where port=" + port + " and (plugin_id='11219' or plugin_id='14272' or plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
+            cur.execute("SELECT asset_uuid from vulns where port=" + port + " and "
+                                                                            "(plugin_id='11219' "
+                                                                            "or plugin_id='14272' "
+                                                                            "or plugin_id='14274' "
+                                                                            "or plugin_id='34220' "
+                                                                            "or plugin_id='10335');")
 
             data = cur.fetchall()
 
@@ -385,7 +391,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
                     # Match on Given Name
                     if group_name == group:
-                        agent_data = request_data('GET', '/scanners/1/agent-groups/' + str(group_id) + '/agents', params=querystring)
+                        agent_data = request_data('GET', '/scanners/1/agent-groups/'
+                                                  + str(group_id) + '/agents', params=querystring)
                         total = agent_data['pagination']['total']
 
                         for agent in agent_data['agents']:
@@ -405,7 +412,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
-        d = d + "\nThis asset was tagged because the scantime took over {} mins".format(scantime)
+        d = d + "\nThis asset was tagged because the scan time took over {} mins".format(scantime)
         database = r"navi.db"
         conn = new_db_connection(database)
         with conn:
@@ -433,7 +440,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     except KeyError:
                         intial_seconds = 'unknown'
 
-                    # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                    # For an unknown reason, the scanner will print unknown for some assets
+                    # leaving no way to calculate the time.
                     if intial_seconds != 'unknown':
 
                         # Numerical value in seconds parsed from the plugin
@@ -502,8 +510,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                         # This method is to get around the 5000 row return limit in IO.
                         if len(tag_list) >= 4999:
 
-                            click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans to ensure all assets are tagged\n")
-                            click.echo("\nTags can take a few minutes to populate in the UI when applied to 1000s of assets\n")
+                            click.echo("\nYou're scan is 5000 IPs or More. Downloading, Parsing and Cleaning up scans "
+                                       "to ensure all assets are tagged\n")
+                            click.echo("\nTags can take a few minutes to populate in the UI when applied to "
+                                       "1000s of assets\n")
                             hist_id = scandata['history'][0]['history_id']
                             download_tag_remove(scanid, hist_id, c, v, d)
                         else:
@@ -512,9 +522,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     except TypeError:
                         click.echo("Check the scan ID")
                     except KeyError:
-                        click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
+                        click.echo("The scan used is archived, canceled, imported or aborted. "
+                                   "Your Tag was not created.")
                 else:
-                    # cycle trough history until you reach completed
+                    # cycle through history until you reach completed
                     hist = 1
                     new_scan_data = None
                     new_hist = 0
@@ -536,7 +547,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     download_tag_remove(scanid, new_hist, c, v, d)
 
             except IndexError:
-                click.echo("\nThe scan used is archived, canceled, imported or aborted and has no completed scans in it's history\n")
+                click.echo("\nThe scan used is archived, canceled, imported or aborted "
+                           "and has no completed scans in it's history\n")
             except Exception as E:
                 click.echo("Check your Scan ID; An Error occurred\n{}".format(E))
 
@@ -600,7 +612,8 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         d = d + "\nTag by Cross Reference: {}".format(xrefs)
         if xid:
             d = d + "\n Refined tag search to the follow Cross Reference ID text search: {}".format(xid)
-            xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
+            xref_data = db_query("select asset_uuid from vulns where "
+                                 "xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
 
         else:
             xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%'".format(xrefs))
@@ -633,6 +646,5 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     tag_list.append(assets[0])
         except:
             click.echo("\nMake sure you are submitting an Integer\n")
-
 
         tag_by_uuid(tag_list, c, v, d)
