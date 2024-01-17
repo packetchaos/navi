@@ -9,7 +9,7 @@ import subprocess
 # The structure is there to help you with the command syntax.
 
 start = time.time()
-#sys('navi keys --a \"eb5e2726779428c31c746e2ab6054133269ed8def2d54c9ccfd63edaa2adf97b\" --s \"89abf9e5a6c5485e352ccd53679bef7383e33fce2e87d0a5292be9e66072e4a1\"')
+
 
 
 def seed_container():
