@@ -1,5 +1,3 @@
-import pprint
-
 import click
 from .dbconfig import create_software_table, new_db_connection
 from .database import db_query, insert_software, drop_tables
@@ -43,8 +41,8 @@ def parse_20811(soft_dict):
         asset_uuid = data[1]
         for pkg in data:
             new_string = str(pkg).splitlines()
-            list = eval(str(new_string))
-            for item in list:
+            my_list = eval(str(new_string))
+            for item in my_list:
                 if "The following software" not in item:
                     if "installed" in item:
                         new_item = item.split(" [installed")
@@ -73,19 +71,22 @@ def parse_83991(soft_dict):
 
 
 def display_stats():
-    total = db_query("select count(software_string) from software;")[0][0]
-    asset_total = db_query("select count(distinct asset_uuid) from vulns;")[0][0]
-    assets_with_data = db_query("select count(distinct asset_uuid) from vulns "
-                                "where plugin_id ='22869' or plugin_id ='20811';")[0][0]
-    assets_without_data = db_query("select hostname, uuid, ip_address from assets where  ip_address !=' ' and "
-                                   "uuid not in (select asset_uuid from vulns "
-                                   "where plugin_id ='22869' or plugin_id ='20811')")
+    try:
+        total = db_query("select count(software_string) from software;")[0][0]
+        asset_total = db_query("select count(distinct asset_uuid) from vulns;")[0][0]
+        assets_with_data = db_query("select count(distinct asset_uuid) from vulns "
+                                    "where plugin_id ='22869' or plugin_id ='20811';")[0][0]
+        assets_without_data = db_query("select hostname, uuid, ip_address from assets where  ip_address !=' ' and "
+                                       "uuid not in (select asset_uuid from vulns "
+                                       "where plugin_id ='22869' or plugin_id ='20811')")
 
-    click.echo("\nUnique Software total is: " + str(total))
-    click.echo("\nAssets evaluated: " + str(asset_total))
-    click.echo("\nAssets with Software: " + str(assets_with_data))
-    click.echo("\nAssets Without Software Plugins: " + str(len(assets_without_data)))
-    click.echo()
+        click.echo("\nUnique Software total is: " + str(total))
+        click.echo("\nAssets evaluated: " + str(asset_total))
+        click.echo("\nAssets with Software: " + str(assets_with_data))
+        click.echo("\nAssets Without Software Plugins: " + str(len(assets_without_data)))
+        click.echo()
+    except:
+        click.echo("\nYou need to run 'navi software generate' to populate the software table.\n")
 
 
 @software.command(help="Display stats on Software")
@@ -169,11 +170,9 @@ def generate():
     parse_20811(soft_dict)
 
     with new_conn:
-        new_list = []
         for item in soft_dict.items():
             # Save the uuid list as a string
             new_list = [item[0], str(item[1]).strip()]
             insert_software(new_conn, new_list)
 
     display_stats()
-

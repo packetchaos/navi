@@ -216,7 +216,8 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
 @click.option('-v', is_flag=True, help="enable Verbosity and print navi commands to the screen")
 @click.option('--sheet', required=True, type=click.Choice(['users', 'networks', 'agent_groups',
                                                            'tags_fqdn', 'tags_ipv4', 'exclusions',
-                                                           'advanced_tags', 'scanner_groups', 'permissions'], case_sensitive=False),
+                                                           'advanced_tags', 'scanner_groups', 'permissions',
+                                                           'tags_for_os'], case_sensitive=False),
               multiple=True)
 def automate(sheet, name, v):
     try:
@@ -305,48 +306,14 @@ def automate(sheet, name, v):
         print("\nCreating OS Tags")
         print("-" * 30)
         for tag in _records['tags']:
-            # Here we are looking for multiple values and a comma was easiest. :)
-            if "," in tag['record']['operating_system']:
+            if v:
+                print("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" "
+                      "--value \"{}\"".format(tag['record']['tag_category'], tag['record']['tag_value'],
+                                              tag['record']['operating_system']))
 
-                ops_list = str(tag['record']['operating_system']).split(",")
-                filter_list = []
-
-                for ops in ops_list:
-                    time.sleep(1)
-                    if v:
-                        print("navi tagrule --c \"{}\" --v \"{}\" --action \"eg\" --filter \"operating_system\" --value \"{}\"".format(
-                            tag['record']['tag_category'], ops, ops))
-
-                    # API bug not allowing for 'wc' in the UI.
-                    cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eg\" --filter \"operating_system\" --value \"{}\"".format(
-                        tag['record']['tag_category'], ops, ops))
-
-                print("Pausing")
-                time.sleep(120)
-                print("Updating assets and tags tables")
-                print('navi update assets')
-                for ops in ops_list:
-                    time.sleep(1)
-                    if v:
-                        print("navi tag --c \"{}\" --v \"{}\" --cc \"{}\" --cv \"{}\"".format(
-                            str(tag['record']['tag_category']), str(tag['record']['tag_value']),
-                            str(tag['record']['tag_category']), str(ops)))
-
-                    cmd("navi tag --c \"{}\" --v \"{}\" --cc \"{}\" --cv \"{}\"".format(
-                        str(tag['record']['tag_category']), str(tag['record']['tag_value']),
-                        str(tag['record']['tag_category']), str(ops)))
-
-                #cmd("navi tagrule --c \"{}\" --v \"{}\" --multi \"{}\" -any".format(tag['record']['tag_category'],
-                #tag['record']['tag_value'],
-                #filter_list))
-
-            else:
-                if v:
-                    print("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" --value \"{}\"".format(
-                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['operating_system']))
-
-                cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" --value \"{}\"".format(
-                    tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['operating_system']))
+            cmd("navi tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"operating_system\" "
+                "--value \"{}\"".format(tag['record']['tag_category'], tag['record']['tag_value'],
+                                        tag['record']['operating_system']))
 
     if "tags_fqdn" in sheet:
         print("\nCreating FQDN Tags")
