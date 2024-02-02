@@ -264,7 +264,7 @@ def download_tag_remove(scanid, new_hist, c, v, d):
 @click.option('--histid', default=None, help="Focus on a specific scan history; Requires --scanid")
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
-@click.option('--remove', default='', help="Remove this tag from all assets to support ephemeral asset tagging")
+@click.option('-remove', is_flag=True, help="Remove this tag from all assets to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
@@ -567,26 +567,21 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nYou have to return uuids or asset_uuid. \nYour query must have uuid or asset_uuid\n")
             exit()
 
-    if remove != '':
+    if remove:
+        # Find the UUID of our given tag
+        tag_list = grab_all_tags()
+        try:
+            for tag_info in tag_list:
+                # Grab our UUID
+                if str(tag_info[0]).lower() == str(c).lower():
+                    if str(tag_info[1]).lower() == str(v).lower():
+                        new_uuid = str(tag_info[2])
+                        print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
+                        remove_uuids_from_tag(new_uuid)
 
-        if remove == 'byname':
+        except Exception as E:
+            click.echo(E)
 
-            # Find the UUID of our given tag
-            tag_list = grab_all_tags()
-            try:
-                for tag_info in tag_list:
-                    # Grab our UUID
-                    if str(tag_info[0]).lower() == str(c).lower():
-                        if str(tag_info[1]).lower() == str(v).lower():
-                            new_uuid = str(tag_info[2])
-                            print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
-                            remove_uuids_from_tag(new_uuid)
-
-            except Exception as E:
-                click.echo(E)
-
-        else:
-            remove_uuids_from_tag(remove)
 
     if cve:
         d = d + "\nTag by CVE ID: {}".format(cve)
