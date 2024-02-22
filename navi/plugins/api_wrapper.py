@@ -121,7 +121,7 @@ def request_data(method, url_mod, **kwargs):
         payload = None
 
     # Retry the download three times
-    for x in range(1, 3):
+    for x in range(1, 4):
         # Small pause between retries
         time.sleep(2.5)
         try:
