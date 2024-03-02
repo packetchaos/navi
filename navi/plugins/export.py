@@ -176,7 +176,7 @@ def parsed(name, users):
 
                     if "Computer" not in strip_output:
                         split_output = strip_output.split(",")[0][3:]
-                        print(split_output)
+                        #print(split_output)
                         if asset[0]:
                             user_list.append(asset[0])
                             user_list.append(str(split_output))
