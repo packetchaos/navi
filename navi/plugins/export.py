@@ -1,4 +1,5 @@
 import click
+import csv
 from .agent_export import agent_export
 from .database import db_query
 from .tag_helper import tag_checker
@@ -145,3 +146,39 @@ def vulns(file, severity):
 def failures():
     click.echo("\nExporting ALl vulnerabilities that failed your SLA\n This requires you run 'navi update fixed'")
     query_export("select * from fixed where pass_fail=='Fail' and state !='FIXED';", "sla_backlog")
+
+
+@export.command(help="Export parsed plugins")
+@click.option('-users', is_flag=True, help="Export Users by parsing the 45478 plugin")
+@click.option('--name', default='parsed_plugin_data')
+def parsed(name, users):
+    with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
+        agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+        header = ['Asset_UUID', "User Found"]
+        agent_writer.writerow(header)
+
+        if users:
+            raw_data = db_query("select asset_uuid, output from vulns where plugin_id='45478'")
+
+            # pprint.pprint(eval(str(raw_data))[1][1])
+            plugin_data = eval(str(raw_data))
+
+            for asset in plugin_data:
+                # remove the +users in the begining of the string
+                output_data = asset[1][18:]
+
+                # Split the users at "|"
+                output_data_split = str(output_data).split("|")
+
+                for user in output_data_split:
+                    user_list = []
+                    strip_output = str(user).strip()
+
+                    if "Computer" not in strip_output:
+                        split_output = strip_output.split(",")[0][3:]
+                        print(split_output)
+                        if asset[0]:
+                            user_list.append(asset[0])
+                            user_list.append(str(split_output))
+
+                            agent_writer.writerow(user_list)
