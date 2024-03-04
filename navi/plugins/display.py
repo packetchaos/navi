@@ -471,8 +471,8 @@ def credentials():
 
 
 @display.command(help="Display Asset and Vulnerability Export Job information")
-@click.option('-a', help="Display Asset Export Jobs", is_flag=True, required=True)
-@click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True, required=True)
+@click.option('-a', help="Display Asset Export Jobs", is_flag=True)
+@click.option('-v', help="Display Vulnerability Export Jobs", is_flag=True)
 def exports(a, v):
     if not a and not v:
         click.echo("\nYou need to use '-a' or '-v' to select your export type. (assets vs vulns)\n")

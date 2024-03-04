@@ -219,7 +219,8 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
                                                            'advanced_tags', 'scanner_groups', 'permissions',
                                                            'tags_for_os'], case_sensitive=False),
               multiple=True)
-def automate(sheet, name, v):
+@click.option('--threads', default=10, help="Number of threads to use for any navi updates")
+def automate(sheet, name, v, threads):
     try:
         ws = Excel(name, sheet_names=sheet)
         _records = ws.get_records()
@@ -377,7 +378,7 @@ def automate(sheet, name, v):
 
     if 'advanced_tags' in sheet:
         print("\nUpdating navi to refresh the db")
-        cmd("navi update full")
+        cmd("navi update full --threads {}".format(threads))
         print("\nCreating Advanced Tags")
         print("-" * 30)
 
