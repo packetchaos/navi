@@ -235,7 +235,7 @@ def start(scan_id, targets):
     if targets is None:
         tio.scans.launch(scan_id)
     else:
-        tio.scans.launch(scan_id, targets=targets)
+        tio.scans.launch(scan_id, targets=list(targets))
 
 
 @scan.command(help="Get Scan Status by Scan ID")
