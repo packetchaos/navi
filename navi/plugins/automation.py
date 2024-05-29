@@ -83,7 +83,7 @@ def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, 
 
     if tag_filter is None:
         # see if there is an operator appended to the filter_name
-        match = re.match('(?P<filter_name>\w+)[ _](?P<operator>\w+)', column_name)
+        match = re.match('(?P<filter_name>\\w+)[ _](?P<operator>\\w+)', column_name)
         if match is None:
             raise ValueError(f'[{column_name}]: bad format')
 

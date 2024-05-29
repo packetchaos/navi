@@ -2,13 +2,12 @@ try:
     import pexpect
     from pexpect import pxssh
 except ImportError:
-    #print("\nInformation: Navi push will not work on this system!\n")
+    # print("\nInformation: Navi push will not work on this system!\n")
     pass
 import click
 from .database import db_query
 
-
-PROMPT = ['#', '>>> ', '> ', '\$ ']
+PROMPT = ['#', '>>> ', '> ', '$ ']
 
 
 def send_command(shell, cmd, quick):
@@ -27,7 +26,6 @@ def send_command(shell, cmd, quick):
 
 
 def connect(user, host, password, command):
-
     try:
         if "sudo" in command:
             conn = pxssh.pxssh()
@@ -87,7 +85,6 @@ def scp(user, host, password, filename):
 @click.option('--target', required=True, help="Target IP receiving the command")
 @click.option('--file', default=None, help="Push a file to a target")
 def push(command, target, file):
-
     try:
         credentials = db_query("select username, password from ssh;")
         user = credentials[0][0]
