@@ -451,7 +451,8 @@ def usergroups(membership):
 def credentials():
     try:
 
-        click.echo("\n{:25s} {:25s} {:25s} {:25s} {:40s}".format("Credential Name", "Created By", "Credential Type", "Category", "Credential UUID"))
+        click.echo("\n{:25s} {:25s} {:25s} {:25s} {:40s}".format("Credential Name", "Created By",
+                                                                 "Credential Type", "Category", "Credential UUID"))
         click.echo("-" * 150)
 
         for cred in tio.credentials.list():

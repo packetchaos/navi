@@ -391,8 +391,8 @@ def automate(sheet, name, v, threads):
                         ad['record']['search_string'], ad['record']['option'], ad['record']['option_text']))
 
                 cmd("navi tag --c \"{}\" --v \"{}\" --{} \"{}\" --{} \"{}\"".format(
-                    ad['record']['tag_category'], ad['record']['tag_value'], ad['record']['method'],
-                    ad['record']['search_string'], ad['record']['option'], ad['record']['option_text']))
+                    str(ad['record']['tag_category']), str(ad['record']['tag_value']), str(ad['record']['method']),
+                    str(ad['record']['search_string']), str(ad['record']['option']), str(ad['record']['option_text'])))
             else:
                 if v:
                     print("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
@@ -400,10 +400,10 @@ def automate(sheet, name, v, threads):
                                                                                 ad['record']['method'],
                                                                                 ad['record']['search_string']))
 
-                cmd("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
-                                                                              ad['record']['tag_value'],
-                                                                              ad['record']['method'],
-                                                                              ad['record']['search_string']))
+                cmd("navi tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(str(ad['record']['tag_category']),
+                                                                              str(ad['record']['tag_value']),
+                                                                              str(ad['record']['method']),
+                                                                              str(ad['record']['search_string'])))
 
     if 'scanner_groups' in sheet:
         print("\nCreating Scanner groups")

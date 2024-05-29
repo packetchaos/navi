@@ -155,11 +155,15 @@ def tag_by_uuid(tag_list, c, v, d):
             # Create the Tag
             payload = {"category_name": str(c), "value": str(v), "description": str(d)}
             data = request_data('POST', '/tags/values', payload=payload)
-            value_uuid = data["uuid"]
-            cat_uuid = data['category_uuid']
-            click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
-            click.echo("The Category UUID is : {}\n".format(cat_uuid))
-            click.echo("The Value UUID is : {}\n".format(value_uuid))
+            try:
+                value_uuid = data["uuid"]
+                cat_uuid = data['category_uuid']
+                click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
+                click.echo("The Category UUID is : {}\n".format(cat_uuid))
+                click.echo("The Value UUID is : {}\n".format(value_uuid))
+            except KeyError:
+                click.echo("\nTag created but the uuid wasn't available\n")
+                click.echo("Here is the payload navi sent: {}\n".format(payload))
 
             # Check to see if the List of UUIDs is over 1999 (API Limit)
             if len(tag_list) > 1999:
