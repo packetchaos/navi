@@ -128,7 +128,7 @@ def tag_by_uuid(tag_list, c, v, d):
         click.echo("\nYour tag {}:{} resulted in 0 Assets, therefore the tag wasn't created\n".format(c,v))
         exit()
     elif tag_list == 'manual':
-        # Create the Tag
+        # Create a blank Tag
         payload = {"category_name": str(c), "value": str(v), "description": str(d)}
         data = request_data('POST', '/tags/values', payload=payload)
         value_uuid = data["uuid"]
@@ -274,8 +274,9 @@ def download_tag_remove(scanid, new_hist, c, v, d):
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
 @click.option('--missed', default='', help="Tag Agents that missed authentication in given number of days")
+@click.option('--byadgroup', default='', help="Create Tags based on AD groups in a CSV")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed):
+        manual, histid, missed, byadgroup):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -647,3 +648,54 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nMake sure you are submitting an Integer\n")
 
         tag_by_uuid(tag_list, c, v, d)
+
+    if byadgroup:
+
+        filename = byadgroup #'HFAUsersWithDevices.csv'
+
+        hfa_dict = {}
+        new_list = []
+        # Open the AD csv file
+        with open(filename, newline='') as csvfile:
+            # Use dict reader to pull a particular column
+            hfa_reader = csv.DictReader(csvfile)
+            # Cycle through each row
+            for row in hfa_reader:
+                # Pull the OU out of the DN column
+                dname = str(row['DistinguishedName']).split("OU=")[2]
+
+                # Grab the hostname of the primary device
+                new_list.append(row['PrimaryDevice1'])
+
+                # Check to see if there is a secondary device
+                try:
+                    if str(row["PrimaryDevice2"]):
+                        new_list.append(row['PrimaryDevice2'])
+                except:
+                    pass
+        # Create the dictionary
+        hfa_dict = {"{}".format(dname[:-1]): new_list}
+
+        #Gab hostnames and UUIDs
+        data = db_query("select asset_uuid, output from vulns where plugin_id='55472")
+
+        clean_hostname_list = []
+        for hostnames in data:
+            hostname = hostnames[1].split("\n")[1].split(":")[1]
+            uuid = hostnames[0]
+            clean_hostname_list.append([hostname, uuid])
+
+        for key, value in hfa_dict.items():
+            print(key)
+            # gather uuids to tag
+            tag_list = []
+            for v in value:
+                #print(v)
+                #print(data)
+                for x in clean_hostname_list:
+                    #print(x[0])
+                    if v in x[0]:
+                        print("tag --c AD Groups --v {}".format(key))
+                        tag_list.append(x[1])
+            tag_by_uuid(tag_list, c="AD Groups", v=key, d="AD Groups tagged by navi")
+            #print(tag_list)
