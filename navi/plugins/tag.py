@@ -677,7 +677,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         hfa_dict = {"{}".format(dname[:-1]): new_list}
 
         #Gab hostnames and UUIDs
-        data = db_query("select asset_uuid, output from vulns where plugin_id='55472")
+        data = db_query("select asset_uuid, output from vulns where plugin_id='55472'")
 
         clean_hostname_list = []
         for hostnames in data:

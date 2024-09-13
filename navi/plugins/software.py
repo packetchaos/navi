@@ -77,7 +77,7 @@ def display_stats():
         assets_with_data = db_query("select count(distinct asset_uuid) from vulns "
                                     "where plugin_id ='22869' or plugin_id ='20811';")[0][0]
         assets_without_data = db_query("select hostname, uuid, ip_address from assets where  ip_address !=' ' and "
-                                       "uuid not in (select asset_uuid from vulns "
+                                       "uuid not in (select distinct asset_uuid from vulns "
                                        "where plugin_id ='22869' or plugin_id ='20811')")
 
         click.echo("\nUnique Software total is: " + str(total))
@@ -102,7 +102,7 @@ def display(missing, stats, greaterthan, lessthan):
         click.echo("\nThese Assets do not have plugin 22869 nor 20811\n")
         assets_without_data = db_query("select hostname, uuid, ip_address, acr, aes from assets where "
                                        "ip_address !=' ' and uuid not in "
-                                       "(select asset_uuid from vulns "
+                                       "(select distinct asset_uuid from vulns "
                                        "where plugin_id ='22869' or plugin_id ='20811')")
 
         click.echo("\n{:16} {:80} {:6} {:6} {}".format("IP Address", "FQDN", "AES", "ACR", "UUID"))

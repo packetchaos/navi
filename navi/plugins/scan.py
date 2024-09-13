@@ -463,10 +463,18 @@ def move(a, s, limit, scanid):
 
 @scan.command(help="Import/upload nessus scans to TIO")
 @click.argument('filename')
-def upload(filename):
-    with open('{}'.format(str(filename)), 'rb') as file:
-        tio.scans.import_scan(fobj=file)
-    file.close()
+@click.option("-scan", is_flag=True, help="Upload a finished vuln or compliance scan.")
+@click.option("-policy", is_flag=True, help="Upload a scan policy.")
+def upload(filename, scan, policy):
+
+    if scan:
+        with open('{}'.format(str(filename)), 'rb') as file:
+            tio.scans.import_scan(fobj=file)
+        file.close()
+
+    if policy:
+        with open('{}'.format(str(filename)), 'rb') as file:
+            tio.policies.policy_import(file)
 
 
 @scan.command(help="Export/Download nessus scans")

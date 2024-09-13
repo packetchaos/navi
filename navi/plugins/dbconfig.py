@@ -119,11 +119,27 @@ def create_tag_table():
     create_tags_table = """CREATE TABLE IF NOT EXISTS tags (
                         tag_id integer PRIMARY KEY,
                         asset_uuid text,
-                        asset_ip,
+                        asset_ip text,
                         tag_key text,
                         tag_uuid text,
                         tag_value text,
                         tag_added_date text
+                        );"""
+    tag_conn.execute('pragma journal_mode=wal;')
+    create_table(tag_conn, create_tags_table)
+
+
+def create_tagrules_table():
+    database = r"navi.db"
+    tag_conn = new_db_connection(database)
+    create_tags_table = """CREATE TABLE IF NOT EXISTS tagrules (
+                        category_uuid text,
+                        key text,
+                        value_uuid text,
+                        value text,
+                        description text,
+                        access text,
+                        filters text
                         );"""
     tag_conn.execute('pragma journal_mode=wal;')
     create_table(tag_conn, create_tags_table)

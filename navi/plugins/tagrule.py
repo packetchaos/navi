@@ -47,7 +47,8 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
                 rule_tuple = (filter, action, [value])
                 try:
                     tio.tags.create(c, v, filters=[rule_tuple], description=d)
-                except:
+                except Exception as E:
+                    click.echo(E)
                     click.echo("\nThis tag name already exist; Delete it or rename the one you want to create.\n")
             else:
                 click.echo("You must have a value if you are going to use a filter")

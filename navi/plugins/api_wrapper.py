@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-7.5.33"
+    return "navi-8.0.1"
 
 
 def tenb_connection():
@@ -136,6 +136,88 @@ def request_data(method, url_mod, **kwargs):
             elif r.status_code == 404:
                 click.echo('\nCheck your query...I can\'t find what you\'re looking for {}'.format(r))
                 return r.json()
+            elif r.status_code == 429:
+                click.echo("\nToo many requests at a time...\n{}".format(r))
+                continue
+            elif r.status_code == 400:
+                click.echo("\nThe object you tried to create may already exist\n")
+                click.echo("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
+                click.echo(r.request)
+                click.echo(r.headers)
+                click.echo(r.reason)
+                break
+            elif r.status_code == 403:
+                click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
+                break
+            elif r.status_code == 409:
+                click.echo("API Returned 409\n If you are changing permissions, it could indicate a duplicate request\n")
+                break
+            elif r.status_code == 504:
+                click.echo("\nOne of the Threads had an issue during download...Retrying...\n "
+                           "If got this error while importing assets you may not have proper permissions{}".format(r))
+                continue
+            else:
+                click.echo("Something went wrong...Don't be trying to hack me now {}".format(r))
+                click.echo(r.request)
+                click.echo(r.headers)
+                click.echo(r.reason)
+                continue
+        except ConnectionError:
+            click.echo("Check your connection...You got a connection error. Retying")
+            continue
+        except JSONDecodeError:
+            click.echo("Download Error or User enabled / Disabled ")
+            continue
+
+
+def request_xml(method, url_mod, **kwargs):
+    def grab_xml_headers():
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT * from keys;")
+            except Error:
+                click.echo("\nYou don't have any API keys!  Please enter your keys\n")
+                exit()
+            rows = cur.fetchall()
+            for row in rows:
+                access_key = row[0]
+                secret_key = row[1]
+        return {'Content-type': 'text/xml', 'user-agent': navi_version(),
+                'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    # set the Base URL
+    url = grab_url() #"https://cloud.tenable.com"
+
+    # check for params and set to None if not found
+    try:
+        params = kwargs['params']
+    except KeyError:
+        params = None
+
+    # check for a payload and set to None if not found
+    try:
+        payload = kwargs['payload']
+    except KeyError:
+        payload = None
+
+    # Retry the download three times
+    for x in range(1, 3):
+        # Small pause between retries
+        time.sleep(2.5)
+        try:
+            r = requests.request(method, url + url_mod, headers=grab_xml_headers(), params=params, json=payload, verify=True)
+            if r.status_code == 200:
+                return r.text
+
+            if r.status_code == 202:
+                # This response is for some successful posts.
+                click.echo("\nSuccess!\n")
+                break
+            elif r.status_code == 404:
+                click.echo('\nCheck your query...I can\'t find what you\'re looking for {}'.format(r))
+                return r.text
             elif r.status_code == 429:
                 click.echo("\nToo many requests at a time...\n{}".format(r))
                 continue

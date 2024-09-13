@@ -1,11 +1,12 @@
 import click
 from .api_wrapper import request_data, tenb_connection, grab_headers
+from sqlite3 import Error
 import time
 import uuid
 import csv
 import textwrap
 import json
-from .database import db_query
+from .database import db_query, new_db_connection
 
 
 tio = tenb_connection()
@@ -289,7 +290,7 @@ def export(scanid):
 def upload(filename):
     try:
         import requests
-        url= "https://cloud.tenable.com/api/v3/was/import"
+        url = "https://cloud.tenable.com/api/v3/was/import"
 
         files = {"Filedata": ("{}".format(filename), open("{}".format(filename), "rb"), "application/json")}
 

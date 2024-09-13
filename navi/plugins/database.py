@@ -126,10 +126,19 @@ def insert_assets(conn, assets):
 
 
 def insert_tags(conn, tags):
-    sql = '''INSERT or IGNORE into tags(tag_id, asset_uuid, asset_ip, tag_key, tag_uuid, tag_value, tag_added_date) VALUES(?,?,?,?,?,?,?)'''
+    sql = '''INSERT or IGNORE into tags(tag_id, asset_uuid, asset_ip, tag_key, tag_uuid, tag_value, tag_added_date)
+     VALUES(?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, tags)
+
+
+def insert_tag_rules(conn, tag_rules):
+    sql = '''INSERT or IGNORE into tagrules(category_uuid, key, value_uuid, value, description, access, filters)
+     VALUES(?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, tag_rules)
 
 
 def insert_software(conn, software):

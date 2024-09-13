@@ -8,6 +8,7 @@ from .agent_group_export import agent_group_export
 from .user_export import user_export
 from .compliance_export_csv import compliance_export_csv
 from .query_export_32K import export_query
+from .api_wrapper import request_xml
 
 
 @click.group(help="Export Tenable.io Data")
@@ -182,3 +183,13 @@ def parsed(name, users):
                             user_list.append(str(split_output))
 
                             agent_writer.writerow(user_list)
+
+
+@export.command(help="Export policies for a migration")
+@click.option('--pid', default=None, help="Policy ID to be exported. Use 'navi display policies' for IDs")
+def policy(pid):
+    def write_file(blob):
+        with open("{}.nessus".format(pid), 'w') as file:
+            file.write(blob)
+    data = request_xml('GET', '/policies/{}/export'.format(pid))
+    write_file(str(data))

@@ -201,7 +201,7 @@ def policies():
         click.echo("-" * 150)
 
         for policy in tio.policies.list():
-            click.echo("{:40s} {:51s} {:10} {}".format(str(policy['name']), str(policy['description']), str(policy['id']),
+            click.echo("{:40s} {:51s} {:10} {}".format(textwrap.shorten(str(policy['name']), width=40), textwrap.shorten(str(policy['description']), width=51), str(policy['id']),
                                                        policy['template_uuid']))
         click.echo()
     except AttributeError:
@@ -220,7 +220,6 @@ def connectors():
         for conn in data["connectors"]:
             try:
                 schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
-
 
                 last_sync = conn['last_sync_time']
             except KeyError:
