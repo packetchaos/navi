@@ -13,13 +13,15 @@ def compare(uuid):
     with open('cve_data_{}.csv'.format(uuid), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
-        header_list = ["Plugin ID", "Plugin Name", "CVE", "CVSS", "CVSS3", "VPR Score", "EPSS Score", "Severity", "First Found",
-                       "Last_Found", "Instances"]
+        header_list = ["Plugin ID", "Plugin Name", "CVE", "CVSS", "CVSS3", "VPR Score", "EPSS Score", "Severity",
+                       "First Found", "Last_Found", "Instances"]
 
         agent_writer.writerow(header_list)
 
         master_list = []
-        click.echo("\n{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format("Plugin ID", "Plugin Name", "CVE", "CVSS", "CVSS3", "VPR", "EPSS", "Severity", "instances"))
+        click.echo("\n{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format("Plugin ID", "Plugin Name", "CVE",
+                                                                             "CVSS", "CVSS3", "VPR", "EPSS", "Severity",
+                                                                             "instances"))
         click.echo("-" * 150)
         for plugin in data:
             plugin_id = plugin[0]
@@ -49,9 +51,14 @@ def compare(uuid):
                         epss_data = str(epss_data_raw[0][0])
                     except:
                         pass
-                    click.echo("{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format(plugin_id, textwrap.shorten(plugin_name, width=65), cve, cvss, cvss3, vpr, epss_data, severity, instances[0][0]))
+                    click.echo("{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format(plugin_id,
+                                                                                       textwrap.shorten(plugin_name,
+                                                                                                        width=65), cve,
+                                                                                       cvss, cvss3, vpr, epss_data,
+                                                                                       severity, instances[0][0]))
 
-                    csv_update_list = [plugin_id, plugin_name, cve, cvss, cvss3, vpr, epss_data, severity, first_found, last_found, instances[0][0]]
+                    csv_update_list = [plugin_id, plugin_name, cve, cvss, cvss3, vpr, epss_data, severity,
+                                       first_found, last_found, instances[0][0]]
                     agent_writer.writerow(csv_update_list)
 
     click.echo("\nYou're export: cve_compare_{}.csv is finished\n".format(uuid))

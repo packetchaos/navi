@@ -159,7 +159,9 @@ def parse_19506_from_file(filename, scanid, histid):
                         indexing_time = total_duration - seconds
 
                         # All assets and 19506 seconds in a tuple
-                        total_assets_scanned_list.append((asset_uuid, row['Host Start'], start_time, seconds, indexing_time, total_duration, row['Host End'], row['IP Address']))
+                        total_assets_scanned_list.append((asset_uuid, row['Host Start'], start_time, seconds,
+                                                          indexing_time, total_duration, row['Host End'],
+                                                          row['IP Address'], scanner_ip))
 
                         # pprint.pprint(total_assets_scanned_list)
 
@@ -250,7 +252,7 @@ def parse_19506_from_file(filename, scanid, histid):
 
     with open("{}-parsing.csv".format(scanid), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration", "Total_duration",  "Platform_end", "IP Address"]
+        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration", "Total_duration",  "Platform_end", "IP Address", "Scanner IP"]
 
         agent_writer.writerow(header)
         # Loop through each asset
@@ -323,30 +325,35 @@ def evaluate_a_scan(scanid, histid):
             # Getting the length of the Category and using it to get the average
             def average_by_policy(name, scan_info):
                 # Print the Category to the Screen ( Scanner, Policy, Scan Name)
-                click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
-                click.echo("-" * 20)
+                with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
+                    average_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+                    click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
+                    click.echo("-" * 20)
+                    header = ["Scan Name", "Avg Minutes per/asset", "Total Assets"]
+                    average_writer.writerow(header)
 
-                # Cycle through each category
-                for scan in scan_info.items():
+                    # Cycle through each category
+                    for scan in scan_info.items():
 
-                    # data is in a list [asset_uuid, mins] We need the length of the total mins found
-                    length = len(scan[1])
+                        # data is in a list [asset_uuid, mins] We need the length of the total mins found
+                        length = len(scan[1])
 
-                    # Reset the total per Category Item - Specific Scan ID, Scanner, Policy ID
-                    total = 0
+                        # Reset the total per Category Item - Specific Scan ID, Scanner, Policy ID
+                        total = 0
 
-                    # Cycle through each asset record
-                    for assets in scan[1].values():
-                        # Gather a total
-                        total = assets + total
+                        # Cycle through each asset record
+                        for assets in scan[1].values():
+                            # Gather a total
+                            total = assets + total
 
-                    # After calculating the total, lets get an average
-                    average = total/length
+                        # After calculating the total, lets get an average
+                        average = total/length
 
-                    # Print results to the screen
-                    click.echo("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
-
-                click.echo("-" * 150)
+                        # Print results to the screen
+                        click.echo("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
+                        averages = [str(scan[0]), average, length]
+                        average_writer.writerow(averages)
+                    click.echo("-" * 150)
 
             # Loop through each plugin 19506 and Parse data from it
             for vulns in plugin_data:

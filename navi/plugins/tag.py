@@ -117,7 +117,6 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
 
 def tag_by_uuid(tag_list, c, v, d):
-
     # Generator to split IPs into 2000 IP chunks
     def chunks(l, n):
         for i in range(0, len(l), n):
@@ -164,7 +163,17 @@ def tag_by_uuid(tag_list, c, v, d):
             except KeyError:
                 click.echo("\nTag created but the uuid wasn't available\n")
                 click.echo("Here is the payload navi sent: {}\n".format(payload))
-
+            except TypeError:
+                click.echo("*" * 100)
+                click.echo("\n\nKNOWN ERROR CONDITION\n\n"
+                           "This error occurs when you have the same tag category or tag value name\n"
+                           "but it isn't exactly the same name. I.E name vs Name vs naMe\n"
+                           "It could be missing a Capital letter or a space.\n"
+                           "Try adding a 1 to your tag value and category to test this theory"
+                           "report any other challenges to github\n"
+                           "Disregard if you didn't get this error using navi tag or navi automate\n\n")
+                click.echo("*" * 100)
+                exit()
             # Check to see if the List of UUIDs is over 1999 (API Limit)
             if len(tag_list) > 1999:
                 try:
@@ -297,34 +306,25 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         click.echo("You must supply a Cross Reference Type using --xrefs option")
 
     if histid and not scanid:
-        click.echo("you need a scanID as well.")
+        click.echo("You must supply a scan ID as well.")
 
     if plugin:
         d = d + "\nTag by Plugin ID: {}".format(plugin)
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                # See if we want to refine our search by the output found in this plugin
-                # this needs to have a JOIN statement to reduce the amount
-                if output != "":
-                    d = d + "\nSearching for '{}' in the plugin output".format(output)
-                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id='"
-                                + plugin + "' and output LIKE '%" + output + "%';")
-                else:
-                    cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_id=%s;" % plugin)
+            if output != "":
+                plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
+                                       "asset_uuid = uuid "
+                                       "where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
+            else:
+                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns where plugin_id={};".format(plugin))
 
-                plugin_data = cur.fetchall()
-                for x in plugin_data:
-                    ip = x[0]
-                    uuid = x[1]
-                    # To reduce duplicates check for the UUID in the list.
-                    if uuid not in tag_list:
-                        tag_list.append(uuid)
-                        ip_list = ip_list + "," + ip
-                    else:
-                        pass
+            for x in plugin_data:
+                uuid = x[1]
+                # To reduce duplicates check for the UUID in the list.
+                if uuid not in tag_list:
+                    tag_list.append(uuid)
+                else:
+                    pass
         except Error:
             pass
 

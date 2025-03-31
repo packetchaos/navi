@@ -133,8 +133,11 @@ def process_groups_from_users(records):
             continue
 
         # build group commands and membership index
-        for group_name in user['record']['groups'].split(','):
-            membership[group_name].append(user['record']['username'])
+        try:
+            for group_name in user['record']['groups'].split(','):
+                membership[group_name].append(user['record']['username'])
+        except:
+            pass
 
     # build group 'create'
     for group_name in membership:

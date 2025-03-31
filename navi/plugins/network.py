@@ -132,6 +132,7 @@ def move(net, scanner, c, v, source, target):
 
         # then grab the Scanned IP from the vulns table using the UUID as a Key; then put the IPs in a list
         ip_list = ""
+
         for item in tag_uuid_list:
             ip_address = db_query("select asset_ip from vulns where asset_uuid='{}'".format(item))
 

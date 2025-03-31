@@ -110,7 +110,9 @@ def organize_19506_composite_data(filename):
     total_assets_scanned_list = []
     start_scan_timestamp_list = []
     timestamp_plus_duration_list = []
-
+    total = 0
+    scan_name = None
+    scan_policy = None
     with open(filename) as fobj:
 
         for row in DictReader(fobj):
@@ -143,7 +145,7 @@ def organize_19506_composite_data(filename):
                 total_assets_scanned_list.append((asset_uuid, seconds))
 
                 # calculate the total for AVG calc
-            total = 0
+
             for secs in total_assets_scanned_list:
                 total += secs[1]
 
@@ -234,37 +236,40 @@ def trend_by_scan_id(scanid):
         for hist in tio.scans.history(scanid):  # scan_hist['history']:
             if not hist['is_archived']:
                 if hist['status'] == 'completed':
-                    # Lets get the Reported Scan Duration
-                    reported_scan_start = hist['time_start']
-                    reported_scan_end = hist['time_end']
-                    total_reported_scan_duration = reported_scan_end - reported_scan_start
+                    try:
+                        # Lets get the Reported Scan Duration
+                        reported_scan_start = hist['time_start']
+                        reported_scan_end = hist['time_end']
+                        total_reported_scan_duration = reported_scan_end - reported_scan_start
 
-                    # Simple Delta from Tenable.io reported Scan times
-                    reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
+                        # Simple Delta from Tenable.io reported Scan times
+                        reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
 
-                    click.echo("\nDownloading scan {}, history {} details into a csv called {}-{}.csv for "
-                               "parsing and manual auditing\n".format(scanid, hist['id'], scanid, hist['id']))
+                        click.echo("\nDownloading scan {}, history {} details into a csv called {}-{}.csv for "
+                                   "parsing and manual auditing\n".format(scanid, hist['id'], scanid, hist['id']))
 
-                    # Download the Scan data
-                    scan_file_name = download_csv_by_plugin_id(scanid, hist['id'])
+                        # Download the Scan data
+                        scan_file_name = download_csv_by_plugin_id(scanid, hist['id'])
 
-                    # Parse the downloaded file
-                    scan_details, total_calculated_scan = decorate_19506_data(scan_file_name)
+                        # Parse the downloaded file
+                        scan_details, total_calculated_scan = decorate_19506_data(scan_file_name)
 
-                    # Processing time therefore is the reported duration - the total scan duration
-                    processing = total_reported_scan_duration - total_calculated_scan
+                        # Processing time therefore is the reported duration - the total scan duration
+                        processing = total_reported_scan_duration - total_calculated_scan
 
-                    # Constructing the scan URL for ease of use
-                    scan_url = "https://cloud.tenable.com/tio/app.html#/assess/scans/vm-scans/folders/1/scan-details/{}/{}/" \
-                               "by-plugin/vulnerability-details/19506/details".format(scanid, hist['scan_uuid'])
+                        # Constructing the scan URL for ease of use
+                        scan_url = "https://cloud.tenable.com/tio/app.html#/assess/scans/vm-scans/folders/1/scan-details/{}/{}/" \
+                                   "by-plugin/vulnerability-details/19506/details".format(scanid, hist['scan_uuid'])
 
-                    # Insert the reported duration and scan url
-                    scan_details.insert(0, scan_url)
-                    scan_details.insert(8, reported_scan_duration)
-                    scan_details.insert(9, datetime.timedelta(seconds=processing))
+                        # Insert the reported duration and scan url
+                        scan_details.insert(0, scan_url)
+                        scan_details.insert(8, reported_scan_duration)
+                        scan_details.insert(9, datetime.timedelta(seconds=processing))
 
-                    # Write to File
-                    trend_writer.writerow(scan_details)
+                        # Write to File
+                        trend_writer.writerow(scan_details)
+                    except TypeError:
+                        pass
 
 
 def display_data(scanid):

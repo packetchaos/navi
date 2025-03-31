@@ -113,7 +113,7 @@ def cves_by_uuid(uuid):
     try:
         data = db_query("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
-        click.echo("\n{:10s} {:60} {:>15} {:>15} {:>15}".format("Plugin", "CVEs", "Avg EPSS", "Total EPSS", "Top EPSS"))
+        click.echo("\n{:10s} {:90} {:>15} {:>15} {:>15}".format("Plugin", "CVEs", "Avg EPSS", "Total EPSS", "Top EPSS"))
         click.echo("-"*150)
 
         for vulns in data:
@@ -136,13 +136,14 @@ def cves_by_uuid(uuid):
 
                 average = total/len(epss_list)
                 top = max(epss_list)
-                click.echo("{:10s} {:60} {:15} {:15} {:15}".format(plugin_id, textwrap.shorten(cves, 140), average, total, top))
+                click.echo("{:10s} {:90} {:15} {:15} {:15}".format(plugin_id, textwrap.shorten(cves, 90),
+                                                                   average, total, top))
             except:
                 average = "No EPSS"
                 total = "No EPSS"
                 top = "No EPSS"
-                click.echo("{:10s} {:60} {:>15} {:>15} {:>15}".format(plugin_id, textwrap.shorten(cves, 140), average, total, top))
-
+                click.echo("{:10s} {:90} {:>15} {:>15} {:>15}".format(plugin_id, textwrap.shorten(cves, 90),
+                                                                      average, total, top))
 
     except IndexError:
         click.echo("Something went wrong")

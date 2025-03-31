@@ -16,10 +16,8 @@ def grab_all_tags():
 
 def update_tag(c, v, tag_list):
     click.echo("Your tag is being updated\n")
-
     try:
         list_tags = grab_all_tags()
-
         for tag_info in list_tags:
             if str(tag_info[0]).lower() == str(c).lower():
                 if str(tag_info[1]).lower() == str(v).lower():

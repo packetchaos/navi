@@ -244,7 +244,7 @@ def grab_scans(days):
                 new_limit = day * int(days)
                 day_limit = time.time() - new_limit
 
-                if scanids['status'] == 'completed' and scanids['template_name'] == 'scan':
+                if scanids['status'] == 'completed':
                     try:
                         asset_uuid = scanids['asset_id']
                     except KeyError:

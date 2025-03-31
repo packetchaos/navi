@@ -68,42 +68,28 @@ def group(group_name):
 @export.command(help="Export All assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default=None, required=True, help="Export bytag with the following Category name")
 @click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; requires --c and Category Name")
-@click.option('--ec', default=None, help="Exclude tag from export with Tag Category; requires --ev")
-@click.option('--ev', default=None, help="Exclude tag from export with Tag Value; requires --ec")
 @click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
 @click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'], case_sensitive=False), multiple=True)
-def bytag(c, v, ec, ev, file, severity):
-    new_list = []
-
-    tag_assets = db_query("SELECT asset_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
-
-    for asset in tag_assets:
-        asset_uuid = asset[0]
-        # Check the tag isn't apart of the exclude tag given
-        if ev:
-            check_for_no = tag_checker(asset_uuid, ec, ev)
-            if check_for_no == 'no':
-                new_list.append(asset_uuid)
-        else:
-            new_list.append(asset_uuid)
+def bytag(c, v, file, severity):
 
     if severity:
         # If Severity is chosen then we will export vuln details
         if len(severity) == 1:
             # multiple choice values are returned as a tuple.
             # Here I break it out and put it in the format needed for sql
-            new_list = tuple(new_list)
-            asset_query = "select * from vulns where severity in ('{}') and asset_uuid in {};".format(severity[0], new_list)
+            asset_query = ("select vulns.*, tags.asset_uuid from vulns left join tags on "
+                           "vulns.asset_uuid = tags.asset_uuid where vulns.severity in ('{}');").format(severity[0])
             query_export(asset_query, file)
         else:
-            new_list = tuple(new_list)
-            # Here I just send the tuple in the query
-            asset_query = "select * from vulns where severity in {} and asset_uuid in {};".format(severity, new_list)
+
+            asset_query = ("select vulns.*, tags.asset_uuid from vulns left join tags on "
+                           "vulns.asset_uuid = tags.asset_uuid where vulns.severity in {};").format(severity)
             query_export(asset_query, file)
     else:
-        new_list = tuple(new_list)
-        asset_query = "select * from assets where uuid in {}".format(new_list)
-        query_export(asset_query, file)
+        tag_assets = ("SELECT assets.*, tags.asset_uuid from assets left join tags on assets.uuid = tags.asset_uuid "
+                      "and tags.tag_key='") + c + "' and tags.tag_value='" + v + "';"
+
+        query_export(tag_assets, file)
 
 
 @export.command(help="Export User and Role information into a CSV")
@@ -177,7 +163,7 @@ def parsed(name, users):
 
                     if "Computer" not in strip_output:
                         split_output = strip_output.split(",")[0][3:]
-                        #print(split_output)
+
                         if asset[0]:
                             user_list.append(asset[0])
                             user_list.append(str(split_output))

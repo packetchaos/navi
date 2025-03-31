@@ -6,7 +6,8 @@ def user_export():
     user_data = request_data("GET", "/users")
 
     # for some reason if a name isn't given no key is created.
-    header_list = ["Name", "User Name", "UUID", "Permissions", "Total Failed Attempts"]
+    header_list = ["Name", "User Name", "UUID", "permissions", "Total Failed Attempts"]
+
     with open('user_data.csv', mode='w', encoding='utf-8', newline="") as csv_file:
         user_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 

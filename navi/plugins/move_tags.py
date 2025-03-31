@@ -31,7 +31,21 @@ def dynamic():
         new_new_filters = str(new_filters).replace("wc", "match")
         super_new_filter = str(new_new_filters).replace("*", "")
         new_super_new_filter = str(super_new_filter).replace("operating_systems", "operating_system")
-        filters = eval(new_super_new_filter)
+        filters1 = str(new_super_new_filter).replace("ipv4_addresses", "ipv4")
+        filters2 = str(filters1).replace("ipv4_addresses", "ipv4")
+        filters3 = str(filters2).replace("tags", "tag.Access Tags")
+        filters4 = str(filters3).replace("name", "netbios_name")
+        filters5 = str(filters4).replace("nwc", "nmatch")
+        filters6 = str(filters5).replace("gt", "date-gt")
+        filters7 = str(filters6).replace("lt", "date-lt")
+        filters8 = str(filters7).replace("nexists", "set-hasnot")
+        filters9 = str(filters8).replace("last_licensed_scan_time", "last_scan_time")
+        filters10 = str(filters9).replace("fqdns", "fqdn")
+        filters11 = str(filters10).replace("ports", "tag.Port")
+        filters12 = str(filters11).replace("last_authenticated_scan_time", "Last Authenticated Scan")
+        filters13 = str(filters12).replace("acr.score", "acr_score")
+
+        filters = eval(filters13)
 
         try:
 
