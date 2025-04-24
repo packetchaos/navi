@@ -133,7 +133,7 @@ def create_tagrules_table():
     database = r"navi.db"
     tag_conn = new_db_connection(database)
     create_tags_table = """CREATE TABLE IF NOT EXISTS tagrules (
-                        category_uuid text,
+                        category_uunaviid text,
                         key text,
                         value_uuid text,
                         value text,

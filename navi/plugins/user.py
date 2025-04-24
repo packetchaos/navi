@@ -118,3 +118,38 @@ def disable(uid, account, api, pwd, saml):
 
     if not account and not api and not pwd and not saml:
         click.echo("\nYou need to specify an option\n\nIf you want to disable an account use the '-account' option\n")
+
+
+
+@click.group(help="Create a user group or Add/remove a user from a user group")
+def usergroup():
+    pass
+
+
+@usergroup.command(help="Create a new user group")
+@click.option("--name", default='', required=True, help="The Name of the user group")
+def create(name):
+    # Check to see if the group already exists
+    group_id, group_uuid = get_group_id(name)
+    if group_id == 0:
+        create_group(name)
+    else:
+        print("Your Group already exists. Here is the group id {}".format(group_id))
+
+
+@usergroup.command(help="Add a User to a user group")
+@click.option("--name", default='', required=True, help="The Name of the user group")
+@click.option("--user", default='', required=True, help="The User Name to be added")
+def add(name, user):
+    user_id, user_uuid = get_user_id(user)
+    group_id, group_uuid = get_group_id(name)
+    add_users(user_id, group_id)
+
+
+@usergroup.command(help="Remove a User from a user group")
+@click.option("--name", default='', required=True, help="The Name of the group")
+@click.option("--user", default='', required=True, help="The User Name to be removed")
+def remove(name, user):
+    user_id, user_uuid = get_user_id(user)
+    group_id, group_uuid = get_group_id(name)
+    remove_user(user_id, group_id)

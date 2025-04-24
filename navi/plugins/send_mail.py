@@ -40,7 +40,10 @@ def send_attachment(from_email, to_email, mail_server, password, port, filename,
 
         click.echo('Email sent!')
     except Exception as E:
-        click.echo('\nSomething went wrong...Your email information may be incorrect\n')
-        click.echo("For now you must use an 'less secure' setting in Gmail for this feature."
-                   "\n I'm working on a more secure option.")
+        click.echo('\n\nSomething went wrong...Your email information may be incorrect')
+        click.echo("\n\nThis feature may not work with Gmail due to some security settings: Try GMX mail"
+                   "\n\nIf you are seeing this message: here are two things to try."
+                   "\n\nOne in GMX or other email clients you may need to enable POP from settings. "
+                   "\n\nTwo, make sure your smtp settings are correct."
+                   "\n\nUse 'navi explore data query' command to query the smtp table.\n\n")
         click.echo(E)

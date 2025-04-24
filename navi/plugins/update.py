@@ -9,6 +9,7 @@ from .was_export import grab_scans
 from .epss import update_navi_with_epss
 from .tagrule_export import export_tags
 
+
 def threads_check(threads):
     if threads != 20:  # Limit the amount of threads to avoid issues
         click.echo("\nUsing {} thread(s) at your request".format(threads))
@@ -133,6 +134,7 @@ def was(days):
 @click.option('--year', '--y', required=True, help="Year of your desire;EX: 2023 NOT 23")
 def epss(day, month, year):
     update_navi_with_epss(day, month, year)
+
 
 @update.command(help="Popluate the DB with Tag rules for migrations")
 def tagrules():

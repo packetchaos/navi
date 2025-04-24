@@ -82,7 +82,7 @@ def discovery_then_vulnscan(trigger, fire, targets):
 @click.option('--fire', default=None, help="The scan ID you want to use for your Vuln Scan")
 def dependency_scan(trigger, fire):
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} packetchaos/dependency_scan".format(a, s, trigger, fire, targets)
+    command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} packetchaos/dependency_scan".format(a, s, trigger, fire)
     if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)

@@ -1,4 +1,5 @@
 import click
+import pprint
 from .api_wrapper import tenb_connection
 from .database import db_query
 import datetime
@@ -14,7 +15,7 @@ tio = tenb_connection()
 @click.option('--freq', multiple=False, required=True, default=["DAILY"],
               type=click.Choice(["ONETIME", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
               help='The frequency of the exclusion')
-@click.option('--day')
+@click.option('--day', required=True, default="")
 @click.option('--c', default=None, help='Category of the Tag you want to exclude')
 @click.option('--v', default=None, help='Value of the Tag you want to exclude')
 def exclude(name, members, start, end, freq, day, c, v):
@@ -38,7 +39,7 @@ def exclude(name, members, start, end, freq, day, c, v):
                                                     day_of_month=day,
                                                     description="Created using Navi; IPs by Tag: {}:{}".format(c, v))
 
-            click.echo(exclude_request)
+            pprint.pprint(exclude_request)
     else:
         if members is None:
             click.echo("\nYou need to specify a Tag or a IP/subnet to exclude\n")
