@@ -1,4 +1,4 @@
-# Navi - The Tenable.io Swiss Army Knife
+# Navi - The Tenable Vulnerability Management Swiss Army Knife
 A command-line tool which leverages the Tenable.io API to automate common tasks
 in Cyber Exposure or Vulnerability Management.
 
@@ -36,11 +36,11 @@ In different terminals it can be a challenge to copy the keys to navi since you 
 
 Use the below commands to check your keys
     
-    navi find query "select * from keys;"
+    navi explore data query "select * from keys;"
 
 Alternatively, you could try entering your keys again using the '-clear' command to see what is being copied to the screen.
 
-    navi keys -clear
+    navi config keys -clear
 
 ### What is the biggest Tenable.io instance Navi has been tested on?
 Navi 6.3.0 was recently tested on a container with 250,000 assets and 41 million vulnerabilties.  
