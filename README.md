@@ -29,7 +29,7 @@ I'm still working on a fix for large accounts, those over 100K assets.  For now 
 ### What is my Navi Version
 Versions older than 5.1.36 do not have this feature.
 
-    navi display version
+    navi explore info version
 
 ### Are my Keys inputted correctly?
 In different terminals it can be a challenge to copy the keys to navi since you can not be sure it copied correctly.  
