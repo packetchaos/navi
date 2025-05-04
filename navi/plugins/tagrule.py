@@ -1,11 +1,12 @@
 from .api_wrapper import tenb_connection, request_data
 import click
 import csv
+from .enrich import enrich
 
 tio = tenb_connection()
 
 
-@click.command(help="Create Tag rules in Tenable.io")
+@enrich.command(help="Create Tag rules in Tenable.io")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")

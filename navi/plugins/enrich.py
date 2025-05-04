@@ -10,6 +10,7 @@ from datetime import datetime
 from .add_by_file import add_helper
 from .tag_helper import tag_checker
 from collections import defaultdict
+from error_msg import error_msg
 
 tio = tenb_connection()
 
@@ -457,7 +458,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     uuid = x[1]
                     if uuid not in tag_list:
                         tag_list.append(uuid)
-                        ip_list = ip_list + "," + ip
                     else:
                         pass
         except Error:
@@ -674,7 +674,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         except Exception as E:
             click.echo(E)
 
-
     if cve:
         d = d + "\nTag by CVE ID: {}".format(cve)
         if len(cve) < 10:
@@ -838,6 +837,7 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
             exit()
 
     if file:
+        # API will limit this by 1024 - need a counter
         ip_list = ''
         for_length = []
         if file != '':
@@ -907,7 +907,7 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
         data = db_query("select acr, asset_uuid from tags left join assets on assets.uuid = tags.asset_uuid "
                         "where tag_key='{}' and tag_value='{}';".format(c, v))
 
-        # create a list of all UUIDs associated; this will be used for comparson later
+        # create a list of all UUIDs associated; this will be used for comparison later
         allow_list = []
         for asset in data:
             uuid = asset[1]
@@ -969,14 +969,17 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
 @click.argument('name')
 @click.option('--description', default='', help="Add a description for clarity")
 def create(name, description):
-    payload = {"attributes": [
-        {
-            "name": name,
-            "description": "{} -Updated by Navi".format(description)
-        }
-    ]}
-    data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
-    print(data)
+    try:
+        payload = {"attributes": [
+            {
+                "name": name,
+                "description": "{} -Updated by Navi".format(description)
+            }
+        ]}
+        data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
+        click.echo(data)
+    except:
+        error_msg("Generic Error")
 
 
 @attribute.command(help="Add a custom attribute to an asset")
@@ -984,16 +987,19 @@ def create(name, description):
 @click.option('--name', default='', help="Name of the Custom Attribute")
 @click.option('--value', default='', help="Value of the Custom Attribute")
 def assign(uuid, name, value):
-    attr_uuid = get_attribute_uuid(name)
-    print(attr_uuid)
-    payload = {"attributes": [
-        {
-            "value": value,
-            "id": attr_uuid
-        }
-    ]}
-    assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
-    print(assign_attr)
+    try:
+        attr_uuid = get_attribute_uuid(name)
+        click.echo(attr_uuid)
+        payload = {"attributes": [
+            {
+                "value": value,
+                "id": attr_uuid
+            }
+        ]}
+        assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
+        click.echo(assign_attr)
+    except:
+        error_msg("Generic Error")
 
 
 @enrich.command(help="Add an asset to Tenable.io from another source via CLI")
@@ -1043,6 +1049,8 @@ def add(ip, mac, netbios, fqdn, hostname, file, source):
             # request Import Job
             data = request_data('POST', '/import/assets', payload=payload)
             click.echo("Your Import ID is : {}".format(data['asset_import_job_uuid']))
+        else:
+            click.echo("\nPlease enter an some information. Use '--help' for more info\n")
 
     except Error:
         click.echo("\nCheck your permissions or your API keys\n")

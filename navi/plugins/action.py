@@ -13,6 +13,7 @@ from .send_mail import send_attachment
 from collections import defaultdict
 from typing import Optional, Dict, Tuple
 from os import system as cmd
+from .error_msg import error_msg
 try:
     # this is only needed for an obscure component of navi.  navi push...
     import pexpect
@@ -55,22 +56,25 @@ def grab_keys():
 
 
 def grab_smtp():
-    # grab SMTP information
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    with conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * from smtp;")
-        rows = cur.fetchall()
+    try:
+        # grab SMTP information
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * from smtp;")
+            rows = cur.fetchall()
 
-        for row in rows:
+            for row in rows:
 
-            server = row[0]
-            port = row[1]
-            from_email = row[2]
-            password = row[3]
+                server = row[0]
+                port = row[1]
+                from_email = row[2]
+                password = row[3]
 
-        return server, port, from_email, password
+            return server, port, from_email, password
+    except:
+        click.echo("\nYou need to enter smtp information\n")
 
 
 def send_command(shell, cmd, quick):
@@ -83,13 +87,14 @@ def send_command(shell, cmd, quick):
         shell.expect(pexpect.TIMEOUT)
 
     response = shell.before
-    print()
+    click.echo()
     print(response.decode('utf-8'))
-    print()
+    click.echo()
 
 
 def connect(user, host, password, command):
     try:
+
         if "sudo" in command:
             conn = pxssh.pxssh()
             conn.login(host, user, password)
@@ -345,8 +350,7 @@ def post_process_sheets(sheets: Dict[str, list], asset_tag_filters: dict = None,
     return sheets
 
 
-
-@action.group(help="Deploy Navi Services using prebuilt Docker Containersr")
+@action.group(help="Deploy Navi Services using prebuilt Docker Containers")
 def deploy():
     pass
 
@@ -356,19 +360,23 @@ def deploy():
 @click.option('--target', required=True, help="Target IP receiving the command")
 @click.option('--file', default=None, help="Push a file to a target")
 def push(command, target, file):
-    try:
-        credentials = db_query("select username, password from ssh;")
-        user = credentials[0][0]
-        password = credentials[0][1]
-        if file:
-            scp(user, target, password, file)
-        else:
-            connect(user, target, password, command)
+    if command or file:
+        try:
+            credentials = db_query("select username, password from ssh;")
+            user = credentials[0][0]
+            password = credentials[0][1]
 
-    except Exception as E:
-        click.echo("\nPlease use the 'navi ssh' command to enter your ssh credentials\n"
-                   "\nIf you have, then this host may not be a Linux machine or your Credentials are not working\n"
-                   "\nHere is the Error: {}\n".format(E))
+            if file:
+                scp(user, target, password, file)
+            else:
+                connect(user, target, password, command)
+
+        except Exception as E:
+            click.echo("\nPlease use the 'navi config ssh' command to enter your ssh credentials\n"
+                       "\nIf you have, then this host may not be a Linux machine or your Credentials are not working\n"
+                       "\nHere is the Error: {}\n".format(E))
+    else:
+        click.echo("\nYou need to send a --command or a --file when using this command\n")
 
 
 @action.command(help="Mail yourself a Report")
@@ -396,8 +404,9 @@ def mail(message, to, subject, v, file):
 
     except Exception as E:
         click.echo("Your Email information may be incorrect")
-        click.echo("Run the 'SMTP' command to correct your information")
+        click.echo("Run the 'navi config smtp' command to correct your information\n")
         click.echo(E)
+
 
 
 @action.command(help="Choose your export type --> assets: '-a' or vulns: '-v' with the corresponding UUID")
@@ -416,7 +425,7 @@ def cancel(uuid, a, v):
         click.echo(vuln_response)
 
 
-@action.group(help="Delete objects from Tenable IO")
+@action.group(help="Delete objects from Tenable Vulnerability Management")
 def delete():
     pass
 
@@ -424,69 +433,100 @@ def delete():
 @delete.command(help="Delete assets by Tag: tag_category:tag_value - Example - OS:Linux")
 @click.argument('tag_string')
 def bytag(tag_string):
-    tag_tuple = tag_string.split(':')
-    cat = tag_tuple[0]
-    val = tag_tuple[1]
-    if bytag != '':
-        click.echo("\nI'm deleting all of the assets associated with your Tag\n")
-        payload = {'query': {'field': "tag.{}".format(cat), 'operator': 'set-has', 'value': str(val)}}
-        request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
+    if ":" in tag_string:
+        tag_tuple = tag_string.split(':')
+        cat = tag_tuple[0]
+        val = tag_tuple[1]
+        if bytag != '':
+
+            click.echo("\nI'm deleting all of the assets associated with your Tag\n")
+            payload = {'query': {'field': "tag.{}".format(cat), 'operator': 'set-has', 'value': str(val)}}
+            request_data('POST', '/api/v2/assets/bulk-jobs/delete', payload=payload)
+
+    else:
+        click.echo("\nERROR:\nIt doesn't look like you put the tag in the right format. \n"
+                   "Ensure you put the Category and Value in this format: 'tag category:tag value\n"
+                   "This is case sensitive.\n")
 
 
 @delete.command(help='Delete a Scan by Scan ID')
 @click.argument('tid')
 def scan(tid):
-    click.echo("\nI'm deleting your Scan Now")
-    tio.scans.delete(str(tid))
+    try:
+        click.echo("\nI'm deleting your Scan Now")
+        tio.scans.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete a target-group by target-group ID')
 @click.argument('tid')
 def tgroup(tid):
-    click.echo("\nI'm deleting your Target group Now")
-    tio.target_groups.delete(str(tid))
+    try:
+        click.echo("\nI'm deleting your Target group Now")
+        tio.target_groups.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete a Policy by Policy ID')
 @click.argument('tid')
 def policy(tid):
-    click.echo("\nI'm deleting your Policy Now")
-    tio.policies.delete(str(tid))
+    try:
+        click.echo("\nI'm deleting your Policy Now")
+        tio.policies.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete an Asset by Asset UUID')
 @click.argument('tid')
 def asset(tid):
-    click.echo("\nI'm deleting your asset Now")
-    tio.assets.delete(str(tid))
+    try:
+        click.echo("\nI'm deleting your asset Now")
+        tio.assets.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete Tag Value by Value UUID')
 @click.argument('tid')
 def value(tid):
-    click.echo("\nI'm deleting your Tag Value")
-    tio.tags.delete(str(tid))
+    try:
+        click.echo("\nI'm deleting your Tag Value")
+        tio.tags.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete Tag Category by Category UUID')
 @click.argument('tid')
 def category(tid):
-    click.echo("\nI'm Deleting your Category")
-    tio.tags.delete_category(str(tid))
+    try:
+        click.echo("\nI'm Deleting your Category")
+        tio.tags.delete_category(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete a user by User ID - Not UUID')
 @click.argument('tid')
 def user(tid):
-    click.echo("\nI'm Deleting the User you requested")
-    tio.users.delete(str(tid))
+    try:
+        click.echo("\nI'm Deleting the User you requested")
+        tio.users.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete a user group by the Group ID')
 @click.argument('tid')
 def usergroup(tid):
-    click.echo("\nI'm Deleting the User you requested")
-    tio.groups.delete(str(tid))
+    try:
+        click.echo("\nI'm Deleting the User you requested")
+        tio.groups.delete(str(tid))
+    except AttributeError as e:
+        error_msg(e)
 
 
 @delete.command(help='Delete a tag by Category/Value pair')
@@ -504,8 +544,11 @@ def tag(c, v):
 @delete.command(help='Delete a Network by Network ID')
 @click.argument('nid')
 def network(nid):
-    click.echo("\nI'm deleting your Network now")
-    tio.networks.delete(nid)
+    try:
+        click.echo("\nI'm deleting your Network now")
+        tio.networks.delete(nid)
+    except AttributeError as e:
+        error_msg(e)
 
 
 @action.command(help="Automate Navi tasks from a Spreadsheet")
@@ -643,7 +686,8 @@ def automate(sheet, name, v, threads, skip):
 
             if "," in tag['record']['ipv4']:
                 if v:
-                    print("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"ipv4\" --value \"{}\"".format(
+                    print("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" "
+                          "--filter \"ipv4\" --value \"{}\"".format(
                         tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
 
                 cmd("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"nmatch\" --filter \"ipv4\" --value \"{}\"".format(
@@ -664,9 +708,10 @@ def automate(sheet, name, v, threads, skip):
 
         for exc in _records['exclusions']:
             if v:
-                print("navi config exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
-                    exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
-                    exc['record']['end_time'], exc['record']['frequency'], exc['record']['day_of_month']))
+                print("navi config exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" "
+                      "--freq {} --day {}".format(exc['record']['exclusion_name'], exc['record']
+                ['exclusion_ipv4'], exc['record']['start_time'], exc['record']['end_time'], exc['record']['frequency'],
+                                                  exc['record']['day_of_month']))
 
             cmd("navi config exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
                 exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
@@ -731,7 +776,8 @@ def automate(sheet, name, v, threads, skip):
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
 
             if perms['record']['usergroup']:
-                print("\nCreating UserGroup permission based on tag: {}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
+                print("\nCreating UserGroup permission based on tag: {}:{}".format(perms['record']['Tag Category']
+                                                                                   , perms['record']['Tag Value']))
 
                 if v:
                     print("navi config access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
@@ -758,8 +804,11 @@ def tag_center():
 @click.option("--days", default=60, help="Limit the amount of data being downloaded/reported")
 def was_reporter(days):
     a, s = grab_keys()
-    command = "docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e {} --mount type=bind,source=$(pwd),target=/usr/src/app/data packetchaos/navi_was_reports".format(a,s,days)
-    if click.confirm('This command downloads the packetchaos/navi_was_reports docker container and runs it on port 5004 using the current navi database. Deploy?'):
+    command = ("docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e {} "
+               "--mount type=bind,source=$(pwd),target=/usr/src/app/data "
+               "packetchaos/navi_was_reports").format(a,s,days)
+    if click.confirm('This command downloads the packetchaos/navi_was_reports '
+                     'docker container and runs it on port 5004 using the current navi database. Deploy?'):
         try:
             os.system(command)
 
@@ -771,7 +820,8 @@ def was_reporter(days):
 def scan_tags():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/scantags".format(a,s)
-    if click.confirm('This command downloads the packetchaos/scantags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/scantags docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -781,13 +831,15 @@ def scan_tags():
 
 @deploy.command(help="Deploy Navi Discovery then Vuln Scan solution")
 @click.option('--trigger', default=None, help="The Scan ID you want to use as the the Trigger Scan, "
-                                                          "or the first scan in the chain.")
+                                              "or the first scan in the chain.")
 @click.option('--fire', default=None, help="The scan ID you want to use for your Vuln Scan")
 @click.option('--targets', default=None, help='The subnet(s) you want to run the discovery scan on.')
 def discovery_then_vulnscan(trigger, fire, targets):
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} -e targets={} packetchaos/discovery_then_vulnscan".format(a, s, trigger, fire, targets)
-    if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    command = ("docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} -e targets={} "
+               "packetchaos/discovery_then_vulnscan").format(a, s, trigger, fire, targets)
+    if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -797,12 +849,14 @@ def discovery_then_vulnscan(trigger, fire, targets):
 
 @deploy.command(help="Deploy Navi Dependency Scan solution")
 @click.option('--trigger', default=None, help="The Scan ID you want to use as the the Trigger Scan, "
-                                                          "or the first scan in the chain.")
+                                              "or the first scan in the chain.")
 @click.option('--fire', default=None, help="The scan ID you want to use for your Vuln Scan")
 def dependency_scan(trigger, fire):
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} packetchaos/dependency_scan".format(a, s, trigger, fire)
-    if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    command = ("docker run -d -e access_key={} -e secret_key={} -e trigger={} -e fire={} "
+               "packetchaos/dependency_scan").format(a, s, trigger, fire)
+    if click.confirm('This command downloads the packetchaos/discoverythenvulnscan docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -814,7 +868,8 @@ def dependency_scan(trigger, fire):
 def critical_tags():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/critical_tags".format(a,s)
-    if click.confirm('This command downloads the packetchaos/critical_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/critical_tags docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -826,7 +881,8 @@ def critical_tags():
 def agent_group_tags():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/agent_group_tags".format(a,s)
-    if click.confirm('This command downloads the packetchaos/agent_group_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/agent_group_tags docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -838,7 +894,8 @@ def agent_group_tags():
 def port_tagging():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/port_tagging".format(a,s)
-    if click.confirm('This command downloads the packetchaos/port_tagging docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/port_tagging docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -850,7 +907,8 @@ def port_tagging():
 def all_tags():
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} packetchaos/all_tags".format(a,s)
-    if click.confirm('This command downloads the packetchaos/all_tags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/all_tags docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 
@@ -864,7 +922,8 @@ def all_tags():
 def user_tags(user):
     a, s = grab_keys()
     command = "docker run -d -e access_key={} -e secret_key={} -e user={} packetchaos/usertags".format(a, s, user)
-    if click.confirm('This command downloads the packetchaos/usertags docker container and runs it.  This will run as a service and will be destroyed after the all assets are tagged.'):
+    if click.confirm('This command downloads the packetchaos/usertags docker container and runs it.  '
+                     'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
             os.system(command)
 

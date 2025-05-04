@@ -96,7 +96,7 @@ Was Table - 'apps'
 ### Give me everything in the asset table
 Find Command
 
-    navi find query "select * from assets;"
+    navi explore data query "select * from assets;"
 
 Export Command
 
@@ -105,7 +105,7 @@ Export Command
 ### Give me everything in the vulns table
 Find Command
 
-    navi find query "select * from vulns;"
+    navi explore data query "select * from vulns;"
 
 Export Command
 
@@ -114,7 +114,7 @@ Export Command
 ### IP, mac, fqdn by plugin ID 19506
 Use the find command first
 
-    navi find query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi explore data query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506';"
@@ -129,7 +129,7 @@ Then you can export.  The columns will follow the order of your select statement
 ### IP, mac, fqdn by plugin ID 19506 but not 11219
 Find command
 
-    navi find query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
+    navi explore data query "SELECT vulns.asset_ip, assets.fqdn, assets.mac_address 
     FROM vulns 
     LEFT OUTER JOIN assets 
     ON assets.ip_address = vulns.asset_ip where vulns.plugin_id='19506' 
@@ -155,11 +155,11 @@ Export command
 ### Count Vulns or Assets using SQL
 Asset Total
 
-    navi find query "select count(uuid) from assets;"
+    navi explore data query "select count(uuid) from assets;"
 
 Vulnerability Total
 
-    navi find query "select count(*) from vulns where severity !='info';"
+    navi explore data query "select count(*) from vulns where severity !='info';"
 
 ### Export Vuln data along EPSS data by cve
     navi export query "select e.epss_value, v.* from vulns v inner JOIN epss e ON v.cves LIKE '%'|| e.cve ||'%' where v.cves LIKE '%CVE-1999-0632%';"

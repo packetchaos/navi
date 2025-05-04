@@ -43,7 +43,11 @@ def db_query(statement):
         # click.echo("Sql Query took: {} seconds".format(total))
         return data
     except Error as e:
-        #click.echo("\nRun navi update...Got a DB issue\n\nHere is the error:\n{}\n\n".format(e))
+        click.echo("\nDB ERROR:")
+        click.echo("The SQL statement: {}\nCreated the following error: {}\n".format(statement, e))
+        click.echo("\nGeneral Information when this Error Occurs:")
+        click.echo("\n'no such table' errors require the corresponding config command to populate the table\n"
+                   "\nnavi config keys\nnavi config ssh\nnavi config smtp\nnavi config epss\nnavi config sla\n")
         exit()
 
 
