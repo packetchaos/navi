@@ -1,4 +1,4 @@
-# Navi - The Tenable.io Swiss Army Knife
+# Navi - The Tenable Vulnerability Management Swiss Army Knife
 A command-line tool which leverages the Tenable.io API to automate common tasks
 in Cyber Exposure or Vulnerability Management.
 
