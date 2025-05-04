@@ -2,6 +2,7 @@ import click
 import pprint
 import getpass
 import datetime
+import textwrap
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
 from .th_compliance_export import compliance_export
@@ -314,6 +315,7 @@ def permissions():
 @config.group(help="Perform common tasks against Agents and Agent Groups")
 def agent():
     pass
+
 
 @config.group(help="Enable, Disable or add users")
 def user():
@@ -1153,7 +1155,6 @@ def exclude(name, members, start, end, freq, day, c, v):
                                                     day_of_month=day,
                                                     description="Created using Navi: manually entered via the CLI")
             click.echo(exclude_request)
-
 
 
 @agent.command(help="Display Agent information - Agent ID/UUID")

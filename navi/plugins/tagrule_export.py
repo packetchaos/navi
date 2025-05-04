@@ -1,8 +1,8 @@
 import pprint
 import click
 from .api_wrapper import request_data
-from .dbconfig import create_epss_table, new_db_connection
-from .database import insert_tag_rules, drop_tables
+from .dbconfig import new_db_connection
+from .database import insert_tag_rules
 
 
 def export_tags():

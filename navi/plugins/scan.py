@@ -2,7 +2,7 @@ import click
 import textwrap
 import time
 import datetime
-from .display import get_scanners
+from .explore import get_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
 from .scan_evaluation import evaluate_a_scan
