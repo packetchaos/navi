@@ -10,7 +10,7 @@ from datetime import datetime
 from .add_by_file import add_helper
 from .tag_helper import tag_checker
 from collections import defaultdict
-from error_msg import error_msg
+from .error_msg import error_msg
 
 tio = tenb_connection()
 

@@ -3,7 +3,7 @@ import time
 import arrow
 from .api_wrapper import tenb_connection, navi_version, request_data
 from .database import new_db_connection, db_query
-from .sla import print_sla
+from .fixed_export import print_sla
 import click
 import pprint
 import textwrap
@@ -735,7 +735,7 @@ def attributes():
     click.echo()
 
 
-@info.command(help="Display curent SLA")
+@info.command(help="Display current SLA")
 def sla():
     print_sla()
 
