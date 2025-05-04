@@ -232,34 +232,50 @@ def create(targets, plugin, cred, discovery, custom, scanner, policy):
 @click.argument('scan_id')
 @click.option('--targets', default=None, help="Start the scan with alternative targets")
 def start(scan_id, targets):
-    if targets is None:
-        tio.scans.launch(scan_id)
-    else:
-        tio.scans.launch(scan_id, targets=list(targets))
+    try:
+        if targets is None:
+            tio.scans.launch(scan_id)
+        else:
+            tio.scans.launch(scan_id, targets=list(targets))
+    except:
+        click.echo("\n\nYour Scan may be in the process of starting. "
+                   "Check the status and ensure you have the right ID\n\n")
 
 
 @scan.command(help="Get Scan Status by Scan ID")
 @click.argument('Scan_id')
 def status(scan_id):
-    click.echo("\nLast Status update : {}\n".format(tio.scans.status(scan_id)))
+    try:
+        click.echo("\nLast Status update : {}\n".format(tio.scans.status(scan_id)))
+    except:
+        click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
 @scan.command(help="Resume a paused Scan by Scan ID")
 @click.argument('scan_id')
 def resume(scan_id):
-    tio.scans.resume(scan_id)
+    try:
+        tio.scans.resume(scan_id)
+    except:
+        click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
 @scan.command(help="Pause a running Scan by Scan ID")
 @click.argument('Scan_id')
 def pause(scan_id):
-    tio.scans.pause(scan_id)
+    try:
+        tio.scans.pause(scan_id)
+    except:
+        click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
 @scan.command(help="Stop a Running Scan by Scan ID")
 @click.argument('scan_id')
 def stop(scan_id):
-    tio.scans.stop(scan_id)
+    try:
+        tio.scans.stop(scan_id)
+    except:
+        click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
 @scan.command(help="Change scan ownership using user logins")
