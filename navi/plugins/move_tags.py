@@ -2,7 +2,7 @@ import click
 import pprint
 from .api_wrapper import tenb_connection, request_data
 from .database import db_query
-from .tag import tag_by_uuid
+from .enrich import tag_by_uuid
 import textwrap
 
 tio = tenb_connection()

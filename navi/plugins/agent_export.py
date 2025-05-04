@@ -6,7 +6,7 @@ tio = tenb_connection()
 
 
 def agent_export():
-
+    # Limited to 5000 assets
     with open('agent_data.csv', mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
