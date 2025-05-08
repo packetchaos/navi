@@ -347,31 +347,37 @@ def network():
 @click.option("--access_key", "--a", default="", help="Provide your Access Key")
 @click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
 def keys(clear, access_key, secret_key):
-    # create all Tables when keys are added.
-    create_keys_table()
-    create_diff_table()
-    create_vulns_table()
-    create_assets_table()
-    create_compliance_table()
+    try:
+        # create all Tables when keys are added.
+        create_keys_table()
+        create_diff_table()
+        create_vulns_table()
+        create_assets_table()
+        create_compliance_table()
 
-    # Check if the keys are empty
-    if access_key == "" or secret_key == "":
-        click.echo("\nHey you don't have any Keys!\n")
-        if clear:
-            access_key = input("Please provide your Access Key : ")
-            secret_key = input("Please provide your Secret Key : ")
-        else:
-            access_key = getpass.getpass("Please provide your Access Key : ")
-            secret_key = getpass.getpass("Please provide your Secret Key : ")
+        # Check if the keys are empty
+        if access_key == "" or secret_key == "":
+            click.echo("\nHey you don't have any Keys!\n")
+            if clear:
+                access_key = input("Please provide your Access Key : ")
+                secret_key = input("Please provide your Secret Key : ")
+            else:
+                access_key = getpass.getpass("Please provide your Access Key : ")
+                secret_key = getpass.getpass("Please provide your Secret Key : ")
 
-    key_dict = (access_key, secret_key)
-    database = r"navi.db"
-    conn = new_db_connection(database)
+        key_dict = (access_key, secret_key)
+        database = r"navi.db"
+        conn = new_db_connection(database)
 
-    with conn:
-        sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
-        cur = conn.cursor()
-        cur.execute(sql, key_dict)
+        with conn:
+            sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
+            cur = conn.cursor()
+            cur.execute(sql, key_dict)
+
+        click.echo("\nYour keys were entered successfully")
+    except:
+        click.echo("\nThe keys are obtained from TVm and are two strings. "
+                   "If you continue to get this error delete the 'navi.db'\n\n")
 
 
 @config.command(help="Enter or Overwrite your SMTP information")
@@ -392,44 +398,52 @@ def smtp(server, port, email, password):
 
     if password == "":
         password = getpass.getpass("Enter your email password - : ")
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        drop_tables(conn, 'smtp')
 
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    drop_tables(conn, 'smtp')
+        create_smtp_table = """CREATE TABLE IF NOT EXISTS smtp (
+                                server text,
+                                port text,
+                                email text, 
+                                password text 
+                                );"""
+        create_table(conn, create_smtp_table)
 
-    create_smtp_table = """CREATE TABLE IF NOT EXISTS smtp (
-                            server text,
-                            port text,
-                            email text, 
-                            password text 
-                            );"""
-    create_table(conn, create_smtp_table)
+        info = (server, port, email, password)
 
-    info = (server, port, email, password)
-
-    with conn:
-        sql = '''INSERT or IGNORE into smtp(server, port, email, password) VALUES(?,?,?,?)'''
-        cur = conn.cursor()
-        cur.execute(sql, info)
+        with conn:
+            sql = '''INSERT or IGNORE into smtp(server, port, email, password) VALUES(?,?,?,?)'''
+            cur = conn.cursor()
+            cur.execute(sql, info)
+        click.echo("\nYour smtp information was entered successfully\n\n")
+    except:
+        click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
 
 
 @config.command(help="Enter a ssh service account User Name and Password")
 @click.option("--username", prompt=True, help="Provide your Access Key")
 @click.option("--password", prompt=True, hide_input=True, help="Provide your Secret Key")
 def ssh(username, password):
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    drop_tables(conn, 'ssh')
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        drop_tables(conn, 'ssh')
 
-    create_passwords_table()
+        create_passwords_table()
 
-    ssh_dict = (username, password)
-    conn = new_db_connection(database)
+        ssh_dict = (username, password)
+        conn = new_db_connection(database)
 
-    with conn:
-        sql = '''INSERT or IGNORE into ssh(username, password) VALUES(?,?)'''
-        cur = conn.cursor()
-        cur.execute(sql, ssh_dict)
+        with conn:
+            sql = '''INSERT or IGNORE into ssh(username, password) VALUES(?,?)'''
+            cur = conn.cursor()
+            cur.execute(sql, ssh_dict)
+
+        click.echo("\nYour username and password was entered successfully\n\n")
+    except:
+        click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
 
 
 @sla.command(help="Overwrite your SLA information")
@@ -746,7 +760,7 @@ def access_group(name, c, v, user, usergroup, perm):
         click.echo("\nYour Tag was null. Check the spelling or perform a 'navi update assets'\n")
 
 
-@user.command(help="Add a User to Tenable.io - User will be enabled if already exists")
+@user.command(help="Add a User to tenable VM - User will be enabled if already exists")
 @click.option("--username", "--u", default='', required=True, help="Username")
 @click.option("--password", "--p", default='', required=True, help="Users password")
 @click.option("--permission", "--m", default='', required=True, help="Users Permission: (16,24,32,40,64)")

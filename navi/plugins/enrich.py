@@ -784,7 +784,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_uuid(tag_list, c="AD Groups", v=key, d="AD Groups tagged by navi")
 
 
-@enrich.command(help="Create Tag rules in Tenable.io")
+@enrich.command(help="Create Tag rules in tenable VM")
 @click.option('--c', default='', help="Create a Tag with the following Category name")
 @click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
@@ -813,8 +813,8 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
         for os in eval(multi):
             temp_dict = {"field": os[0], "operator": os[1], "value": os[2]}
             filter_list.append(temp_dict)
-            # issue with tenable.io API - Or turns in to a string value seperated by a comma
-            # issue with tenable.io API - appends " when you add * so *centos* becomes "*centos*"
+            # issue with tenable VM API - Or turns in to a string value seperated by a comma
+            # issue with tenable VM API - appends " when you add * so *centos* becomes "*centos*"
         if any:
             tio.tags.create(c, v, filters=eval(multi), filter_type="or", description=d)
         else:
@@ -1002,7 +1002,7 @@ def assign(uuid, name, value):
         error_msg("Generic Error")
 
 
-@enrich.command(help="Add an asset to Tenable.io from another source via CLI")
+@enrich.command(help="Add an asset to tenable VM from another source via CLI")
 @click.option('--ip', default='', help="IP address of the new asset")
 @click.option('--mac', default='', help="Mac Address of the new asset")
 @click.option('--netbios', default='', help="NetBios of the new asset")

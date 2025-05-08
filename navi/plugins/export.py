@@ -11,7 +11,7 @@ from .query_export_32K import export_query
 from .api_wrapper import request_xml
 
 
-@click.group(help="Export Tenable.io Data")
+@click.group(help="Export tenable VM Data")
 def export():
     pass
 

@@ -36,7 +36,7 @@ def parse_19506_from_file(filename, scanid, histid):
                 reported_scan_end = hist['time_end']
                 total_reported_scan_duration = reported_scan_end - reported_scan_start
 
-                # Simple Delta from Tenable.io reported Scan times
+                # Simple Delta from Tenable VM reported Scan times
                 reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
 
     # Open the file and parse the 19506 plugin
@@ -78,7 +78,8 @@ def parse_19506_from_file(filename, scanid, histid):
                 except KeyError:
                     intial_seconds = 'unknown'
 
-                # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                # For an unknown reason, the scanner will print unknown for some
+                # assets leaving no way to calculate the time.
                 if intial_seconds != 'unknown':
                     try:
                         # Numerical value in seconds parsed from the plugin
@@ -193,7 +194,8 @@ def parse_19506_from_file(filename, scanid, histid):
 
             asset_average_indextime = index_total / len(total_assets_scanned_list)
 
-            # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest scan date in 19506
+            # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest
+            # scan date in 19506
             total_calculated_scan_duration = (max(timestamp_plus_duration_list) - min(start_scan_timestamp_list))
 
             # Processing time therefore is the reported duration - the total scan duration
@@ -208,7 +210,8 @@ def parse_19506_from_file(filename, scanid, histid):
             click.echo("*" * 100)
             click.echo("This data is derived from the 19506 plugins found in the {}"
                        "\nThe start time stamp(s) and the duration(s) were used to calculate the total scan time(s)\n"
-                       "For manual examination of the details please check out the the file: {}-parsing.csv".format(filename, scanid))
+                       "For manual examination of the details please check out the the file"
+                       ": {}-parsing.csv".format(filename, scanid))
             click.echo("*" * 100)
 
             click.echo("\nScan Name: {}".format(scan_name))
@@ -232,27 +235,39 @@ def parse_19506_from_file(filename, scanid, histid):
             click.echo("-" * 60)
             click.echo("{:40} {:10}".format("Total Reported Scan Duration:", reported_scan_duration))
             click.echo("{:40} {:10}".format("Total T.io Processing Time:", str(datetime.timedelta(seconds=processing))))
-            click.echo("{:40} {:10}\n".format("Actual Scan Duration: ", str(datetime.timedelta(seconds=total_calculated_scan_duration))))
+            click.echo("{:40} {:10}\n".format("Actual Scan Duration: ",
+                                              str(datetime.timedelta(seconds=total_calculated_scan_duration))))
             click.echo("Asset Stats")
             click.echo("-" * 40)
-            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ", str(datetime.timedelta(seconds=longest_scanned[3])), longest_scanned[0]))
-            click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ", str(datetime.timedelta(seconds=shortest_scanned[3])), shortest_scanned[0]))
-            click.echo("{:40} {:10} {}".format("Longest Asset Index: ", str(datetime.timedelta(seconds=longest_index[4])), longest_index[0]))
-            click.echo("{:40} {:10} {}\n".format("Shortest Asset Index: ", str(datetime.timedelta(seconds=shortest_index[4])), shortest_index[0]))
+            click.echo("{:40} {:10} {}".format("Longest Asset Duration: ",
+                                               str(datetime.timedelta(seconds=longest_scanned[3])), longest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ",
+                                               str(datetime.timedelta(seconds=shortest_scanned[3])), shortest_scanned[0]))
+            click.echo("{:40} {:10} {}".format("Longest Asset Index: ",
+                                               str(datetime.timedelta(seconds=longest_index[4])), longest_index[0]))
+            click.echo("{:40} {:10} {}\n".format("Shortest Asset Index: ",
+                                                 str(datetime.timedelta(seconds=shortest_index[4])), shortest_index[0]))
             click.echo("Averages Stats")
             click.echo("-" * 40)
-            click.echo("{:40} {}".format("Average scan duration per Asset:", str(datetime.timedelta(seconds=asset_average_scantime))))
-            click.echo("{:40} {}\n".format("Average processing per Asset:", str(datetime.timedelta(seconds=asset_average_indextime))))
+            click.echo("{:40} {}".format("Average scan duration per Asset:",
+                                         str(datetime.timedelta(seconds=asset_average_scantime))))
+            click.echo("{:40} {}\n".format("Average processing per Asset:",
+                                           str(datetime.timedelta(seconds=asset_average_indextime))))
 
-            click.echo("\nFirst asset scanned started at: {}".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(min(start_scan_timestamp_list)))))
-            click.echo("Last asset finished scanning at: {}\n\n".format(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(max(timestamp_plus_duration_list)))))
+            click.echo("\nFirst asset scanned started at:"
+                       " {}".format(time.strftime('%Y-%m-%d %H:%M:%S',
+                                                  time.localtime(min(start_scan_timestamp_list)))))
+            click.echo("Last asset finished scanning at:"
+                       " {}\n\n".format(time.strftime('%Y-%m-%d %H:%M:%S',
+                                                      time.localtime(max(timestamp_plus_duration_list)))))
 
         except ZeroDivisionError:
             click.echo("\nScan history had No data.\n")
 
     with open("{}-parsing.csv".format(scanid), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration", "Total_duration",  "Platform_end", "IP Address", "Scanner IP"]
+        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration",
+                  "Total_duration",  "Platform_end", "IP Address", "Scanner IP"]
 
         agent_writer.writerow(header)
         # Loop through each asset
@@ -316,7 +331,8 @@ def evaluate_a_scan(scanid, histid):
         with open('evaluate.csv', mode='w', encoding='utf-8', newline="") as csv_file:
             agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
-            header_list = ["asset uuid", "Scan Name", "Scan Policy", "Scanner IP", "Scan Time", "Max Checks", "Max Hosts", "Minutes", "RTT", "Hop Count"]
+            header_list = ["asset uuid", "Scan Name", "Scan Policy", "Scanner IP", "Scan Time", "Max Checks",
+                           "Max Hosts", "Minutes", "RTT", "Hop Count"]
 
             # Write the header to the csv
             agent_writer.writerow(header_list)
@@ -377,7 +393,8 @@ def evaluate_a_scan(scanid, histid):
                 except KeyError:
                     intial_seconds = 'unknown'
 
-                # For an unknown reason, the scanner will print unknown for some assets leaving no way to calculate the time.
+                # For an unknown reason, the scanner will print unknown for some assets leaving
+                # no way to calculate the time.
                 if intial_seconds != 'unknown':
                     try:
                         # Numerical value in seconds parsed from the plugin
@@ -429,7 +446,8 @@ def evaluate_a_scan(scanid, histid):
                         except IndexError:
                             hopcount = "Unknown"
 
-                        parsed_data_organized = [vulns[0], scan_name, scan_policy, scanner_ip, start_time, max_checks, max_hosts, minutes, rtt, hopcount]
+                        parsed_data_organized = [vulns[0], scan_name, scan_policy, scanner_ip,
+                                                 start_time, max_checks, max_hosts, minutes, rtt, hopcount]
 
                         agent_writer.writerow(parsed_data_organized)
 

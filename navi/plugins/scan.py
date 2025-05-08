@@ -586,7 +586,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
                         sc.scan_instances.export_scan(sc_scan_id, nessus)
                     nessus.close()
 
-                    click.echo("Importing your Scan to Tenable.io\n".format())
+                    click.echo("Importing your Scan to tenable VM\n".format())
 
                     with open('{}.nessus'.format(str(sc_scan_id)), 'rb') as file:
                         tio.scans.import_scan(fobj=file)

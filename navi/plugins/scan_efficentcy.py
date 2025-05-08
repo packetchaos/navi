@@ -242,7 +242,7 @@ def trend_by_scan_id(scanid):
                         reported_scan_end = hist['time_end']
                         total_reported_scan_duration = reported_scan_end - reported_scan_start
 
-                        # Simple Delta from Tenable.io reported Scan times
+                        # Simple Delta from tenable VM reported Scan times
                         reported_scan_duration = str(datetime.timedelta(seconds=total_reported_scan_duration))
 
                         click.echo("\nDownloading scan {}, history {} details into a csv called {}-{}.csv for "

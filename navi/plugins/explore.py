@@ -1466,6 +1466,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             click.echo(E)
 
     if details:
+        # This needs to be re-written to avoid using the workbench apis.
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
             data = set(intial_data)
@@ -1647,6 +1648,8 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
 
                     except KeyError:
                         pass
+                    # This needs to be rewritten to avoid the workbench
+
                     click.echo("\nVulnerability Counts")
                     click.echo("-" * 15)
 
@@ -1799,7 +1802,8 @@ def software(missing, stats, greaterthan, lessthan):
             exposure_score = str(asset[4])
             acr = str(asset[3])
 
-            click.echo("{:16} {:80} {:6} {:6} {}".format(ipv4, textwrap.shorten(fqdn, width=80), exposure_score, acr, uuid))
+            click.echo("{:16} {:80} {:6} {:6} {}".format(ipv4,
+                                                         textwrap.shorten(fqdn, width=80), exposure_score, acr, uuid))
         click.echo()
 
     if stats:
@@ -1835,6 +1839,6 @@ def software(missing, stats, greaterthan, lessthan):
                 if int(length) <= int(lessthan):
                     click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
         except:
-            click.echo("\nRun navi sofware Generate\n Or check your input\n")
+            click.echo("\nRun navi software Generate\n Or check your input\n")
         click.echo()
 
