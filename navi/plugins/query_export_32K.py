@@ -1,14 +1,14 @@
 import csv
 import click
 from sqlite3 import Error
-from .database import new_db_connection
-from os import system as cmd
+from .database import new_db_connection, regexp
 
 
 def export_query(query, name):
     database = r"navi.db"
     conn = new_db_connection(database)
     with conn:
+        conn.create_function("REGEXP", 2, regexp)
         cur = conn.cursor()
         try:
             cur.execute(query)

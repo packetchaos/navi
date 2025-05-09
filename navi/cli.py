@@ -10,10 +10,6 @@ def general_help():
     click.echo("*" * 75)
     click.echo("\n           Level up your Exposure Management Game with Navi!")
     click.echo("-" * 75)
-    click.echo("Two commands are required to get navi working properly")
-    click.echo("    navi config keys --a 'YOUR ACCESS KEY' --s 'YOUR SECRET KEY'")
-    click.echo("    navi config update full")
-    click.echo("-" * 75)
     click.echo()
 
 

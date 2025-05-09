@@ -1,6 +1,14 @@
 import sqlite3
 from sqlite3 import Error
 import click
+import re
+
+
+# Define the regex function
+def regexp(pattern, string):
+    if string is None:
+        return False
+    return re.search(pattern, string) is not None
 
 
 def new_db_connection(db_file):
@@ -29,6 +37,7 @@ def db_query(statement):
         database = r"navi.db"
         query_conn = new_db_connection(database)
         with query_conn:
+            query_conn.create_function("REGEXP", 2, regexp)
             cur = query_conn.cursor()
             cur.execute('pragma journal_mode=wal;')
             cur.execute('pragma cache_size=-10000;')
