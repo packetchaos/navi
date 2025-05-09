@@ -168,28 +168,6 @@ def scans(a):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@info.command(help="Display NNM assets and their vulnerability scores")
-def nnm():
-    click.echo("\nChecking all NNM scanners for assets recently found...")
-    click.echo("\n{:20} {:10} {}".format("IP Address", "Score", "Scan ID"))
-    click.echo("-" * 150)
-
-    for scan in tio.scans.list():
-        try:
-            if str(scan["type"]) == "pvs":
-                resp = tio.get('scans/{}'.format(scan["id"]))
-                data = resp.json()
-
-                for host in data["hosts"]:
-                    click.echo("{:20} {:10} {}".format(str(host["hostname"]), str(host["score"]), str(scan["id"])))
-
-        except AttributeError:
-            click.echo("\nCheck your permissions or your API keys\n")
-
-        except KeyError:
-            pass
-
-
 @info.command(help="Display All Assets found in the last 30 days")
 @click.option("--tag", default='', help="Display Assets membership of a given Tag.  "
                                         "Use Tag Value UUID found in the command 'navi display tags'")
@@ -268,32 +246,7 @@ def policies():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@info.command(help="Display Cloud Connector Details and Status")
-def connectors():
-    try:
-        resp = tio.get('settings/connectors')
-        data = resp.json()
-
-        click.echo("\n{:11s} {:40s} {:40s} {:30s} {}".format("Type", "Connector Name",
-                                                             "Connector ID", "Last Sync", "Schedule"))
-        click.echo("-" * 150)
-        schedule = "None"
-        for conn in data["connectors"]:
-            try:
-                schedule = str(conn['schedule']['value']) + " " + str(conn['schedule']['units'])
-
-                last_sync = conn['last_sync_time']
-            except KeyError:
-                last_sync = "Hasn't synced"
-
-            click.echo("{:11s} {:40s} {:40s} {:30s} {}".format(str(conn['type']), str(conn['name']),
-                                                               str(conn['id']), last_sync, schedule))
-        click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
-
-
-@info.command(help="Display T.io Status and Account info")
+@info.command(help="Display TVM Status and Account info")
 def status():
     try:
         data = tio.server.properties()
@@ -338,11 +291,11 @@ def status():
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@info.command(help="Display Agent information - Limit 5000 agents")
-@click.option("-uuid", is_flag=True, help="Display Agent information including Agent UUID")
-def agents(uuid):
+@info.command(help="Display Agent information")
+@click.option("-show_uuid", is_flag=True, help="Display Agent information including Agent UUID")
+def agents(show_uuid):
     try:
-        if uuid:
+        if show_uuid:
             click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address",
                                                                    "Last Connect Time",
                                                                    "Last Scanned Time", "Status", "UUID"))
@@ -378,7 +331,7 @@ def agents(uuid):
             except KeyError:
                 agent_uuid = "unknown"
 
-            if uuid:
+            if show_uuid:
                 click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']),
                                                                                           width=30),
                                                                          str(agent['ip']), str(last_connect_time),
@@ -395,8 +348,39 @@ def agents(uuid):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
+@info.command(help="Display Agent Groups and membership information ")
+@click.option("--group_id", default=None, help="Display the agents that are members of the group using the group ID")
+def agent_groups(group_id):
+
+    if group_id:
+        group_details = tio.agent_groups.details(group_id)
+        click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
+        click.echo("-" * 150)
+
+        for agent_info in group_details['agents']:
+            click.echo("{:85s} {:15} {:40s}".format(textwrap.shorten(str(agent_info['name']), width=85),
+                                                    str(agent_info['id']),
+                                                    str(agent_info['uuid']), str(agent_info['status'])))
+
+        click.echo()
+    else:
+        click.echo("\n*** To see group membership use: navi agent groups --gid <group id> ***\n")
+        try:
+            click.echo("\n{:45s} {:40s} {:10}".format("Group Name", "Group UUID", "Group ID"))
+            click.echo("-" * 150)
+
+            group_list = tio.agent_groups.list()
+
+            for group in group_list:
+                click.echo("{:45s} {:40s} {:10}".format(str(group['name']), str(group['uuid']), str(group['id'])))
+
+            click.echo()
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
+
+
 @info.command(help="Display Target Groups")
-def tgroups():
+def target_groups():
     try:
         print("\nTarget Group Name".ljust(41), "TG ID".ljust(10), "Owner".ljust(30), "Members")
         print("-" * 100)
@@ -493,7 +477,7 @@ def version():
 @info.command(help="Display User group information")
 @click.option('--membership', required=True, default='', help="Display Users that apart of a particular "
                                                               "user group using the user group ID")
-def usergroups(membership):
+def user_groups(membership):
     try:
         if membership:
             click.echo("\n{:35s} {:40s} {:40s} {:10} {}".format("User Name", "Login email", "User UUID", "User ID",
@@ -972,61 +956,6 @@ def scantime(minute):
         click.echo()
     except Exception as E:
         print(E)
-
-
-@data.command(help="Find Assets that have not been scanned in any Cloud")
-def ghost():
-    click.echo("\n{:11s} {:15s} {:50} {}".format("Source", "IP", "FQDN", "First seen"))
-    click.echo("-" * 150)
-
-    for assets in tio.workbenches.assets(("sources", "set-hasonly", "AWS")):
-        for source in assets['sources']:
-            if source['name'] == 'AWS':
-                try:
-                    aws_ip = assets['ipv4'][0]
-                except IndexError:
-                    aws_ip = "No IP Found"
-                try:
-                    aws_fqdn = assets['fqdn'][0]
-                except IndexError:
-                    aws_fqdn = "No FQDN Found"
-
-                click.echo("{:11s} {:15s} {:50} {}".format(str(source['name']), str(aws_ip),
-                                                           str(aws_fqdn), source['first_seen']))
-    click.echo()
-
-    for gcp_assets in tio.workbenches.assets(("sources", "set-hasonly", "GCP")):
-        for gcp_source in gcp_assets['sources']:
-            if gcp_source['name'] == 'GCP':
-                try:
-                    gcp_ip = gcp_assets['ipv4'][0]
-                except IndexError:
-                    gcp_ip = "No IP Found"
-                try:
-                    gcp_fqdn = gcp_assets['fqdn'][0]
-                except IndexError:
-                    gcp_fqdn = "NO FQDN FOUND"
-
-                click.echo("{:11s} {:15s} {:50} {}".format(gcp_source['name'], gcp_ip, gcp_fqdn,
-                                                           gcp_source['first_seen']))
-    click.echo()
-
-    for az_assets in tio.workbenches.assets(("sources", "set-hasonly", "AZURE")):
-        for az_source in az_assets['sources']:
-            if az_source['name'] == 'AZURE':
-                try:
-                    az_ip = az_assets['ipv4'][0]
-                except IndexError:
-                    az_ip = "No IP Found"
-
-                try:
-                    az_fqdn = az_assets['fqdn'][0]
-                except IndexError:
-                    az_fqdn = "NO FQDN Found"
-
-                click.echo("{:11s} {:15s} {:50} {}".format(az_source['name'], az_ip, az_fqdn,
-                                                           az_source['first_seen']))
-    click.echo()
 
 
 @data.command(help="Find Assets with a given port open")
