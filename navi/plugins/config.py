@@ -989,11 +989,12 @@ def url(new_url):
 
 
 @config.command(help="Populate Navi DB with EPSS data")
-@click.option('--day', '--d', required=True, help="Day of the Month; EX: 01 NOT 1")
-@click.option('--month', '--m', required=True, help="Month of the year;EX: 04 NOT 4")
-@click.option('--year', '--y', required=True, help="Year of your desire;EX: 2023 NOT 23")
-def epss(day, month, year):
-    update_navi_with_epss(day, month, year)
+@click.option('--day', '--d', default='01', help="Day of the Month; EX: 01 NOT 1")
+@click.option('--month', '--m', default='01', help="Month of the year;EX: 04 NOT 4")
+@click.option('--year', '--y', default='2025', help="Year of your desire;EX: 2023 NOT 23")
+@click.option('--filename', default=None, help="Supply the EPSS data manually providing a CSV")
+def epss(day, month, year, filename):
+    update_navi_with_epss(day, month, year, filename)
 
 
 @config.group(help="Update the local Navi DB, Change Base URL, and update EPSS")

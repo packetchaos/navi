@@ -26,10 +26,14 @@ def request_new_data(day, month, year):
     return epss_data_name
 
 
-def update_navi_with_epss(day, month, year):
+def update_navi_with_epss(day, month, year, filename):
     click.echo("\nParsing the csv and importing values into the table epss\n")
     try:
-        epss_csv_file = request_new_data(day, month, year)
+        if filename:
+            epss_csv_file = filename
+        else:
+            epss_csv_file = request_new_data(day, month, year)
+
         database = r"navi.db"
         epss_conn = new_db_connection(database)
         drop_tables(epss_conn, 'epss')
