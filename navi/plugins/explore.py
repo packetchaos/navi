@@ -1201,7 +1201,6 @@ def cves_by_uuid(uuid):
 @click.option('-patches', is_flag=True, help='Missing Patches - 38153')
 @click.option('-d', is_flag=True, help="Scan Detail: 19506 plugin output")
 @click.option('-software', is_flag=True, help="Find software installed on Unix(22869) of windows(20811) hosts")
-@click.option('-outbound', is_flag=True, help="outbound connections found by nnm")
 @click.option('-exploit', is_flag=True, help="Display Solution, Description for each Exploit")
 @click.option('-critical', is_flag=True, help="Display Plugin Output for each Critical Vuln")
 @click.option('-details', is_flag=True, help="Details on an Asset: IP, UUID, Vulns, etc")
@@ -1210,7 +1209,7 @@ def cves_by_uuid(uuid):
 @click.option('-cves', is_flag=True, help="Display all cves found on the asset")
 @click.option('-compliance', '-audits', is_flag=True, help="Display all Compliance info for a given asset UUID")
 @click.pass_context
-def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outbound, exploit, critical, details, vulns,
+def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, exploit, critical, details, vulns,
        info, cves, compliance):
 
     if d:
@@ -1219,7 +1218,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         click.echo()
         plugin_by_ip(ipaddr, str(19506))
 
-    if n:
+    elif n:
         click.echo("\nNetstat info")
         click.echo("Established and Listening")
         click.echo("-" * 15)
@@ -1230,26 +1229,26 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         click.echo()
         plugin_by_ip(ipaddr, str(14272))
 
-    if p:
+    elif p:
         click.echo("\nPatch Information")
         click.echo("-" * 15)
         click.echo()
         plugin_by_ip(ipaddr, str(66334))
 
-    if t:
+    elif t:
         click.echo("\nTrace Route Info")
         click.echo("-" * 15)
         click.echo()
         plugin_by_ip(ipaddr, str(10287))
 
-    if o:
+    elif o:
         click.echo("\nProcess Info")
         click.echo("-" * 15)
         click.echo()
         plugin_by_ip(ipaddr, str(70329))
         plugin_by_ip(ipaddr, str(110483))
 
-    if patches:
+    elif patches:
         click.echo("\nMissing Patches")
         click.echo("-" * 15)
         click.echo()
@@ -1261,13 +1260,13 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         click.echo()
         plugin_by_ip(ipaddr, str(56468))
 
-    if c:
+    elif c:
         click.echo("\nConnection info")
         click.echo("-" * 15)
         click.echo()
         plugin_by_ip(ipaddr, str(64582))
 
-    if s:
+    elif s:
         try:
             if len(ipaddr) < 17:
                 data = db_query("SELECT output, port from vulns where asset_ip=\"%s\" and plugin_id='22964'" % ipaddr)
@@ -1282,41 +1281,20 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         except IndexError:
             click.echo("No information for plugin 22964")
 
-    if r:
+    elif r:
         click.echo("Local Firewall Info")
         click.echo("-" * 15)
         plugin_by_ip(ipaddr, str(56310))
         plugin_by_ip(ipaddr, str(61797))
 
-    if software:
+    elif software:
         try:
             plugin_by_ip(ipaddr, str(22869))
             plugin_by_ip(ipaddr, str(20811))
         except IndexError:
             click.echo("No Software found")
 
-    if outbound:
-        try:
-            if len(ipaddr) < 17:
-                data = db_query("SELECT output, port, protocol from vulns where asset_ip=\"%s\" "
-                                "and plugin_id='16'" % ipaddr)
-            else:
-                data = db_query("SELECT output, port, protocol from vulns where asset_uuid=\"%s\" "
-                                "and plugin_id='16'" % ipaddr)
-
-            click.echo("\n{:15s} {:5} {}".format("IP address", "Port", "Protocol"))
-            click.echo("-" * 25)
-            for plugins in data:
-                output = plugins[0]
-                port = plugins[1]
-                proto = plugins[2]
-                click.echo("\n{:15s} {:5} {}".format(str(output), str(port), str(proto)))
-            click.echo()
-        except Exception as E:
-            click.echo("No information for plugin 16")
-            click.echo(E)
-
-    if exploit:
+    elif exploit:
         try:
             if len(ipaddr) < 17:
                 intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
@@ -1361,7 +1339,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         except Exception as E:
             click.echo(E)
 
-    if critical:
+    elif critical:
         try:
             if len(ipaddr) < 17:
 
@@ -1394,7 +1372,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
         except Exception as E:
             click.echo(E)
 
-    if details:
+    elif details:
         # This needs to be re-written to avoid using the workbench apis.
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
@@ -1603,7 +1581,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             click.echo("\nWorkbench data couldn't be received, this could mean the asset UUID or IP doesn't exist "
                        "or was recently deleted.\n")
 
-    if vulns:
+    elif vulns:
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
             data = set(intial_data)
@@ -1619,7 +1597,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             click.echo("-" * 26)
             vulns_by_uuid(ipaddr)
 
-    if cves:
+    elif cves:
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
             data = set(intial_data)
@@ -1634,7 +1612,7 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             click.echo("-" * 26)
             cves_by_uuid(ipaddr)
 
-    if info:
+    elif info:
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
             data = set(intial_data)
@@ -1651,10 +1629,10 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             click.echo("-" * 26)
             info_by_uuid(ipaddr)
 
-    if plugin != '':
+    elif plugin != '':
         plugin_by_ip(ipaddr, plugin)
 
-    if compliance:
+    elif compliance:
         if len(ipaddr) > 16:
             compliance_data = db_query("SELECT check_name, status, audit_file from compliance "
                                        "where asset_uuid='{}';".format(ipaddr))
@@ -1676,6 +1654,9 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, outboun
             for address in uuid_data:
                 click.echo("{:45}{}".format(address[0], address[1]))
             click.echo()
+
+    else:
+        click.echo("\nYou need to select an option.  use '--help' for options.\n\n")
 
 
 @explore.command(help="Explore the API using simple GET requests ex: 'navi api /scans ")
@@ -1708,9 +1689,9 @@ def api(url, raw, limit, offset, post, payload):
 @info.command(help="Display stats on Software")
 @click.option('-missing', is_flag=True, help="Display assets missing software enumeration")
 @click.option('-stats', is_flag=True, help="Display General Stats")
-@click.option('--greaterthan', default=None,
+@click.option('--greater_than', default=None,
               help="Display Software installed Greater than or equal to the number entered")
-@click.option('--lessthan', default=None,
+@click.option('--less_than', default=None,
               help="Display Software installed less than or equal to the number entered")
 def software(missing, stats, greaterthan, lessthan):
 
@@ -1735,10 +1716,10 @@ def software(missing, stats, greaterthan, lessthan):
                                                          textwrap.shorten(fqdn, width=80), exposure_score, acr, uuid))
         click.echo()
 
-    if stats:
+    elif stats:
         display_stats()
 
-    if greaterthan:
+    elif greaterthan:
         try:
             click.echo()
             click.echo("*"*50)
@@ -1752,10 +1733,10 @@ def software(missing, stats, greaterthan, lessthan):
                 if int(length) >= int(greaterthan):
                     click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
         except:
-            click.echo("\nRun navi sofware Generate\n Or check your input\n")
+            click.echo("\nRun navi config software generate\n Or check your input\n")
         click.echo()
 
-    if lessthan:
+    elif lessthan:
         try:
             click.echo("*" * 50)
             click.echo("Below is the Software found {} times or less".format(greaterthan))
@@ -1768,6 +1749,8 @@ def software(missing, stats, greaterthan, lessthan):
                 if int(length) <= int(lessthan):
                     click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
         except:
-            click.echo("\nRun navi software Generate\n Or check your input\n")
+            click.echo("\nRun navi update software Generate\n Or check your input\n")
         click.echo()
 
+    else:
+        click.echo("\nYou need to select an option.  use '--help' for options.\n\n")

@@ -170,7 +170,8 @@ def parse_data(chunk_data):
                 csv_list.append(" ")
 
             try:
-                special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns".format(asset_id)
+                special_url = ("https://cloud.tenable.com/tio/app.html#/"
+                               "vulnerability-management/dashboard/assets/asset-details/{}/vulns").format(asset_id)
                 csv_list.append(special_url)
             except:
                 special_url = None
@@ -235,7 +236,8 @@ def asset_export(days, ex_uuid, threads, category, value):
         if value is None:
             pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
         else:
-            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit), "tag.{}".format(category): value}}
+            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit),
+                                                        "tag.{}".format(category): value}}
     try:
 
         if ex_uuid == '0':
@@ -255,7 +257,6 @@ def asset_export(days, ex_uuid, threads, category, value):
         # now check the status
         status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
 
-        # status = get_data('/vulns/export/89ac18d9-d6bc-4cef-9615-2d138f1ffsdf/status')
         click.echo("Status : {}".format(str(status["status"])))
 
         # loop to check status until finished
@@ -264,7 +265,6 @@ def asset_export(days, ex_uuid, threads, category, value):
             if status['status'] == 'PROCESSING' or 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
-                # click.echo("Status : " + str(status["status"]))
 
             # Exit Loop once confirmed finished
             if status['status'] == 'FINISHED':
@@ -272,14 +272,13 @@ def asset_export(days, ex_uuid, threads, category, value):
                 click.echo("\nProcessing Time took : {}".format(str(ptime - start)))
                 not_ready = False
 
-            # Tell the user an error occured
             if status['status'] == 'ERROR':
                 click.echo("Error occurred")
 
         create_assets_table()
         create_tag_table()
 
-        # grab all of the chunks and craft the URLS for threading
+        # grab all the chunks and craft the URLS for threading
 
         for y in status['chunks_available']:
             urls.append('/assets/export/' + ex_uuid + '/chunks/' + str(y))
@@ -300,7 +299,9 @@ def asset_export(days, ex_uuid, threads, category, value):
 
         # Now that the download has completed we need to record it
         update_id = get_last_update_id()
-        diff_dict = [update_id, str(start), str(days), "Asset Update", str(ex_uuid)] # need to ignore if the Ex_uuid exsists in the db.
+
+        # need to ignore if the Ex_uuid exists in the db.
+        diff_dict = [update_id, str(start), str(days), "Asset Update", str(ex_uuid)]
         database_2 = r"navi.db"
         conn = new_db_connection(database_2)
         with conn:
@@ -310,4 +311,3 @@ def asset_export(days, ex_uuid, threads, category, value):
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")
     except TypeError:
         click.echo("You may not be authorized or your keys are invalid")
-

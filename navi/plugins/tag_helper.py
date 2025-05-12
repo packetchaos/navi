@@ -42,11 +42,12 @@ def remove_tag(tag_uuid, tag_list):
     except IndexError:
         pass
     except TypeError:
-        print("\nYou may need to update the navi DB.  The Query did not yeild any results\n")
+        print("\nYou may need to update the navi DB.  The Query did not yield any results\n")
 
 
 def tag_checker(uuid, key, value):
-    data = db_query("SELECT * from tags where asset_uuid='{}' and tag_key='{}' and tag_value='{}';".format(uuid, key, value))
+    data = db_query("SELECT * from tags where asset_uuid='{}' "
+                    "and tag_key='{}' and tag_value='{}';".format(uuid, key, value))
     length = len(data)
     if length != 0:
         return 'yes'

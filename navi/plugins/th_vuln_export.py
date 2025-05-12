@@ -31,7 +31,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.execute('pragma synchronous=OFF')
     with vuln_conn:
         try:
-            # loop through all of the vulns in this chunk
+            # loop through all the vulns in this chunk
             for vulns in chunk_data:
                 # create a blank list to append asset details
                 vuln_list = []
@@ -225,9 +225,9 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(" ")
 
                     try:
-                        OSes = vulns['asset']['operating_system']
+                        oses = vulns['asset']['operating_system']
 
-                        vuln_list.append(str(OSes))
+                        vuln_list.append(str(oses))
                     except KeyError:
                         vuln_list.append(" ")
 
@@ -246,7 +246,9 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(" ")
 
                     try:
-                        special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns/vulnerability-details/{}/details".format(asset_uuid, plugin_id)
+                        special_url = ("https://cloud.tenable.com/tio/app.html#/"
+                                       "vulnerability-management/dashboard/assets/asset-details/"
+                                       "{}/vulns/vulnerability-details/{}/details").format(asset_uuid, plugin_id)
                         vuln_list.append(special_url)
                     except:
                         special_url = None
@@ -289,9 +291,11 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
         pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity}}
     else:
         if value is None:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity}}
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                                                      "state": state, "severity": severity}}
         else:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity,
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                                                      "state": state, "severity": severity,
                                                       "tag.{}".format(category): "{}".format(value)}}
     try:
 
@@ -338,7 +342,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
             if status['status'] == 'ERROR':
                 click.echo("Error occurred")
 
-        # grab all of the chunks and craft the URLS for threading
+        # grab all the chunks and craft the URLS for threading
         for y in status['chunks_available']:
             urls.append('/vulns/export/' + ex_uuid + '/chunks/' + str(y))
 
@@ -355,7 +359,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
         click.echo("Vulnerability Update Time took : {}\n".format(str(end - start)))
 
         update_id = get_last_update_id()
-        diff_dict = [update_id, str(start), str(days), "Vuln update", str(ex_uuid)]  # need to ignore if the Ex_uuid exists in the db.
+        diff_dict = [update_id, str(start), str(days), "Vuln update", str(ex_uuid)]
         database_2 = r"navi.db"
         conn = new_db_connection(database_2)
         with conn:

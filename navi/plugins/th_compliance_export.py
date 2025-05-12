@@ -31,7 +31,7 @@ def parse_data(chunk_data, chunk_number):
     comply_conn.execute('pragma synchronous=OFF')
     with comply_conn:
         try:
-            # loop through all of the compliance info in this chunk
+            # loop through all the compliance info in this chunk
             for finding in chunk_data:
                 # create a blank list to append asset details
                 finding_list = []
@@ -97,7 +97,7 @@ def parse_data(chunk_data, chunk_number):
                     except KeyError:
                         finding_list.append(" ")
 
-                    # Need to break this into it's own table.
+                    # Need to break this into its own table.
                     try:
                         reference = str(finding['reference'])
                         finding_list.append(reference)
@@ -203,7 +203,7 @@ def compliance_export(days, ex_uuid, threads):
                 click.echo("\nT.io Error occurred\n Try again!")
                 exit()
 
-        # grab all of the chunks and craft the URLS for threading
+        # grab all the chunks and craft the URLS for threading
         for y in status['chunks_available']:
             urls.append('/compliance/export/' + ex_uuid + '/chunks/' + str(y))
 

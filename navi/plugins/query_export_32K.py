@@ -54,4 +54,5 @@ def export_query(query, name):
                 agent_writer.writerow(new_list)
 
             if number != 0:
-                print("\nYou're export had {} records that were over 32K; \nThey were all saved to a text file which is referenced in the CSV\n".format(number))
+                print("\nYou're export had {} records that were over 32K;"
+                      "\nThey were all saved to a text file which is referenced in the CSV\n".format(number))
