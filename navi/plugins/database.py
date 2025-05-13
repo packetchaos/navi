@@ -161,6 +161,30 @@ def insert_agents(conn, agents):
     cur.execute(sql, agents)
 
 
+def insert_certificates(conn, certs):
+    sql = '''INSERT or IGNORE into certs(
+                                        asset_uuid,
+                                        subject_name,  
+                                        country,  
+                                        state_province,  
+                                        locality,  
+                                        organization,  
+                                        common_name,  
+                                        issuer_name,  
+                                        organization_unit,  
+                                        serial_number,  
+                                        version,  
+                                        signature_algorithm,  
+                                        not_valid_before,  
+                                        not_valid_after,    
+                                        algorithm,  
+                                        key_length,  
+                                        signature_length) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, certs)
+
+
 def insert_tags(conn, tags):
     sql = '''INSERT or IGNORE into tags(tag_id, asset_uuid, asset_ip, tag_key, tag_uuid, tag_value, tag_added_date)
      VALUES(?,?,?,?,?,?,?)'''

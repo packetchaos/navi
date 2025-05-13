@@ -1,7 +1,8 @@
 import click
 import csv
 import textwrap
-from .database import db_query
+from .database import db_query, insert_certificates, new_db_connection, drop_tables
+from .dbconfig import create_certs_table
 from .query_export import query_export
 from .agent_group_export import agent_group_export
 from .user_export import user_export
@@ -25,7 +26,7 @@ def assets(file):
 
 
 @export.command(help="Export All Agent data into a CSV")
-@click.option('--filename', deafult="agent_data", help="Name of the file excluding 'csv'")
+@click.option('--filename', default="agent_data", help="Name of the file excluding 'csv'")
 def agents(filename):
     download_agent_data()
     click.echo("\nExporting your data now. Saving {}.csv now...\n".format(filename))

@@ -138,6 +138,29 @@ def create_agents_table():
     create_table(agent_conn, create_agent_table)
 
 
+def create_certs_table():
+    database = r"navi.db"
+    cert_conn = new_db_connection(database)
+    create_cert_table = """CREATE TABLE IF NOT EXISTS certs (
+                        asset_uuid text,
+                        subject_name text,  
+                        country text,  
+                        state_province text,  
+                        locality text,  
+                        organization text,  
+                        common_name text,  
+                        issuer_name text,  
+                        organization_unit text,  
+                        serial_number text,  
+                        version text,  
+                        signature_algorithm text,  
+                        not_valid_before text,  
+                        not_valid_after text,    
+                        algorithm text,  
+                        key_length text,  
+                        signature_length text);"""
+    cert_conn.execute('pragma journal_mode=wal;')
+    create_table(cert_conn, create_cert_table)
 def create_tag_table():
     database = r"navi.db"
     tag_conn = new_db_connection(database)
