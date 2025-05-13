@@ -138,6 +138,29 @@ def insert_assets(conn, assets):
     cur.execute(sql, assets)
 
 
+def insert_agents(conn, agents):
+    sql = '''INSERT or IGNORE into agents(
+                                          agent_id, 
+                                          agent_uuid, 
+                                          hostname, 
+                                          platform, 
+                                          ip_address, 
+                                          last_scanned, 
+                                          plugin_feed_id,
+                                          core_build, 
+                                          core_version, 
+                                          linked_on, 
+                                          last_connect, 
+                                          status, 
+                                          network_uuid, 
+                                          network_name,
+                                          health_score,
+                                          health_state) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, agents)
+
+
 def insert_tags(conn, tags):
     sql = '''INSERT or IGNORE into tags(tag_id, asset_uuid, asset_ip, tag_key, tag_uuid, tag_value, tag_added_date)
      VALUES(?,?,?,?,?,?,?)'''

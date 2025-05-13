@@ -17,6 +17,7 @@ from .database import new_db_connection, create_table, drop_tables, db_query, in
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from IPy import IP
+from .agent_to_db import download_agent_data
 
 tio = tenb_connection()
 
@@ -1040,6 +1041,12 @@ def assets(threads, days, exid, c, v):
         exid = '0'
 
     asset_export(days, exid, threads, c, v)
+
+
+@update.command(help="Create and Update the Agent table for more advanced Agent use-cases")
+def agents():
+    click.echo("\n\nGrabbing Agent data and stuffing it into the database in a table called agents.\n\n")
+    download_agent_data()
 
 
 @update.command(help="Update the vulns Table")

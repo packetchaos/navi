@@ -113,6 +113,31 @@ def create_assets_table():
     create_table(asset_conn, create_asset_table)
 
 
+def create_agents_table():
+    database = r"navi.db"
+    agent_conn = new_db_connection(database)
+    create_agent_table = """CREATE TABLE IF NOT EXISTS agents (
+                            agent_id text, 
+                            agent_uuid text, 
+                            hostname text, 
+                            platform text, 
+                            ip_address text, 
+                            last_scanned text, 
+                            plugin_feed_id text,
+                            core_build text, 
+                            core_version text, 
+                            linked_on text, 
+                            last_connect text, 
+                            status text, 
+                            network_uuid text, 
+                            network_name text,
+                            health_score text,
+                            health_state text
+                            );"""
+    agent_conn.execute('pragma journal_mode=wal;')
+    create_table(agent_conn, create_agent_table)
+
+
 def create_tag_table():
     database = r"navi.db"
     tag_conn = new_db_connection(database)
