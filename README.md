@@ -54,3 +54,5 @@ It took 30 mins for Tenable VM to prepare the download and 60 mins to download a
  * Exports were reduced to 50 from 500 assets to increase download time
  * Synchronous was turned off to speed up downloads
  * DB cache was increased to 10000 from 2000 default in SQLite
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/packetchaos/navi)
