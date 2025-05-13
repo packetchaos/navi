@@ -1,8 +1,7 @@
 import click
 import csv
 import textwrap
-from .database import db_query, insert_certificates, new_db_connection, drop_tables
-from .dbconfig import create_certs_table
+from .database import db_query
 from .query_export import query_export
 from .agent_group_export import agent_group_export
 from .user_export import user_export
@@ -72,9 +71,11 @@ def group(group_name):
 
 @export.command(help="Export All assets by tag; Include ACR and AES into a CSV")
 @click.option('--c', default=None, required=True, help="Export bytag with the following Category name")
-@click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; requires --c and Category Name")
+@click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; "
+                                                       "requires --c and Category Name")
 @click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
-@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'], case_sensitive=False), multiple=True)
+@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'],
+                                              case_sensitive=False), multiple=True)
 def bytag(c, v, file, severity):
 
     if severity:
@@ -115,7 +116,8 @@ def compliance(name, uuid, file):
 
 @export.command(help="Export All Vulnerability data in the Navi Database to a CSV")
 @click.option('--file', default="vuln_data", help="Name of the file excluding '.csv'")
-@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'], case_sensitive=False), multiple=True)
+@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'],
+                                              case_sensitive=False), multiple=True)
 def vulns(file, severity):
     click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
 
@@ -244,4 +246,3 @@ def compare(uuid):
                     agent_writer.writerow(csv_update_list)
 
     click.echo("\nYou're export: cve_compare_{}.csv is finished\n".format(uuid))
-
