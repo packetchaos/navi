@@ -33,7 +33,8 @@ def display_stats():
 
 
 def get_licensed():
-    data = request_data('GET', '/workbenches/asset-stats?date_range=90&filter.0.filter=is_licensed&filter.0.quality=eq&filter.0.value=true')
+    data = request_data('GET', '/workbenches/asset-stats?date_range=90&'
+                               'filter.0.filter=is_licensed&filter.0.quality=eq&filter.0.value=true')
     number_of_assets = data['scanned']
     return number_of_assets
 
@@ -146,21 +147,23 @@ def scans(a):
 
         if a:
             for scan in tio.scans.list():
-                    try:
-                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
-                                                                    str(scan['uuid'])))
-                    except KeyError:
-                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
-                                                                    "No UUID"))
+                try:
+                    click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80),
+                                                                  str(scan['id']), str(scan['status']),
+                                                                  str(scan['uuid'])))
+                except KeyError:
+                    click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80),
+                                                                  str(scan['id']), str(scan['status']),
+                                                                  "No UUID"))
         else:
             for scan in tio.scans.list():
                 if str(compare_dates(scan['last_modification_date'])) == 'yes':
                     try:
-                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
-                                                                    str(scan['uuid'])))
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(
+                            str(scan['name']), width=80), str(scan['id']), str(scan['status']), str(scan['uuid'])))
                     except KeyError:
-                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(str(scan['name']), width=80), str(scan['id']), str(scan['status']),
-                                                                    "No UUID"))
+                        click.echo("{:80s} {:5s} {:10s} {:40}".format(textwrap.shorten(
+                            str(scan['name']), width=80), str(scan['id']), str(scan['status']), "No UUID"))
                 else:
                     pass
         click.echo()
@@ -292,64 +295,107 @@ def status():
 
 
 @info.command(help="Display Agent information")
-@click.option("-show_uuid", is_flag=True, help="Display Agent information including Agent UUID")
-def agents(show_uuid):
-    try:
-        if show_uuid:
-            click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address",
-                                                                   "Last Connect Time",
-                                                                   "Last Scanned Time", "Status", "UUID"))
-            click.echo("-" * 150)
-        else:
-            click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address",
-                                                                   "Last Connect Time", "Last Scanned Time",
-                                                                   "Status", "Group(id)s"))
-            click.echo("-" * 150)
+@click.option("-show_uuid", is_flag=True, help="Display information on all agents including Agent UUID")
+@click.option("--agent_id", default="", help="Get detailed information about a specific Agent")
+def agents(show_uuid, agent_id):
 
-        for agent in tio.agents.list():
-            try:
-                last_connect = agent['last_connect']
-                last_connect_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_connect))
-            except KeyError:
-                last_connect_time = "Unknown"
+    if agent_id:
+        try:
+            agent_details = tio.agents.details(agent_id)
 
-            try:
-                last_scanned = agent['last_scanned']
-                last_scanned_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_scanned))
-            except KeyError:
-                # I assume if we can't pull as scanned time, it doesn't exist
-                last_scanned_time = "Not Scanned"
-            groups = ''
-            try:
-                for group in agent['groups']:
-                    groups = groups + ", {}({})".format(group['name'], group['id'])
-            except KeyError:
-                pass
+            click.echo("\nAgent Details")
+            click.echo("-----------------\n")
+            click.echo("Agent Name: {}".format(agent_details['distro']))
+            click.echo("Agent IP: {}".format(agent_details['distro']))
+            click.echo("Agent UUID: {}".format(agent_details['uuid']))
+            click.echo("Network UUID: {}".format(agent_details['network_uuid']))
+            click.echo("Plugin Feed: {}".format(agent_details['plugin_feed_id']))
 
-            try:
-                agent_uuid = agent['uuid']
-            except KeyError:
-                agent_uuid = "unknown"
+            click.echo("\nDistribution Information")
+            click.echo("----------------------------\n")
+            click.echo("Platform: {}".format(agent_details['platform']))
+            click.echo("Distribution: {}".format(agent_details['distro']))
+            click.echo("Core Version: {}".format(agent_details['core_version']))
+            click.echo("Core Build: {}".format(agent_details['core_build']))
 
+            click.echo("\nAgent Connection information")
+            click.echo("----------------------------\n")
+            click.echo("Last Connect Time: {}".format(agent_details['last_connect']))
+            try:
+                click.echo("Last Scan Time: {}".format(agent_details['last_scanned']))
+            except:
+                click.echo("Not Scanned Yet")
+            click.echo("Restart Pending: {}".format(agent_details['restart_pending']))
+            click.echo("Status: {}".format(agent_details['status']))
+
+            click.echo("\nAgent Groups")
+            click.echo("----------------------------\n")
+            for agent_groups in agent_details['groups']:
+                click.echo("Group Name({}): {}".format(str(agent_groups['id']), str(agent_groups['name'])))
+        except TypeError:
+            click.echo("\nYou need the Agent ID... Try again\n")
+            exit()
+
+    else:
+        try:
             if show_uuid:
-                click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']),
-                                                                                          width=30),
-                                                                         str(agent['ip']), str(last_connect_time),
-                                                                         str(last_scanned_time), str(agent['status']),
-                                                                         textwrap.shorten(agent_uuid, width=60)))
+                click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address",
+                                                                       "Last Connect Time",
+                                                                       "Last Scanned Time", "Status", "UUID"))
+                click.echo("-" * 150)
             else:
-                click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']),
-                                                                                          width=30),
-                                                                         str(agent['ip']), str(last_connect_time),
-                                                                         str(last_scanned_time), str(agent['status']),
-                                                                         textwrap.shorten(groups[1:], width=60)))
-        click.echo()
-    except AttributeError:
-        click.echo("\nCheck your permissions or your API keys\n")
+                click.echo("\n{:30s} {:20} {:20} {:20} {:6} {}".format("Agent Name", "IP Address",
+                                                                       "Last Connect Time", "Last Scanned Time",
+                                                                       "Status", "Group(id)s"))
+                click.echo("-" * 150)
+
+            for agent in tio.agents.list():
+                try:
+                    last_connect = agent['last_connect']
+                    last_connect_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_connect))
+                except KeyError:
+                    last_connect_time = "Unknown"
+
+                try:
+                    last_scanned = agent['last_scanned']
+                    last_scanned_time = time.strftime("%b %d %H:%M:%S", time.localtime(last_scanned))
+                except KeyError:
+                    # I assume if we can't pull as scanned time, it doesn't exist
+                    last_scanned_time = "Not Scanned"
+                groups = ''
+                try:
+                    for group in agent['groups']:
+                        groups = groups + ", {}({})".format(group['name'], group['id'])
+                except KeyError:
+                    pass
+
+                try:
+                    agent_uuid = agent['uuid']
+                except KeyError:
+                    agent_uuid = "unknown"
+
+                if show_uuid:
+                    click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']),
+                                                                                              width=30),
+                                                                             str(agent['ip']), str(last_connect_time),
+                                                                             str(last_scanned_time),
+                                                                             str(agent['status']),
+                                                                             textwrap.shorten(agent_uuid, width=60)))
+                else:
+                    click.echo("{:30s} {:20s} {:20s} {:20s} {:6s} {}".format(textwrap.shorten(str(agent['name']),
+                                                                                              width=30),
+                                                                             str(agent['ip']), str(last_connect_time),
+                                                                             str(last_scanned_time),
+                                                                             str(agent['status']),
+                                                                             textwrap.shorten(groups[1:], width=60)))
+            click.echo()
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
 
 
 @info.command(help="Display Agent Groups and membership information ")
-@click.option("--group_id", default=None, help="Display the agents that are members of the group using the group ID")
+@click.option("--group_id", default=None,
+              help="Display the agents that are members of the group using the group ID")
 def agent_groups(group_id):
 
     if group_id:
@@ -756,14 +802,16 @@ def plugin(plugin_id, o):
             click.echo("-" * 150)
 
             plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
-                                   "asset_uuid = uuid where plugin_id='" + plugin_id + "' and output LIKE '%" + o + "%';")
+                                   "asset_uuid = uuid "
+                                   "where plugin_id='" + plugin_id + "' and output LIKE '%" + o + "%';")
 
             for row in plugin_data:
                 try:
                     fqdn = row[2]
                 except:
                     fqdn = " "
-                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0], textwrap.shorten(fqdn, 46), row[1], row[3]))
+                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0],
+                                                                  textwrap.shorten(fqdn, 46), row[1], row[3]))
 
         else:
             find_by_plugin(plugin_id)
@@ -780,7 +828,8 @@ def cve(cve_id):
         click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
 
     else:
-        click.echo("\n{:8s} {:>8} {:16s} {:40s} {:38s} {}".format("Plugin", "EPSS", "IP Address", "FQDN", "UUID", "Network UUID"))
+        click.echo("\n{:8s} {:>8} {:16s} {:40s} {:38s} {}".format("Plugin", "EPSS", "IP Address",
+                                                                  "FQDN", "UUID", "Network UUID"))
         click.echo("-" * 150)
 
         plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, plugin_id, network from vulns LEFT JOIN "
@@ -913,7 +962,8 @@ def scantime(minute):
                     "scan_uuid, output from vulns where plugin_id='19506';")
 
     try:
-        click.echo("\n{:16s} {:40s} {:25s} {:25s} {}".format("Asset IP", "Asset UUID", "Started", "Finished", "Scan UUID"))
+        click.echo("\n{:16s} {:40s} {:25s} {:25s} {}".format("Asset IP", "Asset UUID",
+                                                             "Started", "Finished", "Scan UUID"))
         click.echo("-" * 150)
         for vulns in data:
             plugin_dict = {}
@@ -1043,9 +1093,11 @@ def xrefs(xref, xid):
 def plugin_by_ip(ipaddr, plugin):
     try:
         if len(ipaddr) < 17:
-            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where "
+                            "asset_ip=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
         else:
-            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where asset_uuid=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
+            rows = db_query("SELECT output, cves, score, state, xrefs from vulns where "
+                            "asset_uuid=\"%s\" and plugin_id=%s" % (ipaddr, plugin))
 
         for plug in rows:
             click.echo("\nCurrent Plugin State: {} ".format(plug[3]))
@@ -1129,9 +1181,11 @@ def get_attributes(uuid):
 
 def info_by_uuid(uuid):
     try:
-        data = db_query("select plugin_id, plugin_name, plugin_family, port, protocol, severity from vulns where asset_uuid='{}' and severity =='info';".format(uuid))
+        data = db_query("select plugin_id, plugin_name, plugin_family, port, protocol, severity from "
+                        "vulns where asset_uuid='{}' and severity =='info';".format(uuid))
 
-        click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family", "Port", "Proto", "Severity"))
+        click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family",
+                                                                  "Port", "Proto", "Severity"))
         click.echo("-"*150)
 
         for vulns in data:
@@ -1141,7 +1195,8 @@ def info_by_uuid(uuid):
             port = vulns[3]
             protocol = vulns[4]
             severity = vulns[5]
-            click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family, port, protocol, severity))
+            click.echo("{:10s} {:90s} {:25s} {:6s} {:6s} {}".format(plugin_id, plugin_name, plugin_family,
+                                                                    port, protocol, severity))
         click.echo("")
     except Error as e:
         click.echo(e)
@@ -1152,7 +1207,8 @@ def cves_by_uuid(uuid):
     try:
         data = db_query("select plugin_id, cves from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
-        click.echo("\n{:10s} {:90} {:>15} {:>15} {:>15}".format("Plugin", "CVEs", "Avg EPSS", "Total EPSS", "Top EPSS"))
+        click.echo("\n{:10s} {:90} {:>15} {:>15} {:>15}".format("Plugin", "CVEs", "Avg EPSS",
+                                                                "Total EPSS", "Top EPSS"))
         click.echo("-"*150)
 
         for vulns in data:
@@ -1191,7 +1247,8 @@ def cves_by_uuid(uuid):
 @explore.command(help="Get Asset details based on IP or UUID")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
-@click.option('-n', '-netstat', is_flag=True, help='Netstat Established(58561) and Listening and Open Ports(14272)')
+@click.option('-n', '-netstat', is_flag=True, help='Netstat Established(58561) and '
+                                                   'Listening and Open Ports(14272)')
 @click.option('-p', '-patch', is_flag=True, help='Patch Information - 66334')
 @click.option('-t', '-tracert', is_flag=True, help='Trace Route - 10287')
 @click.option('-o', '-processes', is_flag=True, help='Process Information - 70329')
@@ -1200,14 +1257,16 @@ def cves_by_uuid(uuid):
 @click.option('-r', '-firewall', is_flag=True, help='Local Firewall Rules - 56310')
 @click.option('-patches', is_flag=True, help='Missing Patches - 38153')
 @click.option('-d', is_flag=True, help="Scan Detail: 19506 plugin output")
-@click.option('-software', is_flag=True, help="Find software installed on Unix(22869) of windows(20811) hosts")
+@click.option('-software', is_flag=True, help="Find software installed on Unix(22869) of "
+                                              "windows(20811) hosts")
 @click.option('-exploit', is_flag=True, help="Display Solution, Description for each Exploit")
 @click.option('-critical', is_flag=True, help="Display Plugin Output for each Critical Vuln")
 @click.option('-details', is_flag=True, help="Details on an Asset: IP, UUID, Vulns, etc")
 @click.option('-vulns', is_flag=True, help="Display all vulnerabilities and their plugin IDs")
 @click.option('-info', is_flag=True, help="Display all info plugins and their IDs")
 @click.option('-cves', is_flag=True, help="Display all cves found on the asset")
-@click.option('-compliance', '-audits', is_flag=True, help="Display all Compliance info for a given asset UUID")
+@click.option('-compliance', '-audits', is_flag=True, help="Display all Compliance info for a "
+                                                           "given asset UUID")
 @click.pass_context
 def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, exploit, critical, details, vulns,
        info, cves, compliance):
@@ -1693,7 +1752,7 @@ def api(url, raw, limit, offset, post, payload):
               help="Display Software installed Greater than or equal to the number entered")
 @click.option('--less_than', default=None,
               help="Display Software installed less than or equal to the number entered")
-def software(missing, stats, greaterthan, lessthan):
+def software(missing, stats, greater_than, less_than):
 
     if missing:
         click.echo("\nThese Assets do not have plugin 22869 nor 20811\n")
@@ -1719,34 +1778,34 @@ def software(missing, stats, greaterthan, lessthan):
     elif stats:
         display_stats()
 
-    elif greaterthan:
+    elif greater_than:
         try:
             click.echo()
             click.echo("*"*50)
-            click.echo("Below is the Software found {} times or more".format(greaterthan))
+            click.echo("Below is the Software found {} times or more".format(greater_than))
             click.echo("*" * 50)
             all_data = db_query("select * from software;")
             click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
             click.echo('-' * 150)
             for wares in all_data:
                 length = len(eval(wares[0]))
-                if int(length) >= int(greaterthan):
+                if int(length) >= int(greater_than):
                     click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
         except:
             click.echo("\nRun navi config software generate\n Or check your input\n")
         click.echo()
 
-    elif lessthan:
+    elif less_than:
         try:
             click.echo("*" * 50)
-            click.echo("Below is the Software found {} times or less".format(greaterthan))
+            click.echo("Below is the Software found {} times or less".format(less_than))
             click.echo("*" * 50)
             all_data = db_query("select * from software;")
             click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
             click.echo('-' * 150)
             for wares in all_data:
                 length = len(eval(wares[0]))
-                if int(length) <= int(lessthan):
+                if int(length) <= int(less_than):
                     click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
         except:
             click.echo("\nRun navi update software Generate\n Or check your input\n")
