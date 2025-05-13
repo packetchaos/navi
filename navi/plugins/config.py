@@ -1116,7 +1116,7 @@ def tagrules():
     export_tags()
 
 
-@update.command(help="Create the database table and populate the software data")
+@config.command(help="Parse the 3 software plugins and stuff the software into a table called software")
 def software():
     database = r'navi.db'
     new_conn = new_db_connection(database)
@@ -1129,6 +1129,9 @@ def software():
 
     # Grab 20811 Data
     parse_20811(soft_dict)
+
+    # grab 83991 Data
+    parse_83991(soft_dict)
 
     with new_conn:
         for item in soft_dict.items():
