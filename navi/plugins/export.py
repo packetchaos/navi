@@ -1,7 +1,6 @@
 import click
 import csv
 import textwrap
-from .agent_export import agent_export
 from .database import db_query
 from .query_export import query_export
 from .agent_group_export import agent_group_export
@@ -9,6 +8,7 @@ from .user_export import user_export
 from .compliance_export_csv import compliance_export_csv
 from .query_export_32K import export_query
 from .api_wrapper import request_xml
+from .agent_to_db import download_agent_data
 
 
 @click.group(help="Export tenable VM Data")
@@ -25,16 +25,20 @@ def assets(file):
 
 
 @export.command(help="Export All Agent data into a CSV")
-def agents():
-    click.echo("\nExporting your data now. Saving agent_data.csv now...\n")
-    agent_export()
+@click.option('--filename', deafult="agent_data", help="Name of the file excluding 'csv'")
+def agents(filename):
+    download_agent_data()
+    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(filename))
+    agent_query = "select * from agents;"
+    query_export(agent_query, filename)
 
 
 @export.command(help="Export Licensed Assets into a CSV")
 @click.option('--file', default="licensed_data", help="Name of the file excluding 'csv'")
 def licensed(file):
     click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
-    licensed_query = "SELECT ip_address, fqdn, uuid, last_licensed_scan_date from assets where last_licensed_scan_date != ' ';"
+    licensed_query = ("SELECT ip_address, fqdn, uuid, last_licensed_scan_date "
+                      "from assets where last_licensed_scan_date != ' ';")
     query_export(licensed_query, file)
 
 

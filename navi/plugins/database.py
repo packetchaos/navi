@@ -184,13 +184,6 @@ def insert_software(conn, software):
     cur.execute(sql, software)
 
 
-def update_software(conn, software, asset_list):
-
-    cur = conn.cursor()
-    cur.execute('pragma journal_mode=wal;')
-    cur.execute('UPDATE software SET asset_uuid=? WHERE software_string=?', (str()))
-
-
 def drop_tables(conn, table):
     try:
         drop_table = '''DROP TABLE {}'''.format(table)

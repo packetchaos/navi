@@ -1045,7 +1045,8 @@ def assets(threads, days, exid, c, v):
 
 @update.command(help="Create and Update the Agent table for more advanced Agent use-cases")
 def agents():
-    click.echo("\n\nGrabbing Agent data and stuffing it into the database in a table called agents.\n\n")
+    click.echo("\n\nGrabbing Agent data and stuffing it into the database in a table called agents. "
+               "This can take some time; 5000 agents at a time.\n\n")
     download_agent_data()
 
 

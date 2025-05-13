@@ -5,6 +5,7 @@ import click
 import time
 import datetime
 
+
 def plugin_parser(plugin_output):
     tech_list = []
     # Split the plugin information on '-'
