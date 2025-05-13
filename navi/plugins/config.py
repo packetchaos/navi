@@ -12,8 +12,9 @@ from .explore import display_stats
 from .tagrule_export import export_tags
 from .epss import update_navi_with_epss
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
-                       create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table)
-from .database import new_db_connection, create_table, drop_tables, db_query, insert_software
+                       create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
+                       create_certs_table)
+from .database import new_db_connection, create_table, drop_tables, db_query, insert_software, insert_certificates
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from IPy import IP
@@ -990,12 +991,19 @@ def url(new_url):
 
 
 @config.command(help="Populate Navi DB with EPSS data")
-@click.option('--day', '--d', default='01', help="Day of the Month; EX: 01 NOT 1")
-@click.option('--month', '--m', default='01', help="Month of the year;EX: 04 NOT 4")
-@click.option('--year', '--y', default='2025', help="Year of your desire;EX: 2023 NOT 23")
+@click.option('--day', '--d', default='', help="Day of the Month; EX: 01 NOT 1")
+@click.option('--month', '--m', default='', help="Month of the year;EX: 04 NOT 4")
+@click.option('--year', '--y', default='', help="Year of your desire;EX: 2023 NOT 23")
 @click.option('--filename', default=None, help="Supply the EPSS data manually providing a CSV")
 def epss(day, month, year, filename):
-    update_navi_with_epss(day, month, year, filename)
+    if day and month and year:
+        update_navi_with_epss(day, month, year, filename)
+    else:
+        date_info = str(datetime.datetime.now()).split("-")
+        year = date_info[0]
+        month = date_info[1]
+        day = date_info[2][:2]
+        update_navi_with_epss(day, month, year, filename)
 
 
 @config.group(help="Update the local Navi DB, Change Base URL, and update EPSS")
@@ -1383,3 +1391,118 @@ def bytag(c, v, group, scanner):
         if tag_uuid[0][0] in temp_agents:
             tio.agent_groups.add_agent(group_id, agent_id)
 
+
+@config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
+def certificates():
+    database = r"navi.db"
+    cert_conn = new_db_connection(database)
+    cert_conn.execute('pragma journal_mode=wal;')
+    cert_conn.execute('pragma cashe_size=-10000')
+    cert_conn.execute('pragma synchronous=OFF')
+    click.echo("\nParsing every output for plugin 10863. This can take some time.\n"
+               "\nThe data will be saved in a table named 'certs'\n\n")
+    drop_tables(cert_conn, 'certs')
+    create_certs_table()
+    with cert_conn:
+        cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
+        cert_dict = {}
+        asset_uuid = cert_data[0][0]
+
+        for certs in cert_data:
+
+            first_pass = str(certs[1])
+            second_pass = str(first_pass).replace("'", "")
+            third_pass = str(second_pass).split("\n")
+
+            for line in third_pass:
+                csv_list = []
+                forth_pass = str(line).split(": ")
+
+                try:
+                    cert_dict[forth_pass[0]] = forth_pass[1]
+                except:
+                    pass
+
+                csv_list.append(asset_uuid)
+
+                try:
+                    csv_list.append(cert_dict['Subject Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Country'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['State/Province'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Locality'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Organization'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Common Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Issuer Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Organization Unit'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Serial Number'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Version'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Signature Algorithm'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Not Valid Before'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Not Valid After'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Algorithm'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Key Length'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Signature Length'])
+                except KeyError:
+                    csv_list.append(" ")
+
+            insert_certificates(cert_conn, csv_list)
