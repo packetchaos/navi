@@ -2,7 +2,7 @@ import click
 import boto3
 import csv
 from .database import new_db_connection, db_query
-from .api_wrapper import request_data, tenb_connection, request_no_response
+from .api_wrapper import request_data, tenb_connection
 from .tag_helper import update_tag, confirm_tag_exists, grab_all_tags, remove_tag
 from sqlite3 import Error
 import pprint
@@ -84,9 +84,6 @@ def tag_by_tag(c, v, d, cv, cc, match):
                             except Exception as F:
                                 print("first error")
                                 click.echo(F)
-
-                                # rules_list.append({"field": "tag.{}".format(str(cc)), "operator": "set-has", "value": str(cv)})
-                                # print("New rules {} \n".format(rules_list))
 
                 payload = {"category_name": str(c), "value": str(v), "description": str(d),
                            "filters": {"asset": {str(match): rules_list}}}
@@ -257,6 +254,7 @@ def remove_uuids_from_tag(tag_uuid):
 
 
 def download_tag_remove(scanid, new_hist, c, v, d):
+    # Download a scan, tag assets by the scan id, remove the scan data.
     try:
         # To reduce API calls lets just download the csv
         filename = download_csv_by_plugin_id(scanid, new_hist)
@@ -315,7 +313,7 @@ def attribute():
     pass
 
 
-@enrich.command(help="Migrate AWS Tags to T.io tags by Instance ID")
+@enrich.command(help="Migrate AWS Tags to TVM tags by Instance ID")
 @click.option("--region", default="", required=True, help="AWS Region")
 @click.option("--a", default="", required=True, help="Access Key")
 @click.option("--s", default="", required=True, help="Secret Key")
@@ -326,7 +324,7 @@ def migrate(region, a, s):
     # Authentication
     ec2client = boto3.client('ec2', region_name=region, aws_access_key_id=a, aws_secret_access_key=s)
 
-    # Grab All of the tags in the Account
+    # Grab All the tags in the Account
     aws_ec2 = ec2client.describe_tags()
 
     # Send the data to get organized into a neat dictionary of Lists
@@ -363,7 +361,8 @@ def migrate(region, a, s):
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 @click.option('--histid', default=None, help="Focus on a specific scan history; Requires --scanid")
-@click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and'")
+@click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and' when creating "
+                                         "parent/child tag relationships")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
 @click.option('-remove', is_flag=True, help="Remove this tag from all assets to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
