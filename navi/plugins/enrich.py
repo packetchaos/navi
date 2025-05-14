@@ -356,7 +356,7 @@ def migrate(region, a, s):
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
-@click.option('--port', default='', help="Create a Tag based on Assets that have a port open.")
+@click.option('--port', default='', help="Create a Tag based on Assets that have a vulnerability on a port.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
 @click.option('--scantime', default='', help="Create a Tag for assets that took longer than supplied minutes")
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
@@ -424,12 +424,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         conn = new_db_connection(database)
         with conn:
             cur = conn.cursor()
-            cur.execute("SELECT asset_uuid from vulns where port=" + port + " and "
-                                                                            "(plugin_id='11219' "
-                                                                            "or plugin_id='14272' "
-                                                                            "or plugin_id='14274' "
-                                                                            "or plugin_id='34220' "
-                                                                            "or plugin_id='10335');")
+            cur.execute("SELECT asset_uuid from vulns where port={};".format(port))
 
             data = cur.fetchall()
 

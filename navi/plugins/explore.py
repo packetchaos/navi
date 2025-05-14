@@ -1008,13 +1008,11 @@ def scantime(minute):
         print(E)
 
 
-@data.command(help="Find Assets with a given port open")
+@data.command(help="Find Assets that have a vulnerability on a particular port")
 @click.argument('open_port')
 def port(open_port):
     data = db_query("SELECT plugin_id, asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN "
-                    "assets ON asset_uuid = uuid where port=" + open_port + " and "
-                    "(plugin_id='11219' or plugin_id='14272' or "
-                    "plugin_id='14274' or plugin_id='34220' or plugin_id='10335');")
+                    "assets ON asset_uuid = uuid where port={};".format(open_port))
 
     try:
         click.echo("\nThe Following assets had Open ports found by various plugins")
@@ -1247,8 +1245,6 @@ def cves_by_uuid(uuid):
 @explore.command(help="Get Asset details based on IP or UUID")
 @click.argument('ipaddr')
 @click.option('--plugin', default='', help='Find Details on a particular plugin ID')
-@click.option('-n', '-netstat', is_flag=True, help='Netstat Established(58561) and '
-                                                   'Listening and Open Ports(14272)')
 @click.option('-p', '-patch', is_flag=True, help='Patch Information - 66334')
 @click.option('-t', '-tracert', is_flag=True, help='Trace Route - 10287')
 @click.option('-o', '-processes', is_flag=True, help='Process Information - 70329')
@@ -1268,7 +1264,7 @@ def cves_by_uuid(uuid):
 @click.option('-compliance', '-audits', is_flag=True, help="Display all Compliance info for a "
                                                            "given asset UUID")
 @click.pass_context
-def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, exploit, critical, details, vulns,
+def uuid(ctx, ipaddr, plugin, p, t, o, c, s, r, patches, d, software, exploit, critical, details, vulns,
        info, cves, compliance):
 
     if d:
@@ -1276,17 +1272,6 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, exploit
         click.echo("-" * 15)
         click.echo()
         plugin_by_ip(ipaddr, str(19506))
-
-    elif n:
-        click.echo("\nNetstat info")
-        click.echo("Established and Listening")
-        click.echo("-" * 15)
-        click.echo()
-        plugin_by_ip(ipaddr, str(58651))
-        click.echo("\nNetstat Open Ports")
-        click.echo("-" * 15)
-        click.echo()
-        plugin_by_ip(ipaddr, str(14272))
 
     elif p:
         click.echo("\nPatch Information")
@@ -1432,7 +1417,6 @@ def uuid(ctx, ipaddr, plugin, n, p, t, o, c, s, r, patches, d, software, exploit
             click.echo(E)
 
     elif details:
-        # This needs to be re-written to avoid using the workbench apis.
         if len(ipaddr) < 17:
             intial_data = db_query("SELECT asset_uuid from vulns where asset_ip='{}';".format(ipaddr))
             data = set(intial_data)

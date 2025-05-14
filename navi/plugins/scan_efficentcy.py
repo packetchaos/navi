@@ -183,7 +183,8 @@ def decorate_19506_data(filename):
         # Avg scan time per asset
         asset_average_scantime = total / len(total_assets_scanned_list)
 
-        # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506) minus the earliest scan date in 19506
+        # total Scan time is: the oldest (scan_date in 19506 + scan duration in 19506)
+        # minus the earliest scan date in 19506
         total_calculated_scan_duration = (max(timestamp_plus_duration_list) - min(start_scan_timestamp_list))
 
         # The asset that took the longest will be the biggest number
@@ -193,9 +194,11 @@ def decorate_19506_data(filename):
         shortest_scanned = min(total_assets_scanned_list, key=lambda uuid: uuid[1])
 
         # Instead of providing the UUID, provide the URL that points to the Asset details page
-        short_asset_special_url = "https://cloud.tenable.com/tio/app.html#/assets-uw/hosts-assets/details/{}/findings?uw_asset_details_findings_nessus.st=severity.1".format(
+        short_asset_special_url = ("https://cloud.tenable.com/tio/app.html#/assets-uw/hosts-assets/details/{}/"
+                                   "findings?uw_asset_details_findings_nessus.st=severity.1").format(
             shortest_scanned[0])
-        long_asset_special_url = "https://cloud.tenable.com/tio/app.html#/assets-uw/hosts-assets/details/{}/findings?uw_asset_details_findings_nessus.st=severity.1".format(
+        long_asset_special_url = ("https://cloud.tenable.com/tio/app.html#/assets-uw/hosts-assets/details/{}/"
+                                  "findings?uw_asset_details_findings_nessus.st=severity.1").format(
             longest_scanned[0])
 
         # collect the data in a list and return it
@@ -258,8 +261,9 @@ def trend_by_scan_id(scanid):
                         processing = total_reported_scan_duration - total_calculated_scan
 
                         # Constructing the scan URL for ease of use
-                        scan_url = "https://cloud.tenable.com/tio/app.html#/assess/scans/vm-scans/folders/1/scan-details/{}/{}/" \
-                                   "by-plugin/vulnerability-details/19506/details".format(scanid, hist['scan_uuid'])
+                        scan_url = ("https://cloud.tenable.com/tio/app.html#/assess/scans/vm-scans/folders/1/"
+                                    "scan-details/{}/{}/by-plugin/"
+                                    "vulnerability-details/19506/details").format(scanid, hist['scan_uuid'])
 
                         # Insert the reported duration and scan url
                         scan_details.insert(0, scan_url)
@@ -277,22 +281,24 @@ def display_data(scanid):
     with open('Trending_report_scan_{}.csv'.format(scanid), mode='r', encoding='utf-8', newline="") as trend_file:
         click.echo()
         click.echo("*" * 100)
-        click.echo("\nThis data is derived from the 19506 plugins found in the last 30 days of available scan history of scan {}"
+        click.echo("\nThis data is derived from the 19506 plugins found "
+                   "in the last 30 days of available scan history of scan {}"
                    "\nThe start time stamps and the durations were used to calculate the total scan times"
-                   "\nThe file Trending_report_scan_{}.csv has all of the available data, including links to assets and scan history\n".format(scanid, scanid))
+                   "\nThe file Trending_report_scan_{}.csv has all of the available data, "
+                   "including links to assets and scan history\n".format(scanid, scanid))
         click.echo("*" * 100)
-        click.echo("\n{:20} {:25} {:10} {:20} {:20} {:20} {:20} {:25}".format("Scan Start", "Scanner IP(s)", "Assets", "Reported",
+        click.echo("\n{:20} {:25} {:10} {:20} {:20} {:20} {:20} {:25}".format("Scan Start", "Scanner IP(s)",
+                                                                              "Assets", "Reported",
                                                                               "Indexing", "Duration", "Average",
                                                                               "Longest Asset time"))
         click.echo("-" * 150)
 
         for detail in DictReader(trend_file):
-            click.echo("{:20} {:25} {:10} {:20} {:20} {:20} {:20} {:25}".format(str(detail["Scan Start"]), textwrap.shorten(str(detail["Scanner IP"]), width=25),
-                                                                                str(detail["Total Assets"]), str(detail["Reported Time"]),
-                                                                                str(detail["Indexing Time"]), str(detail["Scan Duration"]),
-                                                                                detail["Average Scan Duration"], str(detail["Longest Asset time"])))
+            click.echo("{:20} {:25} {:10} {:20} {:20} "
+                       "{:20} {:20} {:25}".format(str(detail["Scan Start"]),
+                                                  textwrap.shorten(str(detail["Scanner IP"]), width=25),
+                                                  str(detail["Total Assets"]), str(detail["Reported Time"]),
+                                                  str(detail["Indexing Time"]), str(detail["Scan Duration"]),
+                                                  detail["Average Scan Duration"], str(detail["Longest Asset time"])))
 
     click.echo()
-
-
-
