@@ -29,7 +29,7 @@ def display_stats():
         click.echo("\nAssets Without Software Plugins: " + str(len(assets_without_data)))
         click.echo()
     except:
-        click.echo("\nYou need to run 'navi software generate' to populate the software table.\n")
+        click.echo("\nYou need to run 'navi config software' to populate the software table.\n")
 
 
 def get_licensed():
@@ -1729,7 +1729,7 @@ def api(url, raw, limit, offset, post, payload):
         error_msg(E)
 
 
-@info.command(help="Display stats on Software")
+@data.command(help="Display stats on Software")
 @click.option('-missing', is_flag=True, help="Display assets missing software enumeration")
 @click.option('-stats', is_flag=True, help="Display General Stats")
 @click.option('--greater_than', default=None,
@@ -1796,4 +1796,5 @@ def software(missing, stats, greater_than, less_than):
         click.echo()
 
     else:
-        click.echo("\nYou need to select an option.  use '--help' for options.\n\n")
+        click.echo("\nYou may want to select an option.  use '--help' for options. Here are the stats:\n\n")
+        display_stats()

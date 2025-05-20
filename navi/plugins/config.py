@@ -1137,15 +1137,14 @@ def software():
             # Save the uuid list as a string
             new_list = [item[0], str(item[1]).strip()]
             insert_software(new_conn, new_list)
-
-    display_stats()
+    click.echo("\nSoftware imported into a table called 'software'. Use 'navi explore data software'\n\n")
 
 
 @config.command(help="Create or delete exclusions")
 @click.option('--name', default=None, required=True, help="The name of your exclusion")
 @click.option('--members', default=None, help="The members of your exclusion, IPs or subnets")
 @click.option('--start', default=None, required=True, help="The start time of the exclusion - YYYY-MM-DD HH:MM")
-@click.option('--end', default=None, required=True, help="The endtime of the exclusion - YYYY-MM-DD HH:MM")
+@click.option('--end', default=None, required=True, help="The end time of the exclusion - YYYY-MM-DD HH:MM")
 @click.option('--freq', multiple=False, required=True, default=["DAILY"],
               type=click.Choice(["ONETIME", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
               help='The frequency of the exclusion')
