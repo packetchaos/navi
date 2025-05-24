@@ -7,7 +7,6 @@ from .th_vuln_export import vuln_export
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .was_export import grab_scans
-from .explore import display_stats
 from .tagrule_export import export_tags
 from .epss import update_navi_with_epss
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
@@ -16,7 +15,6 @@ from .dbconfig import (create_keys_table, create_diff_table, create_assets_table
 from .database import new_db_connection, create_table, drop_tables, db_query, insert_software, insert_certificates
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
-from IPy import IP
 from .agent_to_db import download_agent_data
 
 tio = tenb_connection()
@@ -44,7 +42,7 @@ def parse_22869(soft_dict):
                         else:
                             soft_dict[new_name].append(asset_uuid)
 
-                except:
+                except IndexError:
                     pass
 
 
@@ -94,10 +92,10 @@ def threads_check(threads):
 def find_target_group(tg_name):
     data = request_data("GET", '/target-groups')
     group_id = 0
-    for target_group in data['target_groups']:
+    for target_groups in data['target_groups']:
         try:
-            if target_group['name'] == tg_name:
-                group_id = target_group['id']
+            if target_groups['name'] == tg_name:
+                group_id = target_groups['id']
         except KeyError:
             pass
     return group_id
@@ -139,25 +137,6 @@ def create_target_group(target_name, tg_list):
         request_data("POST", '/target-groups', payload=payload)
 
 
-def cloud_to_target_group(cloud, days, choice, target_group_name):
-    query = {"date_range": days, "filter.0.filter": "sources", "filter.0.quality": "set-has", "filter.0.value": cloud}
-    data = request_data('GET', '/workbenches/assets', params=query)
-    target_ips = []
-
-    for assets in data['assets']:
-        target_ip_list = assets['ipv4']
-        # loop through all the IPs
-        for ip in target_ip_list:
-            # Check to IP type
-            check_ip = IP(ip)
-            check = check_ip.iptype()
-            if check == choice:
-                # Add the IP if there is a match
-                target_ips.append(ip)
-
-    create_target_group(target_group_name, target_ips)
-
-
 def get_scanner_id(scanner_name):
     # Receive name, convert to lower-case, then look up the scanner's ID
     for scanner in tio.scanners.list():
@@ -177,9 +156,9 @@ def get_network_id(network_name):
 
 def check_agroup_exists(aname):
     rvalue = 'no'
-    for group in tio.access_groups.list():
-        if str(group['name']).lower() == str(aname).lower():
-            rvalue = group['id']
+    for access_groups in tio.access_groups.list():
+        if str(access_groups['name']).lower() == str(aname).lower():
+            rvalue = access_groups['id']
     return rvalue
 
 
@@ -225,26 +204,26 @@ def create_group(group_name):
 
 
 def add_users(user_id, group_id):
-    url = "/groups/{}/users/{}".format(group_id, user_id)
+    add_url = "/groups/{}/users/{}".format(group_id, user_id)
     # Using the Delete request because of an API Return issue.
-    request_no_response("POST", url)
+    request_no_response("POST", add_url)
 
 
 def remove_user(user_id, group_id):
-    url = "/groups/{}/users/{}".format(group_id, user_id)
+    remove_url = "/groups/{}/users/{}".format(group_id, user_id)
     # Using the Delete request because of an API Return issue.
-    request_no_response("DELETE", url)
+    request_no_response("DELETE", remove_url)
 
 
 def get_group_id(group_name):
     data = request_data("GET", "/groups")
     group_id = 0
     group_uuid = 0
-    for group in data["groups"]:
+    for groups in data["groups"]:
 
-        if group_name == group["name"]:
-            group_id = group["id"]
-            group_uuid = group['uuid']
+        if group_name == groups["name"]:
+            group_id = groups["id"]
+            group_uuid = groups['uuid']
     return group_id, group_uuid
 
 
@@ -539,13 +518,13 @@ def new(name, description):
 def move(net, scanner, c, v, source, target):
     ip_list = ""
     if scanner != '':
-        # Here I just want to check to see if its a uuid. If it's not 36 chars long, its not a uuid.
+        # Here I just want to check to see if it is an uuid. If it's not 36 chars long, it is not an uuid.
         if len(net) != 36:
             network_id = get_network_id(net)
         else:
             network_id = net
 
-        # Scanner UUIDs have two lengths, both over 35. This isn't bulletproof but it's good enough for now.
+        # Scanner UUIDs have two lengths, both over 35. This isn't bulletproof, but it's good enough for now.
         # I expect a lot from users. :)
         if len(scanner) > 35:
             # This should be an uuid.
@@ -595,35 +574,11 @@ def scan_group(name):
 
 
 @target_group.command(help="Create a Target Group - Retiring in T.io soon")
-@click.option('--name', default='', required=True, help="Target Group Name")
+@click.option('--name', default='Navi Created Target Group', required=True, help="Target Group Name")
 @click.option('--ip', default='', help="Ip(s) or subnet(s) separated by coma")
-@click.option('-aws', is_flag=True, help="Turn AWS assets found by the connector into a Target Group")
-@click.option('-gcp', is_flag=True, help="Turn GCP assets found by the connector into a Target Group")
-@click.option('-azure', is_flag=True, help="Turn Azure assets found by the connector into a Target Group")
-@click.option('--days', default='30', help="Set the number of days for the IPs found by the connector. "
-                                           "Requires: aws, gcp, or azure")
-@click.option('-priv', is_flag=True, help="Set the IP(s) to be used as Private")
-@click.option('-pub', is_flag=True, help="Set the IP to be used as Public")
-def create(name, ip, aws, gcp, azure, days, priv, pub):
-    choice = 'PUBLIC'
-
-    if priv:
-        choice = 'PRIVATE'
-
-    if pub:
-        choice = 'PUBLIC'
-
-    if ip != '':
+def create(name, ip):
+    if ip:
         create_target_group(name, ip)
-
-    if aws:
-        cloud_to_target_group("AWS", days, choice, name)
-
-    if gcp:
-        cloud_to_target_group("GCP", days, choice, name)
-
-    if azure:
-        cloud_to_target_group("AZURE", days, choice, name)
 
 
 @target_group.command(help="Migrate Target Groups to Tags or to Scan Text Targets")
@@ -635,15 +590,16 @@ def migrate(scan, tags):
     if tags:
         tgroups = request_data('GET', '/target-groups')
 
-        for group in tgroups['target_groups']:
-            member = group['members']
-            name = group['name']
-            group_type = group['type']
+        for target_groups in tgroups['target_groups']:
+            member = target_groups['members']
+            name = target_groups['name']
+            group_type = target_groups['type']
             d = "Imported by Script"
             try:
                 if name != 'Default':
-                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d), "filters":
-                        {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": str(member)}]}}}
+                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d),
+                               "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq",
+                                                              "value": str(member)}]}}}
                     data = request_data('POST', '/tags/values', payload=payload)
 
                     value_uuid = data["uuid"]
@@ -699,28 +655,28 @@ def migrate(scan, tags):
 @click.option('--name', default='', required=True, help="Choose a Name for your Access Group.")
 @click.option('--c', default='', required=True, help="Tag Category name to use")
 @click.option('--v', default='', required=True, help="Tag Value to use")
-@click.option('--user', default='', help="The user you want to Assign to the Access Group - "
-                                         "username@domain")
-@click.option('--usergroup', default='', help="The User Group you want to assign to the Access Group")
+@click.option('--user_name', default='', help="The user you want to Assign to the Access Group - "
+                                              "username@domain")
+@click.option('--user_group', default='', help="The User Group you want to assign to the Access Group")
 @click.option('--perm', type=click.Choice(['scan', 'view', 'scanview'], case_sensitive=False),
               required=True)
-def access_group(name, c, v, user, usergroup, perm):
+def access_group(name, c, v, user_name, user_group, perm):
     permission = []
     choice = 'none'
-    permtype = 'none'
+    perm_type = 'none'
 
-    if user == '' and usergroup == '':
-        click.echo("\nYou Need to use '--user' or '--usergroup' command and supply "
+    if user_name == '' and user_group == '':
+        click.echo("\nYou Need to use '--user_name' or '--user_group' command and supply "
                    "a user or group. e.g: user@yourdomain or Linux Admins\n")
         exit()
 
-    if user != '':
-        permtype = 'user'
-        choice = user
+    if user_name:
+        perm_type = 'user'
+        choice = user_name
 
-    if usergroup != '':
-        permtype = 'group'
-        choice = usergroup
+    if user_group:
+        perm_type = 'group'
+        choice = user_group
 
     if perm.lower() == 'scanview':
         permission = ["CAN_VIEW", "CAN_SCAN"]
@@ -731,15 +687,15 @@ def access_group(name, c, v, user, usergroup, perm):
     elif perm.lower() == 'scan':
         permission = ["CAN_SCAN"]
 
-    assets = db_query("SELECT tag_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
+    asset_data = db_query("SELECT tag_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
 
     # Grab the first UUID...UUIDs returned are duplicates due to the db structure
-    tag_uuid = [assets[0][0]]
+    tag_uuid = [asset_data[0][0]]
 
     if tag_uuid:
         payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS",
                    "rules": [{"type": "tag_uuid", "operator": "set-has", "terms": tag_uuid}],
-                   "principals": [{"permissions": permission, "type": permtype, "principal_name": choice}]}
+                   "principals": [{"permissions": permission, "type": perm_type, "principal_name": choice}]}
 
         # Check to see if the group exists
         answer = check_agroup_exists(str(name))
@@ -870,13 +826,13 @@ def remove(usergroup, name):
 @permissions.command(help="Change Access Control Permissions using a Tag")
 @click.option('--c', default='', required=True, help="Tag Category name to use")
 @click.option('--v', default='', required=True, help="Tag Value to use")
-@click.option('--user', default='', help="The User you want to assign to the Permission")
-@click.option('--usergroup', default='', help="The User Group you want to assign to the Permission")
+@click.option('--user_name', default='', help="The User you want to assign to the Permission")
+@click.option('--user_group', default='', help="The User Group you want to assign to the Permission")
 @click.option('--perm', multiple=True,
               type=click.Choice(['CanScan', 'CanView', 'CanEdit', 'CanUse'], case_sensitive=True))
-@click.option('--permlist', default='', help='Added all perms in a comma delimited string to '
-                                             'support automation')
-def create(c, v, user, usergroup, perm, permlist):
+@click.option('--perm_list', default='', help='Added all perms in a comma delimited string to '
+                                              'support automation')
+def create(c, v, user_name, user_group, perm, perm_list):
     # Create the naming format for the tag permission
     perm_name = "{},{}".format(c, v)
     try:
@@ -891,40 +847,40 @@ def create(c, v, user, usergroup, perm, permlist):
                 tag_uuid = tag['uuid']
 
         # Add permission by User
-        if user:
-            user_id, uuid = get_user_id(user)
-            if permlist:
+        if user_name:
+            user_id, uuid = get_user_id(user_name)
+            if perm_list:
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                                  perm_list=list(str(permlist).split(",")), perm_type="Tag",
+                                                  perm_list=list(str(perm_list).split(",")), perm_type="Tag",
                                                   subject_type="User",
-                                                  subject_name=user, subject_uuid=uuid)
+                                                  subject_name=user_name, subject_uuid=uuid)
                 pprint.pprint(resp)
             else:
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
                                                   perm_list=perm, perm_type="Tag", subject_type="User",
-                                                  subject_name=user, subject_uuid=uuid)
+                                                  subject_name=user_name, subject_uuid=uuid)
                 pprint.pprint(resp)
 
-        # Add permission by UserGroup
-        elif usergroup:
-            group_id, uuid = get_group_id(usergroup)
+        # Add permission by User Group
+        elif user_group:
+            group_id, uuid = get_group_id(user_group)
 
-            if permlist:
+            if perm_list:
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
-                                                  perm_list=list(str(permlist).split(",")), perm_type="Tag",
+                                                  perm_list=list(str(perm_list).split(",")), perm_type="Tag",
                                                   subject_type="UserGroup",
-                                                  subject_name=usergroup, subject_uuid=uuid)
+                                                  subject_name=user_group, subject_uuid=uuid)
                 pprint.pprint(resp)
             else:
                 resp = create_granular_permission(tag_name=perm_name, uuid=tag_uuid,
                                                   perm_list=perm, perm_type="Tag", subject_type="UserGroup",
-                                                  subject_name=usergroup, subject_uuid=uuid)
+                                                  subject_name=user_group, subject_uuid=uuid)
                 pprint.pprint(resp)
         else:
-            # If no user or Usergroup Assign it to All Users
-            if permlist:
+            # If no user or User group Assign it to All Users
+            if perm_list:
                 permission_response = create_permission(name=perm_name, tag_name=perm_name, uuid=tag_uuid,
-                                                        perm_string=list(str(permlist).split(",")), perm_type="Tag",
+                                                        perm_string=list(str(perm_list).split(",")), perm_type="Tag",
                                                         subject_type="AllUsers")
                 pprint.pprint(permission_response)
             else:
@@ -946,7 +902,7 @@ def migrate():
     unique_ids = []
     new_list_uuids = []
 
-    # Grab all of the Tags with Can Use
+    # Grab all the Tags with Can Use
     canuse_tags = grab_can_use_tags()
 
     # Grab all Tags and their names from the navi db
@@ -1159,8 +1115,8 @@ def exclude(name, members, start, end, freq, day, c, v):
             data = db_query("select asset_ip from tags where "
                             "tag_key ='" + str(c) + "' and tag_value = '" + str(v) + "';")
             members_list = []
-            for assets in data:
-                members_list.append(assets[0])
+            for asset in data:
+                members_list.append(asset[0])
 
             exclude_request = tio.exclusions.create(name=name,
                                                     start_time=datetime.datetime.strptime
@@ -1180,8 +1136,8 @@ def exclude(name, members, start, end, freq, day, c, v):
         else:
             exclude_request = tio.exclusions.create(name=name,
                                                     start_time=datetime.datetime.strptime
-                                                    (start, '%Y-%m-%d %H:%M')
-                                                    , end_time=datetime.datetime.strptime
+                                                    (start, '%Y-%m-%d %H:%M'),
+                                                    end_time=datetime.datetime.strptime
                                                     (end, '%Y-%m-%d %H:%M'),
                                                     frequency=freq, members=list(members.split(",")),
                                                     day_of_month=day,
@@ -1260,43 +1216,36 @@ def unlink(aid):
 @agent.command(help="Create a Agent group based on a Tag")
 @click.option('--c', default=None, help="Tag Category")
 @click.option('--v', default=None, help="Tag Value")
-@click.option('--group', default=None, help="New Agent group name")
+@click.option('--agent_group', default=None, help="New Agent group name")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
-def bytag(c, v, group, scanner):
+def bytag(c, v, agent_group, scanner):
     from uuid import UUID
     data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
                     "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
     temp_agents = []
 
-    def get_group_id():
-        agent_group_id = None
-        for agent_groups in tio.agent_groups.list():
-            if agent_groups['name'] == group:
-                agent_group_id = agent_groups['id']
-        return agent_group_id
-
     # Grab a current Group ID
-    group_id_test = get_group_id()
+    group_id_test, group_uuid_test = get_group_id(agent_group)
     # If None is returned create a new Group and set the group id
     if group_id_test is None:
         click.echo("\nGroup wasn't found, creating new group\n")
-        group_creation = tio.agent_groups.create(name=group, scanner_id=scanner)
+        group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
         group_id = group_creation['id']
     else:
         group_id = group_id_test
         click.echo("\nGroup was found! Group ID is:" + str(group_id))
 
-    for assets in data:
-        asset_uuid = assets[0]
+    for asset in data:
+        asset_uuid = asset[0]
         temp_agents.append(asset_uuid)
 
     click.echo("\nRetrieving agents from T.VM and comparing it to the navi database."
                "\nMake sure you have updated recently in case nothing get's moved\n")
-    for agents in tio.agents.list():
+    for agent_info in tio.agents.list():
 
         # Convert agent UUID to hex to look up in db
-        agent_uuid = UUID(agents['uuid']).hex
-        agent_id = agents['id']
+        agent_uuid = UUID(agent_info['uuid']).hex
+        agent_id = agent_info['id']
         tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(agent_uuid))
         if tag_uuid[0][0] in temp_agents:
             tio.agent_groups.add_agent(group_id, agent_id)
@@ -1330,7 +1279,7 @@ def certificates():
 
                 try:
                     cert_dict[forth_pass[0]] = forth_pass[1]
-                except:
+                except IndexError:
                     pass
 
                 csv_list.append(asset_uuid)

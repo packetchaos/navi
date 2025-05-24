@@ -1,5 +1,4 @@
 import click
-import boto3
 import csv
 from .database import new_db_connection, db_query
 from .api_wrapper import request_data, tenb_connection
@@ -10,7 +9,6 @@ from datetime import datetime
 from .add_by_file import add_helper
 from .tag_helper import tag_checker
 from collections import defaultdict
-from .error_msg import error_msg
 
 tio = tenb_connection()
 
@@ -23,8 +21,6 @@ def enrich():
 
 def tag_by_tag(c, v, d, cv, cc, match):
     # BUG: Does not check to see if rule exists right now.
-
-    tag_uuid = 0
     # Start a blank rules list to store current a new tag rule.
     rules_list = []
 
@@ -109,8 +105,9 @@ def tag_by_tag(c, v, d, cv, cc, match):
         if child_answer == 'yes':
             # if the child tag does exist, then create the new tag with the existing tag as a child
             try:
-                payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                    {"asset": {str(match): [{"field": "tag.{}".format(cc), "operator": "set-has", "value": str(cv)}]}}}
+                payload = {"category_name": str(c), "value": str(v), "description": str(d),
+                           "filters": {"asset": {str(match): [{"field": "tag.{}".format(cc),
+                                                               "operator": "set-has", "value": str(cv)}]}}}
                 data = request_data('POST', '/tags/values', payload=payload)
 
                 value_uuid = data["uuid"]
@@ -206,7 +203,6 @@ def tag_by_uuid(tag_list, c, v, d):
 def download_csv_by_plugin_id(scan_id, hist_id):
     # This is for scaling tagging by scan id
     filename = f'{scan_id}-report.csv'
-    tio = tenb_connection()
 
     # Stream the report to disk
     with open(filename, 'wb') as fobj:
@@ -318,6 +314,7 @@ def attribute():
 @click.option("--a", default="", required=True, help="Access Key")
 @click.option("--s", default="", required=True, help="Secret Key")
 def migrate(region, a, s):
+    import boto3
     if not a or not s or not region:
         click.echo("You need a region, access key and secret Key")
         exit()
@@ -353,10 +350,13 @@ def migrate(region, a, s):
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
 @click.option('--group', default='', help="Create a Tag based on a Agent Group")
-@click.option('--output', default='', help="Create a Tag based on the text in the output. Requires --plugin")
-@click.option('--port', default='', help="Create a Tag based on Assets that have a vulnerability on a port.")
+@click.option('--output', default='', help="Create a Tag based on the text in the output. "
+                                           "Requires --plugin")
+@click.option('--port', default='', help="Create a Tag based on "
+                                         "Assets that have a vulnerability on a port.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
-@click.option('--scantime', default='', help="Create a Tag for assets that took longer than supplied minutes")
+@click.option('--scantime', default='', help="Create a Tag for assets that took longer "
+                                             "than supplied minutes")
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
@@ -364,15 +364,18 @@ def migrate(region, a, s):
 @click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and' when creating "
                                          "parent/child tag relationships")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
-@click.option('-remove', is_flag=True, help="Remove this tag from all assets to support ephemeral asset tagging")
+@click.option('-remove', is_flag=True, help="Remove this tag from all assets "
+                                            "to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
 @click.option('--missed', default='', help="Tag Agents that missed authentication in given number of days")
 @click.option('--byadgroup', default='', help="Create Tags based on AD groups in a CSV")
+@click.option('-regexp', is_flag=True, help="Use a Regular expression instead of a "
+                                            "text search; requires another option")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed, byadgroup):
+        manual, histid, missed, byadgroup, regexp):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -398,12 +401,18 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     if plugin:
         d = d + "\nTag by Plugin ID: {}".format(plugin)
         try:
-            if output != "":
-                plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
-                                       "asset_uuid = uuid "
-                                       "where plugin_id='" + plugin + "' and output LIKE '%" + output + "%';")
+            if output:
+                if regexp:
+                    plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns "
+                                           "LEFT JOIN assets ON asset_uuid = uuid "
+                                           "where plugin_id='{}' and output REGEXP '{}';".format(plugin, output))
+                else:
+                    plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns "
+                                           "LEFT JOIN assets ON asset_uuid = uuid "
+                                           "where plugin_id='{}' and output LIKE '%{}%';".format(plugin, output))
             else:
-                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns where plugin_id={};".format(plugin))
+                plugin_data = db_query("SELECT asset_ip, asset_uuid, output "
+                                       "from vulns where plugin_id={};".format(plugin))
 
             for x in plugin_data:
                 uuid = x[1]
@@ -440,20 +449,20 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     if name != '':
         d = d + "\nTag by Plugin Name: {}".format(name)
         try:
-            database = r"navi.db"
-            conn = new_db_connection(database)
-            with conn:
-                cur = conn.cursor()
-                cur.execute("SELECT asset_ip, asset_uuid, output from vulns where plugin_name LIKE '%" + name + "%';")
 
-                plugin_data = cur.fetchall()
-                for x in plugin_data:
-                    ip = x[0]
-                    uuid = x[1]
-                    if uuid not in tag_list:
-                        tag_list.append(uuid)
-                    else:
-                        pass
+            if regexp:
+                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns "
+                                       "where plugin_name REGEXP '{}';".format(name))
+            else:
+                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns "
+                                       "where plugin_name LIKE '%{}%';".format(name))
+
+            for x in plugin_data:
+                uuid = x[1]
+                if uuid not in tag_list:
+                    tag_list.append(uuid)
+                else:
+                    pass
         except Error:
             pass
 
@@ -519,7 +528,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                             new_split = info_line.split(" : ")
                             plugin_dict[new_split[0]] = new_split[1]
 
-                        except:
+                        except IndexError:
                             pass
                     try:
                         intial_seconds = plugin_dict['Scan duration']
@@ -613,7 +622,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 else:
                     # cycle through history until you reach completed
                     hist = 1
-                    new_scan_data = None
                     new_hist = 0
 
                     # if you got here the first scan has not completed
@@ -696,7 +704,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                                  "xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
 
         else:
-            xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%'".format(xrefs))
+            if regexp:
+                xref_data = db_query("select asset_uuid from vulns where xrefs REGEXP '{}'".format(xrefs))
+            else:
+                xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%'".format(xrefs))
 
         for x in xref_data:
             uuid = x[0]
@@ -724,16 +735,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
                 if delta.days >= int(missed):
                     tag_list.append(assets[0])
-        except:
+        except IndexError:
             click.echo("\nMake sure you are submitting an Integer\n")
 
         tag_by_uuid(tag_list, c, v, d)
 
     if byadgroup:
-
-        filename = byadgroup #'HFAUsersWithDevices.csv'
-
-        hfa_dict = {}
+        # 'HFAUsersWithDevices.csv'
+        filename = byadgroup
         new_list = []
         # Open the AD csv file
         with open(filename, newline='') as csvfile:
@@ -751,12 +760,12 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 try:
                     if str(row["PrimaryDevice2"]):
                         new_list.append(row['PrimaryDevice2'])
-                except:
+                except KeyError:
                     pass
         # Create the dictionary
         hfa_dict = {"{}".format(dname[:-1]): new_list}
 
-        #Gab hostnames and UUIDs
+        # Gab hostnames and UUIDs
         data = db_query("select asset_uuid, output from vulns where plugin_id='55472'")
 
         clean_hostname_list = []
@@ -844,8 +853,9 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
                         ip_list = ip_list + "," + ips
                         for_length.append(ips)
         try:
-            payload = {"category_name": str(c), "value": str(v), "description": str(d), "filters":
-                      {"asset": {"and": [{"field": "ipv4", "operator": "eq", "value": [str(ip_list[1:])]}]}}}
+            payload = {"category_name": str(c), "value": str(v), "description": str(d),
+                       "filters": {"asset": {"and": [{"field": "ipv4",
+                                                      "operator": "eq", "value": [str(ip_list[1:])]}]}}}
             data = request_data('POST', '/tags/values', payload=payload)
             try:
                 value_uuid = data["uuid"]
@@ -946,11 +956,13 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
                         click.echo("Your request was over 1999 assets and therefore will be chunked up in to groups of "
                                    "1999. You will see a 'success' message per chunk.")
                         for chunks in chunks(asset_list, 1999):
-                            lumin_payload = [{"acr_score": int(new_acr), "reason": choice, "note": note, "asset": chunks}]
+                            lumin_payload = [{"acr_score": int(new_acr),
+                                              "reason": choice, "note": note, "asset": chunks}]
                             request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
                     else:
                         click.echo("\nProcessing your ACR update requests\n")
-                        lumin_payload = [{"acr_score": int(new_acr), "reason": choice, "note": note, "asset": asset_list}]
+                        lumin_payload = [{"acr_score": int(new_acr),
+                                          "reason": choice, "note": note, "asset": asset_list}]
                         request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
             except TypeError:
                 pass
@@ -963,17 +975,14 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
 @click.argument('name')
 @click.option('--description', default='', help="Add a description for clarity")
 def create(name, description):
-    try:
-        payload = {"attributes": [
-            {
-                "name": name,
-                "description": "{} -Updated by Navi".format(description)
-            }
-        ]}
-        data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
-        click.echo(data)
-    except:
-        error_msg("Generic Error")
+    payload = {"attributes": [
+        {
+            "name": name,
+            "description": "{} -Updated by Navi".format(description)
+        }
+    ]}
+    create_data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
+    click.echo(create_data)
 
 
 @attribute.command(help="Add a custom attribute to an asset")
@@ -981,19 +990,16 @@ def create(name, description):
 @click.option('--name', default='', help="Name of the Custom Attribute")
 @click.option('--value', default='', help="Value of the Custom Attribute")
 def assign(uuid, name, value):
-    try:
-        attr_uuid = get_attribute_uuid(name)
-        click.echo(attr_uuid)
-        payload = {"attributes": [
-            {
-                "value": value,
-                "id": attr_uuid
-            }
-        ]}
-        assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
-        click.echo(assign_attr)
-    except:
-        error_msg("Generic Error")
+    attr_uuid = get_attribute_uuid(name)
+    click.echo(attr_uuid)
+    payload = {"attributes": [
+        {
+            "value": value,
+            "id": attr_uuid
+        }
+    ]}
+    assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
+    click.echo(assign_attr)
 
 
 @enrich.command(help="Add an asset to tenable VM from another source via CLI")

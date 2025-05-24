@@ -143,22 +143,22 @@ def failures():
 
 
 @export.command(help="Export parsed plugins")
-@click.option('-users', is_flag=True, help="Export Users by parsing the 45478 plugin")
+@click.option('-user_names', is_flag=True, help="Export Users by parsing the 45478 plugin")
 @click.option('--name', default='parsed_plugin_data')
-def parsed(name, users):
+def parsed(name, user_names):
     with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
         header = ['Asset_UUID', "User Found"]
         agent_writer.writerow(header)
 
-        if users:
+        if user_names:
             raw_data = db_query("select asset_uuid, output from vulns where plugin_id='45478'")
 
             # pprint.pprint(eval(str(raw_data))[1][1])
             plugin_data = eval(str(raw_data))
 
             for asset in plugin_data:
-                # remove the +users in the begining of the string
+                # remove the +users in the beginning of the string
                 output_data = asset[1][18:]
 
                 # Split the users at "|"
@@ -184,14 +184,14 @@ def policy(pid):
     def write_file(blob):
         with open("{}.nessus".format(pid), 'w') as file:
             file.write(blob)
-    data = request_xml('GET', '/policies/{}/export'.format(pid))
-    write_file(str(data))
+    policy_data = request_xml('GET', '/policies/{}/export'.format(pid))
+    write_file(str(policy_data))
 
 
 @export.command(help="Pull out asset CVE data from each plugin into a nice CSV for CVE to CVE comparison")
 @click.argument('uuid')
 def compare(uuid):
-    data = db_query("select plugin_id, plugin_name, cvss_base_score, cvss3_base_score,  cves, severity, score, "
+    data = db_query("select plugin_id, plugin_name, cvss_base_score, cvss3_base_score, cves, severity, score, "
                     "first_found, last_found from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
 
     with open('cve_data_{}.csv'.format(uuid), mode='w', encoding='utf-8', newline="") as csv_file:
@@ -233,7 +233,7 @@ def compare(uuid):
                     try:
                         epss_data_raw = db_query("select epss_value from epss where cve='{}'".format(cve))
                         epss_data = str(epss_data_raw[0][0])
-                    except:
+                    except IndexError:
                         pass
                     click.echo("{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format(plugin_id,
                                                                                        textwrap.shorten(plugin_name,
