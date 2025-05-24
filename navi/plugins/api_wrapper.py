@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.2.2"
+    return "navi-8.2.3"
 
 
 def tenb_connection():
@@ -28,7 +28,8 @@ def tenb_connection():
                 cur.execute("SELECT * from url;")
                 url_rows = cur.fetchall()
                 url = url_rows[0][1]
-                tio = TenableIO(access_key, secret_key, url=url, vendor='Casey Reid', product='navi', build=navi_version())
+                tio = TenableIO(access_key, secret_key, url=url, vendor='Casey Reid',
+                                product='navi', build=navi_version())
                 return tio
             except Error:
                 tio = TenableIO(access_key, secret_key, vendor='Casey Reid', product='navi', build=navi_version())
@@ -66,13 +67,14 @@ def grab_headers():
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
-    return {'Content-type': 'application/json', 'user-agent': navi_version(), 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
+    return {'Content-type': 'application/json', 'user-agent': navi_version(),
+            'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
 
 
 def request_no_response(method, url_mod, **kwargs):
 
     # set the Base URL
-    url = grab_url() #"https://cloud.tenable.com"
+    url = grab_url()  # "https://cloud.tenable.com"
 
     # check for params and set to None if not found
     try:
@@ -106,7 +108,7 @@ def request_no_response(method, url_mod, **kwargs):
 def request_data(method, url_mod, **kwargs):
 
     # set the Base URL
-    url = grab_url() #"https://cloud.tenable.com"
+    url = grab_url()  # "https://cloud.tenable.com"
 
     # check for params and set to None if not found
     try:
@@ -125,7 +127,8 @@ def request_data(method, url_mod, **kwargs):
         # Small pause between retries
         time.sleep(2.5)
         try:
-            r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
+            r = requests.request(method, url + url_mod, headers=grab_headers(),
+                                 params=params, json=payload, verify=True)
             if r.status_code == 200:
                 return r.json()
 
@@ -150,7 +153,8 @@ def request_data(method, url_mod, **kwargs):
                 click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
                 break
             elif r.status_code == 409:
-                click.echo("API Returned 409\n If you are changing permissions, it could indicate a duplicate request\n")
+                click.echo("API Returned 409\n If you are changing permissions, "
+                           "it could indicate a duplicate request\n")
                 break
             elif r.status_code == 504:
                 click.echo("\nOne of the Threads had an issue during download...Retrying...\n "
@@ -188,7 +192,7 @@ def request_xml(method, url_mod, **kwargs):
         return {'Content-type': 'text/xml', 'user-agent': navi_version(),
                 'X-ApiKeys': 'accessKey=' + access_key + ';secretKey=' + secret_key}
     # set the Base URL
-    url = grab_url() #"https://cloud.tenable.com"
+    url = grab_url()  # "https://cloud.tenable.com"
 
     # check for params and set to None if not found
     try:
@@ -207,7 +211,8 @@ def request_xml(method, url_mod, **kwargs):
         # Small pause between retries
         time.sleep(2.5)
         try:
-            r = requests.request(method, url + url_mod, headers=grab_xml_headers(), params=params, json=payload, verify=True)
+            r = requests.request(method, url + url_mod, headers=grab_xml_headers(),
+                                 params=params, json=payload, verify=True)
             if r.status_code == 200:
                 return r.text
 
@@ -232,7 +237,8 @@ def request_xml(method, url_mod, **kwargs):
                 click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
                 break
             elif r.status_code == 409:
-                click.echo("API Returned 409\n If you are changing permissions, it could indicate a duplicate request\n")
+                click.echo("API Returned 409\n If you are changing permissions, "
+                           "it could indicate a duplicate request\n")
                 break
             elif r.status_code == 504:
                 click.echo("\nOne of the Threads had an issue during download...Retrying...\n "

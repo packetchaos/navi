@@ -21,7 +21,7 @@ def print_sla():
         click.echo("     High SLA: {}".format(high))
         click.echo("     Medium SLA: {}".format(medium))
         click.echo("     Low SLA: {}\n".format(low))
-    except:
+    except IndexError:
         # on failure, lets set the defaults.
         critical = 7
         high = 14
@@ -54,7 +54,8 @@ def reset_sla(critical, high, medium, low):
 def check_sla():
     # Check to see if the SLA database has been created; if so, display the sla
     try:
-        data = db_query("select * from sla;")
+        # Check the database to draw out an error
+        db_query("select * from sla;")
         print_sla()
     except:
         # on failure, lets set the defaults.
@@ -145,9 +146,10 @@ def calculate_sla(severity):
 
     else:
         severity_total = db_query("select count(plugin_id) from fixed where severity =='{}';".format(severity))[0][0]
-        sevrity_pass_total = db_query("select count(plugin_id) from fixed where severity =='{}' and pass_fail =='Pass';".format(severity))[0][0]
+        sevrity_pass_total = db_query("select count(plugin_id) from fixed "
+                                      "where severity =='{}' and pass_fail =='Pass';".format(severity))[0][0]
 
-        print("\nTotal {} Vulns found this period: {}".format(severity, severity_total ))
+        print("\nTotal {} Vulns found this period: {}".format(severity, severity_total))
         print("Total {} vulns fixed within SLA: {}".format(severity, sevrity_pass_total))
         try:
             print("{:.0%} Success Rate".format((sevrity_pass_total/severity_total)))
@@ -164,13 +166,15 @@ def fixed_export(category, value, days):
 
     create_fixed_table()
 
-    click.echo("\n***Navi calculates SLAs on export request.  So re-run 'navi update fixed' after changing your SLA***\n")
+    click.echo("\n***Navi calculates SLAs on export request.  "
+               "So re-run 'navi update fixed' after changing your SLA***\n")
     click.echo("Downloading all of your Fixed, Open and Reopened vulns into a new Table called 'fixed'\n")
     with fixed_conn:
         if category and value:
             tags = (category, value)
 
-            for vulns in tio.exports.vulns(state=['fixed', 'open', 'reopened'], tags=[tags], since=int(arrow.now().shift(days=-int(days)).timestamp())):
+            for vulns in tio.exports.vulns(state=['fixed', 'open', 'reopened'], tags=[tags],
+                                           since=int(arrow.now().shift(days=-int(days)).timestamp())):
 
                 asset_uuid = vulns['asset']['uuid']
                 port = vulns['port']['port']
@@ -198,15 +202,19 @@ def fixed_export(category, value, days):
 
                 state = vulns['state']
 
-                special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns/vulnerability-details/{}/details".format(asset_uuid, plugin_id)
+                special_url = ("https://cloud.tenable.com/tio/app.html#/vulnerability-management"
+                               "/dashboard/assets/asset-details/{}/vulns/"
+                               "vulnerability-details/{}/details").format(asset_uuid, plugin_id)
 
-                data_list = [asset_uuid, output, plugin_id, plugin_name, port, first_found, last_fixed, last_found, severity, delta, pass_fail, state, special_url]
+                data_list = [asset_uuid, output, plugin_id, plugin_name, port, first_found, last_fixed,
+                             last_found, severity, delta, pass_fail, state, special_url]
 
                 insert_fixed(fixed_conn, data_list)
 
         else:
 
-            for vulns in tio.exports.vulns(state=['fixed', 'open', 'reopened'], since=int(arrow.now().shift(days=-int(days)).timestamp())):
+            for vulns in tio.exports.vulns(state=['fixed', 'open', 'reopened'],
+                                           since=int(arrow.now().shift(days=-int(days)).timestamp())):
 
                 asset_uuid = vulns['asset']['uuid']
                 port = vulns['port']['port']
@@ -235,9 +243,12 @@ def fixed_export(category, value, days):
 
                 state = vulns['state']
 
-                special_url = "https://cloud.tenable.com/tio/app.html#/vulnerability-management/dashboard/assets/asset-details/{}/vulns/vulnerability-details/{}/details".format(asset_uuid, plugin_id)
+                special_url = ("https://cloud.tenable.com/tio/app.html#/vulnerability-management/"
+                               "dashboard/assets/asset-details/{}/vulns/"
+                               "vulnerability-details/{}/details").format(asset_uuid, plugin_id)
 
-                data_list = [asset_uuid, output, plugin_id, plugin_name, port, first_found, last_fixed, last_found, severity, delta, pass_fail, state, special_url]
+                data_list = [asset_uuid, output, plugin_id, plugin_name, port, first_found, last_fixed,
+                             last_found, severity, delta, pass_fail, state, special_url]
 
                 insert_fixed(fixed_conn, data_list)
     click.echo("Success!")

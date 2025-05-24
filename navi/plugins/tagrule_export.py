@@ -1,4 +1,3 @@
-import pprint
 import click
 from .api_wrapper import request_data
 from .dbconfig import new_db_connection

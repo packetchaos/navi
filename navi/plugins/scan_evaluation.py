@@ -4,7 +4,7 @@ from .database import db_query
 from .api_wrapper import request_data, tenb_connection
 import csv
 import datetime
-import time, pprint
+import time
 
 
 tio = tenb_connection()
@@ -68,8 +68,7 @@ def parse_19506_from_file(filename, scanid, histid):
                     new_split = info_line.split(" : ")
                     plugin_dict[new_split[0]] = new_split[1]
 
-                except:
-                    # Skip warnings
+                except IndexError:
                     pass
 
             try:
@@ -129,7 +128,7 @@ def parse_19506_from_file(filename, scanid, histid):
 
                         except ValueError:
 
-                            # timezone couldn't be used. lets remove it and calculate what we can
+                            # timezone couldn't be used. let's remove it and calculate what we can
                             pattern = '%Y/%m/%d %H:%M'
                             # Split the time to remove the timezone 2-6 chars
                             time_less_timezone = start_time.split(" ")
@@ -177,7 +176,7 @@ def parse_19506_from_file(filename, scanid, histid):
                 else:
                     # Print plugin output to identify an unknown plugin structure/response
                     click.echo(plugin_output)
-            except KeyError as E:
+            except KeyError:
                 # If there is no scan duration, skip the asset.
                 assets_skipped += 1
                 pass
@@ -240,13 +239,17 @@ def parse_19506_from_file(filename, scanid, histid):
             click.echo("Asset Stats")
             click.echo("-" * 40)
             click.echo("{:40} {:10} {}".format("Longest Asset Duration: ",
-                                               str(datetime.timedelta(seconds=longest_scanned[3])), longest_scanned[0]))
+                                               str(datetime.timedelta(seconds=longest_scanned[3])),
+                                               longest_scanned[0]))
             click.echo("{:40} {:10} {}".format("Shortest Asset Duration: ",
-                                               str(datetime.timedelta(seconds=shortest_scanned[3])), shortest_scanned[0]))
+                                               str(datetime.timedelta(seconds=shortest_scanned[3])),
+                                               shortest_scanned[0]))
             click.echo("{:40} {:10} {}".format("Longest Asset Index: ",
-                                               str(datetime.timedelta(seconds=longest_index[4])), longest_index[0]))
+                                               str(datetime.timedelta(seconds=longest_index[4])),
+                                               longest_index[0]))
             click.echo("{:40} {:10} {}\n".format("Shortest Asset Index: ",
-                                                 str(datetime.timedelta(seconds=shortest_index[4])), shortest_index[0]))
+                                                 str(datetime.timedelta(seconds=shortest_index[4])),
+                                                 shortest_index[0]))
             click.echo("Averages Stats")
             click.echo("-" * 40)
             click.echo("{:40} {}".format("Average scan duration per Asset:",
@@ -266,7 +269,7 @@ def parse_19506_from_file(filename, scanid, histid):
 
     with open("{}-parsing.csv".format(scanid), mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration","Indexing duration",
+        header = ["UUID", "Platform_Start", "19506_scantime", "19506_duration", " Indexing duration",
                   "Total_duration",  "Platform_end", "IP Address", "Scanner IP"]
 
         agent_writer.writerow(header)
@@ -341,8 +344,8 @@ def evaluate_a_scan(scanid, histid):
             # Getting the length of the Category and using it to get the average
             def average_by_policy(name, scan_info):
                 # Print the Category to the Screen ( Scanner, Policy, Scan Name)
-                with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
-                    average_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
+                with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as my_file:
+                    average_writer = csv.writer(my_file, delimiter=',', quotechar='"')
                     click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
                     click.echo("-" * 20)
                     header = ["Scan Name", "Avg Minutes per/asset", "Total Assets"]
@@ -419,7 +422,7 @@ def evaluate_a_scan(scanid, histid):
                                 scanner_list.append(scanner_ip)
                         except KeyError:
                             scanner_list = "none"
-                            scanner_ip= "none"
+                            scanner_ip = "none"
                         try:
                             max_hosts = plugin_dict['Max hosts']
                         except KeyError:
@@ -477,4 +480,3 @@ def evaluate_a_scan(scanid, histid):
             average_by_policy("Scanners", scanner_dict)
 
             average_by_policy("Scan Name", scan_name_dict)
-

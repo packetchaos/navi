@@ -51,7 +51,3 @@ def update_navi_with_epss(day, month, year, filename):
     except Exception as E:
         click.echo(E)
         click.echo("\nBe sure you are using YYYY, MM, and DD values and not single digit values.\n")
-
-
-
-

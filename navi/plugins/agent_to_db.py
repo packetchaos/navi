@@ -101,6 +101,3 @@ def download_agent_data():
                 click.echo(
                     "\nYou may not have permissions to the agent data or you have no agents in this container.\n")
                 click.echo("Use 'navi explore api /scanners/1/agents' to validate your access\n")
-
-
-

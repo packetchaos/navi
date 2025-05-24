@@ -250,7 +250,7 @@ def parse_data(chunk_data, chunk_number):
                                        "vulnerability-management/dashboard/assets/asset-details/"
                                        "{}/vulns/vulnerability-details/{}/details").format(asset_uuid, plugin_id)
                         vuln_list.append(special_url)
-                    except:
+                    except AttributeError:
                         special_url = None
                         vuln_list.append(special_url)
                     try:

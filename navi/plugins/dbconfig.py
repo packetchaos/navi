@@ -161,6 +161,8 @@ def create_certs_table():
                         signature_length text);"""
     cert_conn.execute('pragma journal_mode=wal;')
     create_table(cert_conn, create_cert_table)
+
+
 def create_tag_table():
     database = r"navi.db"
     tag_conn = new_db_connection(database)
@@ -312,4 +314,3 @@ def create_passwords_table():
                             password text
                             );"""
     create_table(ssh_conn, ssh_table)
-

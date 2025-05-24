@@ -120,12 +120,9 @@ def scan_hosts(scan_id):
             click.echo("-" * 150)
             for host in data['hosts']:
                 host_list.append(host)
-                click.echo("{:60s} {:40s} {:10} {:10s} {:10s} {:10s} {:10s}".format(textwrap.shorten(host['hostname'], width=60), str(host['uuid']),
-                                                                                    str(host['score']),
-                                                                                    str(host['critical']),
-                                                                                    str(host['high']),
-                                                                                    str(host['medium']),
-                                                                                    str(host['low'])))
+                click.echo("{:60s} {:40s} {:10} {:10s} {:10s} {:10s} {:10s}".format(textwrap.shorten(
+                    host['hostname'], width=60), str(host['uuid']), str(host['score']), str(host['critical']),
+                    str(host['high']), str(host['medium']), str(host['low'])))
 
             click.echo()
             click.echo("\nTotal Assets Scanned: {}\n".format(len(host_list)))
@@ -470,7 +467,7 @@ def move(a, s, limit, scanid):
         single_scan = [scanid]
         scan_mover(single_scan)
     else:
-        # Grab all of the 'remote' scans
+        # Grab all the 'remote' scans
         scan_list = get_all_scans()
         click.echo("Grabbing the list {}\n".format(scan_list))
 
@@ -479,11 +476,11 @@ def move(a, s, limit, scanid):
 
 @scan.command(help="Import/upload nessus scans to TIO")
 @click.argument('filename')
-@click.option("-scan", is_flag=True, help="Upload a finished vuln or compliance scan.")
+@click.option("-scan_type", "-scan", is_flag=True, help="Upload a finished vuln or compliance scan.")
 @click.option("-policy", is_flag=True, help="Upload a scan policy.")
-def upload(filename, scan, policy):
+def upload(filename, scan_type, policy):
 
-    if scan:
+    if scan_type:
         with open('{}'.format(str(filename)), 'rb') as file:
             tio.scans.import_scan(fobj=file)
         file.close()

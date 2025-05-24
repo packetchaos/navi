@@ -23,7 +23,7 @@ def parse_19506(plugin_output):
             new_split = info_line.split(" : ")
             plugin_dict[new_split[0]] = new_split[1]
 
-        except:
+        except IndexError:
             pass
     try:
         intial_seconds = plugin_dict['Scan duration']
@@ -90,7 +90,7 @@ def convert_start_date(start_time):
         start_time_epoch = int(time.mktime(time.strptime(start_time, pattern)))
 
     except ValueError:
-        # timezone couldn't be used. lets remove it and calculate what we can
+        # timezone couldn't be used. let's remove it and calculate what we can
         pattern = '%Y/%m/%d %H:%M'
 
         # Split the time to remove the timezone 2-6 chars
@@ -240,7 +240,7 @@ def trend_by_scan_id(scanid):
             if not hist['is_archived']:
                 if hist['status'] == 'completed':
                     try:
-                        # Lets get the Reported Scan Duration
+                        # Let's get the Reported Scan Duration
                         reported_scan_start = hist['time_start']
                         reported_scan_end = hist['time_end']
                         total_reported_scan_duration = reported_scan_end - reported_scan_start

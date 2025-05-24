@@ -210,7 +210,7 @@ def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, 
         - OR the <name><' ' or '_'><operator
 
     '''
-    # default to equal when the value is a filter_name with out the operator
+    # default to equal when the value is a filter_name without the operator
     operator = 'eq'
     filter_name = column_name
 
@@ -694,11 +694,14 @@ def automate(sheet, name, v, threads, skip):
               tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
             else:
                 if v:
-                    print("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"ipv4\" --value \"{}\"".format(
-                        tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+                    print("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"eq\" -"
+                          "-filter \"ipv4\" --value \"{}\"".format(tag['record']['tag_category'],
+                                                                   tag['record']['tag_value'], tag['record']['ipv4']))
 
-                cmd("navi enrich tagrule --c \"{}\" --v \"{}\" --action \"eq\" --filter \"ipv4\" --value \"{}\"".format(
-              tag['record']['tag_category'], tag['record']['tag_value'], tag['record']['ipv4']))
+                cmd("navi enrich tagrule "
+                    "--c \"{}\" --v \"{}\" --action \"eq\" "
+                    "--filter \"ipv4\" --value \"{}\"".format(tag['record']['tag_category'],
+                                                              tag['record']['tag_value'], tag['record']['ipv4']))
 
         click.echo("Done")
 
@@ -713,9 +716,12 @@ def automate(sheet, name, v, threads, skip):
                 ['exclusion_ipv4'], exc['record']['start_time'], exc['record']['end_time'], exc['record']['frequency'],
                                                   exc['record']['day_of_month']))
 
-            cmd("navi config exclude --name \"{}\" --members \"{}\" --start \"{}\" --end \"{}\" --freq {} --day {}".format(
-                exc['record']['exclusion_name'], exc['record']['exclusion_ipv4'], exc['record']['start_time'],
-                exc['record']['end_time'], exc['record']['frequency'], exc['record']['day_of_month']))
+            cmd("navi config exclude "
+                "--name \"{}\" --members \"{}\" --start \"{}\" "
+                "--end \"{}\" --freq {} --day {}".format(exc['record']['exclusion_name'],
+                                                         exc['record']['exclusion_ipv4'], exc['record']['start_time'],
+                                                         exc['record']['end_time'], exc['record']['frequency'],
+                                                         exc['record']['day_of_month']))
 
             print()
 
@@ -739,15 +745,17 @@ def automate(sheet, name, v, threads, skip):
                     str(ad['record']['search_string']), str(ad['record']['option']), str(ad['record']['option_text'])))
             else:
                 if v:
-                    print("navi enrich tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
-                                                                                ad['record']['tag_value'],
-                                                                                ad['record']['method'],
-                                                                                ad['record']['search_string']))
+                    print("navi enrich tag "
+                          "--c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
+                                                                         ad['record']['tag_value'],
+                                                                         ad['record']['method'],
+                                                                         ad['record']['search_string']))
 
-                cmd("navi enrich tag --c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(str(ad['record']['tag_category']),
-                                                                              str(ad['record']['tag_value']),
-                                                                              str(ad['record']['method']),
-                                                                              str(ad['record']['search_string'])))
+                cmd("navi enrich tag "
+                    "--c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(str(ad['record']['tag_category']),
+                                                                   str(ad['record']['tag_value']),
+                                                                   str(ad['record']['method']),
+                                                                   str(ad['record']['search_string'])))
 
     if 'scanner_groups' in sheet:
         print("\nCreating Scanner groups")
@@ -776,8 +784,8 @@ def automate(sheet, name, v, threads, skip):
                     perms['record']['permission list(CanScan, CanUse, CanEdit, CanView)']))
 
             if perms['record']['usergroup']:
-                print("\nCreating UserGroup permission based on tag: {}:{}".format(perms['record']['Tag Category']
-                                                                                   , perms['record']['Tag Value']))
+                print("\nCreating UserGroup permission based on tag: "
+                      "{}:{}".format(perms['record']['Tag Category'], perms['record']['Tag Value']))
 
                 if v:
                     print("navi config access create --c \"{}\" --v \"{}\" --usergroup \"{}\" --permlist \"{}\"".format(
@@ -806,7 +814,7 @@ def was_reporter(days):
     a, s = grab_keys()
     command = ("docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e {} "
                "--mount type=bind,source=$(pwd),target=/usr/src/app/data "
-               "packetchaos/navi_was_reports").format(a,s,days)
+               "packetchaos/navi_was_reports").format(a, s, days)
     if click.confirm('This command downloads the packetchaos/navi_was_reports '
                      'docker container and runs it on port 5004 using the current navi database. Deploy?'):
         try:
@@ -819,7 +827,7 @@ def was_reporter(days):
 @deploy.command(help="Deploy Navi Scantime Tagging solution")
 def scan_tags():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/scantags".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/scantags".format(a, s)
     if click.confirm('This command downloads the packetchaos/scantags docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
@@ -867,7 +875,7 @@ def dependency_scan(trigger, fire):
 @deploy.command(help="Deploy Navi Critical Tags Docker solution")
 def critical_tags():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/critical_tags".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/critical_tags".format(a, s)
     if click.confirm('This command downloads the packetchaos/critical_tags docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
@@ -880,7 +888,7 @@ def critical_tags():
 @deploy.command(help="Tag each asset by the agent group membership")
 def agent_group_tags():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/agent_group_tags".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/agent_group_tags".format(a, s)
     if click.confirm('This command downloads the packetchaos/agent_group_tags docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
@@ -893,7 +901,7 @@ def agent_group_tags():
 @deploy.command(help="Tag each asset by the ports found open")
 def port_tagging():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/port_tagging".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/port_tagging".format(a, s)
     if click.confirm('This command downloads the packetchaos/port_tagging docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
@@ -906,7 +914,7 @@ def port_tagging():
 @deploy.command(help="Deploy the All tags solution.  Deploy all tags from all the navi services")
 def all_tags():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/all_tags".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/all_tags".format(a, s)
     if click.confirm('This command downloads the packetchaos/all_tags docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
@@ -934,7 +942,7 @@ def user_tags(user):
 @deploy.command(help="Deploy Navi Mitre Tags Docker solution")
 def mitre_tags():
     a, s = grab_keys()
-    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/mitre_tags".format(a,s)
+    command = "docker run -d -e access_key={} -e secret_key={} packetchaos/mitre_tags".format(a, s)
     if click.confirm('This command downloads the packetchaos/mitre_tags docker container and runs it.  '
                      'This will run as a service and will be destroyed after the all assets are tagged.'):
         try:
