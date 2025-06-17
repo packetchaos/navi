@@ -1,5 +1,4 @@
 import click
-import textwrap
 import os
 import re
 import random
@@ -145,7 +144,8 @@ def scp(user, host, password, filename):
         print(response.decode('utf-8'))
         print()
     except:
-        print("\nThis Feature has been disabled.  You're system doesn't allow for pexpect.spawn\n")
+        print("\nThis Feature requires pexpect installed.  "
+              "You're system doesn't allow for pexpect.spawn or pexpect isn't installed\n")
 
 
 class Excel:
@@ -407,6 +407,55 @@ def mail(message, to, subject, v, file):
         click.echo("Run the 'navi config smtp' command to correct your information\n")
         click.echo(E)
 
+
+@action.command(help="Encrypt an file for save transfer")
+@click.option("--name", required=True, help="Name of file you want to encrypt")
+@click.option("--new_name", default=None, help="The new name of the file. (Optional)")
+@click.option("--password", required=True, help="Password you want to encrypt your file with")
+def encrypt(name, password, new_name):
+    try:
+        import pyAesCrypt
+        # Set buffer size
+        buffer_size = 128 * 1024  # 128 KB
+
+        if new_name is None:
+            new_name = name
+            # Encrypt the file with a new name
+            pyAesCrypt.encryptFile("{}".format(name), "{}.aes".format(new_name), password, buffer_size)
+
+        click.echo("\nYour file {} was encrypted\n\n".format(new_name))
+    except ImportError:
+        click.echo("\nYou need to install pyAesCrypt to use this feature\n")
+        exit()
+    except ValueError as err:
+        click.echo("\nAES encrypt Error: {}\n".format(err))
+
+
+@action.command(help="Decrypt a File encrypted by Navi")
+@click.option("--name", required=True, help="Name of file you want to decrypt")
+@click.option("--new_name", default=None, help="The new name of the file. (Optional)")
+@click.option("--password", required=True, help="Password you want to decrypt your file with")
+def decrypt(name, password, new_name):
+    try:
+        import pyAesCrypt
+        # Set buffer size
+        buffer_size = 128 * 1024  # 128 KB
+        remove_aes_from_name = name[:-4]
+        if new_name is None:
+            # If no name is given, remove '.aes' from the name
+            remove_aes_from_name = name[:-4]
+        else:
+            # Use the customer given name
+            remove_aes_from_name = new_name
+
+        # Encrypt the file
+        pyAesCrypt.decryptFile("{}".format(name), "{}".format(remove_aes_from_name), password, buffer_size)
+
+    except ImportError:
+        click.echo("\nYou need to install pyAesCrypt to use this feature\n")
+        exit()
+    except ValueError:
+        click.echo("\nWrong Password of the file is corrupted\n\n")
 
 
 @action.command(help="Choose your export type --> assets: '-a' or vulns: '-v' with the corresponding UUID")
