@@ -2,13 +2,11 @@
 A command-line tool which leverages the Tenable.io API to automate common tasks
 in Cyber Exposure or Vulnerability Management.
 
-    *** This Tool is supported via Github Issues; Please be verbose when submitting an issue. ***
+    *** This Tool is supported by Songbird Systems with a support contract. 
+    Reach out to them: support@songbirdsystems.com ***
 
-    *** This tool is not an officially supported Tenable project ***
-    
     *** Use of this tool is subject to the terms and conditions identified below,
-     and is not subject to any license agreement you may have with Tenable ***
-
+    and is not subject to any license agreement you may have with Tenable ***
 # Important Note
 
 All documentation has been moved to the [Github wiki](https://github.com/packetchaos/navi/wiki) for more verbose documentation.
