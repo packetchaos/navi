@@ -581,8 +581,8 @@ def exports(a, v):
     time_frame = (current_time - (86400 * 3)) * 1000
     if a:
         export_data = request_data('GET', '/assets/export/status')
-        click.echo("{:45s} {:20s} {:10s} {:45s} {:10s} {}".format("\nAsset Export UUID", "Created Date", "Status",
-                                                                  "Export Filter Used",  "Chunk Size", "Total Chunks"))
+        click.echo("{:40s} {:15s} {:10s} {:60s} {:10s} {}".format("\nAsset Export UUID", "Created Date", "Status",
+                                                                  "Export Filter Used",  "Chunk Size", "Total"))
         click.echo('-' * 150)
 
         for export in export_data['exports']:
@@ -593,10 +593,10 @@ def exports(a, v):
                 export_uuid = export['uuid']
                 export_status = export['status']
                 export_chunk_size = export['num_assets_per_chunk']
-                export_filter = export['filters']
+                export_filter = str(export['filters'])
                 export_total_chunks = export['total_chunks']
 
-                click.echo("{:44s} {:20s} {:10s} {:45s} {:10d} {}".format(export_uuid,
+                click.echo("{:39s} {:15s} {:10s} {:60s} {:10d} {}".format(export_uuid,
                                                                           newtime.format('MM-DD-YYYY'),
                                                                           export_status, export_filter,
                                                                           export_chunk_size, export_total_chunks))

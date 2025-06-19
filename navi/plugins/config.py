@@ -11,7 +11,7 @@ from .tagrule_export import export_tags
 from .epss import update_navi_with_epss
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
-                       create_certs_table)
+                       create_certs_table, create_plugins_table, create_agents_table)
 from .database import new_db_connection, create_table, drop_tables, db_query, insert_software, insert_certificates
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
@@ -281,6 +281,153 @@ def grab_can_use_tags():
     return list_of_tag_uuids
 
 
+def update_software():
+    database = r'navi.db'
+    new_conn = new_db_connection(database)
+    drop_tables(new_conn, "software")
+    create_software_table()
+    soft_dict = {}
+
+    # Grab 22869 Data
+    parse_22869(soft_dict)
+
+    # Grab 20811 Data
+    parse_20811(soft_dict)
+
+    # grab 83991 Data
+    parse_83991(soft_dict)
+
+    with new_conn:
+        for item in soft_dict.items():
+            # Save the uuid list as a string
+            new_list = [item[0], str(item[1]).strip()]
+            insert_software(new_conn, new_list)
+    click.echo("\nSoftware imported into a table called 'software'. Use 'navi explore data software'\n\n")
+
+
+def update_certificates():
+    database = r"navi.db"
+    cert_conn = new_db_connection(database)
+    cert_conn.execute('pragma journal_mode=wal;')
+    cert_conn.execute('pragma cashe_size=-10000')
+    cert_conn.execute('pragma synchronous=OFF')
+    click.echo("\nParsing every output for plugin 10863. This can take some time.\n"
+               "\nThe data will be saved in a table named 'certs'\n\n")
+    drop_tables(cert_conn, 'certs')
+    create_certs_table()
+    with cert_conn:
+        cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
+        cert_dict = {}
+        asset_uuid = cert_data[0][0]
+
+        for certs in cert_data:
+
+            first_pass = str(certs[1])
+            second_pass = str(first_pass).replace("'", "")
+            third_pass = str(second_pass).split("\n")
+
+            for line in third_pass:
+                csv_list = []
+                forth_pass = str(line).split(": ")
+
+                try:
+                    cert_dict[forth_pass[0]] = forth_pass[1]
+                except IndexError:
+                    pass
+
+                csv_list.append(asset_uuid)
+
+                try:
+                    csv_list.append(cert_dict['Subject Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Country'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['State/Province'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Locality'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Organization'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Common Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Issuer Name'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Organization Unit'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Serial Number'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Version'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Signature Algorithm'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Not Valid Before'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Not Valid After'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Algorithm'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Key Length'])
+                except KeyError:
+                    csv_list.append(" ")
+
+                try:
+                    csv_list.append(cert_dict['Signature Length'])
+                except KeyError:
+                    csv_list.append(" ")
+
+            insert_certificates(cert_conn, csv_list)
+
+
+def grab_epss_today(filename):
+    date_info = str(datetime.datetime.now()).split("-")
+    year = date_info[0]
+    month = date_info[1]
+    day = date_info[2][:2]
+    update_navi_with_epss(day, month, year, filename)
+
+
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
                   "sla, smtp, mail, keys and update the navi database")
 def config():
@@ -332,7 +479,9 @@ def keys(clear, access_key, secret_key):
         create_keys_table()
         create_diff_table()
         create_vulns_table()
+        create_plugins_table()
         create_assets_table()
+        create_agents_table()
         create_compliance_table()
 
         # Check if the keys are empty
@@ -954,11 +1103,7 @@ def epss(day, month, year, filename):
     if day and month and year:
         update_navi_with_epss(day, month, year, filename)
     else:
-        date_info = str(datetime.datetime.now()).split("-")
-        year = date_info[0]
-        month = date_info[1]
-        day = date_info[2][:2]
-        update_navi_with_epss(day, month, year, filename)
+        grab_epss_today(filename)
 
 
 @config.group(help="Update the local Navi DB, Change Base URL, and update EPSS")
@@ -1073,27 +1218,7 @@ def tagrules():
 
 @config.command(help="Parse the 3 software plugins and stuff the software into a table called software")
 def software():
-    database = r'navi.db'
-    new_conn = new_db_connection(database)
-    drop_tables(new_conn, "software")
-    create_software_table()
-    soft_dict = {}
-
-    # Grab 22869 Data
-    parse_22869(soft_dict)
-
-    # Grab 20811 Data
-    parse_20811(soft_dict)
-
-    # grab 83991 Data
-    parse_83991(soft_dict)
-
-    with new_conn:
-        for item in soft_dict.items():
-            # Save the uuid list as a string
-            new_list = [item[0], str(item[1]).strip()]
-            insert_software(new_conn, new_list)
-    click.echo("\nSoftware imported into a table called 'software'. Use 'navi explore data software'\n\n")
+    update_software()
 
 
 @config.command(help="Create or delete exclusions")
@@ -1253,115 +1378,95 @@ def bytag(c, v, agent_group, scanner):
 
 @config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
 def certificates():
-    database = r"navi.db"
-    cert_conn = new_db_connection(database)
-    cert_conn.execute('pragma journal_mode=wal;')
-    cert_conn.execute('pragma cashe_size=-10000')
-    cert_conn.execute('pragma synchronous=OFF')
-    click.echo("\nParsing every output for plugin 10863. This can take some time.\n"
-               "\nThe data will be saved in a table named 'certs'\n\n")
-    drop_tables(cert_conn, 'certs')
-    create_certs_table()
-    with cert_conn:
-        cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
-        cert_dict = {}
-        asset_uuid = cert_data[0][0]
+    update_certificates()
 
-        for certs in cert_data:
 
-            first_pass = str(certs[1])
-            second_pass = str(first_pass).replace("'", "")
-            third_pass = str(second_pass).split("\n")
+@update.command(help="Update Everything:Assets, Vulns, Audits, Agents, Fixed, EPSS, WAS, Software and Certs")
+@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--days', default=30, help="Limit the download to X # of days")
+@click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
+@click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
+@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
+              help='Isolate your update to a particular finding state')
+@click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
+              type=click.Choice(["critical", "high", "medium", "low", "info"]),
+              help='Isolate your update to a particular finding severity')
+def everything(threads, days, c, v, state, severity):
+    import time
+    start = time.time()
+    click.echo("*" * 70)
+    click.echo("    Updating the Vulns and Plugins Tables from the vulns export API")
+    click.echo("-" * 70)
+    vuln_export(30, "0", threads, c, v, list(state), list(severity))
 
-            for line in third_pass:
-                csv_list = []
-                forth_pass = str(line).split(": ")
+    click.echo("*" * 70)
+    click.echo("    Updating the Assets and Tags Tables from the asset export API")
+    click.echo("-" * 70)
+    asset_export(90, "0", threads, c, v)
 
-                try:
-                    cert_dict[forth_pass[0]] = forth_pass[1]
-                except IndexError:
-                    pass
+    click.echo("*" * 70)
+    click.echo("    Updating the Compliance Table from the Compliance export API")
+    click.echo("-" * 70)
+    compliance_export(days, "0", threads)
 
-                csv_list.append(asset_uuid)
+    click.echo("*" * 70)
+    click.echo("Updating the Was data from the WAS SCAN endpoints(soon to be exports)")
+    click.echo("-" * 70)
+    grab_scans(30)
 
-                try:
-                    csv_list.append(cert_dict['Subject Name'])
-                except KeyError:
-                    csv_list.append(" ")
+    click.echo("*" * 70)
+    click.echo("Updating the Fixed Table with Fixed vulns from the vulns export API")
+    click.echo("-" * 70)
+    fixed_export(c, v, days)
 
-                try:
-                    csv_list.append(cert_dict['Country'])
-                except KeyError:
-                    csv_list.append(" ")
+    click.echo("*" * 70)
+    click.echo("Updating the Cert Table with Certificate Information parsed from plugin 10863")
+    click.echo("-" * 70)
+    update_certificates()
 
-                try:
-                    csv_list.append(cert_dict['State/Province'])
-                except KeyError:
-                    csv_list.append(" ")
+    click.echo("*" * 70)
+    click.echo("Updating the Software table by parsing plugins - 22869(linux),20811(Windows),83991(Mac)")
+    click.echo("-" * 70)
+    update_software()
 
-                try:
-                    csv_list.append(cert_dict['Locality'])
-                except KeyError:
-                    csv_list.append(" ")
+    click.echo("*" * 70)
+    click.echo("   Updating the Agent table with agent data from the Agent API endpoint")
+    click.echo("-" * 70)
+    download_agent_data()
 
-                try:
-                    csv_list.append(cert_dict['Organization'])
-                except KeyError:
-                    csv_list.append(" ")
+    click.echo("*" * 70)
+    click.echo("Updating the EPSS table with EPPS data from EPSS downloadble CSV")
+    click.echo("-" * 70)
+    grab_epss_today(None)
 
-                try:
-                    csv_list.append(cert_dict['Common Name'])
-                except KeyError:
-                    csv_list.append(" ")
+    end = time.time()
+    click.echo("\nNow that we are done, let's check all of the tables.")
+    click.echo("-" * 52)
+    click.echo("-" * 52)
+    click.echo()
+    vuln_count = db_query("select count(*) from vulns;")[0][0]
+    asset_count = db_query("select count(*) from assets;")[0][0]
+    tag_count = db_query("select count(*) from tags;")[0][0]
+    compliance_count = db_query("select count(*) from compliance;")[0][0]
+    fixed_count = db_query("select count(*) from fixed;")[0][0]
+    agent_count = db_query("select count(*) from agents;")[0][0]
+    cert_count = db_query("select count(*) from certs;")[0][0]
+    software_count = db_query("select count(*) from software;")[0][0]
+    application_count = db_query("select count(*) from apps;")[0][0]
+    epss_count = db_query("select count(*) from epss;")[0][0]
 
-                try:
-                    csv_list.append(cert_dict['Issuer Name'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Organization Unit'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Serial Number'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Version'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Signature Algorithm'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Not Valid Before'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Not Valid After'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Algorithm'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Key Length'])
-                except KeyError:
-                    csv_list.append(" ")
-
-                try:
-                    csv_list.append(cert_dict['Signature Length'])
-                except KeyError:
-                    csv_list.append(" ")
-
-            insert_certificates(cert_conn, csv_list)
+    click.echo("Vuln Count: {}".format(vuln_count))
+    click.echo("Asset Count: {}".format(asset_count))
+    click.echo("Tag Count: {}".format(tag_count))
+    click.echo("Compliance Count: {}".format(compliance_count))
+    click.echo("Agent Count: {}".format(agent_count))
+    click.echo("Fixed Count: {}".format(fixed_count))
+    click.echo("Cert Count: {}".format(cert_count))
+    click.echo("Software Count: {}".format(software_count))
+    click.echo("Application Count: {}".format(application_count))
+    click.echo("EPSS CVE Count: {}".format(epss_count))
+    click.echo()
+    click.echo("*" * 60)
+    click.echo("This is how long it took: {} Seconds".format(str(end - start)))
+    click.echo("-" * 60)
+    click.echo("\n\n")

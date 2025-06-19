@@ -167,7 +167,7 @@ def fixed_export(category, value, days):
     create_fixed_table()
 
     click.echo("\n***Navi calculates SLAs on export request.  "
-               "So re-run 'navi update fixed' after changing your SLA***\n")
+               "So re-run 'navi config update fixed' after changing your SLA***\n")
     click.echo("Downloading all of your Fixed, Open and Reopened vulns into a new Table called 'fixed'\n")
     with fixed_conn:
         if category and value:

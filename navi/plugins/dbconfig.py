@@ -76,6 +76,50 @@ def create_vulns_table():
     create_table(vuln_conn, vuln_table)
 
 
+def create_plugins_table():
+    database = r"navi.db"
+    plugin_conn = new_db_connection(database)
+    plugins_table = """CREATE TABLE IF NOT EXISTS plugins (
+                              plugin_id text PRIMARY KEY,
+                              cves text,
+                              vpr_score text,
+                              exploit_available text,
+                              xrefs text,
+                              see_also text,
+                              cvss3_base_score text,
+                              cvss3_temporal_score text,
+                              cvss_base_score text,
+                              publication_date text,
+                              patch_publication_date text,
+                              exploit_framework_canvas text,
+                              exploit_framework_core text,
+                              exploit_framework_d2_elliot text,
+                              exploit_framework_exploithub text,
+                              exploit_framework_metasploit text,
+                              exploitability_ease text,
+                              exploited_by_malware text,
+                              exploited_by_nessus text,
+                              family text,
+                              family_id text,
+                              has_patch text,
+                              has_workaround text,
+                              in_the_news text,
+                              modification_date text,
+                              name text,
+                              risk_factor text,
+                              threat_intensity_last28 text,
+                              threat_sources_last28 text,
+                              cvss_impact_score_predicted text,
+                              cvss3_impact_score text,
+                              lower_bound text,
+                              upper_bound text,
+                              vpr_updated text,
+                              cpe text,
+                              url text);"""
+    plugin_conn.execute('pragma journal_mode=wal;')
+    create_table(plugin_conn, plugins_table)
+
+
 def create_assets_table():
     database = r"navi.db"
     asset_conn = new_db_connection(database)
@@ -277,10 +321,10 @@ def create_fixed_table():
     fixed_conn.execute(fixed_table)
 
 
-def create_plugins_table():
+def create_findings_table():
     database = r"navi.db"
     app_conn = new_db_connection(database)
-    create_plugins = """CREATE TABLE IF NOT EXISTS plugins (
+    create_findings = """CREATE TABLE IF NOT EXISTS findings (
                             scan_uuid text,
                             name text,
                             cves text,
@@ -303,7 +347,7 @@ def create_plugins_table():
                             );"""
     app_conn.execute('pragma journal_mode=wal;')
 
-    create_table(app_conn, create_plugins)
+    create_table(app_conn, create_findings)
 
 
 def create_passwords_table():

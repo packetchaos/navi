@@ -307,8 +307,8 @@ def insert_fixed(conn, fixed):
     cur.execute(sql, fixed)
 
 
-def insert_plugins(conn, plugins):
-    sql2 = '''INSERT or IGNORE into plugins(
+def insert_findings(conn, findings):
+    sql2 = '''INSERT or IGNORE into findings(
             scan_uuid,
             name,
             cves,
@@ -331,7 +331,7 @@ def insert_plugins(conn, plugins):
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur2 = conn.cursor()
     cur2.execute('pragma journal_mode=wal;')
-    cur2.execute(sql2, plugins)
+    cur2.execute(sql2, findings)
 
 
 def insert_epss(conn2, epss_data):
@@ -342,3 +342,47 @@ def insert_epss(conn2, epss_data):
     epss_cur = conn2.cursor()
     epss_cur.execute('pragma journal_mode=wal;')
     epss_cur.execute(sql_epss, epss_data)
+
+
+def insert_plugins(conn, exploit_data):
+    sql_plugins = '''INSERT OR IGNORE into plugins(
+                     plugin_id,
+                     cves,
+                     vpr_score,
+                     exploit_available,
+                     xrefs,
+                     see_also,
+                     cvss3_base_score,
+                     cvss3_temporal_score,
+                     cvss_base_score,
+                     publication_date,
+                     patch_publication_date,
+                     exploit_framework_canvas,
+                     exploit_framework_core,
+                     exploit_framework_d2_elliot,
+                     exploit_framework_exploithub,
+                     exploit_framework_metasploit,
+                     exploitability_ease,
+                     exploited_by_malware,
+                     exploited_by_nessus,
+                     family,
+                     family_id,
+                     has_patch,
+                     has_workaround,
+                     in_the_news,
+                     modification_date,
+                     name,
+                     risk_factor,
+                     threat_intensity_last28,
+                     threat_sources_last28,
+                     cvss_impact_score_predicted,
+                     cvss3_impact_score,
+                     lower_bound,
+                     upper_bound,
+                     vpr_updated,
+                     cpe,
+                     url
+                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+    exploit_cur = conn.cursor()
+    exploit_cur.execute('pragma journal_mode=wal;')
+    exploit_cur.execute(sql_plugins, exploit_data)

@@ -1,5 +1,5 @@
-from .dbconfig import create_apps_table, new_db_connection, create_plugins_table
-from .database import insert_apps, insert_plugins, drop_tables
+from .dbconfig import create_apps_table, new_db_connection, create_findings_table
+from .database import insert_apps, insert_findings, drop_tables
 from .api_wrapper import request_data
 import click
 import time
@@ -167,7 +167,7 @@ def download_data(uuid, asset):
                 finding_list.append(str(xrefs))
                 finding_list.append(str(see_also))
 
-                insert_plugins(app_conn, finding_list)
+                insert_findings(app_conn, finding_list)
 
                 if str(plugin_id) == '98059':
                     tech_list = plugin_parser(finding['output'])
@@ -229,7 +229,7 @@ def grab_scans(days):
 
     create_apps_table()
 
-    create_plugins_table()
+    create_findings_table()
     data = request_data('POST', '/was/v2/configs/search?limit=200&offset=0')
     for configs in data['items']:
         config_id = configs['config_id']
