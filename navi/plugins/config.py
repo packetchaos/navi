@@ -428,6 +428,88 @@ def grab_epss_today(filename):
     update_navi_with_epss(day, month, year, filename)
 
 
+def grab_data_info():
+    click.echo()
+    try:
+        vuln_count = db_query("select count(*) from vulns;")[0][0]
+    except:
+        vuln_count = "Needs updating"
+        click.echo("\nNo data in the Vulns table\n")
+
+    try:
+        plugin_count = db_query("select count(*) from plugins;")[0][0]
+    except:
+        plugin_count = "Needs updating"
+        click.echo("\nNo data in the plugins table\n")
+
+    try:
+        asset_count = db_query("select count(*) from assets;")[0][0]
+    except:
+        asset_count = "Needs updating"
+        click.echo("\nNo data in the assets table\n")
+
+    try:
+        tag_count = db_query("select count(*) from tags;")[0][0]
+    except:
+        tag_count = "Needs updating"
+        click.echo("\nNo data in the tags table\n")
+
+    try:
+        compliance_count = db_query("select count(*) from compliance;")[0][0]
+    except:
+        compliance_count = "Needs updating"
+        click.echo("\nNo data in the compliance table\n")
+
+    try:
+        fixed_count = db_query("select count(*) from fixed;")[0][0]
+    except:
+        fixed_count = "Needs updating"
+        click.echo("\nNo data in the fixed table\n")
+
+    try:
+        agent_count = db_query("select count(*) from agents;")[0][0]
+    except:
+        agent_count = "Needs updating"
+        click.echo("\nNo data in the agents table\n")
+
+    try:
+        cert_count = db_query("select count(*) from certs;")[0][0]
+    except:
+        cert_count = "Needs updating"
+        click.echo("\nNo data in the certs table\n")
+
+    try:
+        software_count = db_query("select count(*) from software;")[0][0]
+    except:
+        software_count = "Needs updating"
+        click.echo("\nNo data in the software table\n")
+
+    try:
+        application_count = db_query("select count(*) from apps;")[0][0]
+    except:
+        application_count = "Needs updating"
+        click.echo("\nNo data in the apps table\n")
+
+    try:
+        epss_count = db_query("select count(*) from epss;")[0][0]
+    except:
+        epss_count = "Needs updating"
+        click.echo("\nNo data in the epss table\n")
+
+    click.echo("Vuln Count: {}".format(vuln_count))
+    click.echo("Plugin Count: {}".format(plugin_count))
+    click.echo("Asset Count: {}".format(asset_count))
+    click.echo("Tag Count: {}".format(tag_count))
+    click.echo("Compliance Count: {}".format(compliance_count))
+    click.echo("Agent Count: {}".format(agent_count))
+    click.echo("Fixed Count: {}".format(fixed_count))
+    click.echo("Cert Count: {}".format(cert_count))
+    click.echo("Software Count: {}".format(software_count))
+    click.echo("Application Count: {}".format(application_count))
+    click.echo("EPSS CVE Count: {}".format(epss_count))
+    click.echo()
+
+
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
                   "sla, smtp, mail, keys and update the navi database")
 def config():
@@ -1391,7 +1473,10 @@ def certificates():
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding severity')
-def everything(threads, days, c, v, state, severity):
+@click.option("-apps", is_flag=True, help="Avoid updating the WAS tables")
+@click.option("-audits", is_flag=True, help="Avoid updating the compliance table")
+@click.option("-fixes", is_flag=True, help="Avoid updating the fixed table")
+def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     import time
     start = time.time()
     click.echo("*" * 70)
@@ -1404,20 +1489,23 @@ def everything(threads, days, c, v, state, severity):
     click.echo("-" * 70)
     asset_export(90, "0", threads, c, v)
 
-    click.echo("*" * 70)
-    click.echo("    Updating the Compliance Table from the Compliance export API")
-    click.echo("-" * 70)
-    compliance_export(days, "0", threads)
+    if not audits:
+        click.echo("*" * 70)
+        click.echo("    Updating the Compliance Table from the Compliance export API")
+        click.echo("-" * 70)
+        compliance_export(days, "0", threads)
 
-    click.echo("*" * 70)
-    click.echo("Updating the Was data from the WAS SCAN endpoints(soon to be exports)")
-    click.echo("-" * 70)
-    grab_scans(30)
+    if not apps:
+        click.echo("*" * 70)
+        click.echo("Updating the Was data from the WAS SCAN endpoints(soon to be exports)")
+        click.echo("-" * 70)
+        grab_scans(days)
 
-    click.echo("*" * 70)
-    click.echo("Updating the Fixed Table with Fixed vulns from the vulns export API")
-    click.echo("-" * 70)
-    fixed_export(c, v, days)
+    if not fixes:
+        click.echo("*" * 70)
+        click.echo("Updating the Fixed Table with Fixed vulns from the vulns export API")
+        click.echo("-" * 70)
+        fixed_export(c, v, days)
 
     click.echo("*" * 70)
     click.echo("Updating the Cert Table with Certificate Information parsed from plugin 10863")
@@ -1443,29 +1531,7 @@ def everything(threads, days, c, v, state, severity):
     click.echo("\nNow that we are done, let's check all of the tables.")
     click.echo("-" * 52)
     click.echo("-" * 52)
-    click.echo()
-    vuln_count = db_query("select count(*) from vulns;")[0][0]
-    asset_count = db_query("select count(*) from assets;")[0][0]
-    tag_count = db_query("select count(*) from tags;")[0][0]
-    compliance_count = db_query("select count(*) from compliance;")[0][0]
-    fixed_count = db_query("select count(*) from fixed;")[0][0]
-    agent_count = db_query("select count(*) from agents;")[0][0]
-    cert_count = db_query("select count(*) from certs;")[0][0]
-    software_count = db_query("select count(*) from software;")[0][0]
-    application_count = db_query("select count(*) from apps;")[0][0]
-    epss_count = db_query("select count(*) from epss;")[0][0]
-
-    click.echo("Vuln Count: {}".format(vuln_count))
-    click.echo("Asset Count: {}".format(asset_count))
-    click.echo("Tag Count: {}".format(tag_count))
-    click.echo("Compliance Count: {}".format(compliance_count))
-    click.echo("Agent Count: {}".format(agent_count))
-    click.echo("Fixed Count: {}".format(fixed_count))
-    click.echo("Cert Count: {}".format(cert_count))
-    click.echo("Software Count: {}".format(software_count))
-    click.echo("Application Count: {}".format(application_count))
-    click.echo("EPSS CVE Count: {}".format(epss_count))
-    click.echo()
+    grab_data_info()
     click.echo("*" * 60)
     click.echo("This is how long it took: {} Seconds".format(str(end - start)))
     click.echo("-" * 60)

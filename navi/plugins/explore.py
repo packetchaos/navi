@@ -8,6 +8,7 @@ import click
 import pprint
 import textwrap
 from .error_msg import error_msg
+from .config import grab_data_info
 
 
 tio = tenb_connection()
@@ -791,6 +792,17 @@ def find_by_plugin(pid):
 @explore.group(help="Discover assets with Open ports, Running containers and more")
 def data():
     pass
+
+
+@data.command(help="Show Navi table counts or prgama table_info outputs")
+@click.option("--table", default=None, help="Get Table column names and types")
+def db_info(table):
+    if table:
+        import pprint
+        data = db_query("pragma table_info({})".format(table))
+        pprint.pprint(data)
+    else:
+        grab_data_info()
 
 
 @data.command(help="Find Assets where a plugin fired using the plugin ID")
