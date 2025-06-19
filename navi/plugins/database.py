@@ -100,6 +100,15 @@ def insert_compliance(conn, compliance):
     cur.execute(sql, compliance)
 
 
+def insert_zipper(conn, zipper):
+    sql = '''INSERT or IGNORE into zipper(
+                                          plugin_id,
+                                          epss_value) VALUES(?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mod=wal;')
+    cur.execute(sql, zipper)
+
+
 def insert_assets(conn, assets):
     sql = '''INSERT or IGNORE into assets(
                                           ip_address, 
@@ -344,6 +353,7 @@ def insert_epss(conn2, epss_data):
 def insert_plugins(conn, exploit_data):
     sql_plugins = '''INSERT OR IGNORE into plugins(
                      plugin_id,
+                     severity,
                      cves,
                      vpr_score,
                      exploit_available,
@@ -379,7 +389,7 @@ def insert_plugins(conn, exploit_data):
                      vpr_updated,
                      cpe,
                      url
-                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     exploit_cur = conn.cursor()
     exploit_cur.execute('pragma journal_mode=wal;')
     exploit_cur.execute(sql_plugins, exploit_data)

@@ -8,11 +8,12 @@ from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .was_export import grab_scans
 from .tagrule_export import export_tags
-from .epss import update_navi_with_epss
+from .epss import update_navi_with_epss, zipper_epss_plugin
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
                        create_certs_table, create_plugins_table, create_agents_table)
-from .database import new_db_connection, create_table, drop_tables, db_query, insert_software, insert_certificates
+from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software,
+                       insert_certificates)
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from .agent_to_db import download_agent_data
@@ -1536,3 +1537,9 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("This is how long it took: {} Seconds".format(str(end - start)))
     click.echo("-" * 60)
     click.echo("\n\n")
+
+
+@update.command(help="Create a zipper table for merging EPSS data with Plugins")
+def zipper():
+    zipper_epss_plugin()
+

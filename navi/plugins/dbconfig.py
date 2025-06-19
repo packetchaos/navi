@@ -81,6 +81,7 @@ def create_plugins_table():
     plugin_conn = new_db_connection(database)
     plugins_table = """CREATE TABLE IF NOT EXISTS plugins (
                               plugin_id text PRIMARY KEY,
+                              severity text,
                               cves text,
                               vpr_score text,
                               exploit_available text,
@@ -249,6 +250,17 @@ def create_epss_table():
                         );"""
     epss_conn.execute('pragma journal_mode=wal;')
     create_table(epss_conn, create_score_table)
+
+
+def create_zipper_table():
+    database = r"navi.db"
+    zipper_conn = new_db_connection(database)
+    zipper_table = """CREATE TABLE IF NOT EXISTS zipper (
+                        plugin_id text PRIMARY KEY,
+                        epss_value text
+                        );"""
+    zipper_conn.execute('pragma journal_mode=wal;')
+    create_table(zipper_conn, zipper_table)
 
 
 def create_apps_table():

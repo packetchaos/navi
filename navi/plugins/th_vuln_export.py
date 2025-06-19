@@ -108,8 +108,10 @@ def parse_data(chunk_data, chunk_number):
                     try:
                         severity = vulns['severity']
                         vuln_list.append(severity)
+                        exploit_list.append(severity)
                     except KeyError:
                         vuln_list.append(" ")
+                        exploit_list.append(" ")
                     try:
                         scan_completed = vulns['scan']['completed_at']
                         vuln_list.append(scan_completed)
