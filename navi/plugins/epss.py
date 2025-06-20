@@ -31,8 +31,10 @@ def zipper_epss_plugin():
                 plugin_zipper_list.append("NO CVE")
             except IndexError:
                 plugin_zipper_list.append("NO CVE")
-
-            insert_zipper(zipper_conn, plugin_zipper_list)
+            try:
+                insert_zipper(zipper_conn, plugin_zipper_list)
+            except:
+                click.echo("\nYou need to update the vulns table to zipper epss data.\n")
 
 
 def request_new_data(day, month, year):

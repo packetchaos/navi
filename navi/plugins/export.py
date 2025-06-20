@@ -74,28 +74,11 @@ def group(group_name):
 @click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; "
                                                        "requires --c and Category Name")
 @click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
-@click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'],
-                                              case_sensitive=False), multiple=True)
-def bytag(c, v, file, severity):
+def bytag(c, v, file):
+    tag_assets = ("SELECT assets.*, tags.asset_uuid from assets left join tags on assets.uuid = tags.asset_uuid "
+                  "and tags.tag_key='" + c + "' and tags.tag_value='" + v + "';")
 
-    if severity:
-        # If Severity is chosen then we will export vuln details
-        if len(severity) == 1:
-            # multiple choice values are returned as a tuple.
-            # Here I break it out and put it in the format needed for sql
-            asset_query = ("select vulns.*, tags.asset_uuid from vulns left join tags on "
-                           "vulns.asset_uuid = tags.asset_uuid where vulns.severity in ('{}');").format(severity[0])
-            query_export(asset_query, file)
-        else:
-
-            asset_query = ("select vulns.*, tags.asset_uuid from vulns left join tags on "
-                           "vulns.asset_uuid = tags.asset_uuid where vulns.severity in {};").format(severity)
-            query_export(asset_query, file)
-    else:
-        tag_assets = ("SELECT assets.*, tags.asset_uuid from assets left join tags on assets.uuid = tags.asset_uuid "
-                      "and tags.tag_key='") + c + "' and tags.tag_value='" + v + "';"
-
-        query_export(tag_assets, file)
+    query_export(tag_assets, file)
 
 
 @export.command(help="Export User and Role information into a CSV")
@@ -132,9 +115,11 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
         if severity:
             # Severity options Chosen
             if c and v:
-                asset_query = ("select vulns.* from vulns left join tags on "
-                               "vulns.asset_uuid = tags.asset_uuid "
-                               "and tags_key='{}' and tags.tag_value='{}' "
+                asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                               "left join tags on vulns.asset_uuid = tags.asset_uuid and "
+                               "tags.tag_key='{}' and tags.tag_value='{}' "
+                               "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                               "left join zipper on plugins.plugin_id = zipper.plugin_id "
                                "where severity in {};".format(c, v, severity))
             elif plugin:
                 # Severity and plugin conflict
@@ -158,7 +143,10 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
                 exit()
             else:
                 # No tag, just a severity
-                asset_query = "select * from vulns where severity in {};".format(severity)
+                asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                               "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                               "left join zipper on plugins.plugin_id = zipper.plugin_id "
+                               "where severity in {};").format(severity)
 
         else:
             # No Severity Chosen
@@ -167,131 +155,184 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
                     if output:
                         # Tag, plugin ID and output
                         if regexp:
+
                             # Enable regex
-                            asset_query = ("select vulns.* from vulns left join tags on "
-                                           "vulns.asset_uuid = tags.asset_uuid "
-                                           "and tags_key='{}' and tags.tag_value='{}' where plugin_id='{}' and "
-                                           "output REGEXP '{}';".format(c, v, plugin, output))
+                            asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                           "vulns.asset_uuid = tags.asset_uuid and "
+                                           "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                           "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                           "plugins.plugin_id = zipper.plugin_id where vulns.plugin_id='{}' and "
+                                           "vulns.output REGEXP '{}';".format(c, v, plugin, output))
                         else:
                             # no regex
-                            asset_query = ("select vulns.* from vulns left join tags on "
-                                           "vulns.asset_uuid = tags.asset_uuid "
-                                           "and tags_key='{}' and tags.tag_value='{}' where plugin_id='{}' and "
-                                           "output LIKE '%{}%';".format(c, v, plugin, output))
+                            asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                           "vulns.asset_uuid = tags.asset_uuid and "
+                                           "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                           "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                           "plugins.plugin_id = zipper.plugin_id where vulns.plugin_id='{}' and "
+                                           "vulns.output LIKE '%{}%';".format(c, v, plugin, output))
                     else:
                         # Tag and plugin id
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where plugin_id='{}';".format(c, v, plugin))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.plugin_id='{}';".format(c, v, plugin))
                 elif output:
                     # Tag, plugin ID and output
                     if regexp:
                         # Enable regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "here output REGEXP '{}';".format(c, v, output))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.output REGEXP '{}';".format(c, v, output))
                     else:
                         # no regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where output LIKE '%{}%';".format(c, v, output))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.output LIKE '%{}%';".format(c, v, output))
 
                 elif name:
                     # Tag and text in plugin name
                     if regexp:
                         # Enable regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where plugin_name REGEXP '{}';".format(c, v, name))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.plugin_name REGEXP '{}';".format(c, v, name))
                     else:
                         # no regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where plugin_name LIKE '%{}%';".format(c, v, name))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.plugin_name LIKE '%{}%';".format(c, v, name))
                 elif xrefs:
                     if regexp:
                         # Enable regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where xrefs REGEXP '{}';".format(c, v, xrefs))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.xrefs REGEXP '{}';".format(c, v, xrefs))
                     else:
                         # no regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where xrefs LIKE '%{}%';".format(c, v, xrefs))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.xrefs LIKE '%{}%';".format(c, v, xrefs))
                 elif cve:
                     if regexp:
                         # Enable regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where cves REGEXP '{}';".format(c, v, cve))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.cves REGEXP '{}';".format(c, v, cve))
                     else:
                         # no regex
-                        asset_query = ("select vulns.* from vulns left join tags on "
-                                       "vulns.asset_uuid = tags.asset_uuid "
-                                       "and tags_key='{}' and tags.tag_value='{}' "
-                                       "where cves LIKE '%{}%';".format(c, v, cve))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                       "vulns.asset_uuid = tags.asset_uuid and "
+                                       "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.cves LIKE '%{}%';".format(c, v, cve))
                 else:
                     # Just the Tag data
-                    asset_query = ("select vulns.* from vulns left join tags on "
-                                   "vulns.asset_uuid = tags.asset_uuid "
-                                   "and tags_key='{}' and tags.tag_value='{}';".format(c, v))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join tags on "
+                                   "vulns.asset_uuid = tags.asset_uuid and "
+                                   "tags.tag_key='{}' and tags.tag_value='{}' left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id;".format(c, v))
             elif plugin:
                 if output:
                     # plugin ID and output
                     if regexp:
                         # Enable regex
-                        asset_query = ("select * from vulns where plugin_id='{}' and "
-                                       "output REGEXP '{}';".format(plugin, output))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id where vulns.plugin_id='{}' and "
+                                       "vulns.output REGEXP '{}';".format(plugin, output))
                     else:
                         # no regex
-                        asset_query = ("select * from vulns "
-                                       "where plugin_id='{}' and output LIKE '%{}%';".format(plugin, output))
+                        asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                       "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                       "plugins.plugin_id = zipper.plugin_id "
+                                       "where vulns.plugin_id='{}' and vulns.output LIKE '%{}%';".format(plugin, output))
                 else:
                     # Just Plugin ID
-                    asset_query = ("select * from vulns where plugin_id={};".format(plugin))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.plugin_id={};".format(plugin))
             elif output:
                 if regexp:
                     # Enable regex
-                    asset_query = ("select * from vulns where output REGEXP '{}';".format(output))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.output REGEXP '{}';".format(output))
                 else:
                     # no regex
-                    asset_query = ("select * from vulns where output LIKE '%{}%';".format(output))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id "
+                                   "where vulns.output LIKE '%{}%';".format(output))
 
             elif name:
                 # Tag and text in plugin name
                 if regexp:
                     # Enable regex
-                    asset_query = ("select * from vulns where plugin_name REGEXP '{}';".format(name))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                                   "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                                   "left join zipper on plugins.plugin_id = zipper.plugin_id "
+                                   "where vulns.plugin_name REGEXP '{}';".format(name))
                 else:
                     # no regex
-                    asset_query = ("select * from vulns where plugin_name LIKE '%{}%';".format(name))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id "
+                                   "where vulns.plugin_name LIKE '%{}%';".format(name))
             elif xrefs:
                 if regexp:
                     # Enable regex
-                    asset_query = ("select * from vulns where xrefs REGEXP '{}';".format(xrefs))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.xrefs REGEXP '{}';".format(xrefs))
                 else:
                     # no regex
-                    asset_query = ("select * from vulns where xrefs LIKE '%{}%';".format(xrefs))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.xrefs LIKE '%{}%';".format(xrefs))
             elif cve:
                 if regexp:
                     # Enable regex
-                    asset_query = ("select * from vulns where cves REGEXP '{}';".format(cve))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.cves REGEXP '{}';".format(cve))
                 else:
                     # no regex
-                    asset_query = ("select * from vulns where cves LIKE '%{}%';".format(cve))
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
+                                   "vulns.plugin_id = plugins.plugin_id left join zipper on"
+                                   "plugins.plugin_id = zipper.plugin_id where vulns.cves LIKE '%{}%';".format(cve))
             else:
                 if click.confirm('You didn\'t make a selection...Use "--help" to see all options.\n'
                                  'Do you want to Export all vulns?\n'):
-                    asset_query = "select * from vulns;"
+
+                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                                   "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                                   "left join zipper on plugins.plugin_id = zipper.plugin_id;")
 
         click.echo("\nExporting your data now; with the following query:\n{}\n "
                    "Saving {}.csv now...\n".format(asset_query, file))
