@@ -247,20 +247,12 @@ def insert_vulns(conn, vulns):
                             score,
                             exploit,
                             xrefs,
-                            synopsis, 
-                            see_also,
+                            synopsis,
                             solution,
                             version, 
                             description, 
-                            cvss3_base_score,
-                            cvss3_temporal_score,
-                            cvss_base_score,
-                            cvss_temporal_score,
                             OSes,
-                            publication_date,
-                            patch_publication_date,
-                            url
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
@@ -372,8 +364,6 @@ def insert_plugins(conn, exploit_data):
                      exploitability_ease,
                      exploited_by_malware,
                      exploited_by_nessus,
-                     family,
-                     family_id,
                      has_patch,
                      has_workaround,
                      in_the_news,
@@ -389,7 +379,7 @@ def insert_plugins(conn, exploit_data):
                      vpr_updated,
                      cpe,
                      url
-                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     exploit_cur = conn.cursor()
     exploit_cur.execute('pragma journal_mode=wal;')
     exploit_cur.execute(sql_plugins, exploit_data)

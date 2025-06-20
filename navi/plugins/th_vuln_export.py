@@ -175,20 +175,35 @@ def parse_data(chunk_data, chunk_number):
                         exploit_list.append(" ")
 
                     try:
+                        see_also = vulns['plugin']['see_also']
+                        exploit_list.append(str(see_also))
+                    except KeyError:
+                        exploit_list.append(" ")
+
+                    try:
+                        cvss3_base_score = vulns['plugin']['cvss3_base_score']
+                        exploit_list.append(str(cvss3_base_score))
+                    except KeyError:
+                        exploit_list.append(" ")
+
+                    try:
+                        cvss3_temporal_score = vulns['plugin']['cvss3_temporal_score']
+                        exploit_list.append(str(cvss3_temporal_score))
+                    except KeyError:
+                        exploit_list.append(" ")
+
+                    try:
+                        cvss_base_score = vulns['plugin']['cvss_base_score']
+                        exploit_list.append(str(cvss_base_score))
+                    except KeyError:
+                        exploit_list.append(" ")
+
+                    try:
                         synopsis = vulns['plugin']['synopsis']
 
                         vuln_list.append(str(synopsis))
                     except KeyError:
                         vuln_list.append(" ")
-
-                    try:
-                        see_also = vulns['plugin']['see_also']
-
-                        vuln_list.append(str(see_also))
-                        exploit_list.append(str(see_also))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
 
                     try:
                         solution = vulns['plugin']['solution']
@@ -212,40 +227,6 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(" ")
 
                     try:
-                        cvss3_base_score = vulns['plugin']['cvss3_base_score']
-
-                        vuln_list.append(str(cvss3_base_score))
-                        exploit_list.append(str(cvss3_base_score))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
-
-                    try:
-                        cvss3_temporal_score = vulns['plugin']['cvss3_temporal_score']
-
-                        vuln_list.append(str(cvss3_temporal_score))
-                        exploit_list.append(str(cvss3_temporal_score))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
-
-                    try:
-                        cvss_base_score = vulns['plugin']['cvss_base_score']
-
-                        vuln_list.append(str(cvss_base_score))
-                        exploit_list.append(str(cvss_base_score))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
-
-                    try:
-                        cvss_temporal_score = vulns['plugin']['cvss_temporal_score']
-
-                        vuln_list.append(str(cvss_temporal_score))
-                    except KeyError:
-                        vuln_list.append(" ")
-
-                    try:
                         oses = vulns['asset']['operating_system']
 
                         vuln_list.append(str(oses))
@@ -254,20 +235,14 @@ def parse_data(chunk_data, chunk_number):
 
                     try:
                         pub_date = vulns['plugin']['publication_date']
-
-                        vuln_list.append(str(pub_date))
                         exploit_list.append(str(pub_date))
                     except KeyError:
-                        vuln_list.append(" ")
                         exploit_list.append(" ")
 
                     try:
                         patch_date = vulns['plugin']['patch_publication_date']
-
-                        vuln_list.append(str(patch_date))
                         exploit_list.append(str(patch_date))
                     except KeyError:
-                        vuln_list.append(" ")
                         exploit_list.append(" ")
 
                     try:
@@ -324,18 +299,6 @@ def parse_data(chunk_data, chunk_number):
                     try:
                         exploited_by_nessus = vulns['plugin']['exploited_by_nessus']
                         exploit_list.append(str(exploited_by_nessus))
-                    except KeyError:
-                        exploit_list.append(" ")
-
-                    try:
-                        family = vulns['plugin']['family']
-                        exploit_list.append(family)
-                    except KeyError:
-                        exploit_list.append(" ")
-
-                    try:
-                        family_id = vulns['plugin']['family_id']
-                        exploit_list.append(family_id)
                     except KeyError:
                         exploit_list.append(" ")
 
