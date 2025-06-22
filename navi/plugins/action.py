@@ -599,7 +599,6 @@ def network(nid):
     except AttributeError as e:
         error_msg(e)
 
-
 @action.command(help="Automate Navi tasks from a Spreadsheet")
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
 @click.option('-v', is_flag=True, help="enable Verbosity and print navi commands to the screen")

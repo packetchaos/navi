@@ -123,7 +123,8 @@ def create_assets_table():
                             first_found text,
                             last_found text, 
                             operating_system text,
-                            mac_address text, 
+                            mac_address text,
+                            netbios_names text, 
                             agent_uuid text,
                             last_licensed_scan_date text,
                             network text,
@@ -361,3 +362,16 @@ def create_passwords_table():
                             password text
                             );"""
     create_table(ssh_conn, ssh_table)
+
+
+def create_vuln_route_table():
+    database = r"navi.db"
+    vuln_route_conn = new_db_connection(database)
+    route_table = """CREATE TABLE IF NOT EXISTS vuln_route (
+                            route_id integer Primary Key,
+                            app_name text,
+                            plugin_list text,
+                            total_vulns text,
+                            vuln_type text
+                            );"""
+    create_table(vuln_route_conn, route_table)

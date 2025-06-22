@@ -1843,3 +1843,16 @@ def software(missing, stats, greater_than, less_than):
     else:
         click.echo("\nYou may want to select an option.  use '--help' for options. Here are the stats:\n\n")
         display_stats()
+
+
+@data.command(help="Display all Vulnerability Routes by Application or OS")
+def route():
+    routes = db_query("select * from vuln_route;")
+
+    click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
+                                                     "Plugin ID Summary", "Total instances"))
+    click.echo("-" * 150)
+    click.echo()
+    for path in routes:
+        click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
+                                                         textwrap.shorten(path[2], width=70), path[3]))

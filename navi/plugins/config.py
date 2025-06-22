@@ -11,8 +11,8 @@ from .tagrule_export import export_tags
 from .epss import update_navi_with_epss, zipper_epss_plugin
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
-                       create_certs_table, create_plugins_table, create_agents_table)
-from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software,
+                       create_certs_table, create_plugins_table, create_agents_table, create_vuln_route_table)
+from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software, insert_vuln_router,
                        insert_certificates)
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
@@ -509,6 +509,79 @@ def grab_data_info():
     click.echo("Application Count: {}".format(application_count))
     click.echo("EPSS CVE Count: {}".format(epss_count))
     click.echo()
+
+
+def group_by_plugins():
+    click.echo("\nCreating a Vulnerability Routing Table called vuln-routes\n\n")
+    database = r"navi.db"
+    route_conn = new_db_connection(database)
+    drop_tables(route_conn, 'vuln_route')
+    create_vuln_route_table()
+
+    data = db_query("select name, plugin_id from plugins where severity !='info';")
+    oses = db_query("select distinct OSes from vulns;")
+
+    with route_conn:
+        route_id = 0
+        grouped_plugins = {}
+
+        for name, plugin_id in data:
+            parts = name.split()
+
+            first_part = parts[0].upper()
+
+            # Special rule for 'KB' or 'MS'
+            if first_part.startswith("KB") or first_part.startswith("MS") or first_part.startswith("MICROSOFT"):
+                key = "Windows"
+            elif first_part == "DEBIAN":
+                key = "Debian"
+            elif len(parts) >= 1:
+                key = f"{parts[0]} {parts[1]}"
+            else:
+                key = parts[0]
+
+            if key not in grouped_plugins:
+                grouped_plugins[key] = []
+
+            grouped_plugins[key].append(plugin_id)
+        list_of_oses = []
+
+        #print(oses)
+        for os in oses:
+            new_os = os[0]
+            try:
+                new_list = eval(new_os)
+            except:
+                new_list = new_os
+
+            for i in new_list:
+                if i not in list_of_oses:
+                    list_of_oses.append(i)
+
+        # Print the result
+        print("Application", "Total Plugins", "Total vulns", "Type")
+        db_list = []
+        for group, plugin_ids in grouped_plugins.items():
+            total = 0
+            db_list = []
+            first_word = group.split(" ")
+            if str(first_word[0]) in str(list_of_oses):
+                vuln_type = "Operating System"
+            else:
+                vuln_type = "Application"
+
+            for plugin_inst in plugin_ids:
+                plugin_count = db_query("select count(*) from vulns where plugin_id='{}'".format(plugin_inst))
+                total += plugin_count[0][0]
+            route_id += 1
+            db_list.append(route_id)
+            db_list.append(group)
+            db_list.append(str(plugin_ids))
+            db_list.append(total)
+            db_list.append(str(vuln_type))
+            insert_vuln_router(route_conn, db_list)
+
+            print(f"{group}: {len(plugin_ids)} {total} {vuln_type}")
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
@@ -1484,6 +1557,7 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("    Updating the Vulns and Plugins Tables from the vulns export API")
     click.echo("-" * 70)
     vuln_export(30, "0", threads, c, v, list(state), list(severity))
+    group_by_plugins()
 
     click.echo("*" * 70)
     click.echo("    Updating the Assets and Tags Tables from the asset export API")
@@ -1543,3 +1617,7 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
 def zipper():
     zipper_epss_plugin()
 
+
+@update.command(help="Group Plugins by Application/Operating system for routing vulns")
+def route():
+    group_by_plugins()

@@ -1,12 +1,11 @@
 import click
 from .api_wrapper import request_data, tenb_connection, grab_headers
-from sqlite3 import Error
 import time
 import uuid
 import csv
 import textwrap
 import json
-from .database import db_query, new_db_connection
+from .database import db_query
 
 
 tio = tenb_connection()

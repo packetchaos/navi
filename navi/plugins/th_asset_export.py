@@ -75,6 +75,11 @@ def parse_data(chunk_data):
                 csv_list.append(" ")
 
             try:
+                csv_list.append(assets['netbios_names'][0])
+            except IndexError:
+                csv_list.append(" ")
+
+            try:
                 csv_list.append(assets['agent_uuid'])
             except KeyError:
                 csv_list.append(" ")

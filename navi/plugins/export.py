@@ -451,3 +451,16 @@ def compare(uuid):
                     agent_writer.writerow(csv_update_list)
 
     click.echo("\nYou're export: cve_compare_{}.csv is finished\n".format(uuid))
+
+
+@export.command(help="Export vulnerabilities by route ID")
+@click.argument('route_id')
+def route(route_id):
+    route_info = db_query("select * from vuln_route where route_id='{}'".format(route_id))
+
+    vulns_to_route = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                      "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                      "left join zipper on plugins.plugin_id = zipper.plugin_id "
+                      "where vulns.plugin_name REGEXP '{}';".format(route_info[0][1]))
+
+    export_query(vulns_to_route, "route_{}".format(route_id))

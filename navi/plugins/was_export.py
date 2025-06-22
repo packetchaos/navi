@@ -21,7 +21,7 @@ def vuln_counter(plugin_id, scan_uuid):
     conn = new_db_connection(database)
     with conn:
         cur = conn.cursor()
-        cur.execute("SELECT count(*) from plugins where plugin_id =='{}' and scan_uuid=='{}';".format(plugin_id, scan_uuid))
+        cur.execute("SELECT count(*) from findings where plugin_id =='{}' and scan_uuid=='{}';".format(plugin_id, scan_uuid))
 
         plugin_data = cur.fetchall()
 
@@ -225,7 +225,7 @@ def grab_scans(days):
     app_conn.execute('pragma journal_mode=wal;')
 
     drop_tables(app_conn, 'apps')
-    drop_tables(app_conn, 'plugins')
+    drop_tables(app_conn, 'findings')
 
     create_apps_table()
 

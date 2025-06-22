@@ -118,7 +118,8 @@ def insert_assets(conn, assets):
                                           first_found, 
                                           last_found, 
                                           operating_system,
-                                          mac_address, 
+                                          mac_address,
+                                          netbios_names, 
                                           agent_uuid, 
                                           last_licensed_scan_date, 
                                           network, 
@@ -138,7 +139,7 @@ def insert_assets(conn, assets):
                                           azure_subscription_id,
                                           azure_type,
                                           azure_vm_id,
-                                          url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                                          url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, assets)
@@ -340,6 +341,18 @@ def insert_epss(conn2, epss_data):
     epss_cur = conn2.cursor()
     epss_cur.execute('pragma journal_mode=wal;')
     epss_cur.execute(sql_epss, epss_data)
+
+
+def insert_vuln_router(conn2, route_data):
+    sql_router = '''INSERT or IGNORE into vuln_route(
+                            route_id,
+                            app_name,
+                            plugin_list,
+                            total_vulns,
+                            vuln_type) VALUES(?,?,?,?,?)'''
+    epss_cur = conn2.cursor()
+    epss_cur.execute('pragma journal_mode=wal;')
+    epss_cur.execute(sql_router, route_data)
 
 
 def insert_plugins(conn, exploit_data):
