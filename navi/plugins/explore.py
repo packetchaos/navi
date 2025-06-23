@@ -8,7 +8,7 @@ import click
 import pprint
 import textwrap
 from .error_msg import error_msg
-from .config import grab_data_info
+from .config import grab_data_info, display_routes
 from .query_export import query_export
 
 
@@ -1852,11 +1852,14 @@ def software(missing, stats, greater_than, less_than):
 def route(exp, route_id):
 
     if route_id:
-        starts_with = db_query("select app_name from vuln_route where route_id='{}'".format(route_id))
+        route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
+
+        work = str(route_info[0][0]).replace("[", "(").replace("]",")")
 
         vuln_data = db_query("select vulns.plugin_id, vulns.plugin_name, vulns.score, epss_value from vulns "
                              "left join zipper on vulns.plugin_id = zipper.plugin_id "
-                             "where plugin_name REGEXP '^{}' and vulns.severity !='info' order by vulns.score DESC;".format(starts_with[0][0]))
+                             "where vulns.plugin_id in {} and vulns.severity !='info' "
+                             "order by vulns.score DESC;".format(work))
 
         click.echo("{:8} {:10} {:70} {:10} {:10}".format("Route ID", "Plugin ID", "Plugin Name", "VPR Score", "EPSS"))
         click.echo("-" * 150)
@@ -1871,14 +1874,7 @@ def route(exp, route_id):
                                                              textwrap.shorten(str(path[1]), width=70), str(path[2]), str(epss_score)))
 
     else:
-        routes = db_query("select * from vuln_route;")
+        display_routes()
 
-        click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
-                                                         "Plugin ID Summary", "Total instances"))
-        click.echo("-" * 150)
-        click.echo()
-        for path in routes:
-            click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
-                                                             textwrap.shorten(path[2], width=70), path[3]))
         if exp:
             query_export("select * From vuln_route;", "Navi_routes")

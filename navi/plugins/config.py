@@ -2,6 +2,7 @@ import click
 import pprint
 import getpass
 import datetime
+import textwrap
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
 from .th_compliance_export import compliance_export
@@ -511,6 +512,17 @@ def grab_data_info():
     click.echo()
 
 
+def display_routes():
+    routes = db_query("select * from vuln_route;")
+
+    click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
+                                                     "Plugin ID Summary", "Total instances"))
+    click.echo("-" * 150)
+    click.echo()
+    for path in routes:
+        click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
+                                                         textwrap.shorten(path[2], width=70), path[3]))
+
 def group_by_plugins():
     click.echo("\nCreating a Vulnerability Routing Table called vuln-routes\n\n")
     database = r"navi.db"
@@ -529,14 +541,31 @@ def group_by_plugins():
             parts = name.split()
 
             first_part = parts[0].upper()
+            second_part = parts[1].upper()
 
-            # Special rule for 'KB' or 'MS'
+            # Vuln Route Data Pipeline / Transform logic
             if first_part.startswith("KB") or first_part.startswith("MS") or first_part.startswith("MICROSOFT"):
                 key = "Windows"
+            elif first_part.startswith("SECURITY"):
+                key = "Internet Explorer"
+            elif first_part.startswith(".SVN"):
+                key = "HTTP"
             elif first_part == "DEBIAN":
                 key = "Debian"
+            elif first_part == "APACHE":
+                key = "Apache"
+            elif "JIRA" in first_part or "JIRA" in second_part:
+                key = "Jira"
+            elif first_part == "UBUNTU" or second_part == "UBUNTU":
+                key = "Ubuntu"
+            elif first_part.startswith("URLLIB3") or second_part.startswith("PYTHON"):
+                key = "Python"
+            elif first_part.startswith("ESX") or second_part.startswith("ESX"):
+                key = "Vmware ESXI"
+            elif parts[0] == "SSL" or parts[0] == "SSLv3" or parts[0] == "TLS":
+                key = "SSL/TLS"
             elif len(parts) >= 1:
-                key = f"{parts[0]} {parts[1]}"
+                key = f"{parts[0]}"
             else:
                 key = parts[0]
 
@@ -546,7 +575,6 @@ def group_by_plugins():
             grouped_plugins[key].append(plugin_id)
         list_of_oses = []
 
-        #print(oses)
         for os in oses:
             new_os = os[0]
             try:
@@ -558,13 +586,10 @@ def group_by_plugins():
                 if i not in list_of_oses:
                     list_of_oses.append(i)
 
-        # Print the result
-        print("Application", "Total Plugins", "Total vulns", "Type")
-        db_list = []
-        for group, plugin_ids in grouped_plugins.items():
+        for plugin_group, plugin_ids in grouped_plugins.items():
             total = 0
             db_list = []
-            first_word = group.split(" ")
+            first_word = plugin_group.split(" ")
             if str(first_word[0]) in str(list_of_oses):
                 vuln_type = "Operating System"
             else:
@@ -575,13 +600,13 @@ def group_by_plugins():
                 total += plugin_count[0][0]
             route_id += 1
             db_list.append(route_id)
-            db_list.append(group)
+            db_list.append(plugin_group)
             db_list.append(str(plugin_ids))
             db_list.append(total)
             db_list.append(str(vuln_type))
             insert_vuln_router(route_conn, db_list)
 
-            print(f"{group}: {len(plugin_ids)} {total} {vuln_type}")
+    display_routes()
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "

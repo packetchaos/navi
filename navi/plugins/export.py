@@ -456,11 +456,14 @@ def compare(uuid):
 @export.command(help="Export vulnerabilities by route ID")
 @click.argument('route_id')
 def route(route_id):
-    route_info = db_query("select * from vuln_route where route_id='{}'".format(route_id))
+    route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
+
+    work = str(route_info[0][0]).replace("[", "(").replace("]",")")
 
     vulns_to_route = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
                       "left join plugins on vulns.plugin_id = plugins.plugin_id "
                       "left join zipper on plugins.plugin_id = zipper.plugin_id "
-                      "where vulns.plugin_name REGEXP '{}';".format(route_info[0][1]))
+                      "vulns.plugin_id in {} and vulns.severity !='info' "
+                      "order by vulns.score DESC;".format(work))
 
     export_query(vulns_to_route, "route_{}".format(route_id))
