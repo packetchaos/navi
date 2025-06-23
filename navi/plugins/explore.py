@@ -9,6 +9,7 @@ import pprint
 import textwrap
 from .error_msg import error_msg
 from .config import grab_data_info
+from .query_export import query_export
 
 
 tio = tenb_connection()
@@ -1846,13 +1847,38 @@ def software(missing, stats, greater_than, less_than):
 
 
 @data.command(help="Display all Vulnerability Routes by Application or OS")
-def route():
-    routes = db_query("select * from vuln_route;")
+@click.option("--route_id", default=None, help="View/Validate the Route by Route ID")
+@click.option("-exp", "-export", is_flag=True, help="Export All routes(What Navi displays)")
+def route(exp, route_id):
 
-    click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
-                                                     "Plugin ID Summary", "Total instances"))
-    click.echo("-" * 150)
-    click.echo()
-    for path in routes:
-        click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
-                                                         textwrap.shorten(path[2], width=70), path[3]))
+    if route_id:
+        starts_with = db_query("select app_name from vuln_route where route_id='{}'".format(route_id))
+
+        vuln_data = db_query("select vulns.plugin_id, vulns.plugin_name, vulns.score, epss_value from vulns "
+                             "left join zipper on vulns.plugin_id = zipper.plugin_id "
+                             "where plugin_name REGEXP '^{}' and vulns.severity !='info' order by vulns.score DESC;".format(starts_with[0][0]))
+
+        click.echo("{:8} {:10} {:70} {:10} {:10}".format("Route ID", "Plugin ID", "Plugin Name", "VPR Score", "EPSS"))
+        click.echo("-" * 150)
+        click.echo()
+        for path in vuln_data:
+            try:
+                epss_score = path[3]
+            except TypeError:
+                epss_score = "NO SCORE"
+
+            click.echo("{:8} {:10} {:70} {:10} {:10}".format(route_id, str(path[0]),
+                                                             textwrap.shorten(str(path[1]), width=70), str(path[2]), str(epss_score)))
+
+    else:
+        routes = db_query("select * from vuln_route;")
+
+        click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
+                                                         "Plugin ID Summary", "Total instances"))
+        click.echo("-" * 150)
+        click.echo()
+        for path in routes:
+            click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
+                                                             textwrap.shorten(path[2], width=70), path[3]))
+        if exp:
+            query_export("select * From vuln_route;", "Navi_routes")
