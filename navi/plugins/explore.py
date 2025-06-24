@@ -1856,12 +1856,14 @@ def route(exp, route_id):
 
         work = str(route_info[0][0]).replace("[", "(").replace("]",")")
 
-        vuln_data = db_query("select vulns.plugin_id, vulns.plugin_name, vulns.score, epss_value from vulns "
+        vuln_data = db_query("select vulns.plugin_id, vulns.plugin_name, vulns.score, zipper.epss_value, "
+                             "vulns.asset_uuid from vulns "
                              "left join zipper on vulns.plugin_id = zipper.plugin_id "
                              "where vulns.plugin_id in {} and vulns.severity !='info' "
                              "order by vulns.score DESC;".format(work))
 
-        click.echo("{:8} {:10} {:70} {:10} {:10}".format("Route ID", "Plugin ID", "Plugin Name", "VPR Score", "EPSS"))
+        click.echo("{:8} {:10} {:70} {:10} {:10} {}".format("Route ID", "Plugin ID", "Plugin Name", "VPR Score",
+                                                                  "EPSS", "Asset UUID"))
         click.echo("-" * 150)
         click.echo()
         for path in vuln_data:
@@ -1870,8 +1872,8 @@ def route(exp, route_id):
             except TypeError:
                 epss_score = "NO SCORE"
 
-            click.echo("{:8} {:10} {:70} {:10} {:10}".format(route_id, str(path[0]),
-                                                             textwrap.shorten(str(path[1]), width=70), str(path[2]), str(epss_score)))
+            click.echo("{:8} {:10} {:70} {:10} {:10} {}".format(route_id, str(path[0]),
+                                                             textwrap.shorten(str(path[1]), width=70), str(path[2]), str(epss_score), str(path[4])))
 
     else:
         display_routes()

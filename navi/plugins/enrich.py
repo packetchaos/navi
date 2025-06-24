@@ -374,8 +374,9 @@ def migrate(region, a, s):
 @click.option('--byadgroup', default='', help="Create Tags based on AD groups in a CSV")
 @click.option('-regexp', is_flag=True, help="Use a Regular expression instead of a "
                                             "text search; requires another option")
+@click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed, byadgroup, regexp):
+        manual, histid, missed, byadgroup, regexp, route_id):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -785,6 +786,19 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                         print("tag --c AD Groups --v {}".format(key))
                         tag_list.append(x[1])
             tag_by_uuid(tag_list, c="AD Groups", v=key, d="AD Groups tagged by navi")
+
+    if route_id:
+        route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
+
+        work = str(route_info[0][0]).replace("[", "(").replace("]", ")")
+
+        vulns_to_route = db_query("select assets.uuid from assets left join vulns on assets.uuid = vulns.asset_uuid "
+                                  "where vulns.plugin_id in {} and vulns.severity !='info';".format(work))
+
+        for assets in vulns_to_route:
+            tag_list.append(assets[0])
+
+        tag_by_uuid(tag_list, c, v, d)
 
 
 @enrich.command(help="Create Tag rules in tenable VM")

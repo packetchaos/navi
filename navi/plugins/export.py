@@ -462,7 +462,7 @@ def route(route_id):
 
     vulns_to_route = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
                       "left join plugins on vulns.plugin_id = plugins.plugin_id "
-                      "left join zipper on plugins.plugin_id = zipper.plugin_id "
+                      "left join zipper on plugins.plugin_id = zipper.plugin_id where "
                       "vulns.plugin_id in {} and vulns.severity !='info' "
                       "order by vulns.score DESC;".format(work))
 

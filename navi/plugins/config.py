@@ -523,6 +523,7 @@ def display_routes():
         click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
                                                          textwrap.shorten(path[2], width=70), path[3]))
 
+
 def group_by_plugins():
     click.echo("\nCreating a Vulnerability Routing Table called vuln-routes\n\n")
     database = r"navi.db"
@@ -550,22 +551,30 @@ def group_by_plugins():
                 key = "Internet Explorer"
             elif first_part.startswith(".SVN"):
                 key = "HTTP"
+            elif first_part.startswith("PHP"):
+                key = "PHP"
+            elif first_part.startswith("SSH"):
+                key = "SSH"
+            elif first_part.startswith("OPENJDK"):
+                key = "OpenJDK"
+            elif first_part.startswith("JENKINS"):
+                key = "Jenkins"
             elif first_part == "DEBIAN":
                 key = "Debian"
             elif first_part == "APACHE":
                 key = "Apache"
             elif "JIRA" in first_part or "JIRA" in second_part:
-                key = "Jira"
+                key = "Atlassian Jira"
             elif first_part == "UBUNTU" or second_part == "UBUNTU":
                 key = "Ubuntu"
-            elif first_part.startswith("URLLIB3") or second_part.startswith("PYTHON"):
+            elif first_part.startswith("PYTHON") or second_part.startswith("PYTHON"):
                 key = "Python"
             elif first_part.startswith("ESX") or second_part.startswith("ESX"):
                 key = "Vmware ESXI"
-            elif parts[0] == "SSL" or parts[0] == "SSLv3" or parts[0] == "TLS":
-                key = "SSL/TLS"
+            elif first_part.startswith("SSL") or first_part.startswith("TLS") or first_part.startswith("OPENSSL"):
+                key = "SSH/TLS"
             elif len(parts) >= 1:
-                key = f"{parts[0]}"
+                key = f"{parts[0]} {parts[1]}"
             else:
                 key = parts[0]
 
