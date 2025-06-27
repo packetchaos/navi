@@ -225,7 +225,6 @@ def asset_export(days, ex_uuid, threads, category, value):
     # Crete a new connection to our database
     database = r"navi.db"
     drop_conn = new_db_connection(database)
-    drop_tables(drop_conn, 'assets')
     drop_tables(drop_conn, 'tags')
 
     # Set URLS for threading

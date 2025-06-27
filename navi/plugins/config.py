@@ -514,7 +514,7 @@ def grab_data_info():
 
 
 def display_routes():
-    routes = db_query("select * from vuln_route;")
+    routes = db_query("select * from vuln_route ORDER BY app_name;")
 
     click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
                                                      "Plugin ID Summary", "Total instances"))
@@ -540,16 +540,16 @@ def group_by_plugins():
 
         for name, plugin_id in data:
             parts = name.split()
-
+            clean_second_part = str(parts[1]).replace("<", " ")
             first_part = parts[0].upper()
-            second_part = parts[1].upper()
+            second_part = clean_second_part.upper()
 
             # Vuln Route Data Pipeline / Transform logic
             if first_part.startswith("KB") or first_part.startswith("MS"):
                 key = "Windows Updates"
             elif first_part.startswith("SECURITY"):
                 key = "Internet Explorer"
-            elif first_part.startswith("GIT FOR WINDOWS"):
+            elif first_part.startswith("GIT") and second_part.startswith("FOR"):
                 key = "Git for Windows"
             elif first_part.startswith(".SVN"):
                 key = "HTTP"
@@ -574,18 +574,18 @@ def group_by_plugins():
             elif first_part.startswith("SSL") or first_part.startswith("TLS") or first_part.startswith("OPENSSL"):
                 key = "SSH/TLS"
             elif len(parts) >= 1:
-                key = f"{parts[0]} {parts[1]}"
+                key = f"{parts[0]} {clean_second_part}"
             else:
                 key = parts[0]
 
-            clean_key = str(key).replace("<", "")
-            if clean_key not in grouped_plugins:
+
+            if key not in grouped_plugins:
                 grouped_plugins[key] = []
 
             grouped_plugins[key].append(plugin_id)
         list_of_oses = []
 
-        # grab all of the OSes detected to use as our base-line
+        # grab all the OSes detected to use as our base-line
         oses = db_query("select distinct OSes from vulns;")
         for os in oses:
             new_os = os[0]
@@ -649,7 +649,8 @@ def search_for_path():
                   (?:\.{1,2}/|/)(?:[\w.-]+/)*[\w.-]{3,}           # Unix-style paths
                 )'''
 
-    search_outputs_for_paths = db_query("select plugin_id, asset_uuid, output from vulns where severity !='info';")
+    search_outputs_for_paths = db_query("select plugin_id, asset_uuid, finding_id, output "
+                                        "from vulns where severity !='info';")
     with path_conn:
         path_id = 0
         for plugin_text in search_outputs_for_paths:
@@ -684,6 +685,7 @@ def search_for_path():
                     path_list.append(plugin_text[0])
                     path_list.append(m)
                     path_list.append(plugin_text[1])
+                    path_list.append(plugin_text[2])
                     insert_vuln_paths(path_conn, path_list)
     vuln_paths = db_query("select * from vuln_paths;")
     display_paths(vuln_paths)

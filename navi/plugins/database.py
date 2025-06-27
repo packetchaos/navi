@@ -361,7 +361,8 @@ def insert_vuln_paths(conn2, path_data):
                             path_id,
                             plugin_id,
                             path,
-                            asset_uuid) VALUES(?,?,?,?)'''
+                            asset_uuid,
+                            finding_id) VALUES(?,?,?,?,?)'''
     epss_cur = conn2.cursor()
     epss_cur.execute('pragma journal_mode=wal;')
     epss_cur.execute(sql_router, path_data)

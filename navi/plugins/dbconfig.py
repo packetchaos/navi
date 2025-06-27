@@ -385,6 +385,7 @@ def create_vuln_path_table():
                             path_id integer Primary Key,
                             plugin_id text,
                             path text,
-                            asset_uuid text
+                            asset_uuid text,
+                            finding_id text
                             );"""
     create_table(vuln_path_conn, path_table)
