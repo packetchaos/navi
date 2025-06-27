@@ -40,7 +40,7 @@ def db_query(statement):
             query_conn.create_function("REGEXP", 2, regexp)
             cur = query_conn.cursor()
             cur.execute('pragma journal_mode=wal;')
-            cur.execute('pragma cache_size=-10000;')
+            cur.execute('pragma cache_size=-100000;')
             cur.execute('PRAGMA synchronous = OFF')
             cur.execute('pragma threads=4')
             cur.execute(statement)
@@ -80,7 +80,7 @@ def insert_update_info(conn, diff):
 
 
 def insert_compliance(conn, compliance):
-    sql = '''INSERT or IGNORE into compliance(
+    sql = '''INSERT or REPLACE into compliance(
                                               asset_uuid, 
                                               actual_value, 
                                               audit_file, 
@@ -110,7 +110,7 @@ def insert_zipper(conn, zipper):
 
 
 def insert_assets(conn, assets):
-    sql = '''INSERT or IGNORE into assets(
+    sql = '''INSERT or REPLACE into assets(
                                           ip_address, 
                                           hostname, 
                                           fqdn, 
