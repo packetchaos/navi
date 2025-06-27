@@ -8,7 +8,7 @@ import click
 import pprint
 import textwrap
 from .error_msg import error_msg
-from .config import grab_data_info, display_routes
+from .config import grab_data_info, display_routes, display_paths
 from .query_export import query_export
 
 
@@ -1880,3 +1880,21 @@ def route(exp, route_id):
 
         if exp:
             query_export("select * From vuln_route;", "Navi_routes")
+
+
+@data.command(help="Display All paths found")
+@click.option("--route_id", default=None, help="View/Validate the Route by Route ID")
+@click.option("--plugin_id", default=None, help="Export All routes(What Navi displays)")
+def paths(plugin_id, route_id):
+    if route_id:
+        route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
+
+        work = str(route_info[0][0]).replace("[", "(").replace("]", ")")
+        vuln_paths = db_query("select * from vuln_paths where plugin_id in {};".format(work))
+
+    elif plugin_id:
+        vuln_paths = db_query("select * from vuln_paths where plugin_id='{}';".format(plugin_id))
+    else:
+        vuln_paths = db_query("select * from vuln_paths;")
+
+    display_paths(vuln_paths)

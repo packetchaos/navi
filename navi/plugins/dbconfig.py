@@ -37,6 +37,7 @@ def create_vulns_table():
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_table = """CREATE TABLE IF NOT EXISTS vulns (
+                            finding_id text PRIMARY KEY,
                             asset_ip text, 
                             asset_uuid text, 
                             asset_hostname text, 
@@ -220,7 +221,7 @@ def create_tagrules_table():
     database = r"navi.db"
     tag_conn = new_db_connection(database)
     create_tags_table = """CREATE TABLE IF NOT EXISTS tagrules (
-                        category_uunaviid text,
+                        category_uuid text,
                         key text,
                         value_uuid text,
                         value text,
@@ -375,3 +376,15 @@ def create_vuln_route_table():
                             vuln_type text
                             );"""
     create_table(vuln_route_conn, route_table)
+
+
+def create_vuln_path_table():
+    database = r"navi.db"
+    vuln_path_conn = new_db_connection(database)
+    path_table = """CREATE TABLE IF NOT EXISTS vuln_paths (
+                            path_id integer Primary Key,
+                            plugin_id text,
+                            path text,
+                            asset_uuid text
+                            );"""
+    create_table(vuln_path_conn, path_table)

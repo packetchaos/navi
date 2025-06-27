@@ -226,7 +226,8 @@ def drop_tables(conn, table):
 
 
 def insert_vulns(conn, vulns):
-    sql = '''INSERT or IGNORE into vulns(
+    sql = '''INSERT or REPLACE into vulns(
+                            finding_id,
                             asset_ip, 
                             asset_uuid, 
                             asset_hostname, 
@@ -253,7 +254,7 @@ def insert_vulns(conn, vulns):
                             version, 
                             description, 
                             OSes,
-                            url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
@@ -353,6 +354,17 @@ def insert_vuln_router(conn2, route_data):
     epss_cur = conn2.cursor()
     epss_cur.execute('pragma journal_mode=wal;')
     epss_cur.execute(sql_router, route_data)
+
+
+def insert_vuln_paths(conn2, path_data):
+    sql_router = '''INSERT or IGNORE into vuln_paths(
+                            path_id,
+                            plugin_id,
+                            path,
+                            asset_uuid) VALUES(?,?,?,?)'''
+    epss_cur = conn2.cursor()
+    epss_cur.execute('pragma journal_mode=wal;')
+    epss_cur.execute(sql_router, path_data)
 
 
 def insert_plugins(conn, exploit_data):

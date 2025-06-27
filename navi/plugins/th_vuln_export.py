@@ -28,7 +28,7 @@ def parse_data(chunk_data, chunk_number):
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
     vuln_conn.execute('pragma journal_mode=wal;')
-    vuln_conn.execute('pragma cashe_size=-10000')
+    vuln_conn.execute('pragma cashe_size=-1000000')
     vuln_conn.execute('pragma synchronous=OFF')
     with vuln_conn:
         try:
@@ -37,8 +37,14 @@ def parse_data(chunk_data, chunk_number):
                 # create a blank list to append asset details
                 vuln_list = []
                 exploit_list = []
-                # Try block to ignore assets without IPs
+
                 try:
+                    try:
+                        finding_id = vulns['finding_id']
+                        vuln_list.append(finding_id)
+                    except KeyError:
+                        click.echo("Every vuln should have a finding Id")
+                        vuln_list.append("0")
                     try:
                         ipv4 = vulns['asset']['ipv4']
                         vuln_list.append(ipv4)
@@ -420,9 +426,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
     drop_conn.execute('pragma journal_mode=wal;')
 
     # Right now we just drop the table.  Eventually I will actually update the database
-    drop_tables(drop_conn, 'vulns')
     drop_tables(drop_conn, 'plugins')
-    create_vulns_table()
     create_plugins_table()
 
     # Set URLS for threading
@@ -513,9 +517,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
 
         click.echo("\nCreating a few indexes to make queries faster.\n")
         db_query("CREATE INDEX vulns_plugin_id on vulns (plugin_id);")
-        db_query("CREATE INDEX vulns_ports on vulns (port);")
         db_query("CREATE INDEX vulns_uuid on vulns (asset_uuid);")
-        db_query("CREATE INDEX vulns_cves on vulns (cves);")
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")

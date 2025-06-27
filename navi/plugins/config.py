@@ -12,9 +12,10 @@ from .tagrule_export import export_tags
 from .epss import update_navi_with_epss, zipper_epss_plugin
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
-                       create_certs_table, create_plugins_table, create_agents_table, create_vuln_route_table)
+                       create_certs_table, create_plugins_table, create_agents_table, create_vuln_route_table,
+                       create_vuln_path_table)
 from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software, insert_vuln_router,
-                       insert_certificates)
+                       insert_certificates, insert_vuln_paths)
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from .agent_to_db import download_agent_data
@@ -532,7 +533,6 @@ def group_by_plugins():
     create_vuln_route_table()
 
     data = db_query("select name, plugin_id from plugins where severity !='info';")
-    oses = db_query("select distinct OSes from vulns;")
 
     with route_conn:
         route_id = 0
@@ -545,10 +545,12 @@ def group_by_plugins():
             second_part = parts[1].upper()
 
             # Vuln Route Data Pipeline / Transform logic
-            if first_part.startswith("KB") or first_part.startswith("MS") or first_part.startswith("MICROSOFT"):
-                key = "Windows"
+            if first_part.startswith("KB") or first_part.startswith("MS"):
+                key = "Windows Updates"
             elif first_part.startswith("SECURITY"):
                 key = "Internet Explorer"
+            elif first_part.startswith("GIT FOR WINDOWS"):
+                key = "Git for Windows"
             elif first_part.startswith(".SVN"):
                 key = "HTTP"
             elif first_part.startswith("PHP"):
@@ -561,8 +563,6 @@ def group_by_plugins():
                 key = "Jenkins"
             elif first_part == "DEBIAN":
                 key = "Debian"
-            elif first_part == "APACHE":
-                key = "Apache"
             elif "JIRA" in first_part or "JIRA" in second_part:
                 key = "Atlassian Jira"
             elif first_part == "UBUNTU" or second_part == "UBUNTU":
@@ -578,19 +578,23 @@ def group_by_plugins():
             else:
                 key = parts[0]
 
-            if key not in grouped_plugins:
+            clean_key = str(key).replace("<", "")
+            if clean_key not in grouped_plugins:
                 grouped_plugins[key] = []
 
             grouped_plugins[key].append(plugin_id)
         list_of_oses = []
 
+        # grab all of the OSes detected to use as our base-line
+        oses = db_query("select distinct OSes from vulns;")
         for os in oses:
             new_os = os[0]
             try:
                 new_list = eval(new_os)
             except:
                 new_list = new_os
-
+            # OSes is a list, so the Distinct option in sqlite doesn't dedupe everything.
+            # Here I cycle through each item in the list and compare it to the current list before adding it.
             for i in new_list:
                 if i not in list_of_oses:
                     list_of_oses.append(i)
@@ -604,9 +608,11 @@ def group_by_plugins():
             else:
                 vuln_type = "Application"
 
+            # Query to grab the total of each plugin IDs for instance total
             for plugin_inst in plugin_ids:
                 plugin_count = db_query("select count(*) from vulns where plugin_id='{}'".format(plugin_inst))
                 total += plugin_count[0][0]
+
             route_id += 1
             db_list.append(route_id)
             db_list.append(plugin_group)
@@ -616,6 +622,71 @@ def group_by_plugins():
             insert_vuln_router(route_conn, db_list)
 
     display_routes()
+
+
+def display_paths(vuln_paths):
+    click.echo("{:8} {:8} {:95} {}".format("Path ID", "Plugin ID",
+                                                          "Path", "Asset UUID"))
+    click.echo("-" * 150)
+    click.echo()
+    for path in vuln_paths:
+        click.echo("{:8} {:8} {:95} {}".format(path[0], path[1],
+                                                     textwrap.shorten(path[2], width=95), path[3]))
+
+
+def search_for_path():
+    import re
+    click.echo("\nCreating a Vulnerability Path Table called vuln-paths\n\n")
+    database = r"navi.db"
+    path_conn = new_db_connection(database)
+    drop_tables(path_conn, 'vuln_paths')
+    create_vuln_path_table()
+
+    pattern = r'''(?ix)
+                (?:                                          
+                  [a-zA-Z]:\\(?:[\w\s().-]+\\)*[\w\s().-]{3,}     # Windows path with spaces, parentheses
+                  |
+                  (?:\.{1,2}/|/)(?:[\w.-]+/)*[\w.-]{3,}           # Unix-style paths
+                )'''
+
+    search_outputs_for_paths = db_query("select plugin_id, asset_uuid, output from vulns where severity !='info';")
+    with path_conn:
+        path_id = 0
+        for plugin_text in search_outputs_for_paths:
+            for plugin_instance in eval(str(plugin_text)):
+
+                # search the plugin text for the path pattern
+                matches = re.findall(pattern, plugin_instance)
+
+                def is_valid_path(p):
+                    stripped = p.strip()
+
+                    # Remove trailing slash if present
+                    if stripped.endswith('/'):
+                        stripped = stripped[:-1]
+
+                    # Get the last segment only (filename or last dir)
+                    last_segment = stripped.split('/')[-1].split('\\')[-1]
+
+                    # Regex: match version numbers or IPs like 1.2.3 or v1.0.0 or 192.168.0.1
+                    version_or_ip_pattern = r'^(v?\d+(\.\d+){1,3}[a-z]?)$'
+
+                    # Exclude if the last segment looks like a version or IP
+                    return not re.match(version_or_ip_pattern, last_segment, re.IGNORECASE)
+
+                filtered = [p for p in matches if is_valid_path(p)]
+
+                for m in filtered:
+                    path_list = []
+                    path_id += 1
+
+                    path_list.append(path_id)
+                    path_list.append(plugin_text[0])
+                    path_list.append(m)
+                    path_list.append(plugin_text[1])
+                    insert_vuln_paths(path_conn, path_list)
+    vuln_paths = db_query("select * from vuln_paths;")
+    display_paths(vuln_paths)
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
@@ -1655,3 +1726,8 @@ def zipper():
 @update.command(help="Group Plugins by Application/Operating system for routing vulns")
 def route():
     group_by_plugins()
+
+
+@update.command(help="Divide routes by Paths found in the plugin output")
+def paths():
+    search_for_path()
