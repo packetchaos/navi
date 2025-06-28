@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import click
 import re
+import time
 
 
 # Define the regex function
@@ -33,23 +34,22 @@ def create_table(conn, table_information):
 
 def db_query(statement):
     try:
-        # start = time.time()
         database = r"navi.db"
         query_conn = new_db_connection(database)
         with query_conn:
             query_conn.create_function("REGEXP", 2, regexp)
             cur = query_conn.cursor()
             cur.execute('pragma journal_mode=wal;')
-            cur.execute('pragma cache_size=-100000;')
-            cur.execute('PRAGMA synchronous = OFF')
-            cur.execute('pragma threads=4')
+            cur.execute('pragma cache_size=-1000000;')
+            cur.execute('PRAGMA synchronous = OFF;')
+            cur.execute('pragma threads=16;')
+            cur.execute('PRAGMA temp_store = MEMORY;')
+            cur.execute('PRAGMA max_page_count = 2147483646;')
             cur.execute(statement)
 
             data = cur.fetchall()
-            # end = time.time()
-            # total = end - start
+
         query_conn.close()
-        # click.echo("Sql Query took: {} seconds".format(total))
         return data
     except Error as e:
         click.echo("\nDB ERROR:")

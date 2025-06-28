@@ -1850,31 +1850,38 @@ def software(missing, stats, greater_than, less_than):
 @click.option("--route_id", default=None, help="View/Validate the Route by Route ID")
 @click.option("-exp", "-export", is_flag=True, help="Export All routes(What Navi displays)")
 def route(exp, route_id):
-
+    start = time.time()
     if route_id:
-        route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
+
+        route_info = db_query("select plugin_list from vuln_route where route_id ='{}'".format(route_id))
 
         work = str(route_info[0][0]).replace("[", "(").replace("]",")")
 
-        vuln_data = db_query("select vulns.plugin_id, vulns.plugin_name, vulns.score, zipper.epss_value, "
-                             "vulns.asset_uuid from vulns "
-                             "left join zipper on vulns.plugin_id = zipper.plugin_id "
-                             "where vulns.plugin_id in {} and vulns.severity !='info' "
-                             "order by vulns.score DESC;".format(work))
+        vuln_data = db_query("select plugins.plugin_id, plugins.name, plugins.vpr_score, "
+                             "zipper.epss_value, vulns.asset_uuid from plugins "
+                             "left join zipper on zipper.plugin_id = plugins.plugin_id "
+                             "left join vulns on plugins.plugin_id = vulns.plugin_id "
+                             "where plugins.plugin_id in {} and plugins.severity !='info' "
+                             "order by plugins.vpr_score DESC;".format(work))
 
         click.echo("{:8} {:10} {:70} {:10} {:10} {}".format("Route ID", "Plugin ID", "Plugin Name", "VPR Score",
-                                                                  "EPSS", "Asset UUID"))
+                                                            "EPSS", "Asset UUID"))
         click.echo("-" * 150)
         click.echo()
+        record_count = 0
         for path in vuln_data:
             try:
+                record_count += 1
                 epss_score = path[3]
             except TypeError:
                 epss_score = "NO SCORE"
 
             click.echo("{:8} {:10} {:70} {:10} {:10} {}".format(route_id, str(path[0]),
-                                                             textwrap.shorten(str(path[1]), width=70), str(path[2]), str(epss_score), str(path[4])))
-
+                                                                textwrap.shorten(str(path[1]), width=70), str(path[2]),
+                                                                str(epss_score), str(path[4])))
+        end = time.time()
+        total = end - start
+        click.echo("Query took: {} for {} records".format(total, record_count))
     else:
         display_routes()
 

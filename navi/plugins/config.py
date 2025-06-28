@@ -578,7 +578,6 @@ def group_by_plugins():
             else:
                 key = parts[0]
 
-
             if key not in grouped_plugins:
                 grouped_plugins[key] = []
 

@@ -112,6 +112,7 @@ def compliance(name, uuid, file):
                                             "text search; requires another option(name, output, cve, xrefs")
 def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
     try:
+        asset_query = "Error"
         if severity:
             # Severity options Chosen
             if c and v:
@@ -463,7 +464,6 @@ def route(route_id):
     vulns_to_route = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
                       "left join plugins on vulns.plugin_id = plugins.plugin_id "
                       "left join zipper on plugins.plugin_id = zipper.plugin_id where "
-                      "vulns.plugin_id in {} and vulns.severity !='info' "
-                      "order by vulns.score DESC;".format(work))
+                      "vulns.plugin_id in {} and vulns.severity !='info';".format(work))
 
     export_query(vulns_to_route, "route_{}".format(route_id))
