@@ -10,7 +10,7 @@ import textwrap
 from .error_msg import error_msg
 from .config import grab_data_info, display_routes, display_paths
 from .query_export import query_export
-
+from restfly import errors as resterrors
 
 tio = tenb_connection()
 
@@ -50,6 +50,8 @@ def get_scanners():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 def compare_dates(given_date):
@@ -107,6 +109,8 @@ def exclusions():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display The actor and the action in the log file")
@@ -123,6 +127,8 @@ def logs():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display running Scans")
@@ -138,6 +144,8 @@ def running():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Scans")
@@ -171,6 +179,8 @@ def scans(a):
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display All Assets found in the last 30 days")
@@ -232,6 +242,8 @@ def assets(tag, net):
             click.echo("\nTotal: {}\n\n".format(len(asset_data)))
         except AttributeError:
             click.echo("\nCheck your permissions or your API keys\n")
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Scan Policies")
@@ -249,6 +261,8 @@ def policies():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display TVM Status and Account info")
@@ -294,6 +308,8 @@ def status():
 
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Agent information")
@@ -337,6 +353,8 @@ def agents(show_uuid, agent_id):
         except TypeError:
             click.echo("\nYou need the Agent ID... Try again\n")
             exit()
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
     else:
         try:
@@ -393,6 +411,8 @@ def agents(show_uuid, agent_id):
             click.echo()
         except AttributeError:
             click.echo("\nCheck your permissions or your API keys\n")
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Agent Groups and membership information ")
@@ -401,16 +421,21 @@ def agents(show_uuid, agent_id):
 def agent_groups(group_id):
 
     if group_id:
-        group_details = tio.agent_groups.details(group_id)
-        click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
-        click.echo("-" * 150)
+        try:
+            group_details = tio.agent_groups.details(group_id)
+            click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
+            click.echo("-" * 150)
 
-        for agent_info in group_details['agents']:
-            click.echo("{:85s} {:15} {:40s}".format(textwrap.shorten(str(agent_info['name']), width=85),
-                                                    str(agent_info['id']),
-                                                    str(agent_info['uuid']), str(agent_info['status'])))
+            for agent_info in group_details['agents']:
+                click.echo("{:85s} {:15} {:40s}".format(textwrap.shorten(str(agent_info['name']), width=85),
+                                                        str(agent_info['id']),
+                                                        str(agent_info['uuid']), str(agent_info['status'])))
 
-        click.echo()
+            click.echo()
+        except AttributeError:
+            click.echo("\nCheck your permissions or your API keys\n")
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
     else:
         click.echo("\n*** To see group membership use: navi agent groups --gid <group id> ***\n")
         try:
@@ -425,6 +450,8 @@ def agent_groups(group_id):
             click.echo()
         except AttributeError:
             click.echo("\nCheck your permissions or your API keys\n")
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Target Groups")
@@ -439,6 +466,8 @@ def target_groups():
         print()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Licensed Assets")
@@ -466,6 +495,8 @@ def licensed():
         click.echo("\nTotal: {}".format(count))
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Tags Information")
@@ -486,6 +517,8 @@ def tags():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Tag Categories and UUIDs")
@@ -500,6 +533,8 @@ def categories():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Network Information including scanner counts")
@@ -515,6 +550,8 @@ def networks():
 
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display the current Navi Version")
@@ -546,6 +583,8 @@ def user_groups(membership):
             click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display All Credentials, including Type and Credential UUID")
@@ -570,6 +609,8 @@ def credentials():
         click.echo()
     except AttributeError:
         click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @info.command(help="Display Asset and Vulnerability Export Job information")
@@ -668,6 +709,8 @@ def templates(policy, scan):
             click.echo()
         except AttributeError:
             click.echo("\nCheck your permissions or your API keys\n")
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
     else:
         click.echo("\nYou must use '-scan' or '-policy'")
 
@@ -799,9 +842,8 @@ def data():
 @click.option("--table", default=None, help="Get Table column names and types")
 def db_info(table):
     if table:
-        import pprint
-        data = db_query("pragma table_info({})".format(table))
-        pprint.pprint(data)
+        db_data = db_query("pragma table_info({})".format(table))
+        pprint.pprint(db_data)
     else:
         grab_data_info()
 
@@ -1882,6 +1924,7 @@ def route(exp, route_id):
         end = time.time()
         total = end - start
         click.echo("Query took: {} for {} records".format(total, record_count))
+
     else:
         display_routes()
 

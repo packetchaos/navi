@@ -372,7 +372,7 @@ def create_vuln_route_table():
                             route_id integer Primary Key,
                             app_name text,
                             plugin_list text,
-                            total_vulns text,
+                            total_vulns INTEGER,
                             vuln_type text
                             );"""
     create_table(vuln_route_conn, route_table)

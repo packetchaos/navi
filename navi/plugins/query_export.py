@@ -19,6 +19,7 @@ def query_export(query, name):
         data = cur.fetchall()
 
         # Grab the Table data
+
         descripts = cur.description
 
         # Create Header list

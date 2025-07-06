@@ -19,6 +19,7 @@ from .database import (new_db_connection, create_table, drop_tables, db_query, i
 from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from .agent_to_db import download_agent_data
+from restfly import errors as resterrors
 
 tio = tenb_connection()
 
@@ -141,28 +142,37 @@ def create_target_group(target_name, tg_list):
 
 
 def get_scanner_id(scanner_name):
-    # Receive name, convert to lower-case, then look up the scanner's ID
-    for scanner in tio.scanners.list():
-        if str(scanner_name).lower() == str(scanner['name']).lower():
-            return scanner['uuid']
-        else:
-            return 'NONE'
+    try:
+        # Receive name, convert to lower-case, then look up the scanner's ID
+        for scanner in tio.scanners.list():
+            if str(scanner_name).lower() == str(scanner['name']).lower():
+                return scanner['uuid']
+            else:
+                return 'NONE'
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 def get_network_id(network_name):
-    # Receive network name, convert to lower-case, then look up the network's uuid
-    for net in tio.networks.list():
-        if network_name.lower() == str(net['name']).lower():
-            return net['uuid']
-    return 'None'
+    try:
+        # Receive network name, convert to lower-case, then look up the network's uuid
+        for net in tio.networks.list():
+            if network_name.lower() == str(net['name']).lower():
+                return net['uuid']
+        return 'None'
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 def check_agroup_exists(aname):
-    rvalue = 'no'
-    for access_groups in tio.access_groups.list():
-        if str(access_groups['name']).lower() == str(aname).lower():
-            rvalue = access_groups['id']
-    return rvalue
+    try:
+        rvalue = 'no'
+        for access_groups in tio.access_groups.list():
+            if str(access_groups['name']).lower() == str(aname).lower():
+                rvalue = access_groups['id']
+        return rvalue
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 def create_user(username, password, permission, name, email):
@@ -301,11 +311,17 @@ def update_software():
     parse_83991(soft_dict)
 
     with new_conn:
-        for item in soft_dict.items():
-            # Save the uuid list as a string
-            new_list = [item[0], str(item[1]).strip()]
-            insert_software(new_conn, new_list)
-    click.echo("\nSoftware imported into a table called 'software'. Use 'navi explore data software'\n\n")
+        try:
+
+            for item in soft_dict.items():
+                # Save the uuid list as a string
+                new_list = [item[0], str(item[1]).strip()]
+                insert_software(new_conn, new_list)
+            click.echo("\nSoftware imported into a table called 'software'. Use 'navi explore data software'\n\n")
+        except IndexError:
+            click.echo("\nERROR: You may not have info plugins downloaded or "
+                       "you do not have any authenticated assets\n\n")
+
 
 
 def update_certificates():
@@ -319,108 +335,112 @@ def update_certificates():
     drop_tables(cert_conn, 'certs')
     create_certs_table()
     with cert_conn:
-        cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
-        cert_dict = {}
-        asset_uuid = cert_data[0][0]
+        try:
+            cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
+            cert_dict = {}
+            asset_uuid = cert_data[0][0]
 
-        for certs in cert_data:
+            for certs in cert_data:
 
-            first_pass = str(certs[1])
-            second_pass = str(first_pass).replace("'", "")
-            third_pass = str(second_pass).split("\n")
+                first_pass = str(certs[1])
+                second_pass = str(first_pass).replace("'", "")
+                third_pass = str(second_pass).split("\n")
 
-            for line in third_pass:
-                csv_list = []
-                forth_pass = str(line).split(": ")
+                for line in third_pass:
+                    csv_list = []
+                    forth_pass = str(line).split(": ")
 
-                try:
-                    cert_dict[forth_pass[0]] = forth_pass[1]
-                except IndexError:
-                    pass
+                    try:
+                        cert_dict[forth_pass[0]] = forth_pass[1]
+                    except IndexError:
+                        pass
 
-                csv_list.append(asset_uuid)
+                    csv_list.append(asset_uuid)
 
-                try:
-                    csv_list.append(cert_dict['Subject Name'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Subject Name'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Country'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Country'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['State/Province'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['State/Province'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Locality'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Locality'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Organization'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Organization'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Common Name'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Common Name'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Issuer Name'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Issuer Name'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Organization Unit'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Organization Unit'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Serial Number'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Serial Number'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Version'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Version'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Signature Algorithm'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Signature Algorithm'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Not Valid Before'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Not Valid Before'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Not Valid After'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Not Valid After'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Algorithm'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Algorithm'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Key Length'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Key Length'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-                try:
-                    csv_list.append(cert_dict['Signature Length'])
-                except KeyError:
-                    csv_list.append(" ")
+                    try:
+                        csv_list.append(cert_dict['Signature Length'])
+                    except KeyError:
+                        csv_list.append(" ")
 
-            insert_certificates(cert_conn, csv_list)
+                insert_certificates(cert_conn, csv_list)
+        except IndexError:
+            click.echo("\nERROR: You may not have info plugins downloaded or "
+                       "you do not have any instances of plugin 10863\n\n")
 
 
 def grab_epss_today(filename):
@@ -436,55 +456,55 @@ def grab_data_info():
     try:
         vuln_count = db_query("select count(*) from vulns;")[0][0]
     except:
-        vuln_count = "Needs updating"
+        vuln_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the Vulns table\n")
 
     try:
         plugin_count = db_query("select count(*) from plugins;")[0][0]
     except:
-        plugin_count = "Needs updating"
+        plugin_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the plugins table\n")
 
     try:
         asset_count = db_query("select count(*) from assets;")[0][0]
     except:
-        asset_count = "Needs updating"
+        asset_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the assets table\n")
 
     try:
         tag_count = db_query("select count(*) from tags;")[0][0]
     except:
-        tag_count = "Needs updating"
+        tag_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the tags table\n")
 
     try:
         compliance_count = db_query("select count(*) from compliance;")[0][0]
     except:
-        compliance_count = "Needs updating"
+        compliance_count = "Needs updating - run navi config update compliance' "
         click.echo("\nNo data in the compliance table\n")
 
     try:
         fixed_count = db_query("select count(*) from fixed;")[0][0]
     except:
-        fixed_count = "Needs updating"
+        fixed_count = "Needs updating - run 'navi config update fixed' "
         click.echo("\nNo data in the fixed table\n")
 
     try:
         agent_count = db_query("select count(*) from agents;")[0][0]
     except:
-        agent_count = "Needs updating"
+        agent_count = "Needs updating - run 'navi config update agents'"
         click.echo("\nNo data in the agents table\n")
 
     try:
         cert_count = db_query("select count(*) from certs;")[0][0]
     except:
-        cert_count = "Needs updating"
+        cert_count = "Needs updating - run 'navi config certificates' "
         click.echo("\nNo data in the certs table\n")
 
     try:
         software_count = db_query("select count(*) from software;")[0][0]
     except:
-        software_count = "Needs updating"
+        software_count = "Needs updating - run 'navi config software' "
         click.echo("\nNo data in the software table\n")
 
     try:
@@ -496,8 +516,29 @@ def grab_data_info():
     try:
         epss_count = db_query("select count(*) from epss;")[0][0]
     except:
-        epss_count = "Needs updating"
+        epss_count = "Needs updating - run 'navi config epss'"
         click.echo("\nNo data in the epss table\n")
+
+    try:
+        path_count = db_query("select count(distinct path) from vuln_paths;")[0][0]
+        total_path = db_query("select count(path) from vuln_paths;")[0][0]
+    except:
+        path_count = "Needs updating - run 'navi config update paths' "
+        total_path = "Needs updating - run 'navi config update paths' "
+        click.echo("\nNo data in the epss table\n")
+
+    try:
+        route_count = db_query("select count(*) from vuln_route;")[0][0]
+    except:
+        route_count = "Needs updating - run 'navi config update route' "
+        click.echo("\nNo data in the epss table\n")
+
+    click.echo("-" * 70)
+    click.echo("-" * 70)
+    click.echo(" " * 25 + "Database Stats")
+    click.echo("-" * 70)
+    click.echo("-" * 70)
+    click.echo()
 
     click.echo("Vuln Count: {}".format(vuln_count))
     click.echo("Plugin Count: {}".format(plugin_count))
@@ -510,18 +551,22 @@ def grab_data_info():
     click.echo("Software Count: {}".format(software_count))
     click.echo("Application Count: {}".format(application_count))
     click.echo("EPSS CVE Count: {}".format(epss_count))
+    click.echo("Unique Path Count: {}".format(path_count))
+    click.echo("Total Path Count: {}".format(total_path))
+    click.echo("Unique Route Count: {}".format(route_count))
+    click.echo("-" * 70)
     click.echo()
 
 
 def display_routes():
-    routes = db_query("select * from vuln_route ORDER BY app_name;")
+    routes = db_query("select * from vuln_route ORDER BY total_vulns;")
 
     click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
                                                      "Plugin ID Summary", "Total instances"))
     click.echo("-" * 150)
     click.echo()
     for path in routes:
-        click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], path[1], path[4],
+        click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], textwrap.shorten(path[1], width=30), path[4],
                                                          textwrap.shorten(path[2], width=70), path[3]))
 
 
@@ -620,7 +665,7 @@ def group_by_plugins():
             db_list.append(str(vuln_type))
             insert_vuln_router(route_conn, db_list)
 
-    display_routes()
+    click.echo("\nFinished updating the vuln_route table. Use 'navi explore data route' to view it's context\n")
 
 
 def display_paths(vuln_paths):
@@ -649,7 +694,8 @@ def search_for_path():
                 )'''
 
     search_outputs_for_paths = db_query("select plugin_id, asset_uuid, finding_id, output "
-                                        "from vulns where severity !='info';")
+                                        "from vulns where severity !='info' and "
+                                        "plugin_name not like '%SSL Certificate%';")
     with path_conn:
         path_id = 0
         for plugin_text in search_outputs_for_paths:
@@ -680,14 +726,21 @@ def search_for_path():
                     path_list = []
                     path_id += 1
 
+                    # Remove meta data
+                    scrub_one = str(m).replace("Installed version", " ")
+                    scrub_two = str(scrub_one).replace("has not been patched.", " ")
+                    scrub_three = str(scrub_two).replace("Remote version", " ")
+                    scrub_four = str(scrub_three).replace("Used by services"," ")
+                    scrub_five = str(scrub_four).strip()
+
                     path_list.append(path_id)
                     path_list.append(plugin_text[0])
-                    path_list.append(m)
+                    path_list.append(scrub_five)
                     path_list.append(plugin_text[1])
                     path_list.append(plugin_text[2])
                     insert_vuln_paths(path_conn, path_list)
-    vuln_paths = db_query("select * from vuln_paths;")
-    display_paths(vuln_paths)
+
+    click.echo("\n Update finished.  Run 'navi explore data paths'\n" )
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
@@ -912,10 +965,13 @@ def change(age, net, name):
 @click.option("--name", default='', required=True, help="Create a Network with the Following Name")
 @click.option("--description", "--d", default='Navi Created', help="Create a description for your Network")
 def new(name, description):
-    click.echo("\nCreating a new network named {}\n".format(name))
+    try:
+        click.echo("\nCreating a new network named {}\n".format(name))
 
-    if name:
-        tio.networks.create(name, description=description)
+        if name:
+            tio.networks.create(name, description=description)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @network.command(help="Move a Scanner or Assets to a Network")
@@ -943,9 +999,11 @@ def move(net, scanner, c, v, source, target):
         else:
             # Let's grab the uuid
             scanner_id = get_scanner_id(scanner)
-
-        # move the scanner
-        tio.networks.assign_scanners(network_id, scanner_id)
+        try:
+            # move the scanner
+            tio.networks.assign_scanners(network_id, scanner_id)
+        except resterrors.ForbiddenError:
+            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
     if c != '' and v != '':
         # First grab all the UUIDS in the tag and put them in a list
@@ -981,7 +1039,10 @@ def move(net, scanner, c, v, source, target):
 @config.command(help="Create a Scanner Group")
 @click.option("--name", required=True, help="Name of Scanner Group")
 def scan_group(name):
-    tio.scanner_groups.create(name)
+    try:
+        tio.scanner_groups.create(name)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @target_group.command(help="Create a Target Group - Retiring in T.io soon")
@@ -1304,6 +1365,8 @@ def create(c, v, user_name, user_group, perm, perm_list):
         click.echo("\nYour Tag might be incorrect. Or you may need to update assets in navi.  "
                    "No tag UUID was returned\n")
         exit()
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @permissions.command(help='Find all Tags without Permissions and apply "CanUse" permissions to AllUsers')
@@ -1390,10 +1453,10 @@ def full(threads, days, c, v, state, severity):
     exid = '0'
 
     if days is None:
-        vuln_export(30, exid, threads, c, v, list(state), list(severity))
+        vuln_export(30, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
         asset_export(90, exid, threads, c, v)
     else:
-        vuln_export(days, exid, threads, c, v, list(state), list(severity))
+        vuln_export(days, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
         asset_export(days, exid, threads, c, v)
 
 
@@ -1423,22 +1486,27 @@ def agents():
 @update.command(help="Update the vulns Table")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--threads', default=10,
+              help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
-@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
-              help='Isolate your update to a partiular finding state')
+@click.option('--state', multiple=True, default=["open", "reopened"],
+              type=click.Choice(['open', 'reopened', 'fixed']),
+              help='Isolate your update to a particular finding state')
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding state')
-def vulns(threads, days, exid, c, v, state, severity):
+@click.option('--vpr_score', default=1, help="Isolate your Vuln data to a VPR score")
+@click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt" "lte"]),
+              help="VPR operator")
+def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v, list(state), list(severity))
+    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator)
 
 
 @update.command(help="Update the Compliance data")
@@ -1495,41 +1563,44 @@ def software():
 @click.option('--c', default=None, help='Category of the Tag you want to exclude')
 @click.option('--v', default=None, help='Value of the Tag you want to exclude')
 def exclude(name, members, start, end, freq, day, c, v):
-    if c:
-        if v is None:
-            click.echo("You must enter a Value if you are going to Exclude by tag.")
-        if v:
-            data = db_query("select asset_ip from tags where "
-                            "tag_key ='" + str(c) + "' and tag_value = '" + str(v) + "';")
-            members_list = []
-            for asset in data:
-                members_list.append(asset[0])
+    try:
+        if c:
+            if v is None:
+                click.echo("You must enter a Value if you are going to Exclude by tag.")
+            if v:
+                data = db_query("select asset_ip from tags where "
+                                "tag_key ='" + str(c) + "' and tag_value = '" + str(v) + "';")
+                members_list = []
+                for asset in data:
+                    members_list.append(asset[0])
 
-            exclude_request = tio.exclusions.create(name=name,
-                                                    start_time=datetime.datetime.strptime
-                                                    (start, '%Y-%m-%d %H:%M'),
-                                                    end_time=datetime.datetime.strptime
-                                                    (end, '%Y-%m-%d %H:%M'),
-                                                    frequency=freq,
-                                                    members=members_list,
-                                                    day_of_month=day,
-                                                    description="Created using Navi; IPs by Tag: {}:{}".format(c, v))
+                exclude_request = tio.exclusions.create(name=name,
+                                                        start_time=datetime.datetime.strptime
+                                                        (start, '%Y-%m-%d %H:%M'),
+                                                        end_time=datetime.datetime.strptime
+                                                        (end, '%Y-%m-%d %H:%M'),
+                                                        frequency=freq,
+                                                        members=members_list,
+                                                        day_of_month=day,
+                                                        description="Created using Navi; IPs by Tag: {}:{}".format(c, v))
 
-            click.echo(exclude_request)
-    else:
-        if members is None:
-            click.echo("\nYou need to specify a Tag or a IP/subnet to exclude\n")
-            exit()
+                click.echo(exclude_request)
         else:
-            exclude_request = tio.exclusions.create(name=name,
-                                                    start_time=datetime.datetime.strptime
-                                                    (start, '%Y-%m-%d %H:%M'),
-                                                    end_time=datetime.datetime.strptime
-                                                    (end, '%Y-%m-%d %H:%M'),
-                                                    frequency=freq, members=list(members.split(",")),
-                                                    day_of_month=day,
-                                                    description="Created using Navi: manually entered via the CLI")
-            click.echo(exclude_request)
+            if members is None:
+                click.echo("\nYou need to specify a Tag or a IP/subnet to exclude\n")
+                exit()
+            else:
+                exclude_request = tio.exclusions.create(name=name,
+                                                        start_time=datetime.datetime.strptime
+                                                        (start, '%Y-%m-%d %H:%M'),
+                                                        end_time=datetime.datetime.strptime
+                                                        (end, '%Y-%m-%d %H:%M'),
+                                                        frequency=freq, members=list(members.split(",")),
+                                                        day_of_month=day,
+                                                        description="Created using Navi: manually entered via the CLI")
+                click.echo(exclude_request)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @agent.command(help="Create a new Agent Group")
@@ -1543,6 +1614,8 @@ def create(name, scanner):
                    "\n".format(group_creation['name'], str(group_creation['id']), str(group_creation['uuid'])))
     except AttributeError:
         click.echo("Check your API Keys")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @agent.command(help="Add an agent to a Group")
@@ -1550,31 +1623,34 @@ def create(name, scanner):
 @click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
 @click.option("--file", default=None, required=False, help="CSV with UUIDs as the first column.")
 def add(aid, gid, file):
-    if file:
-        # ignore AID and use the file instead
-        for agent_info in tio.agents.list():
-            print(agent_info['uuid'], agent_info['id'])
-
-        import csv
-        with open(file, 'r', newline='') as new_file:
-            agent_list = []
-            add_agents = csv.reader(new_file)
-
-            for rows in add_agents:
-                # UUID will be in the first column
-                agent_list.append(rows[0])
-
+    try:
+        if file:
+            # ignore AID and use the file instead
             for agent_info in tio.agents.list():
-                agent_uuid = agent_info['uuid']
-                agent_id = agent_info['id']
-                if agent_uuid in agent_list:
-                    # Add agents to the Group
-                    tio.agent_groups.add_agent(gid, agent_id)
-    else:
-        # Add agent to Group
-        tio.agent_groups.add_agent(gid, aid)
+                print(agent_info['uuid'], agent_info['id'])
 
-        click.echo("\nYour agent has been added to the Group ID: {}\n".format(gid))
+            import csv
+            with open(file, 'r', newline='') as new_file:
+                agent_list = []
+                add_agents = csv.reader(new_file)
+
+                for rows in add_agents:
+                    # UUID will be in the first column
+                    agent_list.append(rows[0])
+
+                for agent_info in tio.agents.list():
+                    agent_uuid = agent_info['uuid']
+                    agent_id = agent_info['id']
+                    if agent_uuid in agent_list:
+                        # Add agents to the Group
+                        tio.agent_groups.add_agent(gid, agent_id)
+        else:
+            # Add agent to Group
+            tio.agent_groups.add_agent(gid, aid)
+
+            click.echo("\nYour agent has been added to the Group ID: {}\n".format(gid))
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @agent.command(help="Remove an Agent from a Agent Group")
@@ -1588,6 +1664,8 @@ def remove(aid, gid):
         click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
     except AttributeError:
         click.echo("Check your API Keys")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @agent.command(help="Unlink an by Agent ID")
@@ -1598,6 +1676,8 @@ def unlink(aid):
         click.echo("\nYour Agent: {} has been unlinked".format(aid))
     except AttributeError:
         click.echo("Check your API Keys")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @agent.command(help="Create a Agent group based on a Tag")
@@ -1606,36 +1686,39 @@ def unlink(aid):
 @click.option('--agent_group', default=None, help="New Agent group name")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def bytag(c, v, agent_group, scanner):
-    from uuid import UUID
-    data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
-                    "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
-    temp_agents = []
+    try:
+        from uuid import UUID
+        data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
+                        "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
+        temp_agents = []
 
-    # Grab a current Group ID
-    group_id_test, group_uuid_test = get_group_id(agent_group)
-    # If None is returned create a new Group and set the group id
-    if group_id_test is None:
-        click.echo("\nGroup wasn't found, creating new group\n")
-        group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
-        group_id = group_creation['id']
-    else:
-        group_id = group_id_test
-        click.echo("\nGroup was found! Group ID is:" + str(group_id))
+        # Grab a current Group ID
+        group_id_test, group_uuid_test = get_group_id(agent_group)
+        # If None is returned create a new Group and set the group id
+        if group_id_test is None:
+            click.echo("\nGroup wasn't found, creating new group\n")
+            group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
+            group_id = group_creation['id']
+        else:
+            group_id = group_id_test
+            click.echo("\nGroup was found! Group ID is:" + str(group_id))
 
-    for asset in data:
-        asset_uuid = asset[0]
-        temp_agents.append(asset_uuid)
+        for asset in data:
+            asset_uuid = asset[0]
+            temp_agents.append(asset_uuid)
 
-    click.echo("\nRetrieving agents from T.VM and comparing it to the navi database."
-               "\nMake sure you have updated recently in case nothing get's moved\n")
-    for agent_info in tio.agents.list():
+        click.echo("\nRetrieving agents from T.VM and comparing it to the navi database."
+                   "\nMake sure you have updated recently in case nothing get's moved\n")
+        for agent_info in tio.agents.list():
 
-        # Convert agent UUID to hex to look up in db
-        agent_uuid = UUID(agent_info['uuid']).hex
-        agent_id = agent_info['id']
-        tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(agent_uuid))
-        if tag_uuid[0][0] in temp_agents:
-            tio.agent_groups.add_agent(group_id, agent_id)
+            # Convert agent UUID to hex to look up in db
+            agent_uuid = UUID(agent_info['uuid']).hex
+            agent_id = agent_info['id']
+            tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(agent_uuid))
+            if tag_uuid[0][0] in temp_agents:
+                tio.agent_groups.add_agent(group_id, agent_id)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
@@ -1644,11 +1727,13 @@ def certificates():
 
 
 @update.command(help="Update Everything:Assets, Vulns, Audits, Agents, Fixed, EPSS, WAS, Software and Certs")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--threads', default=10,
+              help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--days', default=30, help="Limit the download to X # of days")
 @click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
-@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
+@click.option('--state', multiple=True, default=["open", "reopened"],
+              type=click.Choice(['open', 'reopened', 'fixed']),
               help='Isolate your update to a particular finding state')
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
@@ -1662,7 +1747,7 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("*" * 70)
     click.echo("    Updating the Vulns and Plugins Tables from the vulns export API")
     click.echo("-" * 70)
-    vuln_export(30, "0", threads, c, v, list(state), list(severity))
+    vuln_export(30, "0", threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
     group_by_plugins()
 
     click.echo("*" * 70)
@@ -1704,9 +1789,19 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     download_agent_data()
 
     click.echo("*" * 70)
-    click.echo("Updating the EPSS table with EPPS data from EPSS downloadble CSV")
+    click.echo("Updating the EPSS table with EPSS data from EPSS downloadble CSV")
     click.echo("-" * 70)
     grab_epss_today(None)
+
+    click.echo("*" * 70)
+    click.echo("Parsing Paths out of each Plugin and creating a Table called vuln_paths")
+    click.echo("-" * 70)
+    search_for_path()
+
+    click.echo("*" * 70)
+    click.echo("Grouping vulnerabilities together by Application Name in a table called Vuln_routes")
+    click.echo("-" * 70)
+    group_by_plugins()
 
     end = time.time()
     click.echo("\nNow that we are done, let's check all of the tables.")

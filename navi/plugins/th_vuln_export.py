@@ -418,35 +418,35 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads, category, value, state, severity):
+def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator):
     start = time.time()
 
     database = r"navi.db"
     drop_conn = new_db_connection(database)
     drop_conn.execute('pragma journal_mode=wal;')
 
-    # Right now we just drop the table.  Eventually I will actually update the database
-    drop_tables(drop_conn, 'plugins')
-    create_plugins_table()
-
     # Set URLS for threading
     urls = []
 
-    # Set the payload to the maximum number of assets to be pulled at once
     day = 86400
     new_limit = day * int(days)
     day_limit = time.time() - new_limit
 
     if category is None:
-        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state, "severity": severity}}
+        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                  "severity": severity,
+                                                  "vpr_score": {operator: vpr_score}}}
     else:
         if value is None:
             pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                      "state": state, "severity": severity}}
+                                                      "state": state, "severity": severity,
+                                                      "vpr_score": {operator: vpr_score}}}
         else:
             pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
                                                       "state": state, "severity": severity,
-                                                      "tag.{}".format(category): "{}".format(value)}}
+                                                      "vpr_score": {operator: vpr_score},
+                                                      "tag.{}".format(category): "[\"{}\"]".format(value)}}
+
     try:
 
         if ex_uuid == '0':
@@ -516,8 +516,8 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity):
             insert_update_info(conn, diff_dict)
 
         click.echo("\nCreating a few indexes to make queries faster.\n")
-        db_query("CREATE INDEX vulns_plugin_id on vulns (plugin_id);")
-        db_query("CREATE INDEX vulns_uuid on vulns (asset_uuid);")
+        db_query("CREATE INDEX if NOT EXISTS vulns_plugin_id on vulns (plugin_id);")
+        db_query("CREATE INDEX if NOT EXISTS vulns_uuid on vulns (asset_uuid);")
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")

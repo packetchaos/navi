@@ -2,7 +2,6 @@ import sqlite3
 from sqlite3 import Error
 import click
 import re
-import time
 
 
 # Define the regex function
@@ -54,7 +53,6 @@ def db_query(statement):
     except Error as e:
         click.echo("\nDB ERROR:")
         click.echo("The SQL statement: {}\nCreated the following error: {}\n".format(statement, e))
-        exit()
 
 
 def get_last_update_id():

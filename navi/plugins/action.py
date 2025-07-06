@@ -13,6 +13,7 @@ from collections import defaultdict
 from typing import Optional, Dict, Tuple
 from os import system as cmd
 from .error_msg import error_msg
+from restfly import errors as resterrors
 try:
     # this is only needed for an obscure component of navi.  navi push...
     import pexpect
@@ -52,6 +53,12 @@ def grab_keys():
             secret_key = row[1]
 
     return access_key, secret_key
+
+
+def delete_table(tbl):
+    be_gone = db_query("DELETE from {}".format(tbl))
+
+    click.echo("\nDeleting the data in the {} Table.\n{}".format(tbl, be_gone))
 
 
 def grab_smtp():
@@ -479,6 +486,12 @@ def delete():
     pass
 
 
+@delete.command(help="Delete all data from a table")
+@click.argument('tbl')
+def table(tbl):
+    delete_table(tbl)
+
+
 @delete.command(help="Delete assets by Tag: tag_category:tag_value - Example - OS:Linux")
 @click.argument('tag_string')
 def bytag(tag_string):
@@ -506,6 +519,8 @@ def scan(tid):
         tio.scans.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete a target-group by target-group ID')
@@ -516,6 +531,8 @@ def tgroup(tid):
         tio.target_groups.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete a Policy by Policy ID')
@@ -526,6 +543,8 @@ def policy(tid):
         tio.policies.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete an Asset by Asset UUID')
@@ -536,6 +555,8 @@ def asset(tid):
         tio.assets.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete Tag Value by Value UUID')
@@ -546,6 +567,8 @@ def value(tid):
         tio.tags.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete Tag Category by Category UUID')
@@ -556,6 +579,8 @@ def category(tid):
         tio.tags.delete_category(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete a user by User ID - Not UUID')
@@ -566,6 +591,8 @@ def user(tid):
         tio.users.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete a user group by the Group ID')
@@ -576,6 +603,8 @@ def usergroup(tid):
         tio.groups.delete(str(tid))
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @delete.command(help='Delete a tag by Category/Value pair')
@@ -598,6 +627,9 @@ def network(nid):
         tio.networks.delete(nid)
     except AttributeError as e:
         error_msg(e)
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
+
 
 @action.command(help="Automate Navi tasks from a Spreadsheet")
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
