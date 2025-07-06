@@ -418,7 +418,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator):
+def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator, plugins):
     start = time.time()
 
     database = r"navi.db"
@@ -433,19 +433,38 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
     day_limit = time.time() - new_limit
 
     if category is None:
-        pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                  "severity": severity,
-                                                  "vpr_score": {operator: vpr_score}}}
-    else:
-        if value is None:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                      "state": state, "severity": severity,
+        if plugins:
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                      "severity": severity,
+                                                      "plugin_id": plugins,
                                                       "vpr_score": {operator: vpr_score}}}
         else:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                      "state": state, "severity": severity,
-                                                      "vpr_score": {operator: vpr_score},
-                                                      "tag.{}".format(category): "[\"{}\"]".format(value)}}
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                      "severity": severity,
+                                                      "vpr_score": {operator: vpr_score}}}
+    else:
+        if value is None:
+            if plugins:
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                          "severity": severity,
+                                                          "plugin_id": plugins,
+                                                          "vpr_score": {operator: vpr_score}}}
+            else:
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                                                          "state": state, "severity": severity,
+                                                          "vpr_score": {operator: vpr_score}}}
+        else:
+            if plugins:
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                          "severity": severity,
+                                                          "plugin_id": plugins,
+                                                          "vpr_score": {operator: vpr_score},
+                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
+            else:
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                                                          "state": state, "severity": severity,
+                                                          "vpr_score": {operator: vpr_score},
+                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
 
     try:
 

@@ -323,7 +323,6 @@ def update_software():
                        "you do not have any authenticated assets\n\n")
 
 
-
 def update_certificates():
     database = r"navi.db"
     cert_conn = new_db_connection(database)
@@ -1437,11 +1436,13 @@ def update():
 
 
 @update.command(help="Perform a full update (30d Vulns / 90d Assets); Delete the current Database")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--threads', default=10,
+              help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--days', default=None, help="Limit the download to X # of days")
 @click.option('--c', default=None, help="Isolate your update to a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update to a tag using the provided value")
-@click.option('--state', multiple=True, default=["open", "reopened"], type=click.Choice(['open', 'reopened', 'fixed']),
+@click.option('--state', multiple=True, default=["open", "reopened"],
+              type=click.Choice(['open', 'reopened', 'fixed']),
               help='Isolate your update to a particular finding state')
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
@@ -1453,17 +1454,19 @@ def full(threads, days, c, v, state, severity):
     exid = '0'
 
     if days is None:
-        vuln_export(30, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
+        vuln_export(30, exid, threads, c, v, list(state), list(severity),
+                    operator="gte", vpr_score=1, plugins=None)
         asset_export(90, exid, threads, c, v)
     else:
-        vuln_export(days, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
+        vuln_export(days, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1, plugins=None)
         asset_export(days, exid, threads, c, v)
 
 
 @update.command(help="Update the Asset Table")
 @click.option('--days', default='90', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--threads', default=10,
+              help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
 def assets(threads, days, exid, c, v):
@@ -1499,20 +1502,23 @@ def agents():
 @click.option('--vpr_score', default=1, help="Isolate your Vuln data to a VPR score")
 @click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt" "lte"]),
               help="VPR operator")
-def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator):
+@click.option("--plugin_id", multiple=True,type=click.INT, default=None,
+              help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")
+def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator)
+    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id))
 
 
 @update.command(help="Update the Compliance data")
 @click.option('--days', default='30', help="Limit the download to X # of days")
 @click.option('--exid', default='0', help="Download using a specified Export ID")
-@click.option('--threads', default=10, help="Control the threads to speed up or slow down downloads - (1-20)")
+@click.option('--threads', default=10,
+              help="Control the threads to speed up or slow down downloads - (1-20)")
 def compliance(threads, days, exid):
     if threads:
         threads_check(threads)
@@ -1604,7 +1610,8 @@ def exclude(name, members, start, end, freq, day, c, v):
 
 
 @agent.command(help="Create a new Agent Group")
-@click.option("--name", default=None, required=True, help="The name of the new Agent Group you want to create")
+@click.option("--name", default=None, required=True,
+              help="The name of the new Agent Group you want to create")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def create(name, scanner):
     try:
@@ -1747,7 +1754,8 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("*" * 70)
     click.echo("    Updating the Vulns and Plugins Tables from the vulns export API")
     click.echo("-" * 70)
-    vuln_export(30, "0", threads, c, v, list(state), list(severity), operator="gte", vpr_score=1)
+    vuln_export(30, "0", threads, c, v, list(state), list(severity),
+                operator="gte", vpr_score=1, plugins=None)
     group_by_plugins()
 
     click.echo("*" * 70)
