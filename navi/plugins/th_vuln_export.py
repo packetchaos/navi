@@ -4,9 +4,8 @@ import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import (new_db_connection, drop_tables, insert_vulns, insert_update_info,
+from .database import (new_db_connection, insert_vulns, insert_update_info,
                        get_last_update_id, db_query, insert_plugins)
-from .dbconfig import create_vulns_table, create_plugins_table
 
 lock = threading.Lock()
 
@@ -387,7 +386,7 @@ def parse_data(chunk_data, chunk_number):
                         exploit_list.append(" ")
 
                     try:
-                        cpe= vulns['plugin']['cpe']
+                        cpe = vulns['plugin']['cpe']
                         exploit_list.append(str(cpe))
                     except KeyError:
                         exploit_list.append(" ")

@@ -178,7 +178,7 @@ def parse_data(chunk_data):
                 special_url = ("https://cloud.tenable.com/tio/app.html#/"
                                "vulnerability-management/dashboard/assets/asset-details/{}/vulns").format(asset_id)
                 csv_list.append(special_url)
-            except:
+            except TypeError or IndexError or KeyError:
                 special_url = None
                 csv_list.append(special_url)
 

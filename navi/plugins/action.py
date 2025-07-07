@@ -19,6 +19,8 @@ try:
     import pexpect
     from pexpect import pxssh
 except ImportError:
+    pexpect = 0
+    pxssh = 0
     # print("\nInformation: Navi push will not work on this system!\n")
     pass
 
@@ -44,7 +46,7 @@ def grab_keys():
         cur = conn.cursor()
         try:
             cur.execute("SELECT * from keys;")
-        except:
+        except IndexError:
             click.echo("\nYou don't have any API keys!  Please enter your keys\n")
             exit()
         rows = cur.fetchall()
@@ -79,7 +81,7 @@ def grab_smtp():
                 password = row[3]
 
             return server, port, from_email, password
-    except:
+    except IndexError:
         click.echo("\nYou need to enter smtp information\n")
 
 
@@ -156,7 +158,7 @@ def scp(user, host, password, filename):
 
 
 class Excel:
-    def __init__(self, file_path: str, sheet_names: Optional[list]=None) -> None:
+    def __init__(self, file_path: str, sheet_names: Optional[list]= None) -> None:
         self.excel = pd.ExcelFile(file_path)
         self._file_path = file_path
         # include all sheets or just ones that were specified in sheet_names

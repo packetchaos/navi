@@ -736,10 +736,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
                 if delta.days >= int(missed):
                     tag_list.append(assets[0])
+
+            tag_by_uuid(tag_list, c, v, d)
         except IndexError:
             click.echo("\nMake sure you are submitting an Integer\n")
+        except TypeError:
+            click.echo("\nCheck your API Keys or permissions\n")
 
-        tag_by_uuid(tag_list, c, v, d)
+
 
     if byadgroup:
         # 'HFAUsersWithDevices.csv'
@@ -825,33 +829,39 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
         exit()
 
     if multi:
-        click.echo("creating a new tag with the following list {}".format(multi))
-        filter_list = []
-        for os in eval(multi):
-            temp_dict = {"field": os[0], "operator": os[1], "value": os[2]}
-            filter_list.append(temp_dict)
-            # issue with tenable VM API - Or turns in to a string value seperated by a comma
-            # issue with tenable VM API - appends " when you add * so *centos* becomes "*centos*"
-        if any:
-            tio.tags.create(c, v, filters=eval(multi), filter_type="or", description=d)
-        else:
-            tio.tags.create(c, v, filters=eval(multi), description=d)
+        try:
+            click.echo("creating a new tag with the following list {}".format(multi))
+            filter_list = []
+            for os in eval(multi):
+                temp_dict = {"field": os[0], "operator": os[1], "value": os[2]}
+                filter_list.append(temp_dict)
+                # issue with tenable VM API - Or turns in to a string value seperated by a comma
+                # issue with tenable VM API - appends " when you add * so *centos* becomes "*centos*"
+            if any:
+                tio.tags.create(c, v, filters=eval(multi), filter_type="or", description=d)
+            else:
+                tio.tags.create(c, v, filters=eval(multi), description=d)
+        except TypeError:
+            click.echo("\nCheck your API Keys or permissions\n")
 
     if filter:
-        if action:
-            if value:
-                rule_tuple = (filter, action, [value])
-                try:
-                    tio.tags.create(c, v, filters=[rule_tuple], description=d)
-                except Exception as E:
-                    click.echo(E)
-                    click.echo("\nThis tag name already exist; Delete it or rename the one you want to create.\n")
+        try:
+            if action:
+                if value:
+                    rule_tuple = (filter, action, [value])
+                    try:
+                        tio.tags.create(c, v, filters=[rule_tuple], description=d)
+                    except Exception as E:
+                        click.echo(E)
+                        click.echo("\nThis tag name already exist; Delete it or rename the one you want to create.\n")
+                else:
+                    click.echo("You must have a value if you are going to use a filter")
+                exit()
             else:
-                click.echo("You must have a value if you are going to use a filter")
-            exit()
-        else:
-            click.echo("You must have an Action if you are going to use a filter")
-            exit()
+                click.echo("You must have an Action if you are going to use a filter")
+                exit()
+        except TypeError:
+            click.echo("\nCheck your API Keys or permissions\n")
 
     if file:
         # API will limit this by 1024 - need a counter
@@ -920,66 +930,72 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
         choice.append("Other")
 
     if int(score) in range(1, 11):
-        acr_dict = defaultdict(list)
+        try:
+            acr_dict = defaultdict(list)
 
-        data = db_query("select acr, asset_uuid from tags left join assets on assets.uuid = tags.asset_uuid "
-                        "where tag_key='{}' and tag_value='{}';".format(c, v))
+            data = db_query("select acr, asset_uuid from tags left join assets on assets.uuid = tags.asset_uuid "
+                            "where tag_key='{}' and tag_value='{}';".format(c, v))
 
-        # create a list of all UUIDs associated; this will be used for comparison later
-        allow_list = []
-        for asset in data:
-            uuid = asset[1]
-            # First make sure the asset doesn't have a NO:UPDATE tag
-            check_for_no = tag_checker(uuid, "NO", "UPDATE")
-            if check_for_no == 'no':
-                allow_list.append(uuid)
+            # create a list of all UUIDs associated; this will be used for comparison later
+            allow_list = []
+            for asset in data:
+                uuid = asset[1]
+                # First make sure the asset doesn't have a NO:UPDATE tag
+                check_for_no = tag_checker(uuid, "NO", "UPDATE")
+                if check_for_no == 'no':
+                    allow_list.append(uuid)
 
-        for rate, uuid in data:
-            # ensure the UUID is in the 'allow_list'
-            if uuid in allow_list:
-                acr_dict[rate].append(uuid)
+            for rate, uuid in data:
+                # ensure the UUID is in the 'allow_list'
+                if uuid in allow_list:
+                    acr_dict[rate].append(uuid)
 
-        for keys in acr_dict:
-            current_acr = keys
-            asset_list = []
-            for uuid in acr_dict[keys]:
-                asset_list.append({"id": uuid})
+            for keys in acr_dict:
+                current_acr = keys
+                asset_list = []
+                for uuid in acr_dict[keys]:
+                    asset_list.append({"id": uuid})
 
-            try:
-                if current_acr:
-                    # avoid trying to update assets with "None"
-                    if mod == 'set':
-                        new_acr = score
-                    elif mod == 'inc':
-                        new_acr = int(current_acr) + int(score)
-                        if new_acr > 10:
-                            new_acr = 10
-                    elif mod == 'dec':
-                        new_acr = int(current_acr) - int(score)
-                        if new_acr < 1:
-                            new_acr = 1
-                    else:
-                        pass
+                try:
+                    if current_acr:
+                        # avoid trying to update assets with "None"
+                        if mod == 'set':
+                            new_acr = score
+                        elif mod == 'inc':
+                            new_acr = int(current_acr) + int(score)
+                            if new_acr > 10:
+                                new_acr = 10
+                        elif mod == 'dec':
+                            new_acr = int(current_acr) - int(score)
+                            if new_acr < 1:
+                                new_acr = 1
+                        else:
+                            pass
 
-                    # check to see if the list goes over 1999 assets then chunk the requests.
-                    def chunks(l, n):
-                        for i in range(0, len(l), n):
-                            yield l[i:i + n]
+                        # check to see if the list goes over 1999 assets then chunk the requests.
+                        def chunks(l, n):
+                            for i in range(0, len(l), n):
+                                yield l[i:i + n]
 
-                    if len(asset_list) > 1999:
-                        click.echo("Your request was over 1999 assets and therefore will be chunked up in to groups of "
-                                   "1999. You will see a 'success' message per chunk.")
-                        for chunks in chunks(asset_list, 1999):
+                        if len(asset_list) > 1999:
+                            click.echo("Your request was over 1999 assets and "
+                                       "therefore will be chunked up in to groups of "
+                                       "1999. You will see a 'success' message per chunk.")
+                            for chunks in chunks(asset_list, 1999):
+                                lumin_payload = [{"acr_score": int(new_acr),
+                                                  "reason": choice, "note": note, "asset": chunks}]
+                                request_data('POST', '/api/v2/assets/bulk-jobs/acr',
+                                             payload=lumin_payload)
+                        else:
+                            click.echo("\nProcessing your ACR update requests\n")
                             lumin_payload = [{"acr_score": int(new_acr),
-                                              "reason": choice, "note": note, "asset": chunks}]
-                            request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
-                    else:
-                        click.echo("\nProcessing your ACR update requests\n")
-                        lumin_payload = [{"acr_score": int(new_acr),
-                                          "reason": choice, "note": note, "asset": asset_list}]
-                        request_data('POST', '/api/v2/assets/bulk-jobs/acr', payload=lumin_payload)
-            except TypeError:
-                pass
+                                              "reason": choice, "note": note, "asset": asset_list}]
+                            request_data('POST', '/api/v2/assets/bulk-jobs/acr',
+                                         payload=lumin_payload)
+                except TypeError:
+                    pass
+        except TypeError:
+            click.echo("\nCheck your API Keys or permissions\n")
 
     else:
         click.echo("\nYou can't have a score below 1 or higher than 10\n")
@@ -989,14 +1005,17 @@ def acr(score, v, c, note, business,  compliance, mitigation, development, mod):
 @click.argument('name')
 @click.option('--description', default='', help="Add a description for clarity")
 def create(name, description):
-    payload = {"attributes": [
-        {
-            "name": name,
-            "description": "{} -Updated by Navi".format(description)
-        }
-    ]}
-    create_data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
-    click.echo(create_data)
+    try:
+        payload = {"attributes": [
+            {
+                "name": name,
+                "description": "{} -Updated by Navi".format(description)
+            }
+        ]}
+        create_data = request_data('POST', '/api/v3/assets/attributes', payload=payload)
+        click.echo(create_data)
+    except TypeError:
+        click.echo("\nCheck your API Keys or permissions\n")
 
 
 @attribute.command(help="Add a custom attribute to an asset")
@@ -1004,16 +1023,19 @@ def create(name, description):
 @click.option('--name', default='', help="Name of the Custom Attribute")
 @click.option('--value', default='', help="Value of the Custom Attribute")
 def assign(uuid, name, value):
-    attr_uuid = get_attribute_uuid(name)
-    click.echo(attr_uuid)
-    payload = {"attributes": [
-        {
-            "value": value,
-            "id": attr_uuid
-        }
-    ]}
-    assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
-    click.echo(assign_attr)
+    try:
+        attr_uuid = get_attribute_uuid(name)
+        click.echo(attr_uuid)
+        payload = {"attributes": [
+            {
+                "value": value,
+                "id": attr_uuid
+            }
+        ]}
+        assign_attr = request_data("PUT", '/api/v3/assets/{}/attributes'.format(uuid), payload=payload)
+        click.echo(assign_attr)
+    except TypeError:
+        click.echo("\nCheck your API Keys or permissions\n")
 
 
 @enrich.command(help="Add an asset to tenable VM from another source via CLI")

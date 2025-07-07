@@ -57,7 +57,7 @@ def check_sla():
         # Check the database to draw out an error
         db_query("select * from sla;")
         print_sla()
-    except:
+    except IndexError:
         # on failure, lets set the defaults.
         critical = 7
         high = 14
