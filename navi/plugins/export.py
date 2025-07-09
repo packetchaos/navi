@@ -5,10 +5,10 @@ from .database import db_query
 from .query_export import query_export
 from .agent_group_export import agent_group_export
 from .user_export import user_export
-from .compliance_export_csv import compliance_export_csv
 from .query_export_32K import export_query
 from .api_wrapper import request_xml
 from .agent_to_db import download_agent_data
+from restfly import errors as resterrors
 
 
 @click.group(help="Export tenable VM Data")
@@ -88,13 +88,37 @@ def users():
 
 
 @export.command(help="Export Compliance information into a CSV")
-@click.option('--name', default=None, help="Exact name of the Audit file to be exported.  Use 'navi display audits' to "
+@click.option('--name', default=None, help="Exact name of the Audit file to be exported.  "
+                                           "Use 'navi display audits' to "
                                            "get the right name")
 @click.option('--uuid', default=None, help="UUID of the Asset for your export")
 @click.option('--file', default="compliance_data.csv", help="Name of the file excluding '.csv'")
 def compliance(name, uuid, file):
     click.echo("\nExporting your requested Compliance data into a CSV\n")
-    compliance_export_csv(name, uuid, file)
+    try:
+        if name and uuid:
+            export_query("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
+                         "assets.uuid = compliance.asset_uuid "
+                         "where compliance.audit_file='{}' "
+                         "and compliance.asset_uuid='{}';".format(name, uuid), name=file)
+        elif name:
+            export_query("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
+                         "assets.uuid = compliance.asset_uuid "
+                         "where audit_file='{}';".format(name), name=file)
+
+        elif uuid:
+            export_query("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
+                         "assets.uuid = compliance.asset_uuid "
+                         "where asset_uuid='{}';".format(uuid), name=file)
+
+        else:
+            export_query("SELECT assets.fqdn, compliance.* FROM compliance LEFT OUTER JOIN assets ON "
+                         "assets.uuid = compliance.asset_uuid;", name=file)
+
+    except AttributeError:
+        click.echo("\nCheck your permissions or your API keys\n")
+    except resterrors.ForbiddenError:
+        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
 @export.command(help="Export All Vulnerability data in the Navi Database to a CSV")
@@ -272,7 +296,8 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
                         asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
                                        "vulns.plugin_id = plugins.plugin_id left join zipper on"
                                        "plugins.plugin_id = zipper.plugin_id "
-                                       "where vulns.plugin_id='{}' and vulns.output LIKE '%{}%';".format(plugin, output))
+                                       "where vulns.plugin_id='{}' and "
+                                       "vulns.output LIKE '%{}%';".format(plugin, output))
                 else:
                     # Just Plugin ID
                     asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
@@ -283,7 +308,8 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
                     # Enable regex
                     asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
                                    "vulns.plugin_id = plugins.plugin_id left join zipper on"
-                                   "plugins.plugin_id = zipper.plugin_id where vulns.output REGEXP '{}';".format(output))
+                                   "plugins.plugin_id = zipper.plugin_id "
+                                   "where vulns.output REGEXP '{}';".format(output))
                 else:
                     # no regex
                     asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns left join plugins on"
@@ -459,7 +485,7 @@ def compare(uuid):
 def route(route_id):
     route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
 
-    work = str(route_info[0][0]).replace("[", "(").replace("]",")")
+    work = str(route_info[0][0]).replace("[", "(").replace("]", ")")
 
     vulns_to_route = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
                       "left join plugins on vulns.plugin_id = plugins.plugin_id "

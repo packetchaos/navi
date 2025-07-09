@@ -1,8 +1,8 @@
 import click
 import pprint
-from .api_wrapper import tenb_connection, request_data
-from .database import db_query
-from .enrich import tag_by_uuid
+from navi.plugins.api_wrapper import tenb_connection, request_data
+from navi.plugins.database import db_query
+from navi.plugins.enrich import tag_by_uuid
 import textwrap
 
 tio = tenb_connection()

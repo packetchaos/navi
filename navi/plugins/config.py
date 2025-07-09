@@ -8,12 +8,11 @@ from .th_vuln_export import vuln_export
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .was_export import grab_scans
-from .tagrule_export import export_tags
 from .epss import update_navi_with_epss, zipper_epss_plugin
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
-                       create_compliance_table, create_passwords_table, create_tagrules_table, create_software_table,
+                       create_compliance_table, create_passwords_table, create_software_table,
                        create_certs_table, create_plugins_table, create_agents_table, create_vuln_route_table,
-                       create_vuln_path_table)
+                       create_vuln_path_table, create_sla_table)
 from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software, insert_vuln_router,
                        insert_certificates, insert_vuln_paths)
 from .fixed_export import calculate_sla, reset_sla, print_sla
@@ -454,81 +453,81 @@ def grab_data_info():
     click.echo()
     try:
         vuln_count = db_query("select count(*) from vulns;")[0][0]
-    except:
+    except IndexError:
         vuln_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the Vulns table\n")
 
     try:
         plugin_count = db_query("select count(*) from plugins;")[0][0]
-    except:
+    except IndexError:
         plugin_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the plugins table\n")
 
     try:
         asset_count = db_query("select count(*) from assets;")[0][0]
-    except:
+    except IndexError:
         asset_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the assets table\n")
 
     try:
         tag_count = db_query("select count(*) from tags;")[0][0]
-    except:
+    except IndexError:
         tag_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the tags table\n")
 
     try:
         compliance_count = db_query("select count(*) from compliance;")[0][0]
-    except:
+    except IndexError:
         compliance_count = "Needs updating - run navi config update compliance' "
         click.echo("\nNo data in the compliance table\n")
 
     try:
         fixed_count = db_query("select count(*) from fixed;")[0][0]
-    except:
+    except IndexError:
         fixed_count = "Needs updating - run 'navi config update fixed' "
         click.echo("\nNo data in the fixed table\n")
 
     try:
         agent_count = db_query("select count(*) from agents;")[0][0]
-    except:
+    except IndexError:
         agent_count = "Needs updating - run 'navi config update agents'"
         click.echo("\nNo data in the agents table\n")
 
     try:
         cert_count = db_query("select count(*) from certs;")[0][0]
-    except:
+    except IndexError:
         cert_count = "Needs updating - run 'navi config certificates' "
         click.echo("\nNo data in the certs table\n")
 
     try:
         software_count = db_query("select count(*) from software;")[0][0]
-    except:
+    except IndexError:
         software_count = "Needs updating - run 'navi config software' "
         click.echo("\nNo data in the software table\n")
 
     try:
         application_count = db_query("select count(*) from apps;")[0][0]
-    except:
+    except IndexError:
         application_count = "Needs updating"
         click.echo("\nNo data in the apps table\n")
 
     try:
         epss_count = db_query("select count(*) from epss;")[0][0]
-    except:
+    except IndexError:
         epss_count = "Needs updating - run 'navi config epss'"
         click.echo("\nNo data in the epss table\n")
 
     try:
         path_count = db_query("select count(distinct path) from vuln_paths;")[0][0]
         total_path = db_query("select count(path) from vuln_paths;")[0][0]
-    except:
+    except IndexError:
         path_count = "Needs updating - run 'navi config update paths' "
         total_path = "Needs updating - run 'navi config update paths' "
         click.echo("\nNo data in the epss table\n")
 
     try:
         route_count = db_query("select count(*) from vuln_route;")[0][0]
-    except:
+    except IndexError:
         route_count = "Needs updating - run 'navi config update route' "
         click.echo("\nNo data in the epss table\n")
 
@@ -669,12 +668,12 @@ def group_by_plugins():
 
 def display_paths(vuln_paths):
     click.echo("{:8} {:8} {:95} {}".format("Path ID", "Plugin ID",
-                                                          "Path", "Asset UUID"))
+                                           "Path", "Asset UUID"))
     click.echo("-" * 150)
     click.echo()
     for path in vuln_paths:
         click.echo("{:8} {:8} {:95} {}".format(path[0], path[1],
-                                                     textwrap.shorten(path[2], width=95), path[3]))
+                                               textwrap.shorten(path[2], width=95), path[3]))
 
 
 def search_for_path():
@@ -729,7 +728,7 @@ def search_for_path():
                     scrub_one = str(m).replace("Installed version", " ")
                     scrub_two = str(scrub_one).replace("has not been patched.", " ")
                     scrub_three = str(scrub_two).replace("Remote version", " ")
-                    scrub_four = str(scrub_three).replace("Used by services"," ")
+                    scrub_four = str(scrub_three).replace("Used by services", " ")
                     scrub_five = str(scrub_four).strip()
 
                     path_list.append(path_id)
@@ -739,7 +738,7 @@ def search_for_path():
                     path_list.append(plugin_text[2])
                     insert_vuln_paths(path_conn, path_list)
 
-    click.echo("\n Update finished.  Run 'navi explore data paths'\n" )
+    click.echo("\n Update finished.  Run 'navi explore data paths'\n")
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
@@ -797,6 +796,7 @@ def keys(clear, access_key, secret_key):
         create_assets_table()
         create_agents_table()
         create_compliance_table()
+        create_sla_table()
 
         # Check if the keys are empty
         if access_key == "" or secret_key == "":
@@ -1455,10 +1455,11 @@ def full(threads, days, c, v, state, severity):
 
     if days is None:
         vuln_export(30, exid, threads, c, v, list(state), list(severity),
-                    operator="gte", vpr_score=1, plugins=None)
+                    operator="gte", vpr_score=None, plugins=None)
         asset_export(90, exid, threads, c, v)
     else:
-        vuln_export(days, exid, threads, c, v, list(state), list(severity), operator="gte", vpr_score=1, plugins=None)
+        vuln_export(days, exid, threads, c, v, list(state), list(severity),
+                    operator="gte", vpr_score=None, plugins=None)
         asset_export(days, exid, threads, c, v)
 
 
@@ -1499,10 +1500,10 @@ def agents():
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding state')
-@click.option('--vpr_score', default=1, help="Isolate your Vuln data to a VPR score")
+@click.option('--vpr_score', default=None, help="Isolate your Vuln data to a VPR score")
 @click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt" "lte"]),
               help="VPR operator")
-@click.option("--plugin_id", multiple=True,type=click.INT, default=None,
+@click.option("--plugin_id", multiple=True, type=click.INT, default=None,
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")
 def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id):
     if threads:
@@ -1543,15 +1544,6 @@ def was(days):
     grab_scans(days)
 
 
-@update.command(help="Populate the DB with Tag rules for migrations")
-def tagrules():
-    database = r"navi.db"
-    conn = new_db_connection(database)
-    drop_tables(conn, 'tagrules')
-    create_tagrules_table()
-    export_tags()
-
-
 @config.command(help="Parse the 3 software plugins and stuff the software into a table called software")
 def software():
     update_software()
@@ -1560,8 +1552,10 @@ def software():
 @config.command(help="Create or delete exclusions")
 @click.option('--name', default=None, required=True, help="The name of your exclusion")
 @click.option('--members', default=None, help="The members of your exclusion, IPs or subnets")
-@click.option('--start', default=None, required=True, help="The start time of the exclusion - YYYY-MM-DD HH:MM")
-@click.option('--end', default=None, required=True, help="The end time of the exclusion - YYYY-MM-DD HH:MM")
+@click.option('--start', default=None, required=True,
+              help="The start time of the exclusion - YYYY-MM-DD HH:MM")
+@click.option('--end', default=None, required=True,
+              help="The end time of the exclusion - YYYY-MM-DD HH:MM")
 @click.option('--freq', multiple=False, required=True, default=["DAILY"],
               type=click.Choice(["ONETIME", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
               help='The frequency of the exclusion')
@@ -1588,7 +1582,8 @@ def exclude(name, members, start, end, freq, day, c, v):
                                                         frequency=freq,
                                                         members=members_list,
                                                         day_of_month=day,
-                                                        description="Created using Navi; IPs by Tag: {}:{}".format(c, v))
+                                                        description="Created using Navi; "
+                                                                    "IPs by Tag: {}:{}".format(c, v))
 
                 click.echo(exclude_request)
         else:
@@ -1755,7 +1750,7 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("    Updating the Vulns and Plugins Tables from the vulns export API")
     click.echo("-" * 70)
     vuln_export(30, "0", threads, c, v, list(state), list(severity),
-                operator="gte", vpr_score=1, plugins=None)
+                operator="gte", vpr_score=None, plugins=None)
     group_by_plugins()
 
     click.echo("*" * 70)

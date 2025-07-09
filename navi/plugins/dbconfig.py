@@ -130,7 +130,7 @@ def create_assets_table():
                             last_licensed_scan_date text,
                             network text,
                             acr text,
-                            aes text,
+                            aes integer,
                             aws_id text,
                             aws_ec2_instance_state text,
                             aws_ec2_name text,
@@ -217,22 +217,6 @@ def create_tag_table():
     create_table(tag_conn, create_tags_table)
 
 
-def create_tagrules_table():
-    database = r"navi.db"
-    tag_conn = new_db_connection(database)
-    create_tags_table = """CREATE TABLE IF NOT EXISTS tagrules (
-                        category_uuid text,
-                        key text,
-                        value_uuid text,
-                        value text,
-                        description text,
-                        access text,
-                        filters text
-                        );"""
-    tag_conn.execute('pragma journal_mode=wal;')
-    create_table(tag_conn, create_tags_table)
-
-
 def create_epss_table():
     database = r"navi.db"
     epss_conn = new_db_connection(database)
@@ -243,6 +227,18 @@ def create_epss_table():
                         );"""
     epss_conn.execute('pragma journal_mode=wal;')
     create_table(epss_conn, create_score_table)
+
+
+def create_sla_table():
+    database = r"navi.db"
+    conn = new_db_connection(database)
+    create_sla_table = """CREATE TABLE IF NOT EXISTS sla (
+                                critical text,
+                                high text,
+                                medium text, 
+                                low text 
+                                );"""
+    create_table(conn, create_sla_table)
 
 
 def create_zipper_table():

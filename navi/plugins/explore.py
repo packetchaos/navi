@@ -190,7 +190,7 @@ def scans(a):
 def assets(tag, net):
     if tag:
         tag_data = db_query("select ip_address, fqdn, aes, acr from assets "
-                            "LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}';".format(tag))
+                            "LEFT JOIN tags ON uuid == asset_uuid where tag_uuid=='{}' order by aes DESC;".format(tag))
 
         click.echo("\nBelow are the assets that are apart of the Tag")
         click.echo("\n{:16} {:80} {:6} {}".format("IP Address", "FQDN", "AES", "ACR"))
@@ -233,7 +233,7 @@ def assets(tag, net):
             click.echo("\nBelow are the assets found in the last 30 days")
             click.echo("\n{:16} {:80} {:40} {:6}".format("IP Address", "FQDN", "UUID", "AES"))
             click.echo("-" * 150)
-            asset_data = db_query("select ip_address, fqdn, uuid, aes from assets;")
+            asset_data = db_query("select ip_address, fqdn, uuid, aes from assets order by aes DESC;")
             for asset in asset_data:
 
                 click.echo("{:16} {:80} {:40} {:6} ".format(asset[0],
@@ -1288,7 +1288,7 @@ def get_attributes(attr_uuid):
 def info_by_uuid(info_uuid):
     try:
         info_data = db_query("select plugin_id, plugin_name, plugin_family, port, protocol, severity from "
-                             "vulns where asset_uuid='{}' and severity =='info';".format(info_uuid))
+                             "vulns where asset_uuid='{}' and severity == 'info';".format(info_uuid))
 
         click.echo("\n{:10s} {:90s} {:25s} {:6s} {:6s} {}".format("Plugin", "Plugin Name", "Plugin Family",
                                                                   "Port", "Proto", "Severity"))

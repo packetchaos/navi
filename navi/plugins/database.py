@@ -354,6 +354,12 @@ def insert_vuln_router(conn2, route_data):
     epss_cur.execute(sql_router, route_data)
 
 
+def insert_sla_data(conn, sla_info):
+    sql = '''INSERT or IGNORE into sla(critical, high, medium, low) VALUES(?,?,?,?)'''
+    sla_cur = conn.cursor()
+    sla_cur.execute(sql, sla_info)
+
+
 def insert_vuln_paths(conn2, path_data):
     sql_router = '''INSERT or IGNORE into vuln_paths(
                             path_id,

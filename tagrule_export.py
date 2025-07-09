@@ -1,7 +1,7 @@
 import click
-from .api_wrapper import request_data
-from .dbconfig import new_db_connection
-from .database import insert_tag_rules
+from navi.plugins.api_wrapper import request_data
+from navi.plugins.dbconfig import new_db_connection
+from navi.plugins.database import insert_tag_rules
 
 
 def export_tags():

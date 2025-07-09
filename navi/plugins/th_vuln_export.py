@@ -435,34 +435,46 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
         if plugins:
             pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
-                                                      "plugin_id": plugins,
-                                                      "vpr_score": {operator: vpr_score}}}
-        else:
+                                                      "plugin_id": plugins}}
+        elif vpr_score:
+            # VPR Score
             pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
                                                       "vpr_score": {operator: vpr_score}}}
+        else:
+            # no plugins, No vpr score
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                      "severity": severity}}
     else:
         if value is None:
             if plugins:
                 pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
-                                                          "plugin_id": plugins,
+                                                          "plugin_id": plugins}}
+            elif vpr_score:
+                # VPR Score
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                          "severity": severity,
                                                           "vpr_score": {operator: vpr_score}}}
             else:
                 pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                          "state": state, "severity": severity,
-                                                          "vpr_score": {operator: vpr_score}}}
+                                                          "state": state, "severity": severity}}
         else:
             if plugins:
                 pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "plugin_id": plugins,
+                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
+            elif vpr_score:
+                # VPR Score
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                                                          "severity": severity,
                                                           "vpr_score": {operator: vpr_score},
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
+
             else:
                 pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity,
-                                                          "vpr_score": {operator: vpr_score},
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
 
     try:
