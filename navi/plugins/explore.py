@@ -826,6 +826,7 @@ def sla():
 
 
 def find_by_plugin(pid):
+    plugin_count = 0
     try:
         rows = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns "
                         "LEFT JOIN assets ON asset_uuid = uuid where plugin_id=%s" % pid)
@@ -834,10 +835,15 @@ def find_by_plugin(pid):
         click.echo("-" * 150)
 
         for row in rows:
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(pid), row[0],
-                                                              textwrap.shorten(row[2], 46), row[1], row[3]))
+            plugin_count += 1
+            try:
+                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(pid), row[0],
+                                                                  textwrap.shorten(str(row[2]), 46),
+                                                                  row[1], row[3]))
+            except AttributeError:
+                pass
 
-        click.echo()
+        click.echo("\nTotal: {}\n".format(plugin_count))
     except TypeError:
         click.echo("\nCheck your API Keys or permissions\n")
 
@@ -859,7 +865,7 @@ def db_info(table):
 
 @data.command(help="Find Assets where a plugin fired using the plugin ID")
 @click.argument('plugin_id')
-@click.option('--out', default='', help='Find Assets based on the text in the output')
+@click.option('--out', default=None, help='Find Assets based on the text in the output')
 @click.option('-regexp', is_flag=True, help='Use a regular expression to search plugin output')
 def plugin(plugin_id, out, regexp):
     if not str.isdigit(plugin_id):
@@ -867,31 +873,37 @@ def plugin(plugin_id, out, regexp):
         exit()
     else:
         try:
-            click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address",
-                                                                "FQDN", "UUID", "Network UUID"))
-            click.echo("-" * 150)
-            if output:
+            plugin_count = 0
+            if out:
+                click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address",
+                                                                    "FQDN", "UUID", "Network UUID"))
+                click.echo("-" * 150)
+                # Search output with REGEXP enabled
                 if regexp:
                     plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
                                            "asset_uuid = uuid "
                                            "where plugin_id='{}' and output REGEXP '{}';".format(plugin_id, out))
+                # Search output for general text
                 else:
                     plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns LEFT JOIN assets ON "
                                            "asset_uuid = uuid "
                                            "where plugin_id='{}' and output LIKE '%{}%';".format(plugin_id, out))
 
+                # Not everything has a FQDN; Catch errors.
                 for row in plugin_data:
+                    plugin_count += 1
                     try:
-                        fqdn = row[2]
-                    except IndexError:
-                        fqdn = " "
-                    click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0],
-                                                                      textwrap.shorten(fqdn, 46), row[1], row[3]))
+                        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(str(plugin_id), row[0],
+                                                                          textwrap.shorten(str(row[2]), 46),
+                                                                          row[1], row[3]))
+                    except AttributeError:
+                        pass
+                click.echo("\nTotal {}\n".format(plugin_count))
+            else:
+                find_by_plugin(plugin_id)
+
         except TypeError:
             click.echo("\nCheck your API Keys or permissions\n")
-
-        else:
-            find_by_plugin(plugin_id)
 
 
 @data.command(help="Find Assets that have a given CVE iD")
@@ -954,9 +966,10 @@ def exploit():
 @click.argument('out_put')
 @click.option("-regexp", is_flag=True, help="Use a regular expression instead of a text search")
 def output(out_put, regexp):
-
+    plugin_count = 0
     click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
     click.echo("-" * 150)
+
     if regexp:
         plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network, plugin_id from vulns LEFT JOIN"
                                " assets ON asset_uuid = uuid where output REGEXP '{}';".format(str(out_put)))
@@ -966,13 +979,14 @@ def output(out_put, regexp):
 
     for row in plugin_data:
         try:
-            fqdn = row[2]
-        except IndexError:
-            fqdn = " "
-        click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[4], row[0],
-                                                          textwrap.shorten(fqdn, 46), row[1], row[3]))
+            plugin_count += 1
+            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[4], row[0],
+                                                              textwrap.shorten(row[2], 46),
+                                                              row[1], row[3]))
+        except AttributeError:
+            pass
 
-    click.echo()
+    click.echo("\nTotal: {}\n".format(plugin_count))
 
 
 @data.command(help="Find Docker Hosts using plugin 93561")
@@ -1134,6 +1148,7 @@ def query(statement):
 @click.argument('plugin_name')
 @click.option("-regexp", is_flag=True, help="Use a regular expression instead of aa text search")
 def name(plugin_name, regexp):
+    plugin_count = 0
     if regexp:
         plugin_data = db_query("SELECT asset_ip, asset_uuid, plugin_name, "
                                "plugin_id from vulns where plugin_name REGEXP '{}';".format(plugin_name))
@@ -1146,10 +1161,11 @@ def name(plugin_name, regexp):
     click.echo("-" * 150)
 
     for vulns in plugin_data:
+        plugin_count += 1
         click.echo("{:8s} {:20} {:45} {:70}".format(vulns[3], vulns[0], str(vulns[1]),
                                                     textwrap.shorten(str(vulns[2]), 65)))
 
-    click.echo()
+    click.echo("\nTotal: {}\n".format(plugin_count))
 
 
 @data.command(help="Find Assets that have a Cross Reference Type and/or ID")
@@ -1159,6 +1175,7 @@ def name(plugin_name, regexp):
                                             "specific in a Cross Reference")
 def xrefs(xref, xid, regexp):
     try:
+        plugin_count = 0
         click.echo("\n{:8s} {:16s} {:46s} {:40s} {}".format("Plugin", "IP Address", "FQDN", "UUID", "Network UUID"))
         click.echo("-" * 150)
 
@@ -1177,14 +1194,14 @@ def xrefs(xref, xid, regexp):
 
         for row in xref_data:
             try:
-                fqdn = row[2]
-            except IndexError:
-                fqdn = " "
+                plugin_count += 1
+                click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[0], row[1],
+                                                                  textwrap.shorten(str(row[2]), 46),
+                                                                  row[3], row[4]))
+            except AttributeError:
+                pass
 
-            click.echo("{:8s} {:16s} {:46s} {:40s} {}".format(row[0], row[1],
-                                                              textwrap.shorten(fqdn, 46), row[3], row[4]))
-
-        click.echo()
+        click.echo("\nTotal: {}\n".format(plugin_count))
     except TypeError:
         click.echo("\nCheck your API Keys or permissions\n")
 

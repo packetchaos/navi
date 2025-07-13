@@ -557,6 +557,7 @@ def grab_data_info():
 
 
 def display_routes():
+    route_count = 0
     routes = db_query("select * from vuln_route ORDER BY total_vulns;")
 
     click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
@@ -564,8 +565,11 @@ def display_routes():
     click.echo("-" * 150)
     click.echo()
     for path in routes:
+        route_count += 1
         click.echo("{:8} {:30} {:20} {:70} {:15}".format(path[0], textwrap.shorten(path[1], width=30), path[4],
                                                          textwrap.shorten(path[2], width=70), path[3]))
+
+    click.echo("\nTotal: {}\n".format(route_count))
 
 
 def group_by_plugins():
@@ -667,13 +671,17 @@ def group_by_plugins():
 
 
 def display_paths(vuln_paths):
+    path_count = 0
     click.echo("{:8} {:8} {:95} {}".format("Path ID", "Plugin ID",
                                            "Path", "Asset UUID"))
     click.echo("-" * 150)
     click.echo()
     for path in vuln_paths:
+        path_count += 1
         click.echo("{:8} {:8} {:95} {}".format(path[0], path[1],
                                                textwrap.shorten(path[2], width=95), path[3]))
+
+    click.echo("\nTotal: {}\n".format(path_count))
 
 
 def search_for_path():
