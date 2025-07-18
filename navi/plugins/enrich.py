@@ -476,7 +476,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
             offset = 0
             total = 0
-            limit = 5000
+            limit = 1000
             while offset <= total:
                 querystring = {"limit": limit, "offset": offset}
                 group_data = request_data('GET', '/scanners/1/agent-groups', params=querystring)
