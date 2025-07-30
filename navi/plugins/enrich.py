@@ -498,7 +498,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             try:
                 while offset <= total:
                     querystring = {"limit": limit, "offset": offset}
-                    click.echo(querystring)
                     agent_data = request_data('GET', '/scanners/1/agent-groups/'
                                               + str(group_id) + '/agents', params=querystring)
                     total = agent_data['pagination']['total']
@@ -512,10 +511,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                             tag_list.append(tag_uuid[0][0])
                         except IndexError:
                             pass
-                        print("Number of Assets being tagged: {}".format(len(tag_list)))
+                    print("Number of Assets being tagged: {}".format(len(tag_list)))
                     tag_by_uuid(tag_list, c, v, d)
-                offset += 1999
-                limit += 1999
+                    offset += 1999
             except IndexError:
                 click.echo("\nCheck your API permissions\n")
         except Error:
