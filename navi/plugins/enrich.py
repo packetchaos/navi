@@ -497,6 +497,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                            "name in double quotes if it has special chars\n")
             try:
                 while offset <= total:
+                    new_tag_list = []
                     querystring = {"limit": limit, "offset": offset}
                     agent_data = request_data('GET', '/scanners/1/agent-groups/'
                                               + str(group_id) + '/agents', params=querystring)
@@ -508,17 +509,16 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                         # New agents will not have a corresponding UUID and will throw an error.
                         # Since they can not be tagged without a UUID, we will silently skip over the agent
                         try:
-                            tag_list.append(tag_uuid[0][0])
+                            new_tag_list.append(tag_uuid[0][0])
                         except IndexError:
                             pass
-                    print("Number of Assets being tagged: {}".format(len(tag_list)))
-                    tag_by_uuid(tag_list, c, v, d)
+                    print("Number of Assets being tagged: {}".format(len(new_tag_list)))
+                    tag_by_uuid(new_tag_list, c, v, d)
                     offset += 1999
             except IndexError:
                 click.echo("\nCheck your API permissions\n")
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
-
 
     if scantime != '':
         d = d + "\nThis asset was tagged because the scan time took over {} mins".format(scantime)
