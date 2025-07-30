@@ -476,36 +476,51 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
             offset = 0
             total = 0
-            limit = 1000
-            while offset <= total:
-                querystring = {"limit": limit, "offset": offset}
-                group_data = request_data('GET', '/scanners/1/agent-groups', params=querystring)
+            limit = 1999
+            group_id = None
+
+            click.echo("\nGrabbing your Agent Group ID\n")
+            try:
+
+                group_data = request_data('GET', '/scanners/1/agent-groups')
 
                 for agent_group in group_data['groups']:
+                    # Grab each group name
                     group_name = agent_group['name']
-                    group_id = agent_group['id']
-
-                    # Match on Given Name
+                    # find the right name
                     if group_name == group:
-                        agent_data = request_data('GET', '/scanners/1/agent-groups/'
-                                                  + str(group_id) + '/agents', params=querystring)
-                        total = agent_data['pagination']['total']
+                        group_id = agent_group['id']
+                        click.echo("\nYour Group ID is {}\n Grabbing Agent data now\n".format(group_id))
 
-                        for agent in agent_data['agents']:
-                            new_uuid = UUID(agent['uuid']).hex
-                            tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(new_uuid))
-                            # New agents will not have a corresponding UUID and will throw an error.
-                            # Since they can not be tagged without a UUID, we will silently skip over the agent
-                            try:
-                                tag_list.append(tag_uuid[0][0])
-                            except IndexError:
-                                pass
-                offset += 5000
-                limit += 5000
+            except IndexError:
+                click.echo("\nClick your Group name was not found.  Check case and spelling and encase your "
+                           "name in double quotes if it has special chars\n")
+            try:
+                while offset <= total:
+                    querystring = {"limit": limit, "offset": offset}
+                    click.echo(querystring)
+                    agent_data = request_data('GET', '/scanners/1/agent-groups/'
+                                              + str(group_id) + '/agents', params=querystring)
+                    total = agent_data['pagination']['total']
+
+                    for agent in agent_data['agents']:
+                        new_uuid = UUID(agent['uuid']).hex
+                        tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(new_uuid))
+                        # New agents will not have a corresponding UUID and will throw an error.
+                        # Since they can not be tagged without a UUID, we will silently skip over the agent
+                        try:
+                            tag_list.append(tag_uuid[0][0])
+                        except IndexError:
+                            pass
+                        print("Number of Assets being tagged: {}".format(len(tag_list)))
+                    tag_by_uuid(tag_list, c, v, d)
+                offset += 1999
+                limit += 1999
+            except IndexError:
+                click.echo("\nCheck your API permissions\n")
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
 
-        tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
         d = d + "\nThis asset was tagged because the scan time took over {} mins".format(scantime)
