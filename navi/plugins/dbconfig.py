@@ -70,6 +70,34 @@ def create_vulns_table():
     create_table(vuln_conn, vuln_table)
 
 
+def create_tone_findings_table():
+    database = r"navi.db"
+    tone_vuln_conn = new_db_connection(database)
+    tone_findings_table = """CREATE TABLE IF NOT EXISTS tone_findings (
+                            finding_id text PRIMARY KEY,
+                            state text,
+                            last_updated text,
+                            first_seen text,
+                            last_seen text,
+                            port text,
+                            protocol text,
+                            detection_id text,
+                            finding_name text,
+                            solution text,
+                            severity text,
+                            vpr text,
+                            cves text,
+                            asset_uuid text,
+                            asset_name text,
+                            asset_class text,
+                            active_findings text,
+                            fixed_findings text,
+                            source text
+                            );"""
+    tone_vuln_conn.execute('pragma journal_mode=wal;')
+    create_table(tone_vuln_conn, tone_findings_table)
+
+
 def create_plugins_table():
     database = r"navi.db"
     plugin_conn = new_db_connection(database)
@@ -149,6 +177,45 @@ def create_assets_table():
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)
+
+
+def create_tone_assets_table():
+    database = r"navi.db"
+    tone_asset_conn = new_db_connection(database)
+    create_tone_asset_table = """CREATE TABLE IF NOT EXISTS tone_assets(
+                                 acr text, 
+                                 acr_method text, 
+                                 aes text, 
+                                 asset_class text, 
+                                 asset_id PRIMARY KEY, 
+                                 asset_name text, 
+                                 cloud_id_name text, 
+                                 created_at text, 
+                                 critical_vuln_count text, 
+                                 critical_weakness_count text, 
+                                 entitlement_count text, 
+                                 exposure_classes text, 
+                                 first_observed_at text, 
+                                 fqdns text, 
+                                 high_vuln_count text, 
+                                 high_weakness_count text, 
+                                 is_licensed text, 
+                                 last_licensed_at text, 
+                                 last_observed_at text, 
+                                 last_updated text, 
+                                 license_expires_at text, 
+                                 low_vuln_count text, 
+                                 low_weakness_count text, 
+                                 medium_vuln_count text, 
+                                 medium_weakness_count text, 
+                                 sensors text, 
+                                 sources text, 
+                                 tag_count text, 
+                                 tag_ids text, 
+                                 tenable_uuid text, 
+                                 total_weakness_count text);"""
+    tone_asset_conn.execute('pragma journal_mode=wal;')
+    create_table(tone_asset_conn, create_tone_asset_table)
 
 
 def create_agents_table():

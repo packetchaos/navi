@@ -5,6 +5,7 @@ import datetime
 import textwrap
 from .th_asset_export import asset_export
 from .th_vuln_export import vuln_export
+from .th_tone_assets import tone_export
 from .th_compliance_export import compliance_export
 from .fixed_export import fixed_export
 from .was_export import grab_scans
@@ -19,6 +20,7 @@ from .fixed_export import calculate_sla, reset_sla, print_sla
 from .api_wrapper import request_data, tenb_connection, request_no_response
 from .agent_to_db import download_agent_data
 from restfly import errors as resterrors
+from .th_tone_vulns import tone_findings_export
 
 tio = tenb_connection()
 
@@ -1838,3 +1840,9 @@ def route():
 @update.command(help="Divide routes by Paths found in the plugin output")
 def paths():
     search_for_path()
+
+
+@update.command(help="TONE")
+def tone():
+    tone_export(ex_uuid="0", threads=1)
+    tone_findings_export(ex_uuid="0", threads=1)

@@ -143,6 +143,45 @@ def insert_assets(conn, assets):
     cur.execute(sql, assets)
 
 
+def insert_tone_assets(conn, tone_assets):
+    one_sql = '''INSERT or REPLACE into tone_assets(
+                                                acr, 
+                                                acr_method, 
+                                                aes, 
+                                                asset_class, 
+                                                asset_id, 
+                                                asset_name, 
+                                                cloud_id_name, 
+                                                created_at, 
+                                                critical_vuln_count, 
+                                                critical_weakness_count, 
+                                                entitlement_count, 
+                                                exposure_classes, 
+                                                first_observed_at, 
+                                                fqdns, 
+                                                high_vuln_count, 
+                                                high_weakness_count, 
+                                                is_licensed, 
+                                                last_licensed_at, 
+                                                last_observed_at, 
+                                                last_updated, 
+                                                license_expires_at, 
+                                                low_vuln_count, 
+                                                low_weakness_count, 
+                                                medium_vuln_count, 
+                                                medium_weakness_count, 
+                                                sensors, 
+                                                sources, 
+                                                tag_count, 
+                                                tag_ids, 
+                                                tenable_uuid, 
+                                                total_weakness_count) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
+                                                ?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(one_sql, tone_assets)
+
+
 def insert_agents(conn, agents):
     sql = '''INSERT or IGNORE into agents(
                                           agent_id, 
@@ -257,6 +296,33 @@ def insert_vulns(conn, vulns):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, vulns)
+
+
+def insert_tone_findings(conn, tone_findings):
+    sql = '''INSERT or REPLACE into tone_findings(
+                            finding_id,
+                            state,
+                            last_updated,
+                            first_seen,
+                            last_seen,
+                            port,
+                            protocol,
+                            detection_id,
+                            finding_name, 
+                            solution,
+                            severity,
+                            vpr,
+                            cves,
+                            asset_uuid,
+                            asset_name,
+                            asset_class,
+                            active_findings,
+                            fixed_findings,
+                            source) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, tone_findings)
 
 
 def insert_apps(conn, apps):
