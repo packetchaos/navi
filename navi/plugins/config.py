@@ -1843,6 +1843,7 @@ def paths():
 
 
 @update.command(help="TONE")
-def tone():
-    tone_export(ex_uuid="0", threads=1)
-    tone_findings_export(ex_uuid="0", threads=1)
+@click.option('--exid', default='0', help="Enter your own Export ID for downloading data")
+def tone(exid):
+    #tone_export(ex_uuid="0", threads=1)
+    tone_findings_export(exid, threads=1)
