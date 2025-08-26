@@ -31,13 +31,13 @@ def grab_properties():
              'total_weakness_count',
              'host_name',
              'ipv4_addresses',
-              'ipv6_addresses',
-              'operating_systems',
-              'external_identifier',
-              'external_tags',
-              'mac_addresses',
-              'custom_attributes',
-              'total_finding_count']
+             'ipv6_addresses',
+             'operating_systems',
+             'external_identifier',
+             'external_tags',
+             'mac_addresses',
+             'custom_attributes',
+             'total_finding_count']
     for controls in props: #prop_data['data']:
         properties += "{},".format(controls)#['key'])
 
@@ -315,7 +315,6 @@ def tone_export(ex_uuid, threads):
 
     try:
         if ex_uuid == '0':
-            print("/api/v1/t1/inventory/export/assets?properties={}&file_format=JSON".format(raw_prop_list))
             # request an export of the data
             asset_export_id = request_data("POST", "/api/v1/t1/inventory/export/assets?"
                                                    "properties={}&file_format=JSON".format(raw_prop_list))
