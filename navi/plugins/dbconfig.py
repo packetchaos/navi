@@ -243,8 +243,7 @@ def create_tone_assets_table():
     database = r"navi.db"
     tone_asset_conn = new_db_connection(database)
     create_tone_asset_table = """CREATE TABLE IF NOT EXISTS tone_assets(
-                                 acr text, 
-                                 acr_method text, 
+                                 acr text,  
                                  aes text, 
                                  asset_class text, 
                                  asset_id PRIMARY KEY, 
@@ -273,7 +272,17 @@ def create_tone_assets_table():
                                  tag_count text, 
                                  tag_ids text, 
                                  tenable_uuid text, 
-                                 total_weakness_count text);"""
+                                 total_weakness_count text,
+                                 host_name text, 
+                                 ipv4_addresses text, 
+                                 ipv6_addresses text, 
+                                 operating_systems text, 
+                                 external_identifier text, 
+                                 external_tags text, 
+                                 mac_addresses text, 
+                                 custom_attributes text, 
+                                 total_finding_count text
+                                 );"""
     tone_asset_conn.execute('pragma journal_mode=wal;')
     create_table(tone_asset_conn, create_tone_asset_table)
 

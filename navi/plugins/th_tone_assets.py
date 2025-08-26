@@ -15,10 +15,31 @@ tag_id = 0
 
 
 def grab_properties():
-    prop_data = request_data('GET', '/api/v1/t1/inventory/assets/properties')
     properties = ""
-    for controls in prop_data['data']:
-        properties += "{},".format(controls['key'])
+    #prop_data = request_data('GET', '/api/v1/t1/inventory/assets/properties')
+    props = ['acr', 'aes', 'asset_class', 'asset_id', 'asset_name', 'cloud_id_name', 'created_at',
+             'critical_vuln_count', 'critical_weakness_count','entitlement_count', 'exposure_classes',
+             'first_observed_at', 'fqdns', 'high_vuln_count', 'high_weakness_count', 'is_licensed','last_licensed_at',
+             'last_observed_at', 'last_updated', 'license_expires_at', 'low_vuln_count', 'low_weakness_count',
+             'medium_vuln_count',
+             'medium_weakness_count',
+             'sensors',
+             'sources',
+             'tag_count',
+             'tag_ids',
+             'tenable_uuid',
+             'total_weakness_count',
+             'host_name',
+             'ipv4_addresses',
+              'ipv6_addresses',
+              'operating_systems',
+              'external_identifier',
+              'external_tags',
+              'mac_addresses',
+              'custom_attributes',
+              'total_finding_count']
+    for controls in props: #prop_data['data']:
+        properties += "{},".format(controls)#['key'])
 
     return properties[:-1]
 
@@ -40,15 +61,13 @@ def parse_data(chunk_data):
         for assets in chunk_data:
             # create a blank list to append asset details
             csv_list = []
+            # --------------------
+            # Required properties
+            # --------------------
+
             try:
                 acr = assets['acr']
                 csv_list.append(str(acr))
-            except (KeyError, IndexError, TypeError):
-                csv_list.append(" ")
-
-            try:
-                acr_method = assets['acr_method']
-                csv_list.append(str(acr_method))
             except (KeyError, IndexError, TypeError):
                 csv_list.append(" ")
 
@@ -227,6 +246,60 @@ def parse_data(chunk_data):
                 csv_list.append(" ")
 
             try:
+                host_name = assets['host_name']
+                csv_list.append(str(host_name))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                ipv4_addresses = assets['ipv4_addresses']
+                csv_list.append(str(ipv4_addresses))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                ipv6_addresses = assets['ipv6_addresses']
+                csv_list.append(str(ipv6_addresses))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                operating_systems = assets['operating_systems']
+                csv_list.append(str(operating_systems))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                external_identifier = assets['external_identifier']
+                csv_list.append(str(external_identifier))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                external_tags = assets['external_tags']
+                csv_list.append(str(external_tags))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                mac_addresses = assets['mac_addresses']
+                csv_list.append(str(mac_addresses))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                custom_attributes = assets['custom_attributes']
+                csv_list.append(str(custom_attributes))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
+                total_finding_count = assets['total_finding_count']
+                csv_list.append(str(total_finding_count))
+            except (KeyError, IndexError, TypeError):
+                csv_list.append(" ")
+
+            try:
                 insert_tone_assets(asset_conn, csv_list)
             except Error as e:
                 click.echo(e)
@@ -242,6 +315,7 @@ def tone_export(ex_uuid, threads):
 
     try:
         if ex_uuid == '0':
+            print("/api/v1/t1/inventory/export/assets?properties={}&file_format=JSON".format(raw_prop_list))
             # request an export of the data
             asset_export_id = request_data("POST", "/api/v1/t1/inventory/export/assets?"
                                                    "properties={}&file_format=JSON".format(raw_prop_list))
