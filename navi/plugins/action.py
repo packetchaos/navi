@@ -633,6 +633,19 @@ def network(nid):
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
+@delete.command(help="Delete a Tenable One Tag")
+@click.option("--c", required =True, help="TONE Category Exact name(case sensitive)")
+@click.option("--v", required=True, help="TONE value Exact name(case sensitive)")
+def tone(c,v):
+    from .tone_tag_helper import tag_value_exists
+    get_tag_id = tag_value_exists(c,v)
+
+    if get_tag_id == 'no':
+        click.echo("\nTag does not exist; either it was already deleted or not created at all\n")
+    else:
+        click.echo("\nI'm Deleting your tag now\n")
+        request_no_response("DELETE", "/api/v1/t1/tags/{}".format(get_tag_id))
+
 @action.command(help="Automate Navi tasks from a Spreadsheet")
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
 @click.option('-v', is_flag=True, help="enable Verbosity and print navi commands to the screen")

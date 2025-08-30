@@ -2018,3 +2018,18 @@ def paths(plugin_id, route_id):
         display_paths(vuln_paths)
     except TypeError:
         click.echo("\nCheck your API Keys or permissions\n")
+
+
+@info.command(help="Display TONE Objects")
+@click.option("--c", default="", help="TONE tag Category name")
+@click.option("--v", default="", help="TONE tag Value name")
+def tone(c, v):
+    from .tone_tag_helper import tag_value_exists
+    get_tag_id = tag_value_exists(c, v)
+
+    if get_tag_id == 'no':
+        click.echo("\nTag does not exist; I was not able to locate the Tag ID.  If you just created it, give it 90 seconds and retry\n")
+    else:
+        import pprint
+        data = request_data("GET", "/api/v1/t1/tags/{}".format(get_tag_id))
+        pprint.pprint(data)
