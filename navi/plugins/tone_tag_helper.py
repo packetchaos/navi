@@ -114,7 +114,7 @@ def tone_tag_by_uuid(tag_list, c, v, d):
                 if len(tag_list) > 5000:
                     # break the list into 2000 IP chunks
                     for chunks in chunks(tag_list, 5000):
-                        tone_update_tag(c, v, d, chunks, check_tag_id, check_catergory_id)
+                        tone_update_tag(chunks, check_tag_id)
                 else:
                     # If the Chunk is less than 5000, simply update it.
-                    tone_update_tag(c, v, d, tag_list, check_tag_id, check_catergory_id)
+                    tone_update_tag(tag_list, check_tag_id)
