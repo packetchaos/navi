@@ -16,31 +16,16 @@ tag_id = 0
 
 def grab_properties():
     properties = ""
-    #prop_data = request_data('GET', '/api/v1/t1/inventory/assets/properties')
+    # prop_data = request_data('GET', '/api/v1/t1/inventory/assets/properties')
     props = ['acr', 'aes', 'asset_class', 'asset_id', 'asset_name', 'cloud_id_name', 'created_at',
              'critical_vuln_count', 'critical_weakness_count','entitlement_count', 'exposure_classes',
              'first_observed_at', 'fqdns', 'high_vuln_count', 'high_weakness_count', 'is_licensed','last_licensed_at',
              'last_observed_at', 'last_updated', 'license_expires_at', 'low_vuln_count', 'low_weakness_count',
-             'medium_vuln_count',
-             'medium_weakness_count',
-             'sensors',
-             'sources',
-             'tag_count',
-             'tag_ids',
-             'tenable_uuid',
-             'total_weakness_count',
-             'host_name',
-             'ipv4_addresses',
-             'ipv6_addresses',
-             'operating_systems',
-             'external_identifier',
-             'external_tags',
-             'mac_addresses',
-             'custom_attributes',
-             'total_finding_count']
+             'medium_vuln_count', 'medium_weakness_count', 'sensors', 'sources', 'tag_count', 'tag_ids', 'tenable_uuid',
+             'total_weakness_count', 'host_name', 'ipv4_addresses', 'ipv6_addresses', 'operating_systems',
+             'external_identifier', 'external_tags', 'mac_addresses', 'custom_attributes', 'total_finding_count']
     for controls in props: #prop_data['data']:
         properties += "{},".format(controls)#['key'])
-
     return properties[:-1]
 
 
@@ -61,9 +46,6 @@ def parse_data(chunk_data):
         for assets in chunk_data:
             # create a blank list to append asset details
             csv_list = []
-            # --------------------
-            # Required properties
-            # --------------------
 
             try:
                 acr = assets['acr']

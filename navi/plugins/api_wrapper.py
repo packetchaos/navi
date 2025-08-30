@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.4.3"
+    return "navi-8.4.4"
 
 
 def tenb_connection():
@@ -91,6 +91,8 @@ def request_no_response(method, url_mod, **kwargs):
     try:
         r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
         if r.status_code == 200:
+            click.echo("Success!\n")
+        elif r.status_code == 204:
             click.echo("Success!\n")
         elif r.status_code == 404:
             click.echo('\nCheck your query...{}'.format(r))

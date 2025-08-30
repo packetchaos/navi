@@ -9,6 +9,7 @@ from datetime import datetime
 from .add_by_file import add_helper
 from .tag_helper import tag_checker
 from collections import defaultdict
+from .tone_tag_helper import tone_tag_by_uuid
 
 tio = tenb_connection()
 
@@ -375,8 +376,9 @@ def migrate(region, a, s):
 @click.option('-regexp', is_flag=True, help="Use a Regular expression instead of a "
                                             "text search; requires another option")
 @click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
+@click.option("-tone", is_flag=True, help="Create TONE Tag instead of a TVM tag")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed, byadgroup, regexp, route_id):
+        manual, histid, missed, byadgroup, regexp, route_id, tone):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -663,18 +665,20 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
     if query:
         d = d + "\nTag by SQL Query: \n{}".format(query)
-        if ("uuid" or "asset_uuid") in str(query):
-
+        try:
             data = db_query(query)
 
             for asset in set(data):
                 tag_list.append(asset[0])
 
-            tag_by_uuid(tag_list, c, v, d)
+            if tone:
+                tone_tag_by_uuid(tag_list, c, v, d)
+            else:
+                tag_by_uuid(tag_list, c, v, d)
+        except (KeyError, IndexError):
+            click.echo("\nSomething went wrong")
 
-        else:
-            click.echo("\nYou have to return uuids or asset_uuid. \nYour query must have uuid or asset_uuid\n")
-            exit()
+
 
     if remove:
         # Find the UUID of our given tag
