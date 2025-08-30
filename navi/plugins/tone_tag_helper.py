@@ -3,14 +3,11 @@ from .api_wrapper import request_data, request_no_response
 
 
 def tag_category_exists(category):
-    import pprint
     new_data = request_data("GET", "/api/v1/t1/tags/categories")
     category_id = 'no'
-    pprint.pprint(new_data)
     for cats in new_data["data"]:
         if category == str(cats['name']):
             category_id = cats['id']
-            print(category_id)
     return category_id
 
 
@@ -30,23 +27,25 @@ def tag_value_exists(tag_category, tag_value):
     return tag_id
 
 
-def tone_create_new_tag(c, v, tag_list, category_id):
+def tone_create_new_tag(c, v, d, tag_list, category_id):
     click.echo("Your tag is being created\n")
 
     try:
-        payload = {"tags": {c: v}, "category_id": "{}".format(category_id), "assignment_mode": "asset_ids",
-                   "asset_ids": tag_list}
+        payload = {"tags": {v: d}, "category_id": "{}".format(category_id),
+                   "assignment_mode": "asset_ids", "asset_ids": tag_list}
+        print(payload)
         request_data('POST', '/api/v1/t1/tags', payload=payload)
 
     except (KeyError, IndexError):
         click.echo("\nSomething went wrong with the tag creation")
 
 
-def tone_update_tag(tag_list, tag_id):
+def tone_update_tag(d, tag_list, tag_id):
     click.echo("Your tag is being updated\n")
 
     try:
-        payload = {"tags": {"{}".format(tag_id): {}}, "asset_ids_to_add": tag_list, "assignment_mode": "asset_ids", }
+        payload = {"tags": {"{}".format(tag_id): {"tag_description": "{}".format(d)}}, "asset_ids_to_add": tag_list,
+                   "assignment_mode": "asset_ids", }
 
         request_no_response('PATCH', '/api/v1/t1/tags', payload=payload)
 
@@ -81,7 +80,7 @@ def tag_tone_create_category(c):
 
 
 def tone_tag_by_uuid(tag_list, c, v, d):
-    print("Looks like I got to the right place with this data: {}".format(tag_list))
+    print("\nTagging your Assets in Tenable One.  Assets will take some time to show up in the UI under the new tag\n")
     # Generator to split IPs into 2000 IP chunks
 
     def chunks(l, n):
@@ -94,21 +93,26 @@ def tone_tag_by_uuid(tag_list, c, v, d):
         exit()
 
     else:
-        # Check the Categories
+        # Check the Categories; Does the category exist?
         check_catergory_id = tag_category_exists(c)
+
         # Evaluate if the Tag needs to be created or updated
         if check_catergory_id == "no":
-            print("There is no category; need to create one")
+            print("There is no Tag category; Creating a New Tag Category")
             # Create a category and grab the ID
             category_id = tag_tone_create_category(c)
+
             # Create the new tag with the category ID
-            tone_create_new_tag(c, v, tag_list, category_id)
+            tone_create_new_tag(c, v, d, tag_list, category_id)
         else:
-            # Confirmed we have a category, do we have a tag? grab the ID
-            check_tag_id = tag_value_exists(c,v)
+            # Confirmed we have a category, do we have a tag? if so, grab the ID
+            check_tag_id = tag_value_exists(c, v)
+
             if check_tag_id == "no":
+                print("am i here", check_catergory_id)
                 # Got a category ID but no Tag ID. Let's create a new tag
-                tone_create_new_tag(c, v, tag_list, check_catergory_id)
+                tone_create_new_tag(c, v, d, tag_list, check_catergory_id)
+                ''' This needs to be broken into groups of 5000'''
             else:
                 # Check to see if the List of UUIDs is over 5000 (API Limit)
                 if len(tag_list) > 5000:
