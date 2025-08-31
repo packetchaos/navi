@@ -11,6 +11,13 @@ def tag_category_exists(category):
     return category_id
 
 
+def get_all_tags():
+    import pprint
+    payload = {"limit": 1000}
+    tag_details = request_data("POST", "/api/v1/t1/tags/search", payload=payload)
+    pprint.pprint(tag_details)
+
+
 def tag_value_exists(tag_category, tag_value):
     # need to add pagination
     payload = {"limit": 1000}

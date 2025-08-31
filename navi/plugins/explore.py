@@ -2021,15 +2021,85 @@ def paths(plugin_id, route_id):
 
 
 @info.command(help="Display TONE Objects")
-@click.option("--c", default="", help="TONE tag Category name")
-@click.option("--v", default="", help="TONE tag Value name")
-def tone(c, v):
-    from .tone_tag_helper import tag_value_exists
-    get_tag_id = tag_value_exists(c, v)
+@click.option("--c", default=None,help="TONE tag Category name")
+@click.option("--v", default=None, help="TONE tag Value name")
+@click.option("-d","-details", is_flag=True, help="Get Tenable One Tag Details")
+@click.option("-a", "-assets", is_flag=True, help="Get Tenable One assets in a given Tag")
+def tone(c, v, a, d):
+    import pprint
+    from .tone_tag_helper import tag_value_exists, get_all_tags
+    if c:
+        if v:
+            get_tag_id = tag_value_exists(c, v)
 
-    if get_tag_id == 'no':
-        click.echo("\nTag does not exist; I was not able to locate the Tag ID.  If you just created it, give it 90 seconds and retry\n")
+            if get_tag_id == 'no':
+                click.echo("\nTag does not exist; I was not able to locate the Tag ID.  "
+                           "If you just created it, give it 90 seconds and retry\n")
+                exit()
+            else:
+                tagdata = request_data("GET", "/api/v1/t1/tags/{}".format(get_tag_id))
+                click.echo("{:37s} {:50} {:25} {:7} {}".format("Asset ID/UUID", "FQDNs", "IPv4s", "ACR", "Sources"))
+                click.echo(150 * "-")
+
+                if a:
+                    for asset_data in tagdata['assets']:
+                        grab_asset_id = db_query("select asset_id, fqdns, ipv4_addresses, acr, sources "
+                                                 "from tone_assets where asset_id='{}';".format(asset_data))
+
+                        asset_id = grab_asset_id[0][0]
+                        try:
+                            fqnds = grab_asset_id[0][1]
+                        except IndexError:
+                            fqnds = "NONE"
+
+                        try:
+                            ipv4 = grab_asset_id[0][2]
+                        except IndexError:
+                            ipv4 = "NONE"
+
+                        try:
+                            acrs = grab_asset_id[0][3]
+                        except IndexError:
+                            acrs = "NONE"
+                        try:
+                            sources = grab_asset_id[0][4]
+                        except IndexError:
+                            sources = "None?"
+
+                        click.echo("{:37s} {:50} {:25} {:7} {}".format(str(asset_id),
+                                                                            textwrap.shorten(fqnds, 50),
+                                                                            textwrap.shorten(ipv4, 25), acrs,
+                                                                            textwrap.shorten(sources, 40)))
+
+                elif d:
+                    #pprint.pprint(tagdata)
+                    creator = tagdata['creator']['username']
+                    created_at = tagdata['tag_created_at']
+                    description = tagdata['tag_description']
+                    total_weaknesses = tagdata['total_weakness_count']
+                    critical = tagdata['weakness_severity_counts']['critical']
+                    high = tagdata['weakness_severity_counts']['high']
+                    medium = tagdata['weakness_severity_counts']['medium']
+                    low = tagdata['weakness_severity_counts']['low']
+
+                    click.echo("Tag Details for - {} : {}\n".format(c, v))
+                    click.echo(50 * "*")
+                    click.echo("\nDescription: {}\n".format(description))
+                    click.echo(50 * "*")
+                    click.echo("\nCreator: {}".format(creator))
+                    click.echo("Created at: {}\n".format(created_at))
+                    click.echo(50 * "*")
+                    click.echo("\nTotal Weakness Count: {}".format(total_weaknesses))
+                    click.echo(30 * "-")
+                    click.echo("Critical: {}".format(critical))
+                    click.echo("High: {}".format(high))
+                    click.echo("Medium: {}".format(medium))
+                    click.echo("Low: {}\n\n".format(low))
+                else:
+                    click.echo("\nYou need to use '-d' for details, '-a' for asset information.\n")
+        else:
+            click.echo("\nYou need a value if you want tag information\n")
+
     else:
-        import pprint
-        data = request_data("GET", "/api/v1/t1/tags/{}".format(get_tag_id))
-        pprint.pprint(data)
+        get_all_tags()
+
