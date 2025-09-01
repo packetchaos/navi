@@ -1844,6 +1844,11 @@ def paths():
 
 @update.command(help="TONE")
 @click.option('--exid', default='0', help="Enter your own Export ID for downloading data")
-def tone(exid):
-    tone_export(exid, threads=1)
-    tone_findings_export(exid, threads=1)
+@click.option("-a", "-assets", is_flag=True, help="Download Tenable One Asset Data")
+@click.option("-f", "-findings", is_flag=True, help="Download Tenable One Finding Date")
+@click.option("--threads", default=1, help="The amount of threads to be used for downloads; default is 1.")
+def tone(exid, a, f, threads):
+    if a:
+        tone_export(exid, threads=threads)
+    if f:
+        tone_findings_export(exid, threads=threads)

@@ -2026,7 +2026,6 @@ def paths(plugin_id, route_id):
 @click.option("-d","-details", is_flag=True, help="Get Tenable One Tag Details")
 @click.option("-a", "-assets", is_flag=True, help="Get Tenable One assets in a given Tag")
 def tone(c, v, a, d):
-    import pprint
     from .tone_tag_helper import tag_value_exists, get_all_tags
     if c:
         if v:
@@ -2038,10 +2037,11 @@ def tone(c, v, a, d):
                 exit()
             else:
                 tagdata = request_data("GET", "/api/v1/t1/tags/{}".format(get_tag_id))
-                click.echo("{:37s} {:50} {:25} {:7} {}".format("Asset ID/UUID", "FQDNs", "IPv4s", "ACR", "Sources"))
-                click.echo(150 * "-")
 
                 if a:
+                    click.echo("{:37s} {:50} {:25} {:7} {}".format("Asset ID/UUID", "FQDNs",
+                                                                   "IPv4s", "ACR", "Sources"))
+                    click.echo(150 * "-")
                     for asset_data in tagdata['assets']:
                         grab_asset_id = db_query("select asset_id, fqdns, ipv4_addresses, acr, sources "
                                                  "from tone_assets where asset_id='{}';".format(asset_data))
