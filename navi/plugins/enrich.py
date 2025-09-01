@@ -9,7 +9,7 @@ from datetime import datetime
 from .add_by_file import add_helper
 from .tag_helper import tag_checker
 from collections import defaultdict
-from .tone_tag_helper import tone_tag_by_uuid
+from .tone_tag_helper import tone_tag_by_uuid, tone_remove_tag, tag_value_exists
 
 tio = tenb_connection()
 
@@ -678,19 +678,35 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         except (KeyError, IndexError):
             click.echo("\nSomething went wrong")
 
-
-
     if remove:
         # Find the UUID of our given tag
+        def chunks(l, n):
+            for i in range(0, len(l), n):
+                yield l[i:i + n]
+
         tag_list = grab_all_tags()
         try:
-            for tag_info in tag_list:
-                # Grab our UUID
-                if str(tag_info[0]).lower() == str(c).lower():
-                    if str(tag_info[1]).lower() == str(v).lower():
-                        new_uuid = str(tag_info[2])
-                        print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
-                        remove_uuids_from_tag(new_uuid)
+            if tone:
+                tag_id = tag_value_exists(c, v)
+                if tag_id == "no":
+                    click.echo("\nYour tag doesn't exist\n")
+                else:
+                    if len(tag_list) > 5000:
+                        # break the list into 2000 IP chunks
+                        click.echo("\nYour Tag results were over 5000 assets; breaking up the api requests\n")
+
+                        for chunks in chunks(tag_list, 5000):
+                            tone_remove_tag(d, chunks, tag_id)
+                    else:
+                        tone_remove_tag(d, tag_list, tag_id)
+            else:
+                for tag_info in tag_list:
+                    # Grab our UUID
+                    if str(tag_info[0]).lower() == str(c).lower():
+                        if str(tag_info[1]).lower() == str(v).lower():
+                            new_uuid = str(tag_info[2])
+                            print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
+                            remove_uuids_from_tag(new_uuid)
 
         except Exception as E:
             click.echo(E)

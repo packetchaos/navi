@@ -100,6 +100,19 @@ def tone_update_tag(d, tag_list, tag_id):
         click.echo("\nSomething went wrong with the tag creation")
 
 
+def tone_remove_tag(d, tag_list, tag_id):
+    click.echo("Your tag is being updated; Removing the following assets: {}\n".format(tag_list))
+
+    try:
+        payload = {"tags": {"{}".format(tag_id): {"tag_description": "{}".format(d)}}, "asset_ids_to_remove": tag_list,
+                   "assignment_mode": "asset_ids", }
+
+        request_no_response('PATCH', '/api/v1/t1/tags', payload=payload)
+
+    except (KeyError, IndexError):
+        click.echo("\nSomething went wrong with the tag creation")
+
+
 def tag_tone_create_category(c):
     # Create the Tag Category First, then update the tag
     print("Creating a new category")
