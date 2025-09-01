@@ -2072,7 +2072,6 @@ def tone(c, v, a, d):
                                                                             textwrap.shorten(sources, 40)))
 
                 elif d:
-                    #pprint.pprint(tagdata)
                     creator = tagdata['creator']['username']
                     created_at = tagdata['tag_created_at']
                     description = tagdata['tag_description']

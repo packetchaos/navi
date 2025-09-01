@@ -7,40 +7,80 @@ def tag_category_exists(category):
     category_id = 'no'
     for cats in new_data["data"]:
         if category == str(cats['name']):
+            # Might need to Look for TENABLE_AI if the endpoint changes
             category_id = cats['id']
     return category_id
 
 
 def get_all_tags():
     import pprint
-    payload = {"limit": 1000}
-    tag_details = request_data("POST", "/api/v1/t1/tags/search", payload=payload)
-    pprint.pprint(tag_details)
+    # Filtering out Tenable_io tags to reduce confusion
+    # Tenable_AI == Tenable_one
+    payload = {
+        "filters": [
+            {
+                "property": "product",
+                "value": ["TENABLE_AI"],
+                "operator": "="
+            }
+        ],
+        "query": {
+            "mode": "simple",
+            "text": ""
+        }
+    }
+    tag_details = request_data("POST",
+                               "/api/v1/t1/tags/search?extra_properties=tag_category_name, aes_average",
+                               payload=payload)
+    click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format("Asset ID/UUID", "Tag Category", "Tag Value",
+                                                               "Tag Product", "Assets", "Findings", "avg.AES"))
+    click.echo(150 * "-")
+    #pprint.pprint(tag_details)
+    for my_tags in tag_details["data"]:
+        asset_count = my_tags['asset_count']
+        tag_category_name = my_tags['extra_properties']['tag_category_name']
+        try:
+            aes_average = my_tags['extra_properties']['aes_average']
+        except KeyError:
+            aes_average = "NONE"
+        asset_uuid = my_tags['id']
+        tag_value_name = my_tags['name']
+        product = my_tags['product']
+        total_weakness_count = my_tags['total_weakness_count']
+        click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format(asset_uuid, tag_category_name,
+                                              tag_value_name, product, asset_count, total_weakness_count, aes_average))
+
+    click.echo("\n\n")
 
 
 def tag_value_exists(tag_category, tag_value):
     # need to add pagination
-    payload = {"limit": 1000}
+    offset = 0
+    total = 0
+    limit = 1000
     tag_id = "no"
-    value_data = request_data("POST",
-                              "/api/v1/t1/tags/search?extra_properties=tag_category_id,tag_category_name,tag_id",
-                              payload=payload)
-
-    for tag_val in value_data["data"]:
-        if tag_value == str(tag_val['name']):
-            if tag_category == str(tag_val['extra_properties']['tag_category_name']):
-                tag_id = tag_val['extra_properties']['tag_id']
+    while offset <= total:
+        payload= {"limit": limit, "offset": offset}
+        value_data = request_data("POST",
+                                  "/api/v1/t1/tags/search?extra_properties=tag_category_id,tag_category_name,tag_id",
+                                  payload=payload)
+        total = value_data['pagination']['total']
+        for tag_val in value_data["data"]:
+            if tag_value == str(tag_val['name']):
+                if tag_category == str(tag_val['extra_properties']['tag_category_name']):
+                    tag_id = tag_val['extra_properties']['tag_id']
+        offset += 1000
 
     return tag_id
 
 
-def tone_create_new_tag(c, v, d, tag_list, category_id):
+def tone_create_new_tag(v, d, tag_list, category_id):
     click.echo("Your tag is being created\n")
 
     try:
         payload = {"tags": {v: d}, "category_id": "{}".format(category_id),
                    "assignment_mode": "asset_ids", "asset_ids": tag_list}
-        print(payload)
+
         request_data('POST', '/api/v1/t1/tags', payload=payload)
 
     except (KeyError, IndexError):
@@ -87,6 +127,7 @@ def tag_tone_create_category(c):
 
 
 def tone_tag_by_uuid(tag_list, c, v, d):
+    import time
     print("\nTagging your Assets in Tenable One.  Assets will take some time to show up in the UI under the new tag\n")
     # Generator to split IPs into 2000 IP chunks
 
@@ -105,27 +146,59 @@ def tone_tag_by_uuid(tag_list, c, v, d):
 
         # Evaluate if the Tag needs to be created or updated
         if check_catergory_id == "no":
-            print("There is no Tag category; Creating a New Tag Category")
+            print("There is no Tag category")
             # Create a category and grab the ID
             category_id = tag_tone_create_category(c)
 
             # Create the new tag with the category ID
-            tone_create_new_tag(c, v, d, tag_list, category_id)
+            if len(tag_list) > 5000:
+                # break the list into 2000 IP chunks
+                click.echo("\nYour Tag results were over 5000 assets; breaking up the api requests\n")
+                pass_one = 0
+                for chunks in chunks(tag_list, 5000):
+                    if pass_one == 1:
+                        check_tag_id = tag_value_exists(c, v)
+                        # Each 5000 assets after, update the tag
+                        time.sleep(5)
+                        tone_update_tag(d, chunks, check_tag_id)
+                    else:
+                        # First 5000, create the tag
+                        tone_create_new_tag(v, d, chunks, category_id)
+                        pass_one += 1
+            else:
+                tone_create_new_tag(v, d, tag_list, category_id)
+
         else:
             # Confirmed we have a category, do we have a tag? if so, grab the ID
             check_tag_id = tag_value_exists(c, v)
 
             if check_tag_id == "no":
-                print("am i here", check_catergory_id)
                 # Got a category ID but no Tag ID. Let's create a new tag
-                tone_create_new_tag(c, v, d, tag_list, check_catergory_id)
-                ''' This needs to be broken into groups of 5000'''
+                if len(tag_list) > 5000:
+                    # break the list into 2000 IP chunks
+                    click.echo("\nYour Tag results were over 5000 assets; breaking up the api requests\n")
+                    pass_one = 0
+                    for chunks in chunks(tag_list, 5000):
+                        if pass_one == 1:
+                            time.sleep(5)
+                            check_tag_id = tag_value_exists(c, v)
+                            # Each 5000 assets after, update the tag
+                            time.sleep(5)
+                            tone_update_tag(d, chunks, check_tag_id)
+                        else:
+                            # First 5000, create the tag
+                            tone_create_new_tag(v, d, chunks, check_catergory_id)
+                            pass_one += 1
+                else:
+                    tone_create_new_tag(v, d, tag_list, check_catergory_id)
+
             else:
                 # Check to see if the List of UUIDs is over 5000 (API Limit)
                 if len(tag_list) > 5000:
+                    click.echo("\nYour Tag results were over 5000 assets; breaking up the api requests\n")
                     # break the list into 2000 IP chunks
                     for chunks in chunks(tag_list, 5000):
-                        tone_update_tag(chunks, check_tag_id)
+                        tone_update_tag(d, chunks, check_tag_id)
                 else:
                     # If the Chunk is less than 5000, simply update it.
-                    tone_update_tag(tag_list, check_tag_id)
+                    tone_update_tag(d, tag_list, check_tag_id)
