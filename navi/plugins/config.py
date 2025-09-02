@@ -1851,4 +1851,4 @@ def tone(exid, a, f, threads):
     if a:
         tone_export(exid, threads=threads)
     if f:
-        tone_findings_export(ex_uuid="0", threads=1)
+        tone_findings_export(ex_uuid=exid, threads=threads)

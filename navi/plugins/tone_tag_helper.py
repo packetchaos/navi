@@ -151,7 +151,7 @@ def tag_tone_create_category(c):
 
 def tone_tag_by_uuid(tag_list, c, v, d):
     import time
-    print("\nTagging your Assets in Tenable One.  Assets will take some time to show up in the UI under the new tag\n")
+    click.echo("\nTagging your Assets in Tenable One.  Assets will take some time to show up in the UI under the new tag\n")
     # Generator to split IPs into 2000 IP chunks
 
     def chunks(l, n):
@@ -169,7 +169,7 @@ def tone_tag_by_uuid(tag_list, c, v, d):
 
         # Evaluate if the Tag needs to be created or updated
         if check_catergory_id == "no":
-            print("There is no Tag category")
+            click.echo("There is no Tag category")
             # Create a category and grab the ID
             category_id = tag_tone_create_category(c)
 
