@@ -12,6 +12,16 @@ def tag_category_exists(category):
     return category_id
 
 
+def grab_tone_asset_list(tag_category, tag_value):
+    get_tag_id = tag_value_exists(tag_category, tag_value)
+
+    tagdata = request_data("GET", "/api/v1/t1/tags/{}".format(get_tag_id))
+
+    tagged_assets = tagdata['assets']
+
+    return tagged_assets
+
+
 def get_all_tags():
     import pprint
     # Filtering out Tenable_io tags to reduce confusion
@@ -100,11 +110,11 @@ def tone_update_tag(d, tag_list, tag_id):
         click.echo("\nSomething went wrong with the tag creation")
 
 
-def tone_remove_tag(d, tag_list, tag_id):
+def tone_remove_tag(tag_list, tag_id):
     click.echo("Your tag is being updated; Removing the following assets: {}\n".format(tag_list))
 
     try:
-        payload = {"tags": {"{}".format(tag_id): {"tag_description": "{}".format(d)}}, "asset_ids_to_remove": tag_list,
+        payload = {"tags": {"{}".format(tag_id): {}}, "asset_ids_to_remove": tag_list,
                    "assignment_mode": "asset_ids", }
 
         request_no_response('PATCH', '/api/v1/t1/tags', payload=payload)

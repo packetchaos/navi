@@ -14,6 +14,7 @@ from typing import Optional, Dict, Tuple
 from os import system as cmd
 from .error_msg import error_msg
 from restfly import errors as resterrors
+from .tone_tag_helper import grab_tone_asset_list, tone_remove_tag
 try:
     # this is only needed for an obscure component of navi.  navi push...
     import pexpect
@@ -100,12 +101,12 @@ def send_command(shell, cmd, quick):
     click.echo()
 
 
-def connect(user, host, password, command):
+def connect(conn_user, host, password, command):
     try:
 
         if "sudo" in command:
             conn = pxssh.pxssh()
-            conn.login(host, user, password)
+            conn.login(host, conn_user, password)
             conn.sendline(command)
             conn.prompt()
             conn.sendline(password)
@@ -116,7 +117,7 @@ def connect(user, host, password, command):
             conn.logout()
         else:
             conn = pxssh.pxssh()
-            conn.login(host, user, password)
+            conn.login(host, conn_user, password)
             conn.sendline(command)
             conn.prompt()
             raw = conn.before
@@ -126,9 +127,9 @@ def connect(user, host, password, command):
         print(e)
 
 
-def scp(user, host, password, filename):
+def scp(scp_user, host, password, filename):
     ssh_new_key_string = 'Are you sure you want to continue connecting'
-    scp_login_string = 'scp {} {}@{}:/'.format(filename, user, host)
+    scp_login_string = 'scp {} {}@{}:/'.format(filename, scp_user, host)
 
     try:
         shell = pexpect.spawn(scp_login_string, timeout=300)
@@ -152,7 +153,7 @@ def scp(user, host, password, filename):
         response = shell.before
         print(response.decode('utf-8'))
         print()
-    except:
+    except (KeyError, IndexError, TypeError):
         print("\nThis Feature requires pexpect installed.  "
               "You're system doesn't allow for pexpect.spawn or pexpect isn't installed\n")
 
@@ -212,11 +213,12 @@ def str_to_api_name(name):
 
 
 def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, str]:
-    '''split value into (filter_name, operator)
+    '''
+        split value into (filter_name, operator)
 
-    The filter column name will be either:
-        - the name of a filter, i.e. ipv4
-        - OR the <name><' ' or '_'><operator
+        The filter column name will be either:
+            - the name of a filter, i.e. ipv4
+            - OR the <name><' ' or '_'><operator
 
     '''
     # default to equal when the value is a filter_name without the operator
@@ -259,7 +261,6 @@ def build_filters(columns, asset_tag_filters: dict):
         field_value = re.sub('[ ]*,[ ]*', ',', field_value)
 
         filters.append((filter_name, operator, field_value))
-
 
     # build a record with only the header file
     record = {k: v for k, v in columns.items() if k in header_fields}
@@ -633,18 +634,37 @@ def network(nid):
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
-@delete.command(help="Delete a Tenable One Tag")
+@delete.command(help="Delete a Tenable One Tag; Remove assets from a tag.")
 @click.option("--c", required =True, help="TONE Category Exact name(case sensitive)")
 @click.option("--v", required=True, help="TONE value Exact name(case sensitive)")
-def tone(c,v):
+@click.option("-remove", is_flag=True, help="Remove Assets from the tag instead")
+def tone(c,v, remove):
     from .tone_tag_helper import tag_value_exists
     get_tag_id = tag_value_exists(c,v)
+
+    def chunks(l, n):
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
 
     if get_tag_id == 'no':
         click.echo("\nTag does not exist; either it was already deleted or not created at all\n")
     else:
-        click.echo("\nI'm Deleting your tag now\n")
-        request_no_response("DELETE", "/api/v1/t1/tags/{}".format(get_tag_id))
+
+        if remove:
+            tag_list = grab_tone_asset_list(c,v)
+            if len(tag_list) > 5000:
+                # break the list into 2000 IP chunks
+                click.echo("\nYour Tag results were over 5000 assets; breaking up the api requests\n")
+
+                for chunks in chunks(tag_list, 5000):
+                    tone_remove_tag(chunks, get_tag_id)
+            else:
+                click.echo("\nI'm Removing assets from your Tag now\n")
+                tone_remove_tag(tag_list, get_tag_id)
+        else:
+            click.echo("\nI'm Deleting your tag now\n")
+            request_no_response("DELETE", "/api/v1/t1/tags/{}".format(get_tag_id))
+
 
 @action.command(help="Automate Navi tasks from a Spreadsheet")
 @click.option('--name', default='tio-config.xls', help='Name of the excel file')
