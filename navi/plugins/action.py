@@ -662,8 +662,9 @@ def tone(c,v, remove):
                 click.echo("\nI'm Removing assets from your Tag now\n")
                 tone_remove_tag(tag_list, get_tag_id)
         else:
-            click.echo("\nI'm Deleting your tag now\n")
-            request_no_response("DELETE", "/api/v1/t1/tags/{}".format(get_tag_id))
+            if click.confirm("\nI'm about to delete your Tag are you sure?"):
+                click.echo("\nI'm Deleting your tag now\n")
+                request_no_response("DELETE", "/api/v1/t1/tags/{}".format(get_tag_id))
 
 
 @action.command(help="Automate Navi tasks from a Spreadsheet")
