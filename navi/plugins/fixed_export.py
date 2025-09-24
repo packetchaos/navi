@@ -56,27 +56,27 @@ def sla_compare(severity, seconds):
         medium = 90
         low = 180
 
-    if severity == "critical":
+    if severity.lower() == "critical":
         if seconds > int(critical) * 86400:
             return "Fail"
         else:
             return "Pass"
 
-    elif severity == "high":
+    elif severity.lower() == "high":
 
         if seconds > int(high) * 86400:
             return "Fail"
         else:
             return "Pass"
 
-    elif severity == "medium":
+    elif severity.lower() == "medium":
 
         if seconds > int(medium) * 86400:
             return "Fail"
         else:
             return "Pass"
 
-    elif severity == "low":
+    elif severity.lower() == "low":
 
         if seconds > int(low) * 86400:
             return "Fail"

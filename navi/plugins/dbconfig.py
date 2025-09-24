@@ -152,7 +152,9 @@ def create_tone_findings_table():
                             is_licensed text,
                             total_finding_count text,
                             fixed_finding_count text,
-                            sensor_type text
+                            sensor_type text,
+                            days text,
+                            sla_status text
                             );"""
     tone_vuln_conn.execute('pragma journal_mode=wal;')
     create_table(tone_vuln_conn, tone_findings_table)

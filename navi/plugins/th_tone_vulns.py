@@ -6,6 +6,8 @@ from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import new_db_connection, insert_tone_findings
 from .dbconfig import create_tone_findings_table
+import dateutil.parser as dp
+from .fixed_export import sla_compare
 
 lock = threading.Lock()
 
@@ -519,6 +521,25 @@ def parse_data(chunk_data):
                 except (KeyError, IndexError, TypeError):
                     vuln_list.append(" ")
 
+                try:
+
+                    # Compare Time the finding was detected with today
+
+                    # Store days
+                    now = time.time()
+                    first_parsed = dp.parse(first_observed_at)
+                    first_observed_at_in_seconds = first_parsed.timestamp()
+                    delta = now - first_observed_at_in_seconds
+                    days = ((delta / 60 ) / 60 )/ 24
+                    sla_data = sla_compare(finding_severity, delta)
+                    #print(now, first_observed_at, first_observed_at_in_seconds, days, sla_data, finding_severity)
+                    vuln_list.append(days)
+                    vuln_list.append(sla_data)
+
+                except (KeyError, IndexError, TypeError):
+                    vuln_list.append("None Set")
+                    vuln_list.append("not evaluated")
+                    print("SLA error")
                 try:
                     insert_tone_findings(finding_conn, vuln_list)
                 except Error as e:
