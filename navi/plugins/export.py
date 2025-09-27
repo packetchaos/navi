@@ -76,7 +76,7 @@ def group(group_name):
 @click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
 def bytag(c, v, file):
     tag_assets = ("SELECT assets.*, tags.asset_uuid FROM assets JOIN tags ON assets.uuid = tags.asset_uuid "
-                  "WHERE tags.tag_key='") + c + "' AND tags.tag_value='" + v + "';")
+                  "WHERE tags.tag_key='" + c + "' AND tags.tag_value='" + v + "';")
 
     query_export(tag_assets, file)
 
