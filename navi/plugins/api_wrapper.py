@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.4.17"
+    return "navi-8.4.18"
 
 
 def tenb_connection():
@@ -145,7 +145,8 @@ def request_data(method, url_mod, **kwargs):
                 click.echo("\nToo many requests at a time...\n{}".format(r))
                 continue
             elif r.status_code == 400:
-                click.echo("\nThe object you tried to create may already exist\n")
+                click.echo("\nThe object you tried to create may already exist or is processing; "
+                           "Wait 60secs and try again\n")
                 click.echo("If you are changing scan ownership, there is a bug where 'empty' scans won't be moved")
                 click.echo(r.request)
                 click.echo(r.headers)

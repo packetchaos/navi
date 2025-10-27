@@ -309,7 +309,7 @@ def status():
         except KeyError:
             pass
 
-    except AttributeError:
+    except (AttributeError, TypeError):
         click.echo("\nCheck your permissions or your API keys\n")
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")

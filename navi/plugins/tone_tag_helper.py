@@ -1,3 +1,5 @@
+import pprint
+
 import click
 from .api_wrapper import request_data, request_no_response
 
@@ -91,6 +93,7 @@ def tone_create_new_tag(v, d, tag_list, category_id):
         payload = {"tags": {v: d}, "category_id": "{}".format(category_id),
                    "assignment_mode": "asset_ids", "asset_ids": tag_list}
 
+        pprint.pprint(payload)
         request_data('POST', '/api/v1/t1/tags', payload=payload)
 
     except (KeyError, IndexError):
@@ -98,11 +101,13 @@ def tone_create_new_tag(v, d, tag_list, category_id):
 
 
 def tone_update_tag(d, tag_list, tag_id):
-    click.echo("Your tag is being updated\n")
+    click.echo("Your tag is being updated- patch\n")
 
     try:
         payload = {"tags": {"{}".format(tag_id): {"tag_description": "{}".format(d)}}, "asset_ids_to_add": tag_list,
-                   "assignment_mode": "asset_ids", }
+                   "assignment_mode": "asset_ids"}
+
+        pprint.pprint(payload)
 
         request_no_response('PATCH', '/api/v1/t1/tags', payload=payload)
 

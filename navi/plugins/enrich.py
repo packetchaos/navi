@@ -427,7 +427,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         except Error:
             pass
 
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if port != '':
         d = d + "\nTag by Port: {}".format(port)
@@ -447,7 +450,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                         tag_list.append(uuid)
             except ValueError:
                 pass
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if name != '':
         d = d + "\nTag by Plugin Name: {}".format(name)
@@ -469,7 +475,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         except Error:
             pass
 
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
         d = d + "\nTag by Agent Group: {}".format(group)
@@ -521,7 +530,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
         print("Number of Assets being tagged: {}".format(len(tag_list)))
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
         d = d + "\nThis asset was tagged because the scan time took over {} mins".format(scantime)
@@ -574,7 +586,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             except ValueError:
                 pass
 
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if file != '':
         d = d + "\nTagged using IPs found in a file named:{}".format(file)
@@ -592,7 +607,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             if asset_uuid:
                 uuid_list.append(asset_uuid[0][0])
 
-        tag_by_uuid(uuid_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if cv != '' and cc != '':
 
@@ -712,7 +730,11 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
                 else:
                     pass
-            tag_by_uuid(tag_list, c, v, d)
+
+            if tone:
+                tone_tag_by_uuid(tag_list, c, v, d)
+            else:
+                tag_by_uuid(tag_list, c, v, d)
 
     if xrefs:
         d = d + "\nTag by Cross Reference: {}".format(xrefs)
@@ -734,10 +756,16 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
             else:
                 pass
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if manual:
-        tag_by_uuid(manual, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
     if missed:
         try:
@@ -754,13 +782,15 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 if delta.days >= int(missed):
                     tag_list.append(assets[0])
 
-            tag_by_uuid(tag_list, c, v, d)
+            if tone:
+                tone_tag_by_uuid(tag_list, c, v, d)
+            else:
+                tag_by_uuid(tag_list, c, v, d)
+
         except IndexError:
             click.echo("\nMake sure you are submitting an Integer\n")
         except TypeError:
             click.echo("\nCheck your API Keys or permissions\n")
-
-
 
     if byadgroup:
         # 'HFAUsersWithDevices.csv'
@@ -819,7 +849,10 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         for assets in vulns_to_route:
             tag_list.append(assets[0])
 
-        tag_by_uuid(tag_list, c, v, d)
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
 
 
 @enrich.command(help="Create Tag rules in tenable VM")
