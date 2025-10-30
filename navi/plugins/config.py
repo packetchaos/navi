@@ -1554,10 +1554,12 @@ def fixed(c, v, days):
 def was(days):
     grab_scans(days)
 
+
 @update.command(help="Populate the Plugin database with All of Tenable's plugins")
 @click.option('--size', required=True, default='1000', help="Page size: min 1000, max 10000")
 def plugins(size):
     plugin_export(size)
+
 
 @config.command(help="Parse the 3 software plugins and stuff the software into a table called software")
 def software():

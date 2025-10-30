@@ -182,6 +182,8 @@ def create_plugins_table():
                               exploit_framework_exploithub text,
                               exploit_framework_metasploit text,
                               exploitability_ease text,
+                              solution text,
+                              description text,
                               exploited_by_malware text,
                               exploited_by_nessus text,
                               has_patch text,

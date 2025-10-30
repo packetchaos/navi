@@ -533,6 +533,8 @@ def insert_plugins(conn, exploit_data):
                      exploit_framework_exploithub,
                      exploit_framework_metasploit,
                      exploitability_ease,
+                     solution,
+                     description,
                      exploited_by_malware,
                      exploited_by_nessus,
                      has_patch,
@@ -550,7 +552,7 @@ def insert_plugins(conn, exploit_data):
                      vpr_updated,
                      cpe,
                      url
-                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     exploit_cur = conn.cursor()
     exploit_cur.execute('pragma journal_mode=wal;')
     exploit_cur.execute(sql_plugins, exploit_data)

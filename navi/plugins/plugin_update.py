@@ -5,8 +5,8 @@ import click
 from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
-from .database import (new_db_connection, insert_vulns, insert_update_info,
-                       get_last_update_id, db_query, insert_plugins)
+from .dbconfig import create_plugins_table
+from .database import new_db_connection, insert_plugins
 
 lock = threading.Lock()
 
@@ -146,6 +146,17 @@ def parse_data(page_info):
                         exploit_list.append(" ")
 
                     try:
+                        solution = plug_info['attributes']['solution']
+                        exploit_list.append(str(solution))
+                    except KeyError:
+                        exploit_list.append(" ")
+                    try:
+                        description = plug_info['attributes']['description']
+                        exploit_list.append(str(description))
+                    except KeyError:
+                        exploit_list.append(" ")
+
+                    try:
                         exploited_by_malware = plug_info['attributes']['exploited_by_malware']
                         exploit_list.append(str(exploited_by_malware))
                     except KeyError:
@@ -266,7 +277,7 @@ def plugin_export(size):
     database = r"navi.db"
     drop_conn = new_db_connection(database)
     drop_conn.execute('pragma journal_mode=wal;')
-
+    create_plugins_table()
     try:
         # Last total plugin Check:
         total = 281470
