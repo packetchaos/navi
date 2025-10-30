@@ -862,13 +862,13 @@ def automate(sheet, name, v, threads, skip):
             else:
                 if v:
                     print("navi enrich tag "
-                          "--c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(ad['record']['tag_category'],
+                          "--c \"{}\" --v \"{}\" --{} {}".format(ad['record']['tag_category'],
                                                                          ad['record']['tag_value'],
                                                                          ad['record']['method'],
                                                                          ad['record']['search_string']))
 
                 cmd("navi enrich tag "
-                    "--c \"{}\" --v \"{}\" --\"{}\" \"{}\"".format(str(ad['record']['tag_category']),
+                    "--c \"{}\" --v \"{}\" --{} {}".format(str(ad['record']['tag_category']),
                                                                    str(ad['record']['tag_value']),
                                                                    str(ad['record']['method']),
                                                                    str(ad['record']['search_string'])))

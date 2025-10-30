@@ -585,7 +585,7 @@ def user_groups(membership):
                 click.echo("{:35s} {:10s} {:40s} {}".format(str(user_group['name']), str(user_group['id']),
                                                             str(user_group['uuid']), str(user_group['user_count'])))
             click.echo()
-    except AttributeError:
+    except (TypeError, AttributeError):
         click.echo("\nCheck your permissions or your API keys\n")
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
@@ -611,7 +611,7 @@ def credentials():
                                                                    textwrap.shorten(category, width=25),
                                                                    textwrap.shorten(cred_uuid, width=40)))
         click.echo()
-    except AttributeError:
+    except (TypeError, AttributeError):
         click.echo("\nCheck your permissions or your API keys\n")
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
@@ -676,47 +676,53 @@ def exports(a, v):
 @info.command(help="Display Authorization information for a user given a User ID")
 @click.argument('uid')
 def auth(uid):
-    auth_info = request_data("GET", "/users/{}/authorizations".format(uid))
+    try:
+        auth_info = request_data("GET", "/users/{}/authorizations".format(uid))
 
-    click.echo("\n{:45} {:20} {:20} {:20} {}".format("Account_UUID", "API Permitted", "Password Permitted",
-                                                     "SAML Permitted", "User_UUID"))
-    click.echo("-" * 150)
+        click.echo("\n{:45} {:20} {:20} {:20} {}".format("Account_UUID", "API Permitted", "Password Permitted",
+                                                         "SAML Permitted", "User_UUID"))
+        click.echo("-" * 150)
 
-    click.echo("{:45} {:20} {:20} {:20} {}".format(str(auth_info['account_uuid']),
-                                                   str(auth_info['api_permitted']),
-                                                   str(auth_info['password_permitted']),
-                                                   str(auth_info['saml_permitted']),
-                                                   str(auth_info['user_uuid'])))
+        click.echo("{:45} {:20} {:20} {:20} {}".format(str(auth_info['account_uuid']),
+                                                       str(auth_info['api_permitted']),
+                                                       str(auth_info['password_permitted']),
+                                                       str(auth_info['saml_permitted']),
+                                                       str(auth_info['user_uuid'])))
 
-    click.echo()
+        click.echo()
+    except (TypeError, AttributeError):
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @info.command(help="Display Scan Policy Templates")
 @click.option("-policy", is_flag=True, help="Display all Policy Templates")
 @click.option("-scan", is_flag=True, help="Display all Scan Templates")
 def templates(policy, scan):
-    template_type = ""
+    try:
+        template_type = ""
 
-    if policy:
-        template_type = "policy"
-    if scan:
-        template_type = "scan"
+        if policy:
+            template_type = "policy"
+        if scan:
+            template_type = "scan"
 
-    if template_type:
-        try:
-            click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
-            click.echo("-" * 150)
+        if template_type:
+            try:
+                click.echo("\n{:40s} {:61s} {}".format("Policy Name", "Description", "Template ID"))
+                click.echo("-" * 150)
 
-            for policy in tio.editor.template_list(str(template_type)):
-                click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['title']),
-                                                     policy['uuid']))
-            click.echo()
-        except AttributeError:
-            click.echo("\nCheck your permissions or your API keys\n")
-        except resterrors.ForbiddenError:
-            click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
-    else:
-        click.echo("\nYou must use '-scan' or '-policy'")
+                for policy in tio.editor.template_list(str(template_type)):
+                    click.echo("{:40s} {:61s} {}".format(str(policy['name']), str(policy['title']),
+                                                         policy['uuid']))
+                click.echo()
+            except AttributeError:
+                click.echo("\nCheck your permissions or your API keys\n")
+            except resterrors.ForbiddenError:
+                click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
+        else:
+            click.echo("\nYou must use '-scan' or '-policy'")
+    except (TypeError, AttributeError):
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @info.command(help="Display completed Audit files and Audit information")
@@ -780,7 +786,7 @@ def audits(audit_name, asset_uuid):
                 click.echo(names[0])
 
             click.echo()
-    except TypeError:
+    except (TypeError, AttributeError):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
@@ -802,22 +808,25 @@ def permissions():
             click.echo("{:80s} {}".format(textwrap.shorten(perm['name'], width=80),
                                           textwrap.shorten("{}".format(subject_names), width=70)))
         click.echo()
-    except AttributeError:
+    except (TypeError, AttributeError):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
 @info.command(help="Display custom attributes")
 def attributes():
-    custom_attributes = request_data("GET", "/api/v3/assets/attributes")
+    try:
+        custom_attributes = request_data("GET", "/api/v3/assets/attributes")
 
-    click.echo("\n{:60s} {:50} {}".format("Attribute Name", "Description", "UUID"))
-    click.echo("-" * 150)
-    for attr in custom_attributes['attributes']:
-        attr_name = attr['name']
-        attr_description = attr['description']
-        attr_uuid = attr['id']
-        click.echo("{:60s} {:50} {}".format(attr_name, attr_description, attr_uuid))
-    click.echo()
+        click.echo("\n{:60s} {:50} {}".format("Attribute Name", "Description", "UUID"))
+        click.echo("-" * 150)
+        for attr in custom_attributes['attributes']:
+            attr_name = attr['name']
+            attr_description = attr['description']
+            attr_uuid = attr['id']
+            click.echo("{:60s} {:50} {}".format(attr_name, attr_description, attr_uuid))
+        click.echo()
+    except (TypeError, AttributeError):
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @info.command(help="Display current SLA")

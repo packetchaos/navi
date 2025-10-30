@@ -193,12 +193,14 @@ def insert_tone_assets(conn, tone_assets):
 
 def insert_agents(conn, agents):
     sql = '''INSERT or IGNORE into agents(
+                                          asset_uuid,
                                           agent_id, 
                                           agent_uuid, 
                                           hostname, 
                                           platform, 
                                           ip_address, 
-                                          last_scanned, 
+                                          last_scanned,
+                                          groups, 
                                           plugin_feed_id,
                                           core_build, 
                                           core_version, 
@@ -208,7 +210,7 @@ def insert_agents(conn, agents):
                                           network_uuid, 
                                           network_name,
                                           health_score,
-                                          health_state) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                                          health_state) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, agents)

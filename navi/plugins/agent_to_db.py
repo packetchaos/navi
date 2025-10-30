@@ -10,11 +10,17 @@ def download_agent_data():
     database = r"navi.db"
     agent_conn = new_db_connection(database)
     agent_conn.execute('pragma journal_mode=wal;')
+    agent_conn.execute('pragma cashe_size=-1000000')
+    agent_conn.execute('pragma synchronous=OFF')
     create_agents_table()
     with agent_conn:
-
-        for agents in tio.agents.list():
+        agent_total = 0
+        for agents in tio.agents.list(limit=5000):
             csv_list = []
+            try:
+                csv_list.append(agents['asset_uuid'])
+            except KeyError:
+                csv_list.append(" ")
             try:
                 csv_list.append(agents['id'])
             except KeyError:
@@ -42,6 +48,11 @@ def download_agent_data():
 
             try:
                 csv_list.append(agents['last_connect'])
+            except KeyError:
+                csv_list.append(" ")
+
+            try:
+                csv_list.append(str(agents['groups']))
             except KeyError:
                 csv_list.append(" ")
 
@@ -96,7 +107,9 @@ def download_agent_data():
                 csv_list.append(" ")
 
             if csv_list:
+                agent_total += 1
                 insert_agents(agent_conn, csv_list)
+                print(agent_total)
             else:
                 click.echo(
                     "\nYou may not have permissions to the agent data or you have no agents in this container.\n")

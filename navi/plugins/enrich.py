@@ -1,4 +1,5 @@
 import click
+import time
 import csv
 from .database import new_db_connection, db_query
 from .api_wrapper import request_data, tenb_connection
@@ -21,6 +22,7 @@ def enrich():
 
 
 def tag_by_tag(c, v, d, cv, cc, match):
+
     # BUG: Does not check to see if rule exists right now.
     # Start a blank rules list to store current a new tag rule.
     rules_list = []
@@ -124,6 +126,7 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
 
 def tag_by_uuid(tag_list, c, v, d):
+    tag_time = time.time()
     # Generator to split IPs into 2000 IP chunks
     def chunks(l, n):
         for i in range(0, len(l), n):
@@ -137,11 +140,13 @@ def tag_by_uuid(tag_list, c, v, d):
         # Create a blank Tag
         payload = {"category_name": str(c), "value": str(v), "description": str(d)}
         data = request_data('POST', '/tags/values', payload=payload)
+        end_tag_time = time.time()
         value_uuid = data["uuid"]
         cat_uuid = data['category_uuid']
         click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
         click.echo("The Category UUID is : {}\n".format(cat_uuid))
         click.echo("The Value UUID is : {}\n".format(value_uuid))
+        click.echo("Creation Time: {}".format(end_tag_time-tag_time))
     else:
         # Before updating confirm if the tag exists
         answer = confirm_tag_exists(c, v)
@@ -167,6 +172,8 @@ def tag_by_uuid(tag_list, c, v, d):
                 click.echo("\nI've created your new Tag - {} : {}\n".format(c, v))
                 click.echo("The Category UUID is : {}\n".format(cat_uuid))
                 click.echo("The Value UUID is : {}\n".format(value_uuid))
+                end_tag_time = time.time()
+                click.echo("New Tag Time: {}".format(end_tag_time - tag_time))
             except KeyError:
                 click.echo("\nTag created but the uuid wasn't available\n")
                 click.echo("Here is the payload navi sent: {}\n".format(payload))
@@ -481,13 +488,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
+        start_time = time.time()
         d = d + "\nTag by Agent Group: {}".format(group)
-        from uuid import UUID
-
         try:
-            offset = 0
-            total = 0
-            limit = 1999
             group_id = None
 
             click.echo("\nGrabbing your Agent Group ID\n")
@@ -501,39 +504,33 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                     # find the right name
                     if group_name == group:
                         group_id = agent_group['id']
-                        click.echo("\nYour Group ID is {}\n Grabbing Agent data now\n".format(group_id))
+                        click.echo("\nYour Group ID is {}\nGrabbing Agent data now\n".format(group_id))
+                group_time = time.time()
+                print(group_time - start_time)
 
             except IndexError:
                 click.echo("\nClick your Group name was not found.  Check case and spelling and encase your "
                            "name in double quotes if it has special chars\n")
             try:
-                while offset <= total:
-                    new_tag_list = []
-                    querystring = {"limit": limit, "offset": offset}
-                    agent_data = request_data('GET', '/scanners/1/agent-groups/'
-                                              + str(group_id) + '/agents', params=querystring)
-                    total = agent_data['pagination']['total']
+                plugin_data = db_query("select distinct(asset_uuid) from agents where groups like '%{}%';".format(group_id))
+                try:
+                    for x in plugin_data:
+                        uuid = x[0]
+                        tag_list.append(uuid)
 
-                    for agent in agent_data['agents']:
-                        new_uuid = UUID(agent['uuid']).hex
-                        tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(new_uuid))
-                        # New agents will not have a corresponding UUID and will throw an error.
-                        # Since they can not be tagged without a UUID, we will silently skip over the agent
-                        try:
-                            tag_list.append(tag_uuid[0][0])
-                        except IndexError:
-                            pass
+                    if tone:
+                        tone_tag_by_uuid(tag_list, c, v, d)
+                    else:
+                        tag_by_uuid(tag_list, c, v, d)
 
-                    offset += 1999
+                except TypeError:
+                    click.echo("You Tag resulted in 0 Assets; so a tag wasn't created."
+                               "\nMake sure you have run 'navi config update agents'")
             except IndexError:
                 click.echo("\nCheck your API permissions\n")
         except Error:
             click.echo("You might not have agent groups, or you are using Nessus Manager.  ")
         print("Number of Assets being tagged: {}".format(len(tag_list)))
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
 
     if scantime != '':
         d = d + "\nThis asset was tagged because the scan time took over {} mins".format(scantime)

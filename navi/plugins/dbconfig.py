@@ -293,12 +293,14 @@ def create_agents_table():
     database = r"navi.db"
     agent_conn = new_db_connection(database)
     create_agent_table = """CREATE TABLE IF NOT EXISTS agents (
+                            asset_uuid text,
                             agent_id text, 
                             agent_uuid text, 
                             hostname text, 
                             platform text, 
                             ip_address text, 
                             last_scanned text, 
+                            groups text,
                             plugin_feed_id text,
                             core_build text, 
                             core_version text, 

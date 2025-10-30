@@ -1,4 +1,5 @@
 import click
+import time
 from .api_wrapper import request_data, tenb_connection
 from .database import db_query
 
@@ -15,6 +16,7 @@ def grab_all_tags():
 
 
 def update_tag(c, v, tag_list):
+    update_time = time.time()
     click.echo("Your tag is being updated\n")
     list_tags = grab_all_tags()
     for tag_info in list_tags:
@@ -28,6 +30,8 @@ def update_tag(c, v, tag_list):
                     click.echo("Job UUID : {}".format(data['job_uuid']))
                 except IndexError:
                     pass
+    end_udpate_time = time.time()
+    print(end_udpate_time-update_time)
 
 
 def remove_tag(tag_uuid, tag_list):
