@@ -99,6 +99,7 @@ def parse_data(chunk_data, chunk_number):
                         vuln_list.append(plugin_family)
                     except KeyError:
                         vuln_list.append(" ")
+
                     try:
                         port = vulns['port']['port']
                         vuln_list.append(port)
@@ -117,6 +118,7 @@ def parse_data(chunk_data, chunk_number):
                     except KeyError:
                         vuln_list.append(" ")
                         exploit_list.append(" ")
+
                     try:
                         scan_completed = vulns['scan']['completed_at']
                         vuln_list.append(scan_completed)
@@ -205,35 +207,34 @@ def parse_data(chunk_data, chunk_number):
 
                     try:
                         synopsis = vulns['plugin']['synopsis']
-
                         vuln_list.append(str(synopsis))
                     except KeyError:
                         vuln_list.append(" ")
 
                     try:
                         solution = vulns['plugin']['solution']
-
                         vuln_list.append(str(solution))
+                        exploit_list.append(str(solution))
                     except KeyError:
                         vuln_list.append(" ")
+                        exploit_list.append(" ")
 
                     try:
                         version = vulns['plugin']['version']
-
                         vuln_list.append(str(version))
                     except KeyError:
                         vuln_list.append(" ")
 
                     try:
                         description = vulns['plugin']['description']
-
+                        exploit_list.append(str(description))
                         vuln_list.append(str(description))
                     except KeyError:
                         vuln_list.append(" ")
+                        exploit_list.append(" ")
 
                     try:
                         oses = vulns['asset']['operating_system']
-
                         vuln_list.append(str(oses))
                     except KeyError:
                         vuln_list.append(" ")

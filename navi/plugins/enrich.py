@@ -759,6 +759,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_uuid(tag_list, c, v, d)
 
     if manual:
+        tag_list.append(manual)
         if tone:
             tone_tag_by_uuid(tag_list, c, v, d)
         else:

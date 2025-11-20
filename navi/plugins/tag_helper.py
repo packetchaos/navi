@@ -30,8 +30,8 @@ def update_tag(c, v, tag_list):
                     click.echo("Job UUID : {}".format(data['job_uuid']))
                 except IndexError:
                     pass
-    end_udpate_time = time.time()
-    print(end_udpate_time-update_time)
+    end_update_time = time.time()
+    print(end_update_time-update_time)
 
 
 def remove_tag(tag_uuid, tag_list):

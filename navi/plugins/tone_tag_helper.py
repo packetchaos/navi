@@ -42,8 +42,7 @@ def get_all_tags():
         }
     }
     tag_details = request_data("POST",
-                               "/api/v1/t1/tags/search?extra_properties=tag_category_name, aes_average",
-                               payload=payload)
+                               "/api/v1/t1/tags/search?extra_properties=tag_category_name, aes_average")
     click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format("Asset ID/UUID", "Tag Category", "Tag Value",
                                                                "Tag Product", "Assets", "Findings", "avg.AES"))
     click.echo(150 * "-")
@@ -156,7 +155,8 @@ def tag_tone_create_category(c):
 
 def tone_tag_by_uuid(tag_list, c, v, d):
     import time
-    click.echo("\nTagging your Assets in Tenable One.  Assets will take some time to show up in the UI under the new tag\n")
+    click.echo("\nTagging your Assets in Tenable One.  "
+               "Assets will take some time to show up in the UI under the new tag\n")
     # Generator to split IPs into 2000 IP chunks
 
     def chunks(l, n):
