@@ -456,81 +456,81 @@ def grab_data_info():
     click.echo()
     try:
         vuln_count = db_query("select count(*) from vulns;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         vuln_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the Vulns table\n")
 
     try:
         plugin_count = db_query("select count(*) from plugins;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         plugin_count = "Needs updating - run 'navi config update vulns' "
         click.echo("\nNo data in the plugins table\n")
 
     try:
         asset_count = db_query("select count(*) from assets;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         asset_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the assets table\n")
 
     try:
         tag_count = db_query("select count(*) from tags;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         tag_count = "Needs updating - run 'navi config update assets' "
         click.echo("\nNo data in the tags table\n")
 
     try:
         compliance_count = db_query("select count(*) from compliance;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         compliance_count = "Needs updating - run navi config update compliance' "
         click.echo("\nNo data in the compliance table\n")
 
     try:
         fixed_count = db_query("select count(*) from fixed;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         fixed_count = "Needs updating - run 'navi config update fixed' "
         click.echo("\nNo data in the fixed table\n")
 
     try:
         agent_count = db_query("select count(*) from agents;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         agent_count = "Needs updating - run 'navi config update agents'"
         click.echo("\nNo data in the agents table\n")
 
     try:
         cert_count = db_query("select count(*) from certs;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         cert_count = "Needs updating - run 'navi config certificates' "
         click.echo("\nNo data in the certs table\n")
 
     try:
         software_count = db_query("select count(*) from software;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         software_count = "Needs updating - run 'navi config software' "
         click.echo("\nNo data in the software table\n")
 
     try:
         application_count = db_query("select count(*) from apps;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         application_count = "Needs updating"
         click.echo("\nNo data in the apps table\n")
 
     try:
         epss_count = db_query("select count(*) from epss;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         epss_count = "Needs updating - run 'navi config epss'"
         click.echo("\nNo data in the epss table\n")
 
     try:
         path_count = db_query("select count(distinct path) from vuln_paths;")[0][0]
         total_path = db_query("select count(path) from vuln_paths;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         path_count = "Needs updating - run 'navi config update paths' "
         total_path = "Needs updating - run 'navi config update paths' "
         click.echo("\nNo data in the epss table\n")
 
     try:
         route_count = db_query("select count(*) from vuln_route;")[0][0]
-    except IndexError:
+    except (IndexError, TypeError):
         route_count = "Needs updating - run 'navi config update route' "
         click.echo("\nNo data in the epss table\n")
 

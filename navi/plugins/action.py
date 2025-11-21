@@ -175,7 +175,7 @@ class Excel:
 
     def parse_sheet(self, sheet_name: str):
         df = self.excel.parse(sheet_name)
-        df = df.applymap(strip_whitespace)
+        df = df.map(strip_whitespace)
         records = df.replace(np.nan, None).to_dict('records')
         return records
 
