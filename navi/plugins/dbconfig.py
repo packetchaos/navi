@@ -33,6 +33,36 @@ def create_software_table():
     create_table(soft_conn, soft_table)
 
 
+def create_cpes_table():
+    database = r"navi.db"
+    cpe_conn = new_db_connection(database)
+    cpe_table = """CREATE TABLE IF NOT EXISTS cpes (
+                        asset_uuid text,
+                        cpe_string text);"""
+    cpe_conn.execute('pragma journal_mode=wal;')
+    create_table(cpe_conn, cpe_table)
+
+
+def create_recast_table():
+    database = r"navi.db"
+    recast_conn = new_db_connection(database)
+    recast_table = """CREATE TABLE IF NOT EXISTS recast (
+                            recast_uuid PRIMARY KEY,
+                            rule_name text,
+                            resource_type text,
+                            expires_at text, 
+                            asset_uuid text,
+                            original_severity text,
+                            recasted_severity text,
+                            recast_status text,
+                            description text, 
+                            plugin_id text, 
+                            cves text,
+                            recast_rule text);"""
+    recast_conn.execute('pragma journal_mode=wal;')
+    create_table(recast_conn, recast_table)
+
+
 def create_vulns_table():
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
@@ -153,8 +183,9 @@ def create_tone_findings_table():
                             total_finding_count text,
                             fixed_finding_count text,
                             sensor_type text,
-                            days text,
-                            sla_status text
+                            calculated_sla text,
+                            calculated_sla_result text,
+                            recasted_severity text
                             );"""
     tone_vuln_conn.execute('pragma journal_mode=wal;')
     create_table(tone_vuln_conn, tone_findings_table)
@@ -527,3 +558,22 @@ def create_vuln_path_table():
                             finding_id text
                             );"""
     create_table(vuln_path_conn, path_table)
+
+
+def create_rules_table():
+    database = r"navi.db"
+    rules_conn = new_db_connection(database)
+    rules_table = """CREATE TABLE IF NOT EXISTS rules (
+                            category text,
+                            value text,
+                            description text, 
+                            method text,
+                            method_text text,
+                            option_one text,
+                            option_text text, 
+                            option_two text,
+                            option_three text,
+                            run_date text,
+                            magic_url text
+                            );"""
+    create_table(rules_conn, rules_table)

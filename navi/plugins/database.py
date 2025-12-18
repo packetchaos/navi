@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import click
 import re
+import json
 
 
 # Define the regex function
@@ -53,6 +54,57 @@ def db_query(statement):
     except Error as e:
         click.echo("\nDB ERROR:")
         click.echo("The SQL statement: {}\nCreated the following error: {}\n".format(statement, e))
+
+
+def db_query_json_file(table_name, chunk_size, output_dir, new_directory):
+    import json
+    import math
+    import os
+    try:
+        try:
+            os.mkdir(new_directory)
+        except FileExistsError:
+            pass
+        database = r"navi.db"
+        query_conn = new_db_connection(database)
+        with query_conn:
+            query_conn.create_function("REGEXP", 2, regexp)
+            cur = query_conn.cursor()
+            cur.execute('pragma journal_mode=wal;')
+            cur.execute('PRAGMA synchronous = OFF;')
+            cur.execute('pragma threads=16;')
+            cur.execute('PRAGMA temp_store = MEMORY;')
+            cur.execute(f"SELECT COUNT(*) FROM {table_name}")
+            total_rows = cur.fetchone()[0]
+
+            # Calculate number of iterations
+            total_iterations = math.ceil(total_rows / chunk_size)
+            print(f"Total rows: {total_rows}, Total files to create: {total_iterations}")
+
+            for i in range(total_iterations):
+                offset = i * chunk_size
+                # Query data with LIMIT and OFFSET
+                query = f"SELECT * FROM {table_name} LIMIT {chunk_size} OFFSET {offset}"
+                cur.execute(query)
+                rows = cur.fetchall()
+
+                # Get column names for creating JSON objects
+                columns = [desc[0] for desc in cur.description]
+                data = []
+                for row in rows:
+                    data.append(dict(zip(columns, row)))
+
+                # Define output filename (iteration number + 1 for 1-based indexing)
+                filename = f"{output_dir}/{i + 1}.json"
+                with open(filename, 'w') as f:
+                    json.dump(data, f, indent=4)
+
+                print(f"Created file: {filename} with {len(rows)} rows")
+
+        query_conn.close()
+
+    except Error as e:
+        click.echo("\nDB ERROR:")
 
 
 def get_last_update_id():
@@ -263,6 +315,13 @@ def insert_software(conn, software):
     cur.execute(sql, software)
 
 
+def insert_cpes(conn, software):
+    sql = '''INSERT or IGNORE into cpes(asset_uuid, cpe_string) VALUES(?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, software)
+
+
 def drop_tables(conn, table):
     try:
         drop_table = '''DROP TABLE {}'''.format(table)
@@ -272,6 +331,26 @@ def drop_tables(conn, table):
     except Error:
         pass
 
+"""
+def insert_recast(conn, recast):
+    recast_sql = '''INSERT or REPLACE into recast(
+                            recast_uuid,
+                            rule_name,
+                            resource_type,
+                            expires_at, 
+                            asset_uuid,
+                            original_severity,
+                            recasted_severity,
+                            recast_status,
+                            description, 
+                            plugin_id, 
+                            cves,
+                            recast_rule) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(recast_sql, recast)
+
+"""
 
 def insert_vulns(conn, vulns):
     sql = '''INSERT or REPLACE into vulns(
@@ -390,10 +469,11 @@ def insert_tone_findings(conn, tone_findings):
                             total_finding_count,
                             fixed_finding_count,
                             sensor_type,
-                            days,
-                            sla_status
+                            calculated_sla,
+                            calculated_sla_result,
+                            recasted_severity
                             ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
-                            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+                            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
@@ -556,3 +636,23 @@ def insert_plugins(conn, exploit_data):
     exploit_cur = conn.cursor()
     exploit_cur.execute('pragma journal_mode=wal;')
     exploit_cur.execute(sql_plugins, exploit_data)
+
+
+def insert_rules(conn, rules):
+    sql = '''INSERT or IGNORE into rules(
+                            category,
+                            value,
+                            description,
+                            method,
+                            method_text,
+                            option_one,
+                            option_text, 
+                            option_two,
+                            option_three,
+                            run_date,
+                            magic_url
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
+
+    cur = conn.cursor()
+    cur.execute('pragma journal_mode=wal;')
+    cur.execute(sql, rules)

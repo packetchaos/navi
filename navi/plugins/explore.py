@@ -1865,8 +1865,9 @@ def uuid(ipaddr, plugin_id, p, t, o, c, s, r, patches, d, apps, e, critical, det
 @click.option('--limit', default=50, help="Change API Request Limit")
 @click.option('--offset', default=0, help="Change API Request Offset")
 @click.option('-post', is_flag=True, help="Use POST instead of GET")
+@click.option('-put', is_flag=True, help="Use PUT instead of GET")
 @click.option('--payload', help="Used for Automation; Receives a well crafted payload in json")
-def api(url, raw, limit, offset, post, payload):
+def api(url, raw, limit, offset, post, payload, put):
     params = {"limit": limit, "offset": offset}
     try:
         if post:
@@ -1874,6 +1875,11 @@ def api(url, raw, limit, offset, post, payload):
                 api_data = request_data('POST', url, params=params, payload=payload)
             else:
                 api_data = request_data('POST', url, params=params)
+        elif put:
+            if payload:
+                api_data = request_data('PUT', url, params=params, payload=payload)
+            else:
+                api_data = request_data('PUT', url, params=params)
         else:
             api_data = request_data('GET', url, params=params)
 

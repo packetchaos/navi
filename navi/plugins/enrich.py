@@ -316,6 +316,45 @@ def get_attribute_uuid(name):
 def attribute():
     pass
 
+'''
+@enrich.command(help="Create / Update / View Recast rules for 3rd party Data")
+@click.option("--name", default=None, help="Recast Rule Name")
+@click.option("--description", default="Created by navi", help="Recast Description")
+@click.option("--expires_at", default=None, help="Expiration Date for Rule to expire")
+@click.option("--new_severity", default="Low", help="New severity level")
+@click.option("--query", default=None, help="Query for recast rule")
+@click.option("--action", default=None, help="Recast")
+def recast(name, query, description, expires_at, new_severity, action):
+    create_recast_table()
+    start = time.time()
+    from .database import db_query_json_file
+    #query = "select finding_id, asset_uuid, plugin_id, severity, cves from vulns where plugin_name != 'kernel';"
+    recast_data = db_query(query)
+    database = r"/tmp/navi.db"
+    recast_conn = new_db_connection(database)
+    recast_conn.execute('pragma journal_mode=wal;')
+    recast_conn.execute('pragma synchronous=OFF')
+    query_time_end = time.time()
+    query_time = query_time_end - start
+    print(query_time)
+    with recast_conn:
+
+        for assets in recast_data:
+            recast_list = [assets[0], name, "HOST", expires_at, assets[1], assets[3], new_severity, action, description,
+                           assets[2], assets[4], query]
+            insert_recast(recast_conn, recast_list)
+
+    insert_time_end = time.time()
+    insert_time = insert_time_end - start
+    print(insert_time)
+
+    #db_query_json_file(table_name="recast",
+                       #output_dir="/Users/creid/Documents/Code/navi_docker_containers/navi_services/Navi_tag_center/2123-1231-2122",
+                       #chunk_size=10,
+                       #new_directory="/Users/creid/Documents/Code/navi_docker_containers/navi_services/Navi_tag_center/2123-1231-2122")
+
+'''
+
 
 @enrich.command(help="Migrate AWS Tags to TVM tags by Instance ID")
 @click.option("--region", default="", required=True, help="AWS Region")
@@ -375,6 +414,7 @@ def migrate(region, a, s):
 @click.option('-remove', is_flag=True, help="Remove this tag from all assets "
                                             "to support ephemeral asset tagging")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
+@click.option('--cpe', default='', help="Tag based on a CPE")
 @click.option('--xrefs', default='', help="Tag by Cross References like CISA")
 @click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
@@ -385,7 +425,7 @@ def migrate(region, a, s):
 @click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
 @click.option("-tone", is_flag=True, help="Create TONE Tag instead of a TVM tag")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed, byadgroup, regexp, route_id, tone):
+        manual, histid, missed, byadgroup, regexp, route_id, tone, cpe):
     # start a blank list
     tag_list = []
     ip_list = ""
@@ -733,6 +773,23 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             else:
                 tag_by_uuid(tag_list, c, v, d)
 
+    if cpe:
+        d = d + "\nTag by CPE: {}".format(cpe)
+        if regexp:
+            assets_by_cpe = db_query("select distinct(asset_uuid) from cpes where cpe_string REGEXP '{}'".format(cpe))
+        else:
+            assets_by_cpe = db_query("select distinct(asset_uuid) from cpes where cpe_string LIKE '%" + cpe + "%'")
+
+        for asset_uuids in assets_by_cpe:
+            asset_uuid = asset_uuids[0]
+            if asset_uuid not in tag_list:
+                tag_list.append(asset_uuid)
+
+        if tone:
+            tone_tag_by_uuid(tag_list, c, v, d)
+        else:
+            tag_by_uuid(tag_list, c, v, d)
+
     if xrefs:
         d = d + "\nTag by Cross Reference: {}".format(xrefs)
         if xid:
@@ -750,7 +807,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             uuid = x[0]
             if uuid not in tag_list:
                 tag_list.append(uuid)
-
             else:
                 pass
         if tone:

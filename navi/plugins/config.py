@@ -13,7 +13,7 @@ from .epss import update_navi_with_epss, zipper_epss_plugin
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_passwords_table, create_software_table,
                        create_certs_table, create_plugins_table, create_agents_table, create_vuln_route_table,
-                       create_vuln_path_table, create_sla_table)
+                       create_vuln_path_table, create_sla_table, create_cpes_table)
 from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software, insert_vuln_router,
                        insert_certificates, insert_vuln_paths)
 from .fixed_export import calculate_sla, reset_sla, print_sla
@@ -808,6 +808,7 @@ def keys(clear, access_key, secret_key):
         create_agents_table()
         create_compliance_table()
         create_sla_table()
+        create_cpes_table()
 
         # Check if the keys are empty
         if access_key == "" or secret_key == "":
