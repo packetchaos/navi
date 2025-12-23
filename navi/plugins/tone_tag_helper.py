@@ -42,26 +42,30 @@ def get_all_tags():
         }
     }
     tag_details = request_data("POST",
-                               "/api/v1/t1/tags/search?extra_properties=tag_category_name, aes_average")
+                               "/api/v1/t1/tags/search?extra_properties=tag_category_name, aes_average",
+                               payload=payload)
     click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format("Asset ID/UUID", "Tag Category", "Tag Value",
                                                                "Tag Product", "Assets", "Findings", "avg.AES"))
     click.echo(150 * "-")
-    #pprint.pprint(tag_details)
-    for my_tags in tag_details["data"]:
-        asset_count = my_tags['asset_count']
-        tag_category_name = my_tags['extra_properties']['tag_category_name']
-        try:
-            aes_average = my_tags['extra_properties']['aes_average']
-        except KeyError:
-            aes_average = "NONE"
-        asset_uuid = my_tags['id']
-        tag_value_name = my_tags['name']
-        product = my_tags['product']
-        total_weakness_count = my_tags['total_weakness_count']
-        click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format(asset_uuid, tag_category_name,
-                                              tag_value_name, product, asset_count, total_weakness_count, aes_average))
 
-    click.echo("\n\n")
+    try:
+        for my_tags in tag_details["data"]:
+            asset_count = my_tags['asset_count']
+            tag_category_name = my_tags['extra_properties']['tag_category_name']
+            try:
+                aes_average = my_tags['extra_properties']['aes_average']
+            except KeyError:
+                aes_average = "NONE"
+            asset_uuid = my_tags['id']
+            tag_value_name = my_tags['name']
+            product = my_tags['product']
+            total_weakness_count = my_tags['total_weakness_count']
+            click.echo("{:37} {:33} {:33} {:11} {:8} {:8} {:7}".format(asset_uuid, tag_category_name,
+                                                  tag_value_name, product, asset_count, total_weakness_count, aes_average))
+
+        click.echo("\n\n")
+    except TypeError:
+        click.echo("NO Tags Found")
 
 
 def tag_value_exists(tag_category, tag_value):

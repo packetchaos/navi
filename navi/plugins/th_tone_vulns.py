@@ -522,24 +522,23 @@ def parse_data(chunk_data):
                     vuln_list.append(" ")
 
                 try:
-
-                    # Compare Time the finding was detected with today
-
-                    # Store days
-                    now = time.time()
-                    first_parsed = dp.parse(first_observed_at)
-                    first_observed_at_in_seconds = first_parsed.timestamp()
-                    delta = now - first_observed_at_in_seconds
-                    days = ((delta / 60 ) / 60 )/ 24
-                    sla_data = sla_compare(finding_severity, delta)
-                    #print(now, first_observed_at, first_observed_at_in_seconds, days, sla_data, finding_severity)
-                    vuln_list.append(days)
-                    vuln_list.append(sla_data)
-
+                    calculated_sla = findings['calculated_sla']
+                    vuln_list.append(str(calculated_sla))
                 except (KeyError, IndexError, TypeError):
-                    vuln_list.append("None Set")
-                    vuln_list.append("not evaluated")
-                    print("SLA error")
+                    vuln_list.append(" ")
+
+                try:
+                    calculated_sla_result = findings['calculated_sla_result']
+                    vuln_list.append(str(calculated_sla_result))
+                except (KeyError, IndexError, TypeError):
+                    vuln_list.append(" ")
+
+                try:
+                    recasted_severity = findings['recasted_severity']
+                    vuln_list.append(str(recasted_severity))
+                except (KeyError, IndexError, TypeError):
+                    vuln_list.append(" ")
+
                 try:
                     insert_tone_findings(finding_conn, vuln_list)
                 except Error as e:

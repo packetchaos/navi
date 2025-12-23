@@ -391,8 +391,8 @@ def migrate(region, a, s):
 
 
 @enrich.command(help="Create a Tag Category/Value Pair")
-@click.option('--c', default='', help="Create a Tag with the following Category name")
-@click.option('--v', default='', help="Create a Tag Value; requires --c and Category Name or UUID")
+@click.option('--c', default=None, required=True, help="Create a Tag with the following Category name")
+@click.option('--v', default=None, required=True, help="Create a Tag Value; requires --c and Category Name or UUID")
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
 @click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
@@ -424,19 +424,52 @@ def migrate(region, a, s):
                                             "text search; requires another option")
 @click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
 @click.option("-tone", is_flag=True, help="Create TONE Tag instead of a TVM tag")
+@click.option('--by_tag', default=None, help="Create a tag based off another Tag- 'category:value'")
+@click.option('--by_cat', default=None, help="Create a tag by text or regexp in the value field "
+                                             "of another tag or group of tags")
+@click.option('--by_val', default=None, help="Create a tag by text or regexp in the catehgory field of "
+                                             "another tag or group of tags")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
-        manual, histid, missed, byadgroup, regexp, route_id, tone, cpe):
+        manual, histid, missed, byadgroup, regexp, route_id, tone, cpe, by_tag, by_cat, by_val):
     # start a blank list
     tag_list = []
     ip_list = ""
+    by_tags_list = []
 
-    if c == '':
-        click.echo("Category is required.  Please use the --c command")
-        exit()
+    if by_tag:
+        # search for text in the tag, cat string
+        try:
+            category, value = str(by_tag).split(':')
 
-    if v == '':
-        click.echo("Value is required. Please use the --v command")
-        exit()
+        except ValueError:
+            click.echo("\nEnsure your tag has a ':' or this feature won't work.  Category:Value\n")
+            exit()
+
+        by_tag_data = db_query("select asset_uuid from tags where tag_value =='{}' "
+                               "and tag_key == '{}';".format(value, category))
+
+        for assets in by_tag_data:
+            by_tags_list.append(assets[0])
+
+    if by_val:
+        # search value
+        if regexp:
+            by_val_data = db_query("select asset_uuid from tags where tag_value REGEXP '{}';".format(by_val))
+        else:
+            by_val_data = db_query("select asset_uuid from tags where tag_value LIKE '%{}%';".format(by_val))
+
+        for assets in by_val_data:
+            by_tags_list.append(assets[0])
+
+    if by_cat:
+        # Search category
+        if regexp:
+            by_cat_data = db_query("select asset_uuid from tags where tag_key REGEXP '{}'".format(by_cat))
+        else:
+            by_cat_data = db_query("select asset_uuid from tags where tag_category LIKE '%{}%'".format(by_cat))
+
+        for assets in by_cat_data:
+            by_tags_list.append(assets[0])
 
     if output != '' and plugin == '':
         click.echo("You must supply a plugin")
@@ -465,19 +498,19 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                                        "from vulns where plugin_id={};".format(plugin))
 
             for x in plugin_data:
-                uuid = x[1]
-                # To reduce duplicates check for the UUID in the list.
-                if uuid not in tag_list:
-                    tag_list.append(uuid)
+                auuid = x[1]
+                # if by tags list isn't empty, Only add if the uuid is in the list.
+                if by_tags_list:
+                    if auuid in by_tags_list:
+                        tag_list.append(auuid)
                 else:
-                    pass
+                    # To reduce duplicates check for the UUID in the list.
+                    if auuid not in tag_list:
+                        tag_list.append(auuid)
+                    else:
+                        pass
         except Error:
             pass
-
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
 
     if port != '':
         d = d + "\nTag by Port: {}".format(port)
@@ -492,15 +525,15 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             try:
                 for vulns in data:
                     uuid = vulns[0]
-                    # To reduce duplicates check for the UUID in the list.
-                    if uuid not in tag_list:
-                        tag_list.append(uuid)
+                    if by_tags_list:
+                        if uuid in by_tags_list:
+                            tag_list.append(uuid)
+                    else:
+                        # To reduce duplicates check for the UUID in the list.
+                        if uuid not in tag_list:
+                            tag_list.append(uuid)
             except ValueError:
                 pass
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
 
     if name != '':
         d = d + "\nTag by Plugin Name: {}".format(name)
@@ -515,17 +548,16 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
             for x in plugin_data:
                 uuid = x[1]
-                if uuid not in tag_list:
-                    tag_list.append(uuid)
+                if by_tags_list:
+                    if uuid in by_tags_list:
+                        tag_list.append(uuid)
                 else:
-                    pass
+                    if uuid not in tag_list:
+                        tag_list.append(uuid)
+                    else:
+                        pass
         except Error:
             pass
-
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
 
     if group != '':
         start_time = time.time()
@@ -556,12 +588,11 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 try:
                     for x in plugin_data:
                         uuid = x[0]
-                        tag_list.append(uuid)
-
-                    if tone:
-                        tone_tag_by_uuid(tag_list, c, v, d)
-                    else:
-                        tag_by_uuid(tag_list, c, v, d)
+                        if by_tags_list:
+                            if uuid in by_tags_list:
+                                tag_list.append(uuid)
+                        else:
+                            tag_list.append(uuid)
 
                 except TypeError:
                     click.echo("You Tag resulted in 0 Assets; so a tag wasn't created."
@@ -622,11 +653,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 click.echo()
             except ValueError:
                 pass
-
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
 
     if file != '':
         d = d + "\nTagged using IPs found in a file named:{}".format(file)
@@ -762,16 +788,15 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
             for x in plugin_data:
                 uuid = x[0]
-                if uuid not in tag_list:
-                    tag_list.append(uuid)
-
+                if by_tags_list:
+                    if uuid in by_tags_list:
+                        tag_list.append(uuid)
                 else:
-                    pass
+                    if uuid not in tag_list:
+                        tag_list.append(uuid)
 
-            if tone:
-                tone_tag_by_uuid(tag_list, c, v, d)
-            else:
-                tag_by_uuid(tag_list, c, v, d)
+                    else:
+                        pass
 
     if cpe:
         d = d + "\nTag by CPE: {}".format(cpe)
@@ -782,13 +807,12 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
         for asset_uuids in assets_by_cpe:
             asset_uuid = asset_uuids[0]
-            if asset_uuid not in tag_list:
-                tag_list.append(asset_uuid)
-
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
+            if by_tags_list:
+                if asset_uuid in by_tags_list:
+                    tag_list.append(asset_uuid)
+            else:
+                if asset_uuid not in tag_list:
+                    tag_list.append(asset_uuid)
 
     if xrefs:
         d = d + "\nTag by Cross Reference: {}".format(xrefs)
@@ -805,14 +829,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
 
         for x in xref_data:
             uuid = x[0]
-            if uuid not in tag_list:
-                tag_list.append(uuid)
+            if by_tags_list:
+                if uuid in by_tags_list:
+                    tag_list.append(uuid)
             else:
-                pass
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
+                if uuid not in tag_list:
+                    tag_list.append(uuid)
+                else:
+                    pass
 
     if manual:
         tag_list.append(manual)
@@ -901,12 +925,16 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                                   "where vulns.plugin_id in {} and vulns.severity !='info';".format(work))
 
         for assets in vulns_to_route:
-            tag_list.append(assets[0])
+            if by_tags_list:
+                if assets in by_tags_list:
+                    tag_list.append(assets)
+            else:
+                tag_list.append(assets[0])
 
-        if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
-        else:
-            tag_by_uuid(tag_list, c, v, d)
+    if tone:
+        tone_tag_by_uuid(tag_list, c, v, d)
+    else:
+        tag_by_uuid(tag_list, c, v, d)
 
 
 @enrich.command(help="Create Tag rules in tenable VM")

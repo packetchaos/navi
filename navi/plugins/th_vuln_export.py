@@ -5,7 +5,7 @@ from queue import Queue
 from sqlite3 import Error
 from .api_wrapper import request_data
 from .database import (new_db_connection, insert_vulns, insert_update_info,
-                       get_last_update_id, db_query, insert_plugins)
+                       get_last_update_id, db_query, insert_plugins, insert_cpes)
 
 lock = threading.Lock()
 
@@ -36,7 +36,7 @@ def parse_data(chunk_data, chunk_number):
                 # create a blank list to append asset details
                 vuln_list = []
                 exploit_list = []
-
+                cpes = []
                 try:
                     try:
                         finding_id = vulns['finding_id']
@@ -53,6 +53,7 @@ def parse_data(chunk_data, chunk_number):
                     try:
                         asset_uuid = vulns['asset']['uuid']
                         vuln_list.append(asset_uuid)
+                        cpes.append(asset_uuid)
                     except KeyError:
                         vuln_list.append(" ")
 
@@ -389,6 +390,8 @@ def parse_data(chunk_data, chunk_number):
                     try:
                         cpe = vulns['plugin']['cpe']
                         exploit_list.append(str(cpe))
+                        cpes.append(str(cpe))
+                        insert_cpes(vuln_conn, cpes)
                     except KeyError:
                         exploit_list.append(" ")
 
@@ -407,6 +410,7 @@ def parse_data(chunk_data, chunk_number):
                         insert_plugins(vuln_conn, exploit_list)
                     except Error as e:
                         click.echo(e)
+
                 except IndexError:
                     click.echo("skipped one")
 
