@@ -506,12 +506,13 @@ def create(c, v, d, method, method_text, option_one, option_text, option_two, op
     database_conn = new_db_connection(r"navi.db")
     with database_conn:
         today = time.time()
-        navi_tag_rule = [c, v, d, method, method_text, option_one, option_text, option_two, option_three, today, None]
+        navi_tag_rule = ['', c, v, d, method, method_text, option_one, option_text, option_two, option_three, today, None]
         insert_rules(database_conn, navi_tag_rule)
 
 
 @plan.command(help="Run your Strategic Navi Tag Rules")
 def run():
+
     # Grab data from the database
     rules_data = db_query("select * from rules;")
 
@@ -531,7 +532,7 @@ def run():
             cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
 
             if option_one:
-                cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}'".format(c, v, d, method,
+                cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} {}".format(c, v, d, method,
                                                                                                    method_text,
                                                                                                    option_one,
                                                                                                    option_text))
@@ -553,7 +554,7 @@ def run():
                                                                                                                    option_two,
                                                                                                                    option_three))
         elif option_one:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}'".format(c, v, method,
+            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(c, v, method,
                                                                                       method_text,
                                                                                       option_one,
                                                                                       option_text))
@@ -594,13 +595,14 @@ def run():
                                                                                     method_text,
                                                                                     option_three))
             else:
-                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' ".format(c, v, method, method_text))
+                cmd("navi enrich tag --c '{}' --v '{}' --{} {}".format(c, v, method, method_text))
 
 
 @plan.command(help="Import Tag Rules from Tag Sheet")
 @click.option('--file', required=True, help="CSV tio-config.csv")
 def ingest(file):
     import csv
+    create_rules_table()
     with open(file, 'r', newline='') as new_file:
         rules_sheet = csv.reader(new_file)
 
@@ -624,7 +626,7 @@ def ingest(file):
                     method_text = row[3]
                     option_one = row[4]
                     option_text = row[5]
-                    navi_tag_rule = [row[0], row[1], None, row[2], row[3], row[4], row[5], None, None, today, None]
+                    navi_tag_rule = [None, row[0], row[1], None, row[2], row[3], row[4], row[5], None, None, today, None]
                     insert_rules(database_conn, navi_tag_rule)
 
 
@@ -642,27 +644,29 @@ def ingest(file):
 def display():
     # Grab data from the database
     rules_data = db_query("select * from rules;")
-
-    for rules in rules_data:
+    click.echo("Rule ID - Navi Command Example")
+    click.echo("-"* 150)
+    for rule_instance in rules_data:
         # Map the Data
-        c = rules[0]
-        v = rules[1]
-        d = rules[2]
-        method = rules[3]
-        method_text = rules[4]
-        option_one = rules[5]
-        option_text = rules[6]
-        option_two = rules[7]
-        option_three = rules[8]
+        ruleid = rule_instance[0]
+        c = rule_instance[1]
+        v = rule_instance[2]
+        d = rule_instance[3]
+        method = rule_instance[4]
+        method_text = rule_instance[5]
+        option_one = rule_instance[6]
+        option_text = rule_instance[7]
+        option_two = rule_instance[8]
+        option_three = rule_instance[9]
 
         if d:
             click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
 
             if option_one:
-                click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}'".format(c, v, d, method,
-                                                                                                   method_text,
-                                                                                                   option_one,
-                                                                                                   option_text))
+                click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} {}".format(c, v, d, method,
+                                                                                                 method_text,
+                                                                                                 option_one,
+                                                                                                 option_text))
                 if option_two:
                     click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
                                                                                                            method,
@@ -681,7 +685,7 @@ def display():
                                                                                                                    option_two,
                                                                                                                    option_three))
         elif option_one:
-            click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}'".format(c, v, method,
+            click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(c, v, method,
                                                                                       method_text,
                                                                                       option_one,
                                                                                       option_text))
@@ -722,7 +726,7 @@ def display():
                                                                                     method_text,
                                                                                     option_three))
             else:
-                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' ".format(c, v, method, method_text))
+                click.echo(" {} - navi enrich tag --c '{}' --v '{}' --{} {}".format(ruleid, c, v, method, method_text))
 
 
 @action.command(help="Push a command to a linux target")
@@ -994,6 +998,14 @@ def network(nid):
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
 
+@delete.command(help="Delete Tag Rules from your Action Plan")
+@click.argument('ruleid')
+def rules(ruleid):
+    try:
+        delete_assets = db_query("DELETE from rules where rowid={}".format(ruleid))
+        click.echo("\nYour Rule was deleted {}".format(delete_assets))
+    except:
+        click.echo("\nYour Rule wasn't found")
 @delete.command(help="Delete a Tenable One Tag; Remove assets from a tag.")
 @click.option("--c", required =True, help="TONE Category Exact name(case sensitive)")
 @click.option("--v", required=True, help="TONE value Exact name(case sensitive)")

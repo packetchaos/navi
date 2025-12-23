@@ -331,6 +331,7 @@ def drop_tables(conn, table):
     except Error:
         pass
 
+
 """
 def insert_recast(conn, recast):
     recast_sql = '''INSERT or REPLACE into recast(
@@ -351,6 +352,7 @@ def insert_recast(conn, recast):
     cur.execute(recast_sql, recast)
 
 """
+
 
 def insert_vulns(conn, vulns):
     sql = '''INSERT or REPLACE into vulns(
@@ -640,6 +642,7 @@ def insert_plugins(conn, exploit_data):
 
 def insert_rules(conn, rules):
     sql = '''INSERT or IGNORE into rules(
+                            ROWID, 
                             category,
                             value,
                             description,
@@ -651,7 +654,7 @@ def insert_rules(conn, rules):
                             option_three,
                             run_date,
                             magic_url
-    ) VALUES(?,?,?,?,?,?,?,?,?,?,?)'''
+    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'''
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')

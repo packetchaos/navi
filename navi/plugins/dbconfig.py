@@ -564,6 +564,7 @@ def create_rules_table():
     database = r"navi.db"
     rules_conn = new_db_connection(database)
     rules_table = """CREATE TABLE IF NOT EXISTS rules (
+                            ROWID INTEGER PRIMARY KEY AUTOINCREMENT,
                             category text,
                             value text,
                             description text, 
