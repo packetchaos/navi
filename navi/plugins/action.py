@@ -422,7 +422,8 @@ def rotate(userid, db):
                                                             'scantime', 'scanid', 'query', 'cve', 'xrefs',
                                                             'route_id']), help="Navi Tagging method")
 @click.option('--method_text', required=True, help="Test to pair with the Chosen Method")
-@click.option('--option_one', required=False, type=click.Choice(['plugin', 'histid', 'xid', 'xref-id']),
+@click.option('--option_one', required=False, type=click.Choice(['plugin', 'histid', 'xid', 'xref-id',
+                                                                 'by_tag', 'by_cat', 'by_val']),
               help="Navi option that alters the current Method")
 @click.option('--option_text', required=False, help="Text to pair with Option One alteration")
 @click.option('--option_two', required=False, type=click.Choice(['tone', 'regexp']),
@@ -643,9 +644,13 @@ def ingest(file):
 @plan.command(help="List Tag Rules")
 def display():
     # Grab data from the database
-    rules_data = db_query("select * from rules;")
-    click.echo("Rule ID - Navi Command Example")
-    click.echo("-"* 150)
+    try:
+        rules_data = db_query("select * from rules;")
+    except:
+         rules_data = []
+
+    click.echo("Rule ID - Navi Command - You can copy and paste the command in your CLI to test.")
+    click.echo("-" * 150)
     for rule_instance in rules_data:
         # Map the Data
         ruleid = rule_instance[0]
@@ -727,6 +732,8 @@ def display():
                                                                                     option_three))
             else:
                 click.echo(" {} - navi enrich tag --c '{}' --v '{}' --{} {}".format(ruleid, c, v, method, method_text))
+
+    click.echo()
 
 
 @action.command(help="Push a command to a linux target")
@@ -1006,6 +1013,8 @@ def rules(ruleid):
         click.echo("\nYour Rule was deleted {}".format(delete_assets))
     except:
         click.echo("\nYour Rule wasn't found")
+
+
 @delete.command(help="Delete a Tenable One Tag; Remove assets from a tag.")
 @click.option("--c", required =True, help="TONE Category Exact name(case sensitive)")
 @click.option("--v", required=True, help="TONE value Exact name(case sensitive)")

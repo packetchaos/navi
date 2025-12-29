@@ -128,6 +128,7 @@ def tag_by_tag(c, v, d, cv, cc, match):
 def tag_by_uuid(tag_list, c, v, d):
     tag_time = time.time()
     # Generator to split IPs into 2000 IP chunks
+
     def chunks(l, n):
         for i in range(0, len(l), n):
             yield l[i:i + n]
@@ -392,43 +393,44 @@ def migrate(region, a, s):
 
 @enrich.command(help="Create a Tag Category/Value Pair")
 @click.option('--c', default=None, required=True, help="Create a Tag with the following Category name")
-@click.option('--v', default=None, required=True, help="Create a Tag Value; requires --c and Category Name or UUID")
+@click.option('--v', default=None, required=True,
+              help="Create a Tag Value; requires --c and Category Name or UUID")
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
+@click.option('--cve', default='', help="Tag based on a CVE ID")
+@click.option('--cpe', default='', help="Tag based on a CPE")
 @click.option('--plugin', default='', help="Create a tag by plugin ID")
-@click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
-@click.option('--group', default='', help="Create a Tag based on a Agent Group")
 @click.option('--output', default='', help="Create a Tag based on the text in the output. "
                                            "Requires --plugin")
+@click.option('--name', default='', help="Create a Tag by the text found in the Plugin Name")
+@click.option('--group', default='', help="Create a Tag based on a Agent Group")
+@click.option('--xrefs', default='', help="Tag by Cross References like CISA")
+@click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
+@click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
 @click.option('--port', default='', help="Create a Tag based on "
                                          "Assets that have a vulnerability on a port.")
 @click.option('--file', default='', help="Create a Tag based on IPs in a CSV file.")
 @click.option('--scantime', default='', help="Create a Tag for assets that took longer "
                                              "than supplied minutes")
-@click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
-@click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
 @click.option('--scanid', default='', help="Create a tag by Scan ID")
 @click.option('--histid', default=None, help="Focus on a specific scan history; Requires --scanid")
-@click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and' when creating "
-                                         "parent/child tag relationships")
 @click.option('--query', default='', help="Use a custom query to create a tag.")
-@click.option('-remove', is_flag=True, help="Remove this tag from all assets "
-                                            "to support ephemeral asset tagging")
-@click.option('--cve', default='', help="Tag based on a CVE ID")
-@click.option('--cpe', default='', help="Tag based on a CPE")
-@click.option('--xrefs', default='', help="Tag by Cross References like CISA")
-@click.option('--xid', '--xref-id', default='', help="Specify a Cross Reference ID")
 @click.option('--manual', default='', help="Tag assets manually by supplying the UUID")
 @click.option('--missed', default='', help="Tag Agents that missed authentication in given number of days")
 @click.option('--byadgroup', default='', help="Create Tags based on AD groups in a CSV")
 @click.option('-regexp', is_flag=True, help="Use a Regular expression instead of a "
                                             "text search; requires another option")
-@click.option("--route_id", default='', help='Tag assets by a Route ID in the vuln_route table.')
 @click.option("-tone", is_flag=True, help="Create TONE Tag instead of a TVM tag")
 @click.option('--by_tag', default=None, help="Create a tag based off another Tag- 'category:value'")
 @click.option('--by_cat', default=None, help="Create a tag by text or regexp in the value field "
                                              "of another tag or group of tags")
 @click.option('--by_val', default=None, help="Create a tag by text or regexp in the catehgory field of "
                                              "another tag or group of tags")
+@click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
+@click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
+@click.option('-all', is_flag=True, help="Change Default Match rule of 'or' to 'and' when creating "
+                                         "parent/child tag relationships")
+@click.option('-remove', is_flag=True, help="Remove this tag from all assets "
+                                            "to support ephemeral asset tagging")
 def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scanid, all, query, remove, cve, xrefs, xid,
         manual, histid, missed, byadgroup, regexp, route_id, tone, cpe, by_tag, by_cat, by_val):
     # start a blank list
@@ -445,7 +447,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nEnsure your tag has a ':' or this feature won't work.  Category:Value\n")
             exit()
 
-        by_tag_data = db_query("select asset_uuid from tags where tag_value =='{}' "
+        by_tag_data = db_query("select asset_uuid from tags where tag_value == '{}' "
                                "and tag_key == '{}';".format(value, category))
 
         for assets in by_tag_data:
@@ -464,9 +466,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     if by_cat:
         # Search category
         if regexp:
-            by_cat_data = db_query("select asset_uuid from tags where tag_key REGEXP '{}'".format(by_cat))
+            by_cat_data = db_query("select asset_uuid from tags where tag_key REGEXP '{}';".format(by_cat))
         else:
-            by_cat_data = db_query("select asset_uuid from tags where tag_category LIKE '%{}%'".format(by_cat))
+            by_cat_data = db_query("select asset_uuid from tags where tag_category LIKE '%{}%';".format(by_cat))
 
         for assets in by_cat_data:
             by_tags_list.append(assets[0])
