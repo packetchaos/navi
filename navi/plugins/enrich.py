@@ -423,7 +423,7 @@ def migrate(region, a, s):
 @click.option('--by_tag', default=None, help="Create a tag based off another Tag- 'category:value'")
 @click.option('--by_cat', default=None, help="Create a tag by text or regexp in the value field "
                                              "of another tag or group of tags")
-@click.option('--by_val', default=None, help="Create a tag by text or regexp in the catehgory field of "
+@click.option('--by_val', default=None, help="Create a tag by text or regexp in the category field of "
                                              "another tag or group of tags")
 @click.option('--cc', default='', help="Add a Tag to a new parent tag: Child Category")
 @click.option('--cv', default='', help="Add a Tag to a new parent tag: Child Value")
@@ -933,10 +933,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             else:
                 tag_list.append(assets[0])
 
+    # Add date and time to the Description
+    date_in_d = d + "\nUpdated: {}".format(str(datetime.now()))
+
     if tone:
-        tone_tag_by_uuid(tag_list, c, v, d)
+
+        tone_tag_by_uuid(tag_list, c, v, date_in_d)
     else:
-        tag_by_uuid(tag_list, c, v, d)
+        tag_by_uuid(tag_list, c, v, date_in_d)
 
 
 @enrich.command(help="Create Tag rules in tenable VM")

@@ -3,6 +3,7 @@ import os
 import re
 import random
 import time
+from datetime import datetime
 import string
 import pandas as pd
 import numpy as np
@@ -90,12 +91,12 @@ def grab_smtp():
         click.echo("\nYou need to enter smtp information\n")
 
 
-def send_command(shell, cmd, quick):
+def send_command(shell, command, quick):
     if quick == 1:
-        shell.sendline(cmd)
+        shell.sendline(command)
         shell.expect(PROMPT)
     else:
-        shell.sendline(cmd)
+        shell.sendline(command)
         shell.expect(PROMPT, timeout=300)
         shell.expect(pexpect.TIMEOUT)
 
@@ -217,14 +218,14 @@ def str_to_api_name(name):
 
 
 def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, str]:
-    '''
+    """
         split value into (filter_name, operator)
 
         The filter column name will be either:
             - the name of a filter, i.e. ipv4
             - OR the <name><' ' or '_'><operator
 
-    '''
+    """
     # default to equal when the value is a filter_name without the operator
     operator = 'eq'
     filter_name = column_name
@@ -251,7 +252,7 @@ def parse_filter_name(column_name: str, asset_tag_filters: dict) -> Tuple[dict, 
 
 
 def build_filters(columns, asset_tag_filters: dict):
-    '''Build the filter statement based on multiple columns.'''
+    """Build the filter statement based on multiple columns."""
     header_fields = ('category', 'value', 'filter_type')
     # filter items are all k, v pairs execept
     filter_values = {k: v for k, v in columns.items() if k not in header_fields}
@@ -506,8 +507,10 @@ def create(c, v, d, method, method_text, option_one, option_text, option_two, op
 
     database_conn = new_db_connection(r"navi.db")
     with database_conn:
-        today = time.time()
-        navi_tag_rule = ['', c, v, d, method, method_text, option_one, option_text, option_two, option_three, today, None]
+        today = datetime.now()
+        date_in_d = d + "\nUpdated: {}".format(str(today))
+        navi_tag_rule = ['', c, v, date_in_d, method, str(method_text), option_one, str(option_text),
+                         option_two, option_three, today, None]
         insert_rules(database_conn, navi_tag_rule)
 
 
@@ -517,17 +520,17 @@ def run():
     # Grab data from the database
     rules_data = db_query("select * from rules;")
 
-    for rules in rules_data:
+    for rule_i in rules_data:
         # Map the Data
-        c = rules[0]
-        v = rules[1]
-        d = rules[2]
-        method = rules[3]
-        method_text = rules[4]
-        option_one = rules[5]
-        option_text = rules[6]
-        option_two = rules[7]
-        option_three = rules[8]
+        c = rule_i[0]
+        v = rule_i[1]
+        d = rule_i[2]
+        method = rule_i[3]
+        method_text = rule_i[4]
+        option_one = rule_i[5]
+        option_text = rule_i[6]
+        option_two = rule_i[7]
+        option_three = rule_i[8]
 
         if d:
             cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
