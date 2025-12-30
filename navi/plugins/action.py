@@ -420,7 +420,7 @@ def rotate(userid, db):
 @click.option('--d', required=False, help='Tag Description')
 @click.option('--method', required=True, type=click.Choice(['plugin', 'name', 'group', 'output',
                                                             'scantime', 'scanid', 'query', 'cve', 'xrefs',
-                                                            'route_id']), help="Navi Tagging method")
+                                                            'route_id', 'cpe']), help="Navi Tagging method")
 @click.option('--method_text', required=True, help="Test to pair with the Chosen Method")
 @click.option('--option_one', required=False, type=click.Choice(['plugin', 'histid', 'xid', 'xref-id',
                                                                  'by_tag', 'by_cat', 'by_val']),
