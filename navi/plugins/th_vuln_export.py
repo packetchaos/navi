@@ -26,9 +26,12 @@ def worker():
 def parse_data(chunk_data, chunk_number):
     database = r"navi.db"
     vuln_conn = new_db_connection(database)
-    vuln_conn.execute('pragma journal_mode=wal;')
-    vuln_conn.execute('pragma cashe_size=-1000000')
-    vuln_conn.execute('pragma synchronous=OFF')
+    vuln_conn.execute('pragma journal_mode=WAL;')
+    vuln_conn.execute('pragma threads=16;')
+    vuln_conn.execute('PRAGMA temp_store = MEMORY;')
+    vuln_conn.execute('pragma cashe_size=-1000000;')
+    vuln_conn.execute('pragma busy_timeout = 10000;')
+    vuln_conn.execute('pragma synchronous=OFF;')
     with vuln_conn:
         try:
             # loop through all the vulns in this chunk
@@ -388,25 +391,21 @@ def parse_data(chunk_data, chunk_number):
                         exploit_list.append(" ")
 
                     try:
-                        cpe = vulns['plugin']['cpe']
-                        exploit_list.append(str(cpe))
-                        cpes.append(str(cpe))
-                        insert_cpes(vuln_conn, cpes)
-                    except KeyError:
-                        exploit_list.append(" ")
-
-                    try:
                         url = "https://www.tenable.com/plugins/nessus/{}".format(plugin_id)
                         exploit_list.append(str(url))
                     except KeyError:
                         exploit_list.append(" ")
 
                     try:
-                        insert_vulns(vuln_conn, vuln_list)
-                    except Error as e:
-                        click.echo(e)
+                        cpe = vulns['plugin']['cpe']
+                        exploit_list.append(str(cpe))
+                        cpes.append(str(cpe))
+                    except KeyError:
+                        exploit_list.append(" ")
 
                     try:
+                        insert_cpes(vuln_conn, cpes)
+                        insert_vulns(vuln_conn, vuln_list)
                         insert_plugins(vuln_conn, exploit_list)
                     except Error as e:
                         click.echo(e)
