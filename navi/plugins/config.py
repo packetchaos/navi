@@ -1715,7 +1715,7 @@ def bytag(c, v, agent_group, scanner):
         # Grab a current Group ID
         group_id_test, group_uuid_test = get_group_id(agent_group)
         # If None is returned create a new Group and set the group id
-        if group_id_test is None:
+        if group_id_test == 0:
             click.echo("\nGroup wasn't found, creating new group\n")
             group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
             group_id = group_creation['id']

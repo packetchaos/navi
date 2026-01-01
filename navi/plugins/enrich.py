@@ -771,7 +771,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 if str(tag_info[0]).lower() == str(c).lower():
                     if str(tag_info[1]).lower() == str(v).lower():
                         new_uuid = str(tag_info[2])
-                        print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
+                        #print("grab all tags, find correct uuid, hit db with {}".format(new_uuid))
                         remove_uuids_from_tag(new_uuid)
 
         except Exception as E:
