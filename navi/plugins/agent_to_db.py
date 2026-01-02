@@ -9,9 +9,9 @@ tio = tenb_connection()
 def download_agent_data():
     database = r"navi.db"
     agent_conn = new_db_connection(database)
-    agent_conn.execute('pragma journal_mode=wal;')
-    agent_conn.execute('pragma cashe_size=-1000000')
-    agent_conn.execute('pragma synchronous=OFF')
+    agent_conn.execute('pragma journal_mode=WAL;')
+    agent_conn.execute('pragma cashe_size=-1000000;')
+    agent_conn.execute('pragma synchronous=OFF;')
     create_agents_table()
     with agent_conn:
         agent_total = 0
@@ -109,7 +109,7 @@ def download_agent_data():
             if csv_list:
                 agent_total += 1
                 insert_agents(agent_conn, csv_list)
-                print(agent_total)
+                #print(agent_total)
             else:
                 click.echo(
                     "\nYou may not have permissions to the agent data or you have no agents in this container.\n")

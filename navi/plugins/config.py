@@ -95,54 +95,6 @@ def threads_check(threads):
             exit()
 
 
-def find_target_group(tg_name):
-    data = request_data("GET", '/target-groups')
-    group_id = 0
-    for target_groups in data['target_groups']:
-        try:
-            if target_groups['name'] == tg_name:
-                group_id = target_groups['id']
-        except KeyError:
-            pass
-    return group_id
-
-
-def create_target_group(target_name, tg_list):
-    # Check to see if the Target group exists
-    group_id = find_target_group(target_name)
-
-    # Target group API takes a string of IPs. We will start the string here.
-    target_string = ""
-
-    # Check to see if tg_list is a string
-    string_test = isinstance(tg_list, str)
-
-    # turn the list into a string separated by a comma
-    if not string_test:
-        for ips in tg_list:
-            target_string = target_string + str(ips) + ","
-    else:
-        target_string = tg_list
-
-    if not tg_list:
-        click.echo("\nYour request returned zero results\nAs a result, nothing happened\n")
-        exit()
-
-    click.echo("\nThese are the IPs that will be added to the target Group: {}".format(target_name))
-    click.echo(tg_list)
-    click.echo()
-
-    if group_id != 0:
-        # Update current Target Group
-        payload = {"name": target_name, "members": target_string, "type": "system"}
-        request_data("PUT", '/target-groups/' + str(group_id), payload=payload)
-    else:
-        # Create a New Target Group
-        payload = {"name": target_name, "members": str(target_string), "type": "system",
-                   "acls": [{"type": "default", "permissions": 64}]}
-        request_data("POST", '/target-groups', payload=payload)
-
-
 def get_scanner_id(scanner_name):
     try:
         # Receive name, convert to lower-case, then look up the scanner's ID
@@ -162,17 +114,6 @@ def get_network_id(network_name):
             if network_name.lower() == str(net['name']).lower():
                 return net['uuid']
         return 'None'
-    except resterrors.ForbiddenError:
-        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
-
-
-def check_agroup_exists(aname):
-    try:
-        rvalue = 'no'
-        for access_groups in tio.access_groups.list():
-            if str(access_groups['name']).lower() == str(aname).lower():
-                rvalue = access_groups['id']
-        return rvalue
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
@@ -238,8 +179,19 @@ def get_group_id(group_name):
 
         if group_name == groups["name"]:
             group_id = groups["id"]
-            group_uuid = groups['uuid']
+            group_uuid = groups["uuid"]
     return group_id, group_uuid
+
+
+def get_agent_group_id(agent_group_name):
+    agent_group_id = None
+    agent_group_uuid = None
+    for agent_group_instance in tio.agent_groups.list():
+        if agent_group_name == str(agent_group_instance["name"]):
+            agent_group_id = agent_group_instance["id"]
+            agent_group_uuid = agent_group_instance["uuid"]
+
+    return agent_group_id, agent_group_uuid
 
 
 def create_permission(name, tag_name, uuid, perm_string, perm_type, subject_type):
@@ -773,11 +725,6 @@ def user():
     pass
 
 
-@config.group(help="Migrate Target Groups to Scans or Tags and Create Target Groups(Retiring soon)")
-def target_group():
-    pass
-
-
 @config.group(help="Set, Reset and Calculate SLAs")
 def sla():
     pass
@@ -1054,150 +1001,6 @@ def scan_group(name):
         tio.scanner_groups.create(name)
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
-
-
-@target_group.command(help="Create a Target Group - Retiring in T.io soon")
-@click.option('--name', default='Navi Created Target Group', required=True, help="Target Group Name")
-@click.option('--ip', default='', help="Ip(s) or subnet(s) separated by coma")
-def create(name, ip):
-    if ip:
-        create_target_group(name, ip)
-
-
-@target_group.command(help="Migrate Target Groups to Tags or to Scan Text Targets")
-@click.option('--scan', default='', help="Move Target Group Members in a given scan to the Text Target "
-                                         "section of the same scan")
-@click.option('-tags', is_flag=True, help="Migrate All Target Groups to Tags - "
-                                          "Target Group Type : Target Group Name")
-def migrate(scan, tags):
-    if tags:
-        tgroups = request_data('GET', '/target-groups')
-
-        for target_groups in tgroups['target_groups']:
-            member = target_groups['members']
-            name = target_groups['name']
-            group_type = target_groups['type']
-            d = "Imported by Script"
-            try:
-                if name != 'Default':
-                    payload = {"category_name": str(group_type), "value": str(name), "description": str(d),
-                               "filters": {"asset": {"and": [{"field": "ipv4", "operator": "eq",
-                                                              "value": str(member)}]}}}
-                    data = request_data('POST', '/tags/values', payload=payload)
-
-                    value_uuid = data["uuid"]
-                    cat_uuid = data['category_uuid']
-                    click.echo("\nI've created your new Tag - {} : {}\n".format(group_type, name))
-                    click.echo("The Category UUID is : {}\n".format(cat_uuid))
-                    click.echo("The Value UUID is : {}\n".format(value_uuid))
-            except TypeError:
-                click.echo("\nTag has already been created, or there was a name conflict\n")
-                pass
-
-    elif scan:
-        def grab_tg_members():
-            # Grab all members of every target group and put them into a dict for evaluation later
-            tg_member_dict = {}
-            member_data = request_data('GET', '/target-groups')
-
-            for tg in member_data['target_groups']:
-                tg_member = tg['members']
-                tg_member_dict[tg['id']] = tg_member
-            return tg_member_dict
-
-        def get_tg_list():
-            # grab the target list ID from a scan
-            tgs_for_scan = []
-            tg_data = request_data("GET", '/editor/scan/{}'.format(scan))
-            for item in tg_data["settings"]["basic"]["inputs"]:
-                if item["name"] == "Target Groups":
-                    tgs_for_scan = item["default"]  # This maps each scan ID to the list of target group IDs
-            return tgs_for_scan
-
-        text_target_string = ""
-        try:
-            for scan_id in get_tg_list():
-                text_target_string = text_target_string + ",{}".format(grab_tg_members()[scan_id])
-
-            payload = {"settings": {
-                "target_groups": [],
-                "text_targets": text_target_string[1:]}}
-
-            update_scan = request_data("PUT", "/scans/{}".format(scan), payload=payload)
-            click.echo("\n{} was updated with the below targets:\n {}".format(update_scan['name'],
-                                                                              text_target_string[1:]))
-        except TypeError:
-            exit()
-        except KeyError:
-            click.echo("\nScan doesn't exist or doesn't have a target group assigned\n")
-    else:
-        click.echo("\nYou need to select an option: --scan or -tags\n")
-
-
-@config.command(help="Create an Access group Based on a Tag - DEPRECATED in T.vm")
-@click.option('--name', default='', required=True, help="Choose a Name for your Access Group.")
-@click.option('--c', default='', required=True, help="Tag Category name to use")
-@click.option('--v', default='', required=True, help="Tag Value to use")
-@click.option('--user_name', default='', help="The user you want to Assign to the Access Group - "
-                                              "username@domain")
-@click.option('--user_group', default='', help="The User Group you want to assign to the Access Group")
-@click.option('--perm', type=click.Choice(['scan', 'view', 'scanview'], case_sensitive=False),
-              required=True)
-def access_group(name, c, v, user_name, user_group, perm):
-    permission = []
-    choice = 'none'
-    perm_type = 'none'
-
-    if user_name == '' and user_group == '':
-        click.echo("\nYou Need to use '--user_name' or '--user_group' command and supply "
-                   "a user or group. e.g: user@yourdomain or Linux Admins\n")
-        exit()
-
-    if user_name:
-        perm_type = 'user'
-        choice = user_name
-
-    if user_group:
-        perm_type = 'group'
-        choice = user_group
-
-    if perm.lower() == 'scanview':
-        permission = ["CAN_VIEW", "CAN_SCAN"]
-
-    elif perm.lower() == 'view':
-        permission = ["CAN_VIEW"]
-
-    elif perm.lower() == 'scan':
-        permission = ["CAN_SCAN"]
-
-    asset_data = db_query("SELECT tag_uuid from tags where tag_key='" + c + "' and tag_value='" + v + "';")
-
-    # Grab the first UUID...UUIDs returned are duplicates due to the db structure
-    tag_uuid = [asset_data[0][0]]
-
-    if tag_uuid:
-        payload = {"name": str(name), "access_group_type": "MANAGE_ASSETS",
-                   "rules": [{"type": "tag_uuid", "operator": "set-has", "terms": tag_uuid}],
-                   "principals": [{"permissions": permission, "type": perm_type, "principal_name": choice}]}
-
-        # Check to see if the group exists
-        answer = check_agroup_exists(str(name))
-
-        try:
-            # Check to see if the list has any IPs in it.
-            if answer == 'no':
-                new_access_group = request_data('POST', '/v2/access-groups', payload=payload)
-                click.echo("\nYour Access group {} is being created now \n".format(new_access_group['name']))
-                click.echo("The UUID is {} \n".format(new_access_group['id']))
-            else:
-                update_group = request_data('PUT', '/v2/access-groups/' + str(answer), payload=payload)
-                click.echo("\nYour Access group {} is being updated now \n".format(update_group['name']))
-                click.echo("The UUID is {} \n".format(update_group['id']))
-        except TypeError as E:
-            click.echo("\nAccess group? - Check the Username")
-            click.echo(E)
-    else:
-        click.echo("\nYour Tag was null. Check the spelling or perform a 'navi update assets'\n")
 
 
 @user.command(help="Add a User to tenable VM - User will be enabled if already exists")
@@ -1706,39 +1509,24 @@ def unlink(aid):
 @click.option('--agent_group', default=None, help="New Agent group name")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def bytag(c, v, agent_group, scanner):
-    try:
-        from uuid import UUID
-        data = db_query("select uuid from assets LEFT JOIN tags ON uuid == asset_uuid "
-                        "where tag_key =='" + str(c) + "' and tag_value == '" + str(v) + "';")
-        temp_agents = []
+    # Check to see if the Agent Group exists
+    agent_group_id, agent_group_uuid = get_agent_group_id(agent_group)
 
-        # Grab a current Group ID
-        group_id_test, group_uuid_test = get_group_id(agent_group)
-        # If None is returned create a new Group and set the group id
-        if group_id_test == 0:
-            click.echo("\nGroup wasn't found, creating new group\n")
-            group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
-            group_id = group_creation['id']
-        else:
-            group_id = group_id_test
-            click.echo("\nGroup was found! Group ID is:" + str(group_id))
+    if not agent_group_id:
+        # If the Agent group returns a None value, create a new Agent Group
+        click.echo("\nGroup wasn't found, creating new group\n")
+        group_creation = tio.agent_groups.create(name=agent_group, scanner_id=scanner)
+        a_group_id = group_creation['id']
+    else:
+        a_group_id = agent_group_id
 
-        for asset in data:
-            asset_uuid = asset[0]
-            temp_agents.append(asset_uuid)
+    # grab all of the agent IDs in the tag group.
+    agent_data_from_db = db_query("select agents.agent_id from agents LEFT JOIN tags ON "
+                                  "agents.asset_uuid = tags.asset_uuid "
+                                  "where tags.tag_value='{}' AND tags.tag_key='{}';".format(c, v))
 
-        click.echo("\nRetrieving agents from T.VM and comparing it to the navi database."
-                   "\nMake sure you have updated recently in case nothing get's moved\n")
-        for agent_info in tio.agents.list():
-
-            # Convert agent UUID to hex to look up in db
-            agent_uuid = UUID(agent_info['uuid']).hex
-            agent_id = agent_info['id']
-            tag_uuid = db_query("select uuid from assets where agent_uuid='{}'".format(agent_uuid))
-            if tag_uuid[0][0] in temp_agents:
-                tio.agent_groups.add_agent(group_id, agent_id)
-    except resterrors.ForbiddenError:
-        click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
+    for agent_ids in agent_data_from_db:
+        tio.agent_groups.add_agent(a_group_id, agent_ids)
 
 
 @config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
