@@ -40,378 +40,376 @@ def parse_data(chunk_data, chunk_number):
                 vuln_list = []
                 exploit_list = []
                 cpes = []
+
                 try:
-                    try:
-                        finding_id = vulns['finding_id']
-                        vuln_list.append(finding_id)
-                    except KeyError:
-                        click.echo("Every vuln should have a finding Id")
-                        vuln_list.append("0")
-                    try:
-                        ipv4 = vulns['asset']['ipv4']
-                        vuln_list.append(ipv4)
-                    except KeyError:
-                        vuln_list.append(" ")
+                    finding_id = vulns['finding_id']
+                    vuln_list.append(finding_id)
+                except KeyError:
+                    click.echo("Every vuln should have a finding Id")
+                    vuln_list.append("0")
 
-                    try:
-                        asset_uuid = vulns['asset']['uuid']
-                        vuln_list.append(asset_uuid)
-                        cpes.append(asset_uuid)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    ipv4 = vulns['asset']['ipv4']
+                    vuln_list.append(ipv4)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        hostname = vulns['asset']['hostname']
-                        vuln_list.append(hostname)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    asset_uuid = vulns['asset']['uuid']
+                    vuln_list.append(asset_uuid)
+                    cpes.append(asset_uuid)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        first_found = vulns['first_found']
-                        vuln_list.append(first_found)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    hostname = vulns['asset']['hostname']
+                    vuln_list.append(hostname)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        last_found = vulns['last_found']
-                        vuln_list.append(last_found)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    first_found = vulns['first_found']
+                    vuln_list.append(first_found)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        output = vulns['output']
-                        vuln_list.append(str(output))
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    last_found = vulns['last_found']
+                    vuln_list.append(last_found)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        plugin_id = vulns['plugin']['id']
-                        vuln_list.append(plugin_id)
-                        exploit_list.append(plugin_id)
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    output = vulns['output']
+                    vuln_list.append(str(output))
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        plugin_name = vulns['plugin']['name']
-                        vuln_list.append(plugin_name)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    plugin_id = vulns['plugin']['id']
+                    vuln_list.append(plugin_id)
+                    exploit_list.append(plugin_id)
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        plugin_family = vulns['plugin']['family']
-                        vuln_list.append(plugin_family)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    plugin_name = vulns['plugin']['name']
+                    vuln_list.append(plugin_name)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        port = vulns['port']['port']
-                        vuln_list.append(port)
-                    except KeyError:
-                        vuln_list.append(" ")
-                    try:
-                        protocol = vulns['port']['protocol']
-                        vuln_list.append(protocol)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    plugin_family = vulns['plugin']['family']
+                    vuln_list.append(plugin_family)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        severity = vulns['severity']
-                        vuln_list.append(severity)
-                        exploit_list.append(severity)
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    port = vulns['port']['port']
+                    vuln_list.append(port)
+                except KeyError:
+                    vuln_list.append(" ")
+                try:
+                    protocol = vulns['port']['protocol']
+                    vuln_list.append(protocol)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        scan_completed = vulns['scan']['completed_at']
-                        vuln_list.append(scan_completed)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    severity = vulns['severity']
+                    vuln_list.append(severity)
+                    exploit_list.append(severity)
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        scan_started = vulns['scan']['started_at']
-                        vuln_list.append(scan_started)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    scan_completed = vulns['scan']['completed_at']
+                    vuln_list.append(scan_completed)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        scan_uuid = vulns['scan']['uuid']
-                        vuln_list.append(scan_uuid)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    scan_started = vulns['scan']['started_at']
+                    vuln_list.append(scan_started)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        schedule_id = vulns['scan']['schedule_id']
-                        vuln_list.append(schedule_id)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    scan_uuid = vulns['scan']['uuid']
+                    vuln_list.append(scan_uuid)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        state = vulns['state']
-                        vuln_list.append(state)
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    schedule_id = vulns['scan']['schedule_id']
+                    vuln_list.append(schedule_id)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        cves = vulns['plugin']['cve']
-                        vuln_list.append(str(cves))
-                        exploit_list.append(str(cves))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    state = vulns['state']
+                    vuln_list.append(state)
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        score = vulns['plugin']['vpr']['score']
-                        vuln_list.append(score)
-                        exploit_list.append(score)
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    cves = vulns['plugin']['cve']
+                    vuln_list.append(str(cves))
+                    exploit_list.append(str(cves))
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        exploit = vulns['plugin']['exploit_available']
-                        vuln_list.append(str(exploit))
-                        exploit_list.append(str(exploit))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    score = vulns['plugin']['vpr']['score']
+                    vuln_list.append(score)
+                    exploit_list.append(score)
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        xrefs = vulns['plugin']['xrefs']
-                        vuln_list.append(str(xrefs))
-                        exploit_list.append(str(xrefs))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    exploit = vulns['plugin']['exploit_available']
+                    vuln_list.append(str(exploit))
+                    exploit_list.append(str(exploit))
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        see_also = vulns['plugin']['see_also']
-                        exploit_list.append(str(see_also))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    xrefs = vulns['plugin']['xrefs']
+                    vuln_list.append(str(xrefs))
+                    exploit_list.append(str(xrefs))
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        cvss3_base_score = vulns['plugin']['cvss3_base_score']
-                        exploit_list.append(str(cvss3_base_score))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    see_also = vulns['plugin']['see_also']
+                    exploit_list.append(str(see_also))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        cvss3_temporal_score = vulns['plugin']['cvss3_temporal_score']
-                        exploit_list.append(str(cvss3_temporal_score))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    cvss3_base_score = vulns['plugin']['cvss3_base_score']
+                    exploit_list.append(str(cvss3_base_score))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        cvss_base_score = vulns['plugin']['cvss_base_score']
-                        exploit_list.append(str(cvss_base_score))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    cvss3_temporal_score = vulns['plugin']['cvss3_temporal_score']
+                    exploit_list.append(str(cvss3_temporal_score))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        synopsis = vulns['plugin']['synopsis']
-                        vuln_list.append(str(synopsis))
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    cvss_base_score = vulns['plugin']['cvss_base_score']
+                    exploit_list.append(str(cvss_base_score))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        solution = vulns['plugin']['solution']
-                        vuln_list.append(str(solution))
-                        exploit_list.append(str(solution))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    synopsis = vulns['plugin']['synopsis']
+                    vuln_list.append(str(synopsis))
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        version = vulns['plugin']['version']
-                        vuln_list.append(str(version))
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    solution = vulns['plugin']['solution']
+                    vuln_list.append(str(solution))
+                    exploit_list.append(str(solution))
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        description = vulns['plugin']['description']
-                        exploit_list.append(str(description))
-                        vuln_list.append(str(description))
-                    except KeyError:
-                        vuln_list.append(" ")
-                        exploit_list.append(" ")
+                try:
+                    version = vulns['plugin']['version']
+                    vuln_list.append(str(version))
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        oses = vulns['asset']['operating_system']
-                        vuln_list.append(str(oses))
-                    except KeyError:
-                        vuln_list.append(" ")
+                try:
+                    description = vulns['plugin']['description']
+                    exploit_list.append(str(description))
+                    vuln_list.append(str(description))
+                except KeyError:
+                    vuln_list.append(" ")
+                    exploit_list.append(" ")
 
-                    try:
-                        pub_date = vulns['plugin']['publication_date']
-                        exploit_list.append(str(pub_date))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    oses = vulns['asset']['operating_system']
+                    vuln_list.append(str(oses))
+                except KeyError:
+                    vuln_list.append(" ")
 
-                    try:
-                        patch_date = vulns['plugin']['patch_publication_date']
-                        exploit_list.append(str(patch_date))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    pub_date = vulns['plugin']['publication_date']
+                    exploit_list.append(str(pub_date))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        special_url = ("https://cloud.tenable.com/tio/app.html#/"
-                                       "vulnerability-management/dashboard/assets/asset-details/"
-                                       "{}/vulns/vulnerability-details/{}/details").format(asset_uuid, plugin_id)
-                        vuln_list.append(special_url)
-                    except AttributeError:
-                        special_url = None
-                        vuln_list.append(special_url)
+                try:
+                    patch_date = vulns['plugin']['patch_publication_date']
+                    exploit_list.append(str(patch_date))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploit_framework_canvas = vulns['plugin']['exploit_framework_canvas']
-                        exploit_list.append(str(exploit_framework_canvas))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    special_url = ("https://cloud.tenable.com/tio/app.html#/"
+                                   "vulnerability-management/dashboard/assets/asset-details/"
+                                   "{}/vulns/vulnerability-details/{}/details").format(asset_uuid, plugin_id)
+                    vuln_list.append(special_url)
+                except AttributeError:
+                    special_url = None
+                    vuln_list.append(special_url)
 
-                    try:
-                        exploit_framework_core = vulns['plugin']['exploit_framework_core']
-                        exploit_list.append(str(exploit_framework_core))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploit_framework_canvas = vulns['plugin']['exploit_framework_canvas']
+                    exploit_list.append(str(exploit_framework_canvas))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploit_framework_d2_elliot = vulns['plugin']['exploit_framework_d2_elliot']
-                        exploit_list.append(str(exploit_framework_d2_elliot))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploit_framework_core = vulns['plugin']['exploit_framework_core']
+                    exploit_list.append(str(exploit_framework_core))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploit_framework_exploithub = vulns['plugin']['exploit_framework_exploithub']
-                        exploit_list.append(str(exploit_framework_exploithub))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploit_framework_d2_elliot = vulns['plugin']['exploit_framework_d2_elliot']
+                    exploit_list.append(str(exploit_framework_d2_elliot))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploit_framework_metasploit = vulns['plugin']['exploit_framework_metasploit']
-                        exploit_list.append(str(exploit_framework_metasploit))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploit_framework_exploithub = vulns['plugin']['exploit_framework_exploithub']
+                    exploit_list.append(str(exploit_framework_exploithub))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploitability_ease = vulns['plugin']['exploitability_ease']
-                        exploit_list.append(str(exploitability_ease))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploit_framework_metasploit = vulns['plugin']['exploit_framework_metasploit']
+                    exploit_list.append(str(exploit_framework_metasploit))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploited_by_malware = vulns['plugin']['exploited_by_malware']
-                        exploit_list.append(str(exploited_by_malware))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploitability_ease = vulns['plugin']['exploitability_ease']
+                    exploit_list.append(str(exploitability_ease))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        exploited_by_nessus = vulns['plugin']['exploited_by_nessus']
-                        exploit_list.append(str(exploited_by_nessus))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploited_by_malware = vulns['plugin']['exploited_by_malware']
+                    exploit_list.append(str(exploited_by_malware))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        has_patch = vulns['plugin']['has_patch']
-                        exploit_list.append(str(has_patch))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    exploited_by_nessus = vulns['plugin']['exploited_by_nessus']
+                    exploit_list.append(str(exploited_by_nessus))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        has_workaround = vulns['plugin']['has_workaround']
-                        exploit_list.append(str(has_workaround))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    has_patch = vulns['plugin']['has_patch']
+                    exploit_list.append(str(has_patch))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        in_the_news = vulns['plugin']['in_the_news']
-                        exploit_list.append(str(in_the_news))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    has_workaround = vulns['plugin']['has_workaround']
+                    exploit_list.append(str(has_workaround))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        modification_date = vulns['plugin']['modification_date']
-                        exploit_list.append(str(modification_date))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    in_the_news = vulns['plugin']['in_the_news']
+                    exploit_list.append(str(in_the_news))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        name = vulns['plugin']['name']
-                        exploit_list.append(name)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    modification_date = vulns['plugin']['modification_date']
+                    exploit_list.append(str(modification_date))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        risk_factor = vulns['plugin']['risk_factor']
-                        exploit_list.append(risk_factor)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    name = vulns['plugin']['name']
+                    exploit_list.append(name)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        threat_intensity_last28 = vulns['plugin']['vpr']['drivers']['threat_intensity_last28']
-                        exploit_list.append(str(threat_intensity_last28))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    risk_factor = vulns['plugin']['risk_factor']
+                    exploit_list.append(risk_factor)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        threat_sources_last28 = vulns['plugin']['vpr']['drivers']['threat_sources_last28']
-                        exploit_list.append(str(threat_sources_last28))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    threat_intensity_last28 = vulns['plugin']['vpr']['drivers']['threat_intensity_last28']
+                    exploit_list.append(str(threat_intensity_last28))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        cvss_impact_score_predicted = vulns['plugin']['vpr']['drivers']['cvss_impact_score_predicted']
-                        exploit_list.append(cvss_impact_score_predicted)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    threat_sources_last28 = vulns['plugin']['vpr']['drivers']['threat_sources_last28']
+                    exploit_list.append(str(threat_sources_last28))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        threat_sources_last28 = vulns['plugin']['vpr']['drivers']['cvss3_impact_score']
-                        exploit_list.append(threat_sources_last28)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    cvss_impact_score_predicted = vulns['plugin']['vpr']['drivers']['cvss_impact_score_predicted']
+                    exploit_list.append(cvss_impact_score_predicted)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        lower_bound = vulns['plugin']['vpr']['drivers']['age_of_vuln']['lower_bound']
-                        exploit_list.append(lower_bound)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    threat_sources_last28 = vulns['plugin']['vpr']['drivers']['cvss3_impact_score']
+                    exploit_list.append(threat_sources_last28)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        upper_bound = vulns['plugin']['vpr']['drivers']['age_of_vuln']['upper_bound']
-                        exploit_list.append(upper_bound)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    lower_bound = vulns['plugin']['vpr']['drivers']['age_of_vuln']['lower_bound']
+                    exploit_list.append(lower_bound)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        vpr_updated = vulns['plugin']['vpr']['updated']
-                        exploit_list.append(vpr_updated)
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    upper_bound = vulns['plugin']['vpr']['drivers']['age_of_vuln']['upper_bound']
+                    exploit_list.append(upper_bound)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        url = "https://www.tenable.com/plugins/nessus/{}".format(plugin_id)
-                        exploit_list.append(str(url))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    vpr_updated = vulns['plugin']['vpr']['updated']
+                    exploit_list.append(vpr_updated)
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        cpe = vulns['plugin']['cpe']
-                        exploit_list.append(str(cpe))
-                        cpes.append(str(cpe))
-                    except KeyError:
-                        exploit_list.append(" ")
+                try:
+                    url = "https://www.tenable.com/plugins/nessus/{}".format(plugin_id)
+                    exploit_list.append(str(url))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                    try:
-                        insert_cpes(vuln_conn, cpes)
-                        insert_vulns(vuln_conn, vuln_list)
-                        insert_plugins(vuln_conn, exploit_list)
-                    except Error as e:
-                        click.echo(e)
+                try:
+                    cpe = vulns['plugin']['cpe']
+                    exploit_list.append(str(cpe))
+                    cpes.append(str(cpe))
+                except KeyError:
+                    exploit_list.append(" ")
 
-                except IndexError:
-                    click.echo("skipped one")
+            try:
+                insert_cpes(vuln_conn, cpes)
+                insert_vulns(vuln_conn, vuln_list)
+                insert_plugins(vuln_conn, exploit_list)
+            except Error as e:
+                click.echo(e)
 
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
