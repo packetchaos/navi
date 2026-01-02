@@ -236,7 +236,7 @@ def remove_uuids_from_tag(tag_uuid):
     asset_uuid_list = []
 
     tag_data = db_query("select asset_uuid from assets LEFT JOIN tags ON "
-                        "uuid == asset_uuid where tag_uuid=='{}';".format(str(tag_uuid)))
+                        "assets.uuid == tags.asset_uuid where tags.tag_uuid=='{}';".format(str(tag_uuid)))
 
     # Clean up the data into a list
     for asset_uuid_loop in tag_data:
@@ -488,19 +488,17 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
             if output:
                 if regexp:
-                    plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns "
-                                           "LEFT JOIN assets ON asset_uuid = uuid "
-                                           "where plugin_id='{}' and output REGEXP '{}';".format(plugin, output))
+                    plugin_data = db_query("SELECT distinct(asset_uuid) where plugin_id='{}' "
+                                           "and output REGEXP '{}';".format(plugin, output))
                 else:
-                    plugin_data = db_query("SELECT asset_ip, asset_uuid, fqdn, network from vulns "
-                                           "LEFT JOIN assets ON asset_uuid = uuid "
+                    plugin_data = db_query("SELECT distinct(asset_uuid) from vulns "
                                            "where plugin_id='{}' and output LIKE '%{}%';".format(plugin, output))
             else:
-                plugin_data = db_query("SELECT asset_ip, asset_uuid, output "
+                plugin_data = db_query("SELECT distinct(asset_uuid)"
                                        "from vulns where plugin_id={};".format(plugin))
 
             for x in plugin_data:
-                auuid = x[1]
+                auuid = x[0]
                 # if by tags list isn't empty, Only add if the uuid is in the list.
                 if by_tags_list:
                     if auuid in by_tags_list:
@@ -542,14 +540,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
 
             if regexp:
-                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns "
+                plugin_data = db_query("SELECT distinct(asset_uuid) from vulns "
                                        "where plugin_name REGEXP '{}';".format(name))
             else:
-                plugin_data = db_query("SELECT asset_ip, asset_uuid, output from vulns "
+                plugin_data = db_query("SELECT distinct(asset_uuid) from vulns "
                                        "where plugin_name LIKE '%{}%';".format(name))
 
             for x in plugin_data:
-                uuid = x[1]
+                uuid = x[0]
                 if by_tags_list:
                     if uuid in by_tags_list:
                         tag_list.append(uuid)
@@ -786,7 +784,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             click.echo("\nYou must have 'CVE' in your CVE string. EX: CVE-1111-2222\n")
 
         else:
-            plugin_data = db_query("SELECT asset_uuid from vulns where cves LIKE '%" + cve + "%';")
+            plugin_data = db_query("SELECT distinct(asset_uuid) from vulns where cves LIKE '%" + cve + "%';")
 
             for x in plugin_data:
                 uuid = x[0]
@@ -820,14 +818,14 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         d = d + "\nTag by Cross Reference: {}".format(xrefs)
         if xid:
             d = d + "\n Refined tag search to the follow Cross Reference ID text search: {}".format(xid)
-            xref_data = db_query("select asset_uuid from vulns where "
+            xref_data = db_query("select distinct(asset_uuid) from vulns where "
                                  "xrefs LIKE '%{}%' AND xrefs LIKE '%{}%'".format(xrefs, xid))
 
         else:
             if regexp:
-                xref_data = db_query("select asset_uuid from vulns where xrefs REGEXP '{}'".format(xrefs))
+                xref_data = db_query("select distinct(asset_uuid) from vulns where xrefs REGEXP '{}'".format(xrefs))
             else:
-                xref_data = db_query("select asset_uuid from vulns where xrefs LIKE '%{}%'".format(xrefs))
+                xref_data = db_query("select distinct(asset_uuid) from vulns where xrefs LIKE '%{}%'".format(xrefs))
 
         for x in xref_data:
             uuid = x[0]
@@ -937,7 +935,6 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
     date_in_d = d + "\nUpdated: {}".format(str(datetime.now()))
 
     if tone:
-
         tone_tag_by_uuid(tag_list, c, v, date_in_d)
     else:
         tag_by_uuid(tag_list, c, v, date_in_d)
