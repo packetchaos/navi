@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.5.12"
+    return "navi-8.5.13"
 
 
 def tenb_connection():
@@ -174,6 +174,9 @@ def request_data(method, url_mod, **kwargs):
             continue
         except JSONDecodeError:
             click.echo("Download Error or User enabled / Disabled ")
+            continue
+        except requests.exceptions.ChunkedEncodingError:
+            click.echo("Data error. Retrying")
             continue
 
 

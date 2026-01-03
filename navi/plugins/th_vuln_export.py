@@ -404,12 +404,12 @@ def parse_data(chunk_data, chunk_number):
                 except KeyError:
                     exploit_list.append(" ")
 
-            try:
-                insert_cpes(vuln_conn, cpes)
-                insert_vulns(vuln_conn, vuln_list)
-                insert_plugins(vuln_conn, exploit_list)
-            except Error as e:
-                click.echo(e)
+                try:
+                    insert_cpes(vuln_conn, cpes)
+                    insert_vulns(vuln_conn, vuln_list)
+                    insert_plugins(vuln_conn, exploit_list)
+                except Error as e:
+                    click.echo(e)
 
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
