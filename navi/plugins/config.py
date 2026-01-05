@@ -1523,7 +1523,7 @@ def bytag(c, v, agent_group, scanner):
     # grab all of the agent IDs in the tag group.
     agent_data_from_db = db_query("select agents.agent_id from agents LEFT JOIN tags ON "
                                   "agents.asset_uuid = tags.asset_uuid "
-                                  "where tags.tag_value='{}' AND tags.tag_key='{}';".format(c, v))
+                                  "where tags.tag_value='{}' AND tags.tag_key='{}';".format(v, c))
 
     for agent_ids in agent_data_from_db:
         tio.agent_groups.add_agent(a_group_id, agent_ids)

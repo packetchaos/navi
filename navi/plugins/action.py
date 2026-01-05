@@ -432,85 +432,15 @@ def rotate(userid, db):
 @click.option('--option_three', required=False, type=click.Choice(['tone', 'regexp']),
               help="Option to create a TOne Tag or use regular expressions")
 def create(c, v, d, method, method_text, option_one, option_text, option_two, option_three):
-
-    if d:
-        cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
-
-        if option_one:
-            cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}'".format(c, v, d, method,
-                                                                                               method_text,
-                                                                                               option_one,
-                                                                                               option_text))
-            if option_two:
-                cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
-                                                                                                       method,
-                                                                                                       method_text,
-                                                                                                       option_one,
-                                                                                                       option_text,
-                                                                                                       option_two))
-                if option_three:
-                    cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
-                                                                                                       v,
-                                                                                                       d,
-                                                                                                       method,
-                                                                                                       method_text,
-                                                                                                       option_one,
-                                                                                                       option_text,
-                                                                                                       option_two,
-                                                                                                       option_three))
-    elif option_one:
-        cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}'".format(c, v, method,
-                                                                                  method_text,
-                                                                                  option_one,
-                                                                                  option_text))
-        if option_two:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(c, v,
-                                                                                                   method,
-                                                                                                   method_text,
-                                                                                                   option_one,
-                                                                                                   option_text,
-                                                                                                   option_two))
-            if option_three:
-                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
-                                                                                                           v,
-                                                                                                           method,
-                                                                                                           method_text,
-                                                                                                           option_one,
-                                                                                                           option_text,
-                                                                                                           option_two,
-                                                                                                           option_three))
-    elif option_two:
-        cmd("navi enrich tag --c '{}' --v '{}' --{} {} -{}".format(c, v,
-                                                                          method,
-                                                                          method_text,
-                                                                          option_two))
-        if option_three:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' -{} -{}".format(c,
-                                                                                    v,
-                                                                                    method,
-                                                                                    method_text,
-                                                                                    option_two,
-                                                                                    option_three))
-
-    else:
-        if option_three:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c,
-                                                                                v,
-                                                                                method,
-                                                                                method_text,
-                                                                                option_three))
-        else:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' ".format(c, v, method, method_text))
-
     # Insert into DB
     create_rules_table()
 
     database_conn = new_db_connection(r"navi.db")
     with database_conn:
         today = datetime.now()
-        date_in_d = d + "\nUpdated: {}".format(str(today))
-        navi_tag_rule = ['', c, v, date_in_d, method, str(method_text), option_one, str(option_text),
-                         option_two, option_three, today, None]
+        date_in_d = str(d + "Updated: {}".format(str(today)))
+        navi_tag_rule = [None, str(c), str(v), date_in_d, method, str(method_text), option_one, str(option_text), option_two, option_three, str(today), None]
+
         insert_rules(database_conn, navi_tag_rule)
 
 
@@ -522,32 +452,30 @@ def run():
 
     for rule_i in rules_data:
         # Map the Data
-        c = rule_i[0]
-        v = rule_i[1]
-        d = rule_i[2]
-        method = rule_i[3]
-        method_text = rule_i[4]
-        option_one = rule_i[5]
-        option_text = rule_i[6]
-        option_two = rule_i[7]
-        option_three = rule_i[8]
+        c = rule_i[1]
+        v = rule_i[2]
+        d = rule_i[3]
+        method = rule_i[4]
+        method_text = rule_i[5]
+        option_one = rule_i[6]
+        option_text = rule_i[7]
+        option_two = rule_i[8]
+        option_three = rule_i[9]
 
         if d:
-            cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
-
             if option_one:
-                cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} {}".format(c, v, d, method,
-                                                                                                   method_text,
-                                                                                                   option_one,
-                                                                                                   option_text))
                 if option_two:
-                    cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
-                                                                                                           method,
-                                                                                                           method_text,
-                                                                                                           option_one,
-                                                                                                           option_text,
-                                                                                                           option_two))
                     if option_three:
+                        click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
+                                                                                                            v,
+                                                                                                            d,
+                                                                                                            method,
+                                                                                                            method_text,
+                                                                                                            option_one,
+                                                                                                            option_text,
+                                                                                                            option_two,
+                                                                                                            option_three))
+
                         cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
                                                                                                                    v,
                                                                                                                    d,
@@ -557,19 +485,43 @@ def run():
                                                                                                                    option_text,
                                                                                                                    option_two,
                                                                                                                    option_three))
-        elif option_one:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(c, v, method,
-                                                                                      method_text,
-                                                                                      option_one,
-                                                                                      option_text))
-            if option_two:
-                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(c, v,
-                                                                                              method,
+                    else:
+                        click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
+                                                                                                        method,
+                                                                                                        method_text,
+                                                                                                        option_one,
+                                                                                                        option_text,
+                                                                                                        option_two))
+
+                        cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
+                                                                                                        method,
+                                                                                                        method_text,
+                                                                                                        option_one,
+                                                                                                        option_text,
+                                                                                                        option_two))
+                else:
+                    click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}'".format(c, v, d, method,
                                                                                               method_text,
                                                                                               option_one,
-                                                                                              option_text,
-                                                                                              option_two))
+                                                                                              option_text))
+                    cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}'".format(c, v, d, method,
+                                                                                              method_text,
+                                                                                              option_one,
+                                                                                              option_text))
+            else:
+                click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}'".format(c, v, d, method, method_text))
+                cmd("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}'".format(c, v, d, method, method_text))
+        elif option_one:
+            if option_two:
                 if option_three:
+                    click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
+                                                                                               v,
+                                                                                               method,
+                                                                                               method_text,
+                                                                                               option_one,
+                                                                                               option_text,
+                                                                                               option_two,
+                                                                                               option_three))
                     cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
                                                                                                       v,
                                                                                                       method,
@@ -578,28 +530,67 @@ def run():
                                                                                                       option_text,
                                                                                                       option_two,
                                                                                                       option_three))
+                else:
+                    click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(c, v,
+                                                                                           method,
+                                                                                           method_text,
+                                                                                           option_one,
+                                                                                           option_text,
+                                                                                           option_two))
+                    cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(c, v,
+                                                                                           method,
+                                                                                           method_text,
+                                                                                           option_one,
+                                                                                           option_text,
+                                                                                           option_two))
+            else:
+                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}'".format(c, v, method,
+                                                                                 method_text,
+                                                                                 option_one,
+                                                                                 option_text))
+                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}'".format(c, v, method,
+                                                                                 method_text,
+                                                                                 option_one,
+                                                                                 option_text))
         elif option_two:
-            cmd("navi enrich tag --c '{}' --v '{}' --{} {} -{}".format(c, v,
-                                                                              method,
-                                                                              method_text,
-                                                                              option_two))
             if option_three:
+                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' -{} -{}".format(c,
+                                                                                 v,
+                                                                                 method,
+                                                                                 method_text,
+                                                                                 option_two,
+                                                                                 option_three))
                 cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' -{} -{}".format(c,
                                                                                         v,
                                                                                         method,
                                                                                         method_text,
                                                                                         option_two,
                                                                                         option_three))
+            else:
+                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c, v,
+                                                                           method,
+                                                                           method_text,
+                                                                           option_two))
+                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c, v,
+                                                                           method,
+                                                                           method_text,
+                                                                           option_two))
 
         else:
             if option_three:
+                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c,
+                                                                             v,
+                                                                             method,
+                                                                             method_text,
+                                                                             option_three))
                 cmd("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c,
                                                                                     v,
                                                                                     method,
                                                                                     method_text,
                                                                                     option_three))
             else:
-                cmd("navi enrich tag --c '{}' --v '{}' --{} {}".format(c, v, method, method_text))
+                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}'".format(c, v, method, method_text))
+                cmd("navi enrich tag --c '{}' --v '{}' --{} '{}'".format(c, v, method, method_text))
 
 
 @plan.command(help="Import Tag Rules from Tag Sheet")
@@ -633,7 +624,6 @@ def ingest(file):
                     navi_tag_rule = [None, row[0], row[1], None, row[2], row[3], row[4], row[5], None, None, today, None]
                     insert_rules(database_conn, navi_tag_rule)
 
-
                     if option_one:
                         click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(c, v, method,
                                                                                                 method_text,
@@ -649,94 +639,101 @@ def display():
     # Grab data from the database
     try:
         rules_data = db_query("select * from rules;")
-    except:
-         rules_data = []
 
-    click.echo("Rule ID - Navi Command - You can copy and paste the command in your CLI to test.")
-    click.echo("-" * 150)
-    for rule_instance in rules_data:
-        # Map the Data
-        ruleid = rule_instance[0]
-        c = rule_instance[1]
-        v = rule_instance[2]
-        d = rule_instance[3]
-        method = rule_instance[4]
-        method_text = rule_instance[5]
-        option_one = rule_instance[6]
-        option_text = rule_instance[7]
-        option_two = rule_instance[8]
-        option_three = rule_instance[9]
+        click.echo("Rule ID - Navi Command - You can copy and paste the command in your CLI to test.")
+        click.echo("-" * 150)
+        for rule_instance in rules_data:
+            # Map the Data
+            ruleid = rule_instance[0]
+            c = rule_instance[1]
+            v = rule_instance[2]
+            d = rule_instance[3]
+            method = rule_instance[4]
+            method_text = rule_instance[5]
+            option_one = rule_instance[6]
+            option_text = rule_instance[7]
+            option_two = rule_instance[8]
+            option_three = rule_instance[9]
 
-        if d:
-            click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(c, v, d, method, method_text))
+            if d:
+                if option_one:
+                    if option_two:
+                        if option_three:
+                            click.echo(
+                                "{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{} -{}".format(ruleid, c,
+                                                                                                                v,
+                                                                                                                d,
+                                                                                                                method,
+                                                                                                                method_text,
+                                                                                                                option_one,
+                                                                                                                option_text,
+                                                                                                                option_two,
+                                                                                                                option_three))
 
-            if option_one:
-                click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} {}".format(c, v, d, method,
-                                                                                                 method_text,
-                                                                                                 option_one,
-                                                                                                 option_text))
+                        else:
+                            click.echo("{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(ruleid, c, v, d,
+                                                                                                            method,
+                                                                                                            method_text,
+                                                                                                            option_one,
+                                                                                                            option_text,
+                                                                                                            option_two))
+                    else:
+                        click.echo("{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} {}".format(ruleid, c, v, d, method,
+                                                                                                  method_text,
+                                                                                                  option_one,
+                                                                                                  option_text))
+                else:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(ruleid, c, v, d, method, method_text))
+            elif option_one:
                 if option_two:
-                    click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{}".format(c, v, d,
-                                                                                                           method,
-                                                                                                           method_text,
-                                                                                                           option_one,
-                                                                                                           option_text,
-                                                                                                           option_two))
                     if option_three:
-                        click.echo("navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
-                                                                                                                   v,
-                                                                                                                   d,
-                                                                                                                   method,
-                                                                                                                   method_text,
-                                                                                                                   option_one,
-                                                                                                                   option_text,
-                                                                                                                   option_two,
-                                                                                                                   option_three))
-        elif option_one:
-            click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(c, v, method,
-                                                                                      method_text,
-                                                                                      option_one,
-                                                                                      option_text))
-            if option_two:
-                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(c, v,
-                                                                                              method,
-                                                                                              method_text,
-                                                                                              option_one,
-                                                                                              option_text,
-                                                                                              option_two))
-                if option_three:
-                    click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{} -{}".format(c,
-                                                                                                      v,
+                        click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{} -{}".format(ruleid, c,
+                                                                                                          v,
+                                                                                                          method,
+                                                                                                          method_text,
+                                                                                                          option_one,
+                                                                                                          option_text,
+                                                                                                          option_two,
+                                                                                                          option_three))
+                    else:
+                        click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} '{}' --{} '{}' -{}".format(ruleid, c, v,
                                                                                                       method,
                                                                                                       method_text,
                                                                                                       option_one,
                                                                                                       option_text,
-                                                                                                      option_two,
-                                                                                                      option_three))
-        elif option_two:
-            click.echo("navi enrich tag --c '{}' --v '{}' --{} {} -{}".format(c, v,
-                                                                              method,
-                                                                              method_text,
-                                                                              option_two))
-            if option_three:
-                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' -{} -{}".format(c,
+                                                                                                      option_two))
+                else:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} '{}' --{} {}".format(ruleid, c, v, method,
+                                                                                            method_text,
+                                                                                            option_one,
+                                                                                            option_text))
+            elif option_two:
+                if option_three:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} '{}' -{} -{}".format(ruleid, c,
+                                                                                            v,
+                                                                                            method,
+                                                                                            method_text,
+                                                                                            option_two,
+                                                                                            option_three))
+                else:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} {} -{}".format(ruleid, c, v,
+                                                                                      method,
+                                                                                      method_text,
+                                                                                      option_two))
+
+            else:
+                if option_three:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(ruleid, c,
                                                                                         v,
                                                                                         method,
                                                                                         method_text,
-                                                                                        option_two,
                                                                                         option_three))
+                else:
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --{} {}".format(ruleid, c, v, method, method_text))
 
-        else:
-            if option_three:
-                click.echo("navi enrich tag --c '{}' --v '{}' --{} '{}' -{}".format(c,
-                                                                                    v,
-                                                                                    method,
-                                                                                    method_text,
-                                                                                    option_three))
-            else:
-                click.echo(" {} - navi enrich tag --c '{}' --v '{}' --{} {}".format(ruleid, c, v, method, method_text))
-
-    click.echo()
+    except TypeError:
+        click.echo("\nNo rules have been created.")
+        exit()
 
 
 @action.command(help="Push a command to a linux target")
