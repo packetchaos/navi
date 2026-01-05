@@ -30,9 +30,12 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.execute('pragma threads=16;')
     vuln_conn.execute('PRAGMA temp_store = MEMORY;')
     vuln_conn.execute('pragma cashe_size=-1000000;')
-    vuln_conn.execute('pragma busy_timeout = 10000;')
+    vuln_conn.execute('pragma busy_timeout = 20000;')
     vuln_conn.execute('pragma synchronous=OFF;')
     with vuln_conn:
+        vuln_master_list = []
+        cpes_master_list = []
+        plugins_master_list = []
         try:
             # loop through all the vulns in this chunk
             for vulns in chunk_data:
@@ -405,12 +408,16 @@ def parse_data(chunk_data, chunk_number):
                     exploit_list.append(" ")
 
                 try:
-                    insert_cpes(vuln_conn, cpes)
-                    insert_vulns(vuln_conn, vuln_list)
-                    insert_plugins(vuln_conn, exploit_list)
+                    #insert_cpes(vuln_conn, cpes)
+                    cpes_master_list.append(cpes)
+                    vuln_master_list.append(vuln_list)
+                    plugins_master_list.append(exploit_list)
+                    #insert_plugins(vuln_conn, exploit_list)
                 except Error as e:
                     click.echo(e)
-
+            insert_vulns(vuln_conn, vuln_master_list)
+            insert_cpes(vuln_conn, cpes_master_list)
+            insert_plugins(vuln_conn, plugins_master_list)
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
             click.echo("Error on Chunk {}".format(chunk_number))
@@ -435,47 +442,47 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
 
     if category is None:
         if plugins:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
                                                       "plugin_id": plugins}}
         elif vpr_score:
             # VPR Score
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
                                                       "vpr_score": {operator: vpr_score}}}
         else:
             # no plugins, No vpr score
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity}}
     else:
         if value is None:
             if plugins:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "plugin_id": plugins}}
             elif vpr_score:
                 # VPR Score
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "vpr_score": {operator: vpr_score}}}
             else:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity}}
         else:
             if plugins:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "plugin_id": plugins,
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
             elif vpr_score:
                 # VPR Score
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "vpr_score": {operator: vpr_score},
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
 
             else:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
+                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity,
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
 

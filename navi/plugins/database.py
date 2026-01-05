@@ -319,7 +319,8 @@ def insert_cpes(conn, software):
     sql = '''INSERT or IGNORE into cpes(asset_uuid, cpe_string) VALUES(?,?)'''
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
-    cur.execute(sql, software)
+    #cur.execute(sql, software)
+    cur.executemany(sql, software)
 
 
 def drop_tables(conn, table):
@@ -366,7 +367,7 @@ def insert_vulns(conn, vulns):
                             plugin_id, 
                             plugin_name, 
                             plugin_family, 
-                            port, 
+                            port,
                             protocol, 
                             severity, 
                             scan_completed, 
@@ -387,8 +388,8 @@ def insert_vulns(conn, vulns):
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
-    cur.execute(sql, vulns)
-
+    #cur.execute(sql, vulns)
+    cur.executemany(sql, vulns)
 
 def insert_tone_findings(conn, tone_findings):
     sql = '''INSERT or REPLACE into tone_findings(
@@ -637,7 +638,8 @@ def insert_plugins(conn, exploit_data):
                      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     exploit_cur = conn.cursor()
     exploit_cur.execute('pragma journal_mode=wal;')
-    exploit_cur.execute(sql_plugins, exploit_data)
+    #exploit_cur.execute(sql_plugins, exploit_data)
+    exploit_cur.executemany(sql_plugins, exploit_data)
 
 
 def insert_rules(conn, rules):
