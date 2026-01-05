@@ -158,10 +158,10 @@ def tag_by_uuid(tag_list, c, v, d):
             if len(tag_list) > 1999:
                 # break the list into 2000 IP chunks
                 for chunks in chunks(tag_list, 1999):
-                    update_tag(c, v, chunks)
+                    update_tag(c, v, d, chunks)
             else:
                 # If the Chunk is less than 2000, simply update it.
-                update_tag(c, v, tag_list)
+                update_tag(c, v, d, tag_list)
         # If the tag doesn't exist. we need to create one.
         else:
             # Create the Tag
@@ -196,14 +196,14 @@ def tag_by_uuid(tag_list, c, v, d):
                                "Splitting the UUIDs into chunks and updating the tags now")
                     # Break the UUIDs into Chunks and update the tag per chunk
                     for chunks in chunks(tag_list, 1999):
-                        update_tag(c, v, chunks)
+                        update_tag(c, v, d, chunks)
 
                 except Exception as E:
                     click.echo("An Error Occurred: \n")
                     click.echo(E)
             else:
                 try:
-                    update_tag(c, v, tag_list)
+                    update_tag(c, v, d, tag_list)
                 except Exception as E:
                     click.echo("An Error Occurred: \n")
                     click.echo(E)
@@ -932,7 +932,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 tag_list.append(assets[0])
 
     # Add date and time to the Description
-    date_in_d = d + "\nUpdated: {}".format(str(datetime.now()))
+    date_in_d = str(d + " Updated: {} ".format(str(datetime.now())))
 
     if tone:
         tone_tag_by_uuid(tag_list, c, v, date_in_d)

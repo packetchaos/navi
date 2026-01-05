@@ -15,7 +15,7 @@ def grab_all_tags():
     return tag_list
 
 
-def update_tag(c, v, tag_list):
+def update_tag(c, v, d, tag_list):
     update_time = time.time()
     click.echo("Your tag is being updated\n")
     list_tags = grab_all_tags()
@@ -28,6 +28,10 @@ def update_tag(c, v, tag_list):
                     payload = {"action": "add", "assets": tag_list, "tags": [tag_uuid]}
                     data = request_data('POST', '/tags/assets/assignments', payload=payload)
                     click.echo("Job UUID : {}".format(data['job_uuid']))
+
+                    payload_two = {"description": "{}".format(d)}
+                    updating_description = request_data('PUT', '/tags/values/{}'.format(tag_uuid), payload=payload_two)
+                    click.echo("\nUpdating The date on the Tag value.\n{}".format(updating_description["description"]))
                 except IndexError:
                     pass
     end_update_time = time.time()
