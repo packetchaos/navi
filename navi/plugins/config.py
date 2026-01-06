@@ -1477,14 +1477,19 @@ def add(aid, gid, file):
 
 
 @agent.command(help="Remove an Agent from a Agent Group")
-@click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to remove ")
+@click.option("--aid", default=None, required=False, help="The agent ID of the agent you want to remove ")
 @click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
-def remove(aid, gid):
+@click.option("-remove_all", is_flag=True, help="remove all agents from the specific group")
+def remove(aid, gid, remove_all):
     try:
-        # Remove an agent from a Group
-        tio.agent_groups.delete_agent(gid, aid)
+        if remove_all:
+            for agent_id_for_removal in tio.agent_groups.details(gid)['agents']:
+                tio.agent_groups.delete_agent(gid, agent_id_for_removal['id'])
+        else:
+            # Remove an agent from a Group
+            tio.agent_groups.delete_agent(gid, aid)
 
-        click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
+            click.echo("\nYour agent has been removed from the Group ID: {}\n".format(gid))
     except AttributeError:
         click.echo("Check your API Keys")
     except resterrors.ForbiddenError:
@@ -1521,13 +1526,12 @@ def bytag(c, v, agent_group, scanner):
         a_group_id = agent_group_id
 
     # grab all of the agent IDs in the tag group.
-    agent_data_from_db = db_query("select agents.agent_id from agents LEFT JOIN tags ON "
-                                  "agents.asset_uuid = tags.asset_uuid "
+    agent_data_from_db = db_query("select agents.agent_id from agents "
+                                  "LEFT JOIN tags ON agents.asset_uuid = tags.asset_uuid "
                                   "where tags.tag_value='{}' AND tags.tag_key='{}';".format(v, c))
 
     for agent_ids in agent_data_from_db:
         tio.agent_groups.add_agent(a_group_id, agent_ids)
-
 
 @config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
 def certificates():

@@ -683,7 +683,7 @@ def display():
                                                                                                   option_one,
                                                                                                   option_text))
                 else:
-                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} {}".format(ruleid, c, v, d, method, method_text))
+                    click.echo("{} - navi enrich tag --c '{}' --v '{}' --d '{}' --{} '{}'".format(ruleid, c, v, d, method, method_text))
             elif option_one:
                 if option_two:
                     if option_three:

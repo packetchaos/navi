@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.5.16"
+    return "navi-8.5.17"
 
 
 def tenb_connection():
@@ -169,7 +169,7 @@ def request_data(method, url_mod, **kwargs):
                 click.echo(r.headers)
                 click.echo(r.reason)
                 continue
-        except ConnectionError:
+        except (ConnectionError, ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError):
             click.echo("Check your connection...You got a connection error. Retying")
             continue
         except JSONDecodeError:

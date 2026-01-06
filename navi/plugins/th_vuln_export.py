@@ -29,9 +29,12 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.execute('pragma journal_mode=WAL;')
     vuln_conn.execute('pragma threads=16;')
     vuln_conn.execute('PRAGMA temp_store = MEMORY;')
-    vuln_conn.execute('pragma cashe_size=-1000000;')
-    vuln_conn.execute('pragma busy_timeout = 20000;')
-    vuln_conn.execute('pragma synchronous=OFF;')
+    vuln_conn.execute('pragma cashe_size=-2000000;')
+    vuln_conn.execute('PRAGMA mmap_size = 30000000000;')
+    vuln_conn.execute('PRAGMA page_size = 4096;')
+    # SQLite will wait for 2 mins before throwing the first dblock
+    vuln_conn.execute('pragma busy_timeout = 60000;')
+    vuln_conn.execute('pragma synchronous=NORMAL;')
     with vuln_conn:
         vuln_master_list = []
         cpes_master_list = []
@@ -407,17 +410,43 @@ def parse_data(chunk_data, chunk_number):
                 except KeyError:
                     exploit_list.append(" ")
 
+                cpes_master_list.append(cpes)
+                vuln_master_list.append(vuln_list)
+                plugins_master_list.append(exploit_list)
+
+            try:
+                insert_vulns(vuln_conn, vuln_master_list)
+            except Error as e:
                 try:
-                    #insert_cpes(vuln_conn, cpes)
-                    cpes_master_list.append(cpes)
-                    vuln_master_list.append(vuln_list)
-                    plugins_master_list.append(exploit_list)
-                    #insert_plugins(vuln_conn, exploit_list)
-                except Error as e:
-                    click.echo(e)
-            insert_vulns(vuln_conn, vuln_master_list)
-            insert_cpes(vuln_conn, cpes_master_list)
-            insert_plugins(vuln_conn, plugins_master_list)
+                    click.echo("{}".format(e))
+                    click.echo("Trying Once more")
+                    time.sleep(20)
+                    insert_vulns(vuln_conn, vuln_master_list)
+                except Error as db_error:
+                    click.echo(db_error, chunk_number)
+                    pass
+            try:
+                insert_plugins(vuln_conn, plugins_master_list)
+            except Error as e:
+                try:
+                    click.echo("{}".format(e))
+                    click.echo("Trying Once more")
+                    time.sleep(25)
+                    insert_vulns(vuln_conn, vuln_master_list)
+                except Error as db_error:
+                    click.echo(db_error, chunk_number)
+                    pass
+            try:
+                insert_cpes(vuln_conn, cpes_master_list)
+            except Error as e:
+                try:
+                    click.echo("{}".format(e))
+                    click.echo("Trying Once more")
+                    time.sleep(30)
+                    insert_vulns(vuln_conn, vuln_master_list)
+                except Error as db_error:
+                    click.echo(db_error, chunk_number)
+                    pass
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
             click.echo("Error on Chunk {}".format(chunk_number))
@@ -442,47 +471,47 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
 
     if category is None:
         if plugins:
-            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
                                                       "plugin_id": plugins}}
         elif vpr_score:
             # VPR Score
-            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity,
                                                       "vpr_score": {operator: vpr_score}}}
         else:
             # no plugins, No vpr score
-            pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                       "severity": severity}}
     else:
         if value is None:
             if plugins:
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "plugin_id": plugins}}
             elif vpr_score:
                 # VPR Score
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "vpr_score": {operator: vpr_score}}}
             else:
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit),
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity}}
         else:
             if plugins:
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "plugin_id": plugins,
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
             elif vpr_score:
                 # VPR Score
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit), "state": state,
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
                                                           "severity": severity,
                                                           "vpr_score": {operator: vpr_score},
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
 
             else:
-                pay_load = {"num_assets": 500, "filters": {'last_found': int(day_limit),
+                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity,
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
 
@@ -553,10 +582,6 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
         conn = new_db_connection(database_2)
         with conn:
             insert_update_info(conn, diff_dict)
-
-        click.echo("\nCreating a few indexes to make queries faster.\n")
-        db_query("CREATE INDEX if NOT EXISTS vulns_plugin_id on vulns (plugin_id);")
-        db_query("CREATE INDEX if NOT EXISTS vulns_uuid on vulns (asset_uuid);")
 
     except KeyError:
         click.echo("Well this is a bummer; you don't have permissions to download Asset data :( ")
