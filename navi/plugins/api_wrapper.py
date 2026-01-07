@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.5.17"
+    return "navi-8.5.18"
 
 
 def tenb_connection():
@@ -153,6 +153,7 @@ def request_data(method, url_mod, **kwargs):
                 click.echo(r.reason)
                 break
             elif r.status_code == 403:
+                click.echo("{}\n{}".format(r.request, r.headers))
                 click.echo("\nYou are not authorized! You need to be an admin\n{}".format(r))
                 break
             elif r.status_code == 409:

@@ -1526,12 +1526,13 @@ def bytag(c, v, agent_group, scanner):
         a_group_id = agent_group_id
 
     # grab all of the agent IDs in the tag group.
-    agent_data_from_db = db_query("select agents.agent_id from agents "
+    agent_data_from_db = db_query("select agents.agent_uuid from agents "
                                   "LEFT JOIN tags ON agents.asset_uuid = tags.asset_uuid "
                                   "where tags.tag_value='{}' AND tags.tag_key='{}';".format(v, c))
 
     for agent_ids in agent_data_from_db:
-        tio.agent_groups.add_agent(a_group_id, agent_ids)
+        tio.agent_groups.add_agent(a_group_id, agent_ids[0])
+
 
 @config.command(help="Parse plugin 10863(certificate information) into it's own table in the database")
 def certificates():
