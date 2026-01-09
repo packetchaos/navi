@@ -328,7 +328,7 @@ def create_agents_table():
     create_agent_table = """CREATE TABLE IF NOT EXISTS agents (
                             asset_uuid text,
                             agent_id text, 
-                            agent_uuid text, 
+                            agent_uuid PRIMARY KEY, 
                             hostname text, 
                             platform text, 
                             ip_address text, 

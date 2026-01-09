@@ -32,7 +32,6 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.execute('pragma cashe_size=-2000000;')
     vuln_conn.execute('PRAGMA mmap_size = 30000000000;')
     vuln_conn.execute('PRAGMA page_size = 4096;')
-    # SQLite will wait for 2 mins before throwing the first dblock
     vuln_conn.execute('pragma busy_timeout = 60000;')
     vuln_conn.execute('pragma synchronous=NORMAL;')
     with vuln_conn:
@@ -460,7 +459,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
 
     database = r"navi.db"
     drop_conn = new_db_connection(database)
-    drop_conn.execute('pragma journal_mode=wal;')
+    drop_conn.execute('pragma journal_mode=WAL;')
 
     # Set URLS for threading
     urls = []
