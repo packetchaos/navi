@@ -541,11 +541,17 @@ def group_by_plugins():
         grouped_plugins = {}
 
         for name, plugin_id in data:
+            #print(name, plugin_id)
             parts = name.split()
-            clean_second_part = str(parts[1]).replace("<", " ")
-            first_part = parts[0].upper()
-            second_part = clean_second_part.upper()
-
+            try:
+                clean_second_part = str(parts[1]).replace("<", " ")
+                first_part = parts[0].upper()
+                second_part = clean_second_part.upper()
+            except IndexError:
+                #print(name, plugin_id, parts)
+                first_part = name
+                second_part = "Plugin: {}".format(plugin_id)
+            print(first_part, second_part)
             # Vuln Route Data Pipeline / Transform logic
             if first_part.startswith("KB") or first_part.startswith("MS"):
                 key = "Windows Updates"
