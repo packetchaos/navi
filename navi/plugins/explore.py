@@ -725,71 +725,6 @@ def templates(policy, scan):
         click.echo("\nCheck your permissions or your API keys\n")
 
 
-@info.command(help="Display completed Audit files and Audit information")
-@click.option('--audit_name', default=None, help="Display all of the Assets with completed Audits "
-                                                 "for the Given Audit name")
-@click.option('--asset_uuid', default=None, help="Display all compliance findings for a given Asset UUID")
-def audits(audit_name, asset_uuid):
-    try:
-        if audit_name and asset_uuid:
-            audit_data = db_query("SELECT asset_uuid, check_name, status FROM compliance where audit_file='{}' "
-                                  "and asset_uuid='{}';".format(audit_name, asset_uuid))
-
-            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
-            click.echo("-" * 150)
-            click.echo()
-            for finding in audit_data:
-                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
-                                                   textwrap.shorten(str(finding[1]), width=85),
-                                                   finding[2]))
-            click.echo()
-
-        elif audit_name:
-            audit_data = db_query("SELECT asset_uuid, check_name, status FROM compliance "
-                                  "where audit_file='{}';".format(audit_name))
-
-            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
-            click.echo("-" * 150)
-            click.echo()
-            for finding in audit_data:
-                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
-                                                   textwrap.shorten(str(finding[1]), width=85),
-                                                   finding[2]))
-            click.echo()
-
-        elif asset_uuid:
-            finding_data = db_query("SELECT asset_uuid, check_name, status FROM compliance "
-                                    "where asset_uuid='{}';".format(asset_uuid))
-
-            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
-            click.echo("-" * 150)
-            click.echo()
-            for finding in finding_data:
-                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
-                                                   textwrap.shorten(str(finding[1]), width=85),
-                                                   finding[2]))
-            click.echo()
-
-        else:
-            compliance_data = db_query("SELECT audit_file from compliance;")
-            compliance_list = []
-
-            for audit in compliance_data:
-                if audit not in compliance_list:
-                    compliance_list.append(audit)
-
-            click.echo("\nCompleted Audits")
-            click.echo("-" * 80)
-            click.echo()
-
-            for names in compliance_list:
-                click.echo(names[0])
-
-            click.echo()
-    except (TypeError, AttributeError):
-        click.echo("\nCheck your permissions or your API keys\n")
-
-
 @info.command(help="Display Permissions")
 def permissions():
     permission_data = request_data("GET", "/api/v3/access-control/permissions")
@@ -1890,6 +1825,71 @@ def api(url, raw, limit, offset, post, payload, put):
 
     except TypeError:
         click.echo("\nCheck your API Keys or permissions\n")
+
+
+@data.command(help="Display completed Audit files and Audit information")
+@click.option('--audit_name', default=None, help="Display all of the Assets with completed Audits "
+                                                 "for the Given Audit name")
+@click.option('--asset_uuid', default=None, help="Display all compliance findings for a given Asset UUID")
+def audits(audit_name, asset_uuid):
+    try:
+        if audit_name and asset_uuid:
+            audit_data = db_query("SELECT asset_uuid, check_name, status FROM compliance where audit_file='{}' "
+                                  "and asset_uuid='{}';".format(audit_name, asset_uuid))
+
+            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
+            click.echo("-" * 150)
+            click.echo()
+            for finding in audit_data:
+                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                                   textwrap.shorten(str(finding[1]), width=85),
+                                                   finding[2]))
+            click.echo()
+
+        elif audit_name:
+            audit_data = db_query("SELECT asset_uuid, check_name, status FROM compliance "
+                                  "where audit_file='{}';".format(audit_name))
+
+            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
+            click.echo("-" * 150)
+            click.echo()
+            for finding in audit_data:
+                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                                   textwrap.shorten(str(finding[1]), width=85),
+                                                   finding[2]))
+            click.echo()
+
+        elif asset_uuid:
+            finding_data = db_query("SELECT asset_uuid, check_name, status FROM compliance "
+                                    "where asset_uuid='{}';".format(asset_uuid))
+
+            click.echo("{:45} {:85} {}".format("\nAsset UUID", " Check Name", " Status"))
+            click.echo("-" * 150)
+            click.echo()
+            for finding in finding_data:
+                click.echo("{:45} {:85} {}".format(textwrap.shorten(str(finding[0]), width=45),
+                                                   textwrap.shorten(str(finding[1]), width=85),
+                                                   finding[2]))
+            click.echo()
+
+        else:
+            compliance_data = db_query("SELECT audit_file from compliance;")
+            compliance_list = []
+
+            for audit in compliance_data:
+                if audit not in compliance_list:
+                    compliance_list.append(audit)
+
+            click.echo("\nCompleted Audits")
+            click.echo("-" * 80)
+            click.echo()
+
+            for names in compliance_list:
+                click.echo(names[0])
+
+            click.echo()
+    except (TypeError, AttributeError):
+        click.echo("\nCheck your permissions or your API keys\n")
 
 
 @data.command(help="Display stats on Software")
