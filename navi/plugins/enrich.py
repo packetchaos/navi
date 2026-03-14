@@ -917,6 +917,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
             tag_by_uuid(tag_list, c="AD Groups", v=key, d="AD Groups tagged by navi")
 
     if route_id:
+        d = d + "\nTag by Route ID: {}".format(route_id)
         route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
 
         work = str(route_info[0][0]).replace("[", "(").replace("]", ")")

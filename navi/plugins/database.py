@@ -2,10 +2,8 @@ import sqlite3
 from sqlite3 import Error
 import click
 import re
-import json
 
 
-# Define the regex function
 def regexp(pattern, string):
     if string is None:
         return False
@@ -127,6 +125,22 @@ def insert_update_info(conn, diff):
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, diff)
+
+
+def insert_scan_data(conn, scan_data):
+    sql = '''INSERT or REPLACE into scan_data(
+                                              asset_uuid, 
+                                              scan_name, 
+                                              scan_policy, 
+                                              scanner_ip, 
+                                              scan_time, 
+                                              max_chunks,
+                                              max_hosts, 
+                                              scan_minutes, 
+                                              round_trip_time) VALUES(?,?,?,?,?,?,?,?,?)'''
+    cur = conn.cursor()
+    cur.execute('pragma journal_mod=wal;')
+    cur.execute(sql, scan_data)
 
 
 def insert_compliance(conn, compliance):
@@ -391,6 +405,7 @@ def insert_vulns(conn, vulns):
     #cur.execute(sql, vulns)
     cur.executemany(sql, vulns)
 
+
 def insert_tone_findings(conn, tone_findings):
     sql = '''INSERT or REPLACE into tone_findings(
                             asset_id,
@@ -480,7 +495,8 @@ def insert_tone_findings(conn, tone_findings):
 
     cur = conn.cursor()
     cur.execute('pragma journal_mode=wal;')
-    cur.execute(sql, tone_findings)
+    # cur.execute(sql, tone_findings)
+    cur.executemany(sql, tone_findings)
 
 
 def insert_apps(conn, apps):

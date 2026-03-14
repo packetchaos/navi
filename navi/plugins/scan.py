@@ -5,9 +5,10 @@ import datetime
 from .explore import get_scanners
 from .api_wrapper import request_data, tenb_connection
 from .error_msg import error_msg
-from .scan_evaluation import evaluate_a_scan
+from .scan_eval import evaluate_scans
 import os
 from .scan_efficentcy import display_data, trend_by_scan_id
+from .scan_evaluation import evaluate_a_scan
 
 tio = tenb_connection()
 
@@ -616,25 +617,25 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
 
 @scan.command(help="Evaluate Scan times")
 @click.option("--scanid", default=None, help="A Scan ID you want to evaluate")
-@click.option("--histid", default="", help="A Specific History ID")
+@click.option("--histid", default=None, help="A Specific History ID")
 @click.option("-full", is_flag=True, help="Evaluate entire available history")
 def evaluate(scanid, histid, full):
     if full:
         try:
             display_data(scanid)
-
         except FileNotFoundError:
             if click.confirm("\nThis command will download each scan history filtered by only the 19506 plugin,"
                              "then parse each output while calculating important statistics.\n It can take from 5 mins "
                              "to over an hour depending on scan frequency and asset count\n"):
                 trend_by_scan_id(scanid)
                 display_data(scanid)
-
         except FileExistsError:
             if click.confirm("\nThis command will download each scan history filtered by only the 19506 plugin,"
                              "then parse each output while calculating important statistics.\n It can take from 5 mins "
                              "to over an hour depending on scan frequency and asset count\n"):
                 trend_by_scan_id(scanid)
                 display_data(scanid)
-    else:
+    elif scanid:
         evaluate_a_scan(scanid, histid)
+    else:
+        evaluate_scans()

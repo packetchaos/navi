@@ -305,6 +305,39 @@ def download_csv_by_plugin_id(scan_id, hist_id):
     parse_19506_from_file(filename, scan_id, hist_id)
 
 
+def average_by_policy(name, scan_info):
+    # Print the Category to the Screen ( Scanner, Policy, Scan Name)
+    with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as my_file:
+        average_writer = csv.writer(my_file, delimiter=',', quotechar='"')
+        click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
+        click.echo("-" * 20)
+        header = ["Scan Name", "Avg Minutes per/asset", "Total Assets"]
+        average_writer.writerow(header)
+
+        # Cycle through each category
+        for scan in scan_info.items():
+
+            # data is in a list [asset_uuid, mins] We need the length of the total mins found
+            length = len(scan[1])
+
+            # Reset the total per Category Item - Specific Scan ID, Scanner, Policy ID
+            total = 0
+
+            # Cycle through each asset record
+            for assets in scan[1].values():
+                # Gather a total
+                total = assets + total
+
+            # After calculating the total, lets get an average
+            average = total / length
+
+            # Print results to the screen
+            click.echo("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
+            averages = [str(scan[0]), average, length]
+            average_writer.writerow(averages)
+        click.echo("-" * 150)
+
+
 def evaluate_a_scan(scanid, histid):
 
     if scanid:
@@ -324,7 +357,7 @@ def evaluate_a_scan(scanid, histid):
         click.echo("*" * 100)
         # Pull all 19506 Plugins from the DB
         plugin_data = db_query("select asset_uuid, output from vulns where plugin_id='19506';")
-
+        print(len(plugin_data))
         # Set some dicts for organizing Data
         scan_policy_dict = {}
         scanner_dict = {}
@@ -342,40 +375,11 @@ def evaluate_a_scan(scanid, histid):
 
             # This function is used to parse the data
             # Getting the length of the Category and using it to get the average
-            def average_by_policy(name, scan_info):
-                # Print the Category to the Screen ( Scanner, Policy, Scan Name)
-                with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as my_file:
-                    average_writer = csv.writer(my_file, delimiter=',', quotechar='"')
-                    click.echo("\n{:100s} {:25s} {:10}".format(name, "AVG Minutes Per/Asset", "Total Assets"))
-                    click.echo("-" * 20)
-                    header = ["Scan Name", "Avg Minutes per/asset", "Total Assets"]
-                    average_writer.writerow(header)
-
-                    # Cycle through each category
-                    for scan in scan_info.items():
-
-                        # data is in a list [asset_uuid, mins] We need the length of the total mins found
-                        length = len(scan[1])
-
-                        # Reset the total per Category Item - Specific Scan ID, Scanner, Policy ID
-                        total = 0
-
-                        # Cycle through each asset record
-                        for assets in scan[1].values():
-                            # Gather a total
-                            total = assets + total
-
-                        # After calculating the total, lets get an average
-                        average = total/length
-
-                        # Print results to the screen
-                        click.echo("\n{:100s} {:25d} {:10d}".format(scan[0], int(average), length))
-                        averages = [str(scan[0]), average, length]
-                        average_writer.writerow(averages)
-                    click.echo("-" * 150)
 
             # Loop through each plugin 19506 and Parse data from it
+            count = 0
             for vulns in plugin_data:
+                count = count+1
                 plugin_dict = {}
 
                 # Output is the second item in the tuple from the DB
@@ -394,6 +398,7 @@ def evaluate_a_scan(scanid, histid):
                 try:
                     intial_seconds = plugin_dict['Scan duration']
                 except KeyError:
+                    print("here")
                     intial_seconds = 'unknown'
 
                 # For an unknown reason, the scanner will print unknown for some assets leaving
@@ -453,6 +458,7 @@ def evaluate_a_scan(scanid, histid):
                                                  start_time, max_checks, max_hosts, minutes, rtt, hopcount]
 
                         agent_writer.writerow(parsed_data_organized)
+                        print("chunk {}".format(count))
 
                         # Organize Data by Scan Policy
                         # If the category is not in the new dict, add it; else update it.

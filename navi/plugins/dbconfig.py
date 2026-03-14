@@ -33,6 +33,22 @@ def create_software_table():
     create_table(soft_conn, soft_table)
 
 
+def create_scan_data_table():
+    database = r"navi.db"
+    scan_data_conn = new_db_connection(database)
+    scan_data_table = """CREATE TABLE IF NOT EXISTS scan_data (
+                                              asset_uuid PRIMARY KEY, 
+                                              scan_name text, 
+                                              scan_policy text, 
+                                              scanner_ip text, 
+                                              scan_time text, 
+                                              max_chunks text,
+                                              max_hosts text, 
+                                              scan_minutes text, 
+                                              round_trip_time text);"""
+    scan_data_conn.execute('pragma journal_mode=wal;')
+    create_table(scan_data_conn, scan_data_table)
+
 def create_cpes_table():
     database = r"navi.db"
     cpe_conn = new_db_connection(database)

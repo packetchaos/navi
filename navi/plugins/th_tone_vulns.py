@@ -14,33 +14,28 @@ lock = threading.Lock()
 q = Queue()
 
 
-def grab_properties():
-    prop_data = request_data('GET', '/api/v1/t1/inventory/findings/properties')
-    properties = ""
-    for controls in prop_data['data']:
-        try:
-            properties += "{},".format(controls['key'])
-        except KeyError:
-            pass
-
-    return properties[:-1]
-
-
 def worker():
     # The worker thread pulls an item from the queue and processes it
     while True:
         item = q.get()
-        parse_data(request_data('GET', item))
+        new_start = time.time()
+        parse_data(request_data('GET', item), item[72:], new_start)
         q.task_done()
 
 
-def parse_data(chunk_data):
+def parse_data(chunk_data, chunk_num, start_time):
     database = r"navi.db"
     finding_conn = new_db_connection(database)
-    finding_conn.execute('pragma journal_mode=wal;')
-    finding_conn.execute('pragma cashe_size=-1000000')
-    finding_conn.execute('pragma synchronous=OFF')
+    finding_conn.execute('pragma journal_mode=WAL;')
+    finding_conn.execute('pragma threads=16;')
+    finding_conn.execute('PRAGMA temp_store = MEMORY;')
+    finding_conn.execute('pragma cashe_size=-2000000;')
+    finding_conn.execute('PRAGMA mmap_size = 30000000000;')
+    finding_conn.execute('PRAGMA page_size = 4096;')
+    finding_conn.execute('pragma busy_timeout = 60000;')
+    finding_conn.execute('pragma synchronous=NORMAL;')
     with finding_conn:
+        master_vuln_list = []
         try:
             # loop through all the vulns in this chunk
             for findings in chunk_data:
@@ -538,18 +533,21 @@ def parse_data(chunk_data):
                     vuln_list.append(str(recasted_severity))
                 except (KeyError, IndexError, TypeError):
                     vuln_list.append(" ")
-
                 try:
-                    insert_tone_findings(finding_conn, vuln_list)
+                    #insert_tone_findings(finding_conn, vuln_list)
+                    master_vuln_list.append(vuln_list)
                 except Error as e:
                     click.echo(e)
-
-                except IndexError:
-                    click.echo("skipped one")
+            try:
+                insert_tone_findings(finding_conn, master_vuln_list)
+            except Error as e:
+                click.echo(e)
 
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
-
+    finish = time.time()
+    new_time = finish - start_time
+    click.echo("Chunk {} Finished in : {}".format(chunk_num, new_time))
     finding_conn.close()
 
 
@@ -586,7 +584,7 @@ def tone_findings_export(ex_uuid, threads):
 
             # request an export of the data
             asset_export_id = request_data("POST", "/api/v1/t1/inventory/export/findings?"
-                                                   "properties={}&file_format=JSON".format(raw_prop_list))
+                                                   "properties={}&file_format=JSON&max_chunk_file_size=20971520".format(raw_prop_list))
 
             # grab the export UUID
             ex_uuid = asset_export_id['export_id']
