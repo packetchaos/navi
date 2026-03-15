@@ -1968,8 +1968,10 @@ def software(missing, stats, greater_than, less_than):
 
 @data.command(help="Display all Vulnerability Routes by Application or OS")
 @click.option("--route_id", default=None, help="View/Validate the Route by Route ID")
+@click.option("--order_by", type=click.Choice(['total_vulns', 'app_name', 'vuln_type', 'route_id']),
+              default="total_vulns", help="Order by Table Column")
 @click.option("-exp", "-export", is_flag=True, help="Export All routes(What Navi displays)")
-def route(exp, route_id):
+def route(exp, route_id, order_by):
     try:
         start = time.time()
         if route_id:
@@ -2006,7 +2008,7 @@ def route(exp, route_id):
             click.echo("Query took: {} for {} records".format(total, record_count))
 
         else:
-            display_routes()
+            display_routes(display_table=order_by)
 
             if exp:
                 query_export("select * From vuln_route;", "Navi_routes")

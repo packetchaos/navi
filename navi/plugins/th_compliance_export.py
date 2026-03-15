@@ -127,8 +127,9 @@ def parse_data(chunk_data, chunk_number):
                     except Error as e:
                         click.echo(e)
 
-                except IndexError:
+                except (IndexError, KeyError, TypeError):
                     click.echo("skipped one")
+                    pass
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
             click.echo("Error on Chunk {}".format(chunk_number))

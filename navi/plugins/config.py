@@ -511,9 +511,9 @@ def grab_data_info():
     click.echo()
 
 
-def display_routes():
+def display_routes(display_table):
     route_count = 0
-    routes = db_query("select * from vuln_route ORDER BY total_vulns;")
+    routes = db_query("select * from vuln_route ORDER BY {};".format(display_table))
 
     click.echo("{:8} {:30} {:20} {:70} {:15}".format("Route ID", "Application Name", "Product Type",
                                                      "Plugin ID Summary", "Total instances"))
@@ -534,13 +534,13 @@ def group_by_plugins():
     drop_tables(route_conn, 'vuln_route')
     create_vuln_route_table()
 
-    data = db_query("select name, plugin_id from plugins where severity !='info';")
+    plugin_data = db_query("select name, plugin_id from plugins where severity !='info';")
 
     with route_conn:
         route_id = 0
         grouped_plugins = {}
 
-        for name, plugin_id in data:
+        for name, plugin_id in plugin_data:
             #print(name, plugin_id)
             parts = name.split()
             try:
@@ -548,23 +548,37 @@ def group_by_plugins():
                 first_part = parts[0].upper()
                 second_part = clean_second_part.upper()
             except IndexError:
-                #print(name, plugin_id, parts)
                 first_part = name
                 second_part = "Plugin: {}".format(plugin_id)
-            print(first_part, second_part)
+            #print(first_part, second_part)
             # Vuln Route Data Pipeline / Transform logic
+
             if first_part.startswith("KB") or first_part.startswith("MS"):
-                key = "Windows Updates"
+                key = "WINDOWS UPDATES"
+            elif any(char.isdigit() for char in second_part):
+                key=first_part
             elif first_part.startswith("SECURITY"):
                 key = "Internet Explorer"
             elif first_part.startswith("GIT") and second_part.startswith("FOR"):
                 key = "Git for Windows"
             elif first_part.startswith(".SVN"):
                 key = "HTTP"
+            elif first_part.startswith("LIBCURL"):
+                key = "libcurl"
+            elif first_part.startswith("RED"):
+                key = "RHEL"
+            elif first_part.startswith("LIBREOFFICE"):
+                key = "LIBREOFFICE"
             elif first_part.startswith("PHP"):
                 key = "PHP"
-            elif first_part.startswith("SSH"):
-                key = "SSH"
+            elif first_part.startswith("ULTRAVNC"):
+                key = "ULTRAVNC"
+            elif first_part.startswith("AIX"):
+                key = "AIX"
+            elif first_part.startswith("OLLAMA"):
+                key = "OLLAMA"
+            elif first_part.startswith("SSH") or first_part.startswith("OPENSSH"):
+                key = "SSH/TLS"
             elif first_part.startswith("OPENJDK"):
                 key = "OpenJDK"
             elif first_part.startswith("JENKINS"):
@@ -582,18 +596,20 @@ def group_by_plugins():
             elif first_part.startswith("SSL") or first_part.startswith("TLS") or first_part.startswith("OPENSSL"):
                 key = "SSH/TLS"
             elif len(parts) >= 1:
-                key = f"{parts[0]} {clean_second_part}"
+                key = f"{first_part} {clean_second_part}"
             else:
-                key = parts[0]
+                key = first_part
 
-            if key not in grouped_plugins:
-                grouped_plugins[key] = []
+            if str(key).upper() not in grouped_plugins:
+                grouped_plugins[str(key).upper()] = []
 
-            grouped_plugins[key].append(plugin_id)
-        list_of_oses = []
+            grouped_plugins[str(key).upper()].append(plugin_id)
+        list_of_oses = ["RHEL", "CENTOS", "APPLE"]
 
+        click.echo("\nGrabbing distinct OSes from the vulns table; this can take time\n")
         # grab all the OSes detected to use as our base-line
         oses = db_query("select distinct OSes from vulns;")
+        click.echo("\nOrganizing data\n")
         for os in oses:
             new_os = os[0]
             try:
@@ -603,21 +619,21 @@ def group_by_plugins():
             # OSes is a list, so the Distinct option in sqlite doesn't dedupe everything.
             # Here I cycle through each item in the list and compare it to the current list before adding it.
             for i in new_list:
-                if i not in list_of_oses:
-                    list_of_oses.append(i)
+                if str(i).upper() not in list_of_oses:
+                    #print(i)
+                    list_of_oses.append(str(i).upper())
 
         for plugin_group, plugin_ids in grouped_plugins.items():
             total = 0
             db_list = []
-            first_word = plugin_group.split(" ")
-            if str(first_word[0]) in str(list_of_oses):
+            if str(plugin_group).upper() in str(list_of_oses):
                 vuln_type = "Operating System"
             else:
                 vuln_type = "Application"
 
             # Query to grab the total of each plugin IDs for instance total
             for plugin_inst in plugin_ids:
-                plugin_count = db_query("select count(*) from vulns where plugin_id='{}'".format(plugin_inst))
+                plugin_count = db_query("select count(*) from vulns where plugin_id='{}';".format(plugin_inst))
                 total += plugin_count[0][0]
 
             route_id += 1
@@ -629,6 +645,30 @@ def group_by_plugins():
             insert_vuln_router(route_conn, db_list)
 
     click.echo("\nFinished updating the vuln_route table. Use 'navi explore data route' to view it's context\n")
+
+
+def optimize_now():
+    click.echo("\nBuilding Indexes for faster querys and tags\n")
+
+    click.echo("\nBuilding Index by plugin_id\n")
+    db_query("CREATE INDEX idx_plugin ON vulns (plugin_id);")
+
+    click.echo("\nBuilding Index by plugin_id=19506\n")
+    db_query("CREATE INDEX idx_plugin_2 ON vulns (plugin_id) where plugin_id='19506';")
+
+    click.echo("\nBuilding Index by OSes\n")
+    db_query("CREATE INDEX idx_OSes ON vulns (OSes);")
+
+    click.echo("\nBuilding Index by severity\n")
+    db_query("CREATE INDEX idx_severity ON vulns (severity);")
+
+    click.echo("\nBuilding Index by cves\n")
+    db_query("CREATE INDEX idx_cves ON vulns (cves);")
+
+    click.echo("\nBuilding Index by plugin Name\n")
+    db_query("CREATE INDEX idx_name ON vulns (plugin_name);")
+
+    db_query("ANALYZE;")
 
 
 def display_paths(vuln_paths):
@@ -786,6 +826,11 @@ def keys(clear, access_key, secret_key):
     except:
         click.echo("\nThe keys are obtained from TVm and are two strings. "
                    "If you continue to get this error delete the 'navi.db'\n\n")
+
+
+@config.command(help="Optimize the Database for Large environments")
+def optimize():
+    optimize_now()
 
 
 @config.command(help="Enter or Overwrite your SMTP information")
@@ -1568,7 +1613,6 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("-" * 70)
     vuln_export(30, "0", threads, c, v, list(state), list(severity),
                 operator="gte", vpr_score=None, plugins=None)
-    group_by_plugins()
 
     click.echo("*" * 70)
     click.echo("    Updating the Assets and Tags Tables from the asset export API")
@@ -1623,11 +1667,17 @@ def everything(threads, days, c, v, state, severity, apps, audits, fixes):
     click.echo("-" * 70)
     group_by_plugins()
 
+    click.echo("*" * 70)
+    click.echo("Optimizing Data. This will take a long time.")
+    click.echo("-" * 70)
+    optimize_now()
+
     end = time.time()
     click.echo("\nNow that we are done, let's check all of the tables.")
     click.echo("-" * 52)
     click.echo("-" * 52)
     grab_data_info()
+
     click.echo("*" * 60)
     click.echo("This is how long it took: {} Seconds".format(str(end - start)))
     click.echo("-" * 60)
