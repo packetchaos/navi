@@ -620,7 +620,6 @@ def group_by_plugins():
             # Here I cycle through each item in the list and compare it to the current list before adding it.
             for i in new_list:
                 if str(i).upper() not in list_of_oses:
-                    #print(i)
                     list_of_oses.append(str(i).upper())
 
         for plugin_group, plugin_ids in grouped_plugins.items():
@@ -655,6 +654,9 @@ def optimize_now():
 
     click.echo("\nBuilding Index by plugin_id=19506\n")
     db_query("CREATE INDEX idx_plugin_2 ON vulns (plugin_id) where plugin_id='19506';")
+
+    click.echo("\nBuilding Index by plugin_id=10863\n")
+    db_query("CREATE INDEX idx_plugin_3 ON vulns (plugin_id) where plugin_id='10863';")
 
     click.echo("\nBuilding Index by OSes\n")
     db_query("CREATE INDEX idx_OSes ON vulns (OSes);")
