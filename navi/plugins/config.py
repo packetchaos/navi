@@ -696,7 +696,7 @@ def search_for_path():
     create_vuln_path_table()
 
     pattern = r'''(?ix)
-                (?:                                          
+                (?:
                   [a-zA-Z]:\\(?:[\w\s().-]+\\)*[\w\s().-]{3,}     # Windows path with spaces, parentheses
                   |
                   (?:\.{1,2}/|/)(?:[\w.-]+/)*[\w.-]{3,}           # Unix-style paths
@@ -861,8 +861,8 @@ def smtp(server, port, email, password):
         create_smtp_table = """CREATE TABLE IF NOT EXISTS smtp (
                                 server text,
                                 port text,
-                                email text, 
-                                password text 
+                                email text,
+                                password text
                                 );"""
         create_table(conn, create_smtp_table)
 
@@ -1315,7 +1315,10 @@ def update():
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding severity')
-def full(threads, days, c, v, state, severity):
+@click.option('--severity-modification-type', multiple=True, default=["NONE", "RECASTED", "ACCEPTED"],
+              type=click.Choice(["NONE", "RECASTED", "ACCEPTED"]),
+              help="Modify severity types to include.")
+def full(threads, days, c, v, state, severity, severity_modification_type):
     if threads:
         threads_check(threads)
 
@@ -1323,11 +1326,13 @@ def full(threads, days, c, v, state, severity):
 
     if days is None:
         vuln_export(30, exid, threads, c, v, list(state), list(severity),
-                    operator="gte", vpr_score=None, plugins=None)
+                    operator="gte", vpr_score=None, plugins=None,
+                    severity_modification_type=list(severity_modification_type))
         asset_export(90, exid, threads, c, v)
     else:
         vuln_export(days, exid, threads, c, v, list(state), list(severity),
-                    operator="gte", vpr_score=None, plugins=None)
+                    operator="gte", vpr_score=None, plugins=None,
+                    severity_modification_type=list(severity_modification_type))
         asset_export(days, exid, threads, c, v)
 
 
@@ -1373,14 +1378,18 @@ def agents():
               help="VPR operator")
 @click.option("--plugin_id", multiple=True, type=click.INT, default=None,
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")
-def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id):
+@click.option('--severity-modification-type', multiple=True, default=["NONE", "RECASTED", "ACCEPTED"],
+              type=click.Choice(["NONE", "RECASTED", "ACCEPTED"]),
+              help="Modify severity types to include.")
+def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id, severity_modification_type):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id))
+    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id),
+                severity_modification_type=severity_modification_type))
 
 
 @update.command(help="Update the Compliance data")
