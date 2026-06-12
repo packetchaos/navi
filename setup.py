@@ -8,8 +8,8 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='navi pro',
-    version="8.5.31",
+    name='navi-pro',
+    version="8.5.33",
     description="A command-line interface to Tenable's Products",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -37,7 +37,8 @@ setup(
         'typing-extensions>=4.0.1',
         'pandas>=1.1.5',
         'numpy>=1.19.5',
-        'xlrd>=2.0.1'
+        'xlrd>=2.0.1',
+	    'restfly-1.5.1'
     ],
     python_requires='>=3.9',
     extras_require={

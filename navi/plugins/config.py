@@ -291,10 +291,10 @@ def update_certificates():
         try:
             cert_data = db_query("select asset_uuid, output from vulns where plugin_id='10863';")
             cert_dict = {}
-            asset_uuid = cert_data[0][0]
-
+            
             for certs in cert_data:
-
+                asset_uuid = certs[0]
+                print(asset_uuid)
                 first_pass = str(certs[1])
                 second_pass = str(first_pass).replace("'", "")
                 third_pass = str(second_pass).split("\n")
