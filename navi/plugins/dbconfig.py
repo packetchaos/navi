@@ -421,13 +421,13 @@ def create_epss_table():
 def create_sla_table():
     database = r"navi.db"
     conn = new_db_connection(database)
-    create_sla_table = """CREATE TABLE IF NOT EXISTS sla (
+    sla_table = """CREATE TABLE IF NOT EXISTS sla (
                                 critical text,
                                 high text,
                                 medium text, 
                                 low text 
                                 );"""
-    create_table(conn, create_sla_table)
+    create_table(conn, sla_table)
 
 
 def create_zipper_table():
