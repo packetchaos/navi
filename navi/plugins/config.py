@@ -56,6 +56,10 @@ def parse_20811(soft_dict):
     software_data = db_query("select output, asset_uuid from vulns where plugin_id='20811'")
     for data in software_data:
         asset_uuid = data[1]
+        # note: this iterates the (output, asset_uuid) row tuple, so the body also runs
+        # once on the uuid string. That pass is harmless - a uuid never contains
+        # "installed", so nothing is added to soft_dict. Left as-is intentionally; a
+        # naive change to str(data[0]).splitlines() would alter the inner parsing.
         for pkg in data:
             new_string = str(pkg).splitlines()
             my_list = eval(str(new_string))

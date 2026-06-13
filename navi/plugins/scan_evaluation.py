@@ -16,8 +16,10 @@ def grab_hop_count(uuid):
         hop_count_data = db_query("select output from vulns where asset_uuid='{}' and plugin_id='10287';".format(uuid))
         # Send the raw data back
         return hop_count_data
-    except:
-        return "none"
+    except Exception:
+        # Return an empty list (not a string) so the caller's IndexError path
+        # produces "Unknown" instead of silently indexing into a string.
+        return []
 
 
 def parse_19506_from_file(filename, scanid, histid):
@@ -101,7 +103,7 @@ def parse_19506_from_file(filename, scanid, histid):
                             if scanner_ip not in scanner_list:
                                 scanner_list.append(scanner_ip)
                         except KeyError:
-                            scanner_list = "none"
+                            scanner_ip = "none"
 
                         try:
                             max_hosts = plugin_dict['Max hosts']
@@ -393,7 +395,7 @@ def evaluate_a_scan(scanid, histid):
                         new_split = info_line.split(" : ")
                         plugin_dict[new_split[0]] = new_split[1]
 
-                    except:
+                    except Exception:
                         pass
                 try:
                     intial_seconds = plugin_dict['Scan duration']
@@ -426,7 +428,6 @@ def evaluate_a_scan(scanid, histid):
                             if scanner_ip not in scanner_list:
                                 scanner_list.append(scanner_ip)
                         except KeyError:
-                            scanner_list = "none"
                             scanner_ip = "none"
                         try:
                             max_hosts = plugin_dict['Max hosts']
