@@ -45,11 +45,11 @@ def add_helper(file, source):
 
     if len(asset_lists) > 1999:
         # break the list into 2000 IP chunks
-        for chunks in chunks(asset_lists, 1999):
+        for chunk_group in chunks(asset_lists, 1999):
 
-            payload = {"assets": chunks, "source": source}
+            payload = {"assets": chunk_group, "source": source}
             click.echo("\nYour list has more than 2000 hosts in it; I'm breaking them into groups of 1999.\n")
-            click.echo("Adding:{} Assets with source {}\n".format(len(chunks), source))
+            click.echo("Adding:{} Assets with source {}\n".format(len(chunk_group), source))
 
             data = request_data('POST', '/import/assets', payload=payload)
             click.echo("Your Import ID is : {}".format(data['asset_import_job_uuid']))

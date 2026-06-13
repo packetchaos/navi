@@ -52,7 +52,7 @@ def parse_19506(plugin_output):
                 if scanner_ip not in scanner_list:
                     scanner_list.append(scanner_ip)
             except KeyError:
-                scanner_list = "none"
+                scanner_ip = "none"
             try:
                 max_hosts = plugin_dict['Max hosts']
             except KeyError:

@@ -235,7 +235,7 @@ def start(scan_id, targets):
             tio.scans.launch(scan_id)
         else:
             tio.scans.launch(scan_id, targets=list(targets))
-    except:
+    except Exception:
         click.echo("\n\nYour Scan may be in the process of starting. "
                    "Check the status and ensure you have the right ID\n\n")
 
@@ -245,7 +245,7 @@ def start(scan_id, targets):
 def status(scan_id):
     try:
         click.echo("\nLast Status update : {}\n".format(tio.scans.status(scan_id)))
-    except:
+    except Exception:
         click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
@@ -254,7 +254,7 @@ def status(scan_id):
 def resume(scan_id):
     try:
         tio.scans.resume(scan_id)
-    except:
+    except Exception:
         click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
@@ -263,7 +263,7 @@ def resume(scan_id):
 def pause(scan_id):
     try:
         tio.scans.pause(scan_id)
-    except:
+    except Exception:
         click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
@@ -272,7 +272,7 @@ def pause(scan_id):
 def stop(scan_id):
     try:
         tio.scans.stop(scan_id)
-    except:
+    except Exception:
         click.echo("\n\nCheck your Scan ID or ensure your API keys are correct")
 
 
@@ -562,7 +562,7 @@ def bridge(un, pw, host, scanid, repoid, a, s, allscans, io):
 
             click.echo("Importing your Scan into Repo {} at https://{}\n".format(repo_id, host))
 
-            with open('{}.nessus'.format(str(sid))) as file:
+            with open('{}.nessus'.format(str(sid)), 'rb') as file:
                 sc.scan_instances.import_scan(file, repo_id)
 
             # delete the scan

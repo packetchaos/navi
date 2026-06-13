@@ -422,7 +422,7 @@ def parse_data(chunk_data, chunk_number):
                     time.sleep(20)
                     insert_vulns(vuln_conn, vuln_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
             try:
                 insert_plugins(vuln_conn, plugins_master_list)
@@ -431,9 +431,9 @@ def parse_data(chunk_data, chunk_number):
                     click.echo("{}".format(e))
                     click.echo("Trying Once more")
                     time.sleep(25)
-                    insert_vulns(vuln_conn, vuln_master_list)
+                    insert_plugins(vuln_conn, plugins_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
             try:
                 insert_cpes(vuln_conn, cpes_master_list)
@@ -442,9 +442,9 @@ def parse_data(chunk_data, chunk_number):
                     click.echo("{}".format(e))
                     click.echo("Trying Once more")
                     time.sleep(30)
-                    insert_vulns(vuln_conn, vuln_master_list)
+                    insert_cpes(vuln_conn, cpes_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")

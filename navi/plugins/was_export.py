@@ -231,6 +231,9 @@ def grab_scans(days):
 
     create_findings_table()
     data = request_data('POST', '/was/v2/configs/search?limit=200&offset=0')
+    if not data or 'items' not in data:
+        click.echo("\nNo WAS config data returned. Check your license/permissions and try again.\n")
+        return
     for configs in data['items']:
         config_id = configs['config_id']
         was_config_data = request_data("POST", "/was/v2/configs/{}/scans/search".format(config_id))

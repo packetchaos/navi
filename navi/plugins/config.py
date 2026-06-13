@@ -101,8 +101,7 @@ def get_scanner_id(scanner_name):
         for scanner in tio.scanners.list():
             if str(scanner_name).lower() == str(scanner['name']).lower():
                 return scanner['uuid']
-            else:
-                return 'NONE'
+        return 'NONE'
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
@@ -433,7 +432,7 @@ def grab_data_info():
     try:
         compliance_count = db_query("select count(*) from compliance;")[0][0]
     except (IndexError, TypeError):
-        compliance_count = "Needs updating - run navi config update compliance' "
+        compliance_count = "Needs updating - run 'navi config update compliance'"
         click.echo("\nNo data in the compliance table\n")
 
     try:
@@ -614,7 +613,7 @@ def group_by_plugins():
             new_os = os[0]
             try:
                 new_list = eval(new_os)
-            except:
+            except Exception:
                 new_list = new_os
             # OSes is a list, so the Distinct option in sqlite doesn't dedupe everything.
             # Here I cycle through each item in the list and compare it to the current list before adding it.

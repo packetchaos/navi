@@ -181,7 +181,7 @@ def details(scan_uuid, plugin):
             click.echo("Medium: {}".format(len(detail_meduim)))
             click.echo("Low: {}".format(len(detail_low)))
             click.echo()
-        except:
+        except Exception:
             click.echo("\nRun navi update was to populate it with data.  This command requires it.")
 
 
@@ -256,7 +256,7 @@ def configs():
 
             click.echo("{:70s} {:40s} {:14s} {}".format(textwrap.shorten(str(app_name), width=70),
                                                         str(app_scan_id), str(app_status), str(updated)))
-        except:
+        except Exception:
             pass
     click.echo()
 
@@ -278,7 +278,7 @@ def stats(scan_id):
 @click.argument('scanid')
 def export(scanid):
     was_data = request_data("GET", "/was/v2/scans/{}/report".format(scanid))
-    click.echo("\nDownloading your scan and saving it as {}-export.json\n")
+    click.echo("\nDownloading your scan and saving it as {}-export.json\n".format(scanid))
     with open('{}-export.json'.format(scanid), 'w', encoding='utf-8') as f:
 
         json.dump(was_data, f, ensure_ascii=False)
@@ -291,9 +291,10 @@ def upload(filename):
         import requests
         url = "https://cloud.tenable.com/api/v3/was/import"
 
-        files = {"Filedata": ("{}".format(filename), open("{}".format(filename), "rb"), "application/json")}
+        with open("{}".format(filename), "rb") as upload_file:
+            files = {"Filedata": ("{}".format(filename), upload_file, "application/json")}
 
-        response = requests.post(url, files=files, headers=grab_headers())
+            response = requests.post(url, files=files, headers=grab_headers())
 
         click.echo("\nUploading your scan {} now\n{}\n".format(filename, response))
     except Exception as E:

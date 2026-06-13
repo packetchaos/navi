@@ -326,8 +326,8 @@ def agents(show_uuid, agent_id):
 
             click.echo("\nAgent Details")
             click.echo("-----------------\n")
-            click.echo("Agent Name: {}".format(agent_details['distro']))
-            click.echo("Agent IP: {}".format(agent_details['distro']))
+            click.echo("Agent Name: {}".format(agent_details['name']))
+            click.echo("Agent IP: {}".format(agent_details['ip']))
             click.echo("Agent UUID: {}".format(agent_details['uuid']))
             click.echo("Network UUID: {}".format(agent_details['network_uuid']))
             click.echo("Plugin Feed: {}".format(agent_details['plugin_feed_id']))
@@ -426,13 +426,13 @@ def agent_groups(group_id):
     if group_id:
         try:
             group_details = tio.agent_groups.details(group_id)
-            click.echo("\n{:85s} {:15} {:40}".format("Agent Name", "Agent ID", "UUID", "Status"))
+            click.echo("\n{:85s} {:15} {:40} {}".format("Agent Name", "Agent ID", "UUID", "Status"))
             click.echo("-" * 150)
 
             for agent_info in group_details['agents']:
-                click.echo("{:85s} {:15} {:40s}".format(textwrap.shorten(str(agent_info['name']), width=85),
-                                                        str(agent_info['id']),
-                                                        str(agent_info['uuid']), str(agent_info['status'])))
+                click.echo("{:85s} {:15} {:40s} {}".format(textwrap.shorten(str(agent_info['name']), width=85),
+                                                           str(agent_info['id']),
+                                                           str(agent_info['uuid']), str(agent_info['status'])))
 
             click.echo()
         except AttributeError:
@@ -1715,7 +1715,7 @@ def uuid(ipaddr, plugin_id, p, t, o, c, s, r, patches, d, apps, e, critical, det
             else:
                 vulns_data = db_query("select uuid from assets where uuid='{}'".format(ipaddr))
                 click.echo("\nAsset UUID: {}".format(ipaddr))
-                click.echo("Asset IP: {}".format(vulns_data[0]))
+                click.echo("Asset IP: {}".format(vulns_data[0][0]))
                 click.echo("-" * 26)
                 vulns_by_uuid(ipaddr)
         except TypeError:
@@ -1753,7 +1753,7 @@ def uuid(ipaddr, plugin_id, p, t, o, c, s, r, patches, d, apps, e, critical, det
             else:
                 info_data = db_query("select uuid from assets where uuid='{}'".format(ipaddr))
                 click.echo("\nAsset UUID: {}".format(ipaddr))
-                click.echo("Asset IP: {}".format(info_data[0]))
+                click.echo("Asset IP: {}".format(info_data[0][0]))
                 click.echo("-" * 26)
                 info_by_uuid(ipaddr)
         except TypeError:

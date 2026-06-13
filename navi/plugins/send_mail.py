@@ -21,11 +21,12 @@ def send_attachment(from_email, to_email, mail_server, password, port, filename,
 
         # If there is an attachment, add it to the email.
         if filename:
-            attachment = open(filename, "rb")
+            with open(filename, "rb") as attachment:
+                payload = attachment.read()
             p = MIMEBase('application', 'octet-stream')
 
             # To change the payload into encoded form
-            p.set_payload(attachment.read())
+            p.set_payload(payload)
 
             # encode into base64
             encoders.encode_base64(p)

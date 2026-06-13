@@ -52,6 +52,8 @@ def db_query(statement):
     except Error as e:
         click.echo("\nDB ERROR:")
         click.echo("The SQL statement: {}\nCreated the following error: {}\n".format(statement, e))
+        # Return an empty result so callers iterating the result don't crash on None
+        return []
 
 
 def db_query_json_file(table_name, chunk_size, output_dir, new_directory):
@@ -103,6 +105,7 @@ def db_query_json_file(table_name, chunk_size, output_dir, new_directory):
 
     except Error as e:
         click.echo("\nDB ERROR:")
+        click.echo(e)
 
 
 def get_last_update_id():
