@@ -144,10 +144,9 @@ def organize_19506_composite_data(filename):
                 # All assets and 19506 seconds in a tuple
                 total_assets_scanned_list.append((asset_uuid, seconds))
 
-                # calculate the total for AVG calc
-
-            for secs in total_assets_scanned_list:
-                total += secs[1]
+        # calculate the total for AVG calc once, after every row is processed
+        for secs in total_assets_scanned_list:
+            total += secs[1]
 
     organize_composite_data = {"Scanner List": scanner_list, "Total Assets": total_assets_scanned_list,
                                "Start Scan List": start_scan_timestamp_list,

@@ -30,7 +30,7 @@ def print_sla():
 
 
 def reset_sla(critical, high, medium, low):
-    clear_data = db_query("DELETE table sla;")
+    clear_data = db_query("DELETE FROM sla;")
     print("\n Resetting your SLA\n{}".format(clear_data))
     sla_info = (critical, high, medium, low)
     database = r"navi.db"

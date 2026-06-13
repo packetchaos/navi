@@ -139,7 +139,7 @@ def insert_scan_data(conn, scan_data):
                                               scan_minutes, 
                                               round_trip_time) VALUES(?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, scan_data)
 
 
@@ -160,7 +160,7 @@ def insert_compliance(conn, compliance):
                                               solution, 
                                               status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, compliance)
 
 
@@ -169,7 +169,7 @@ def insert_zipper(conn, zipper):
                                           plugin_id,
                                           epss_value) VALUES(?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, zipper)
 
 

@@ -266,7 +266,7 @@ def asset_export(days, ex_uuid, threads, category, value):
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
 

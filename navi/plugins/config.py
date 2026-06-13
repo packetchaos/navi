@@ -281,7 +281,7 @@ def update_certificates():
     database = r"navi.db"
     cert_conn = new_db_connection(database)
     cert_conn.execute('pragma journal_mode=wal;')
-    cert_conn.execute('pragma cashe_size=-10000')
+    cert_conn.execute('pragma cache_size=-10000')
     cert_conn.execute('pragma synchronous=OFF')
     click.echo("\nParsing every output for plugin 10863. This can take some time.\n"
                "\nThe data will be saved in a table named 'certs'\n\n")
@@ -1369,7 +1369,7 @@ def agents():
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding state')
 @click.option('--vpr_score', default=None, help="Isolate your Vuln data to a VPR score")
-@click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt" "lte"]),
+@click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt", "lte"]),
               help="VPR operator")
 @click.option("--plugin_id", multiple=True, type=click.INT, default=None,
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")

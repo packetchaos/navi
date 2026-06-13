@@ -17,7 +17,7 @@ def parse_data(page_info):
     database = r"navi.db"
     plugin_conn = new_db_connection(database)
     plugin_conn.execute('pragma journal_mode=wal;')
-    plugin_conn.execute('pragma cashe_size=-1000000')
+    plugin_conn.execute('pragma cache_size=-1000000')
     plugin_conn.execute('pragma synchronous=OFF')
     with plugin_conn:
         try:

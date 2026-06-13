@@ -1193,7 +1193,7 @@ def plugin_by_ip(ipaddr, plugin_id):
                             cur.execute("select epss_value from epss where cve='{}'".format(cve_id))
                             epss_value = cur.fetchall()
                             epss_list.append(eval(epss_value[0][0]))
-                            total += total + eval(epss_value[0][0])
+                            total += eval(epss_value[0][0])
 
                     average = total/len(epss_list)
                     top = max(epss_list)
@@ -1294,7 +1294,7 @@ def cves_by_uuid(cve_uuid):
                         cur.execute("select epss_value from epss where cve='{}'".format(cve_id))
                         epss_value = cur.fetchall()
                         epss_list.append(eval(epss_value[0][0]))
-                        total += total + eval(epss_value[0][0])
+                        total += eval(epss_value[0][0])
 
                 average = total/len(epss_list)
                 top = max(epss_list)

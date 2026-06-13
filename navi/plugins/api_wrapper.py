@@ -8,7 +8,8 @@ import time
 
 
 def navi_version():
-    return "navi-8.5.33"
+    return "navi-8.6.0"
+
 
 def tenb_connection():
     try:
