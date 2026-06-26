@@ -34,6 +34,8 @@ def update_tag(c, v, d, tag_list):
                     click.echo("\nUpdating The date on the Tag value.\n{}".format(updating_description["description"]))
                 except IndexError:
                     pass
+                except TypeError:
+                    pass
     end_update_time = time.time()
     print(end_update_time-update_time)
 
