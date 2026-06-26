@@ -297,7 +297,6 @@ def update_certificates():
             
             for certs in cert_data:
                 asset_uuid = certs[0]
-                print(asset_uuid)
                 first_pass = str(certs[1])
                 second_pass = str(first_pass).replace("'", "")
                 third_pass = str(second_pass).split("\n")
