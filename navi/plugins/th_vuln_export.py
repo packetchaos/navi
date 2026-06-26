@@ -454,7 +454,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator, plugins):
+def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator, plugins, severity_modification_type=None):
     start = time.time()
 
     database = r"navi.db"
@@ -513,6 +513,8 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
                 pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
                                                           "state": state, "severity": severity,
                                                           "tag.{}".format(category): "[\"{}\"]".format(value)}}
+    if severity_modification_type:
+        pay_load['filters']['severity_modification_type'] = severity_modification_type
 
     try:
 
