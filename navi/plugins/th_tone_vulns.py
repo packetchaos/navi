@@ -29,7 +29,7 @@ def parse_data(chunk_data, chunk_num, start_time):
     finding_conn.execute('pragma journal_mode=WAL;')
     finding_conn.execute('pragma threads=16;')
     finding_conn.execute('PRAGMA temp_store = MEMORY;')
-    finding_conn.execute('pragma cashe_size=-2000000;')
+    finding_conn.execute('pragma cache_size=-2000000;')
     finding_conn.execute('PRAGMA mmap_size = 30000000000;')
     finding_conn.execute('PRAGMA page_size = 4096;')
     finding_conn.execute('pragma busy_timeout = 60000;')
@@ -604,7 +604,7 @@ def tone_findings_export(ex_uuid, threads):
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/api/v1/t1/inventory/export/' + ex_uuid + '/status')
 

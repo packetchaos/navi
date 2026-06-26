@@ -9,6 +9,7 @@ def create_keys_table():
                             secret_key text
                             );"""
     create_table(key_conn, key_table)
+    key_conn.close()
 
 
 def create_diff_table():
@@ -21,6 +22,7 @@ def create_diff_table():
                         update_type text,
                         exid text);"""
     create_table(diff_conn, diff_table)
+    diff_conn.close()
 
 
 def create_software_table():
@@ -31,6 +33,7 @@ def create_software_table():
                         software_string text);"""
     soft_conn.execute('pragma journal_mode=wal;')
     create_table(soft_conn, soft_table)
+    soft_conn.close()
 
 
 def create_scan_data_table():
@@ -48,6 +51,7 @@ def create_scan_data_table():
                                               round_trip_time text);"""
     scan_data_conn.execute('pragma journal_mode=wal;')
     create_table(scan_data_conn, scan_data_table)
+    scan_data_conn.close()
 
 def create_cpes_table():
     database = r"navi.db"
@@ -57,6 +61,7 @@ def create_cpes_table():
                         cpe_string text);"""
     cpe_conn.execute('pragma journal_mode=wal;')
     create_table(cpe_conn, cpe_table)
+    cpe_conn.close()
 
 
 def create_recast_table():
@@ -77,6 +82,7 @@ def create_recast_table():
                             recast_rule text);"""
     recast_conn.execute('pragma journal_mode=wal;')
     create_table(recast_conn, recast_table)
+    recast_conn.close()
 
 
 def create_vulns_table():
@@ -114,6 +120,7 @@ def create_vulns_table():
                             );"""
     vuln_conn.execute('pragma journal_mode=wal;')
     create_table(vuln_conn, vuln_table)
+    vuln_conn.close()
 
 
 def create_tone_findings_table():
@@ -205,6 +212,7 @@ def create_tone_findings_table():
                             );"""
     tone_vuln_conn.execute('pragma journal_mode=wal;')
     create_table(tone_vuln_conn, tone_findings_table)
+    tone_vuln_conn.close()
 
 
 def create_plugins_table():
@@ -250,6 +258,7 @@ def create_plugins_table():
                               url text);"""
     plugin_conn.execute('pragma journal_mode=wal;')
     create_table(plugin_conn, plugins_table)
+    plugin_conn.close()
 
 
 def create_assets_table():
@@ -288,6 +297,7 @@ def create_assets_table():
                             );"""
     asset_conn.execute('pragma journal_mode=wal;')
     create_table(asset_conn, create_asset_table)
+    asset_conn.close()
 
 
 def create_tone_assets_table():
@@ -336,6 +346,7 @@ def create_tone_assets_table():
                                  );"""
     tone_asset_conn.execute('pragma journal_mode=wal;')
     create_table(tone_asset_conn, create_tone_asset_table)
+    tone_asset_conn.close()
 
 
 def create_agents_table():
@@ -363,6 +374,7 @@ def create_agents_table():
                             );"""
     agent_conn.execute('pragma journal_mode=wal;')
     create_table(agent_conn, create_agent_table)
+    agent_conn.close()
 
 
 def create_certs_table():
@@ -388,6 +400,7 @@ def create_certs_table():
                         signature_length text);"""
     cert_conn.execute('pragma journal_mode=wal;')
     create_table(cert_conn, create_cert_table)
+    cert_conn.close()
 
 
 def create_tag_table():
@@ -404,6 +417,7 @@ def create_tag_table():
                         );"""
     tag_conn.execute('pragma journal_mode=wal;')
     create_table(tag_conn, create_tags_table)
+    tag_conn.close()
 
 
 def create_epss_table():
@@ -416,6 +430,7 @@ def create_epss_table():
                         );"""
     epss_conn.execute('pragma journal_mode=wal;')
     create_table(epss_conn, create_score_table)
+    epss_conn.close()
 
 
 def create_sla_table():
@@ -428,6 +443,7 @@ def create_sla_table():
                                 low text 
                                 );"""
     create_table(conn, sla_table)
+    conn.close()
 
 
 def create_zipper_table():
@@ -439,6 +455,7 @@ def create_zipper_table():
                         );"""
     zipper_conn.execute('pragma journal_mode=wal;')
     create_table(zipper_conn, zipper_table)
+    zipper_conn.close()
 
 
 def create_apps_table():
@@ -465,6 +482,7 @@ def create_apps_table():
     app_conn.execute('pragma journal_mode=wal;')
 
     create_table(app_conn, create_apps)
+    app_conn.close()
 
 
 def create_compliance_table():
@@ -488,6 +506,7 @@ def create_compliance_table():
                             );"""
 
     create_table(compliance_conn, create_compliance)
+    compliance_conn.close()
 
 
 def create_fixed_table():
@@ -538,6 +557,7 @@ def create_findings_table():
     app_conn.execute('pragma journal_mode=wal;')
 
     create_table(app_conn, create_findings)
+    app_conn.close()
 
 
 def create_passwords_table():
@@ -548,6 +568,7 @@ def create_passwords_table():
                             password text
                             );"""
     create_table(ssh_conn, ssh_table)
+    ssh_conn.close()
 
 
 def create_vuln_route_table():
@@ -561,6 +582,7 @@ def create_vuln_route_table():
                             vuln_type text
                             );"""
     create_table(vuln_route_conn, route_table)
+    vuln_route_conn.close()
 
 
 def create_vuln_path_table():
@@ -574,6 +596,7 @@ def create_vuln_path_table():
                             finding_id text
                             );"""
     create_table(vuln_path_conn, path_table)
+    vuln_path_conn.close()
 
 
 def create_rules_table():
@@ -594,3 +617,4 @@ def create_rules_table():
                             magic_url text
                             );"""
     create_table(rules_conn, rules_table)
+    rules_conn.close()

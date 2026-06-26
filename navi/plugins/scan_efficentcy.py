@@ -52,7 +52,7 @@ def parse_19506(plugin_output):
                 if scanner_ip not in scanner_list:
                     scanner_list.append(scanner_ip)
             except KeyError:
-                scanner_list = "none"
+                scanner_ip = "none"
             try:
                 max_hosts = plugin_dict['Max hosts']
             except KeyError:
@@ -144,10 +144,9 @@ def organize_19506_composite_data(filename):
                 # All assets and 19506 seconds in a tuple
                 total_assets_scanned_list.append((asset_uuid, seconds))
 
-                # calculate the total for AVG calc
-
-            for secs in total_assets_scanned_list:
-                total += secs[1]
+        # calculate the total for AVG calc once, after every row is processed
+        for secs in total_assets_scanned_list:
+            total += secs[1]
 
     organize_composite_data = {"Scanner List": scanner_list, "Total Assets": total_assets_scanned_list,
                                "Start Scan List": start_scan_timestamp_list,

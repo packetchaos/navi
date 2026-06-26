@@ -27,7 +27,7 @@ def parse_data(chunk_data, chunk_number):
     database = r"navi.db"
     comply_conn = new_db_connection(database)
     comply_conn.execute('pragma journal_mode=wal;')
-    comply_conn.execute('pragma cashe_size=-10000')
+    comply_conn.execute('pragma cache_size=-10000')
     comply_conn.execute('pragma synchronous=OFF')
     with comply_conn:
         try:
@@ -184,7 +184,7 @@ def compliance_export(days, ex_uuid, threads):
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/compliance/export/' + ex_uuid + '/status')
                 # click.echo("Status : " + str(status["status"]))

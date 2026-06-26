@@ -56,6 +56,10 @@ def parse_20811(soft_dict):
     software_data = db_query("select output, asset_uuid from vulns where plugin_id='20811'")
     for data in software_data:
         asset_uuid = data[1]
+        # note: this iterates the (output, asset_uuid) row tuple, so the body also runs
+        # once on the uuid string. That pass is harmless - a uuid never contains
+        # "installed", so nothing is added to soft_dict. Left as-is intentionally; a
+        # naive change to str(data[0]).splitlines() would alter the inner parsing.
         for pkg in data:
             new_string = str(pkg).splitlines()
             my_list = eval(str(new_string))
@@ -101,8 +105,7 @@ def get_scanner_id(scanner_name):
         for scanner in tio.scanners.list():
             if str(scanner_name).lower() == str(scanner['name']).lower():
                 return scanner['uuid']
-            else:
-                return 'NONE'
+        return 'NONE'
     except resterrors.ForbiddenError:
         click.echo("\nYou do not have access to this endpoint. Check with your Tenable VM Admin.\n")
 
@@ -281,7 +284,7 @@ def update_certificates():
     database = r"navi.db"
     cert_conn = new_db_connection(database)
     cert_conn.execute('pragma journal_mode=wal;')
-    cert_conn.execute('pragma cashe_size=-10000')
+    cert_conn.execute('pragma cache_size=-10000')
     cert_conn.execute('pragma synchronous=OFF')
     click.echo("\nParsing every output for plugin 10863. This can take some time.\n"
                "\nThe data will be saved in a table named 'certs'\n\n")
@@ -433,7 +436,7 @@ def grab_data_info():
     try:
         compliance_count = db_query("select count(*) from compliance;")[0][0]
     except (IndexError, TypeError):
-        compliance_count = "Needs updating - run navi config update compliance' "
+        compliance_count = "Needs updating - run 'navi config update compliance'"
         click.echo("\nNo data in the compliance table\n")
 
     try:
@@ -614,7 +617,7 @@ def group_by_plugins():
             new_os = os[0]
             try:
                 new_list = eval(new_os)
-            except:
+            except Exception:
                 new_list = new_os
             # OSes is a list, so the Distinct option in sqlite doesn't dedupe everything.
             # Here I cycle through each item in the list and compare it to the current list before adding it.
@@ -1369,7 +1372,7 @@ def agents():
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding state')
 @click.option('--vpr_score', default=None, help="Isolate your Vuln data to a VPR score")
-@click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt" "lte"]),
+@click.option('--operator', multiple=False, default="gte", type=click.Choice(["gte", "gt", "lt", "lte"]),
               help="VPR operator")
 @click.option("--plugin_id", multiple=True, type=click.INT, default=None,
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")

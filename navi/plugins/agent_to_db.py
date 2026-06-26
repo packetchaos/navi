@@ -10,7 +10,7 @@ def download_agent_data():
     database = r"navi.db"
     agent_conn = new_db_connection(database)
     agent_conn.execute('pragma journal_mode=WAL;')
-    agent_conn.execute('pragma cashe_size=-1000000;')
+    agent_conn.execute('pragma cache_size=-1000000;')
     agent_conn.execute('pragma synchronous=OFF;')
     create_agents_table()
     with agent_conn:

@@ -319,7 +319,7 @@ def tone_export(ex_uuid, threads):
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/api/v1/t1/inventory/export/' + ex_uuid + '/status')
 

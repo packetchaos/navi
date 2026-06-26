@@ -178,7 +178,7 @@ def parse_data(chunk_data):
                 special_url = ("https://cloud.tenable.com/tio/app.html#/"
                                "vulnerability-management/dashboard/assets/asset-details/{}/vulns").format(asset_id)
                 csv_list.append(special_url)
-            except TypeError or IndexError or KeyError:
+            except (TypeError, IndexError, KeyError):
                 special_url = None
                 csv_list.append(special_url)
 
@@ -189,8 +189,12 @@ def parse_data(chunk_data):
                 tag_asset_id = assets['id']
                 for t in assets["tags"]:
                     tag_list = []
-                    tag_id = tag_id + 1
-                    tag_list.append(tag_id)
+                    # tag_id is a shared global incremented by multiple worker threads;
+                    # guard the read-modify-write with the module lock.
+                    with lock:
+                        tag_id = tag_id + 1
+                        new_tag_id = tag_id
+                    tag_list.append(new_tag_id)
                     tag_list.append(tag_asset_id)
                     tag_list.append(tag_ip)
 
@@ -266,7 +270,7 @@ def asset_export(days, ex_uuid, threads, category, value):
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/assets/export/' + ex_uuid + '/status')
 

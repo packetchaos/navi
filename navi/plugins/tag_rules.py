@@ -1,10 +1,10 @@
 from os import system as sys
 import click
-from database import db_query
+from .database import db_query
 
 
-from api_wrapper import tenb_connection, request_data
-from database import db_query
+from .api_wrapper import tenb_connection, request_data
+from .database import db_query
 import time
 import json
 import base64
@@ -87,7 +87,7 @@ def run_rules_now():
 
         elif rule[3] == 'ports':
             click.echo("navi enrich tag --c \"{}\" --v \"{}\" --port {}".format(rule[1], rule[2], rule[4]))
-            sys("navi enrich tag --c \"{}\" --v \"{}\" --port \"{}\"cd".format(rule[1], rule[2], rule[4]))
+            sys("navi enrich tag --c \"{}\" --v \"{}\" --port \"{}\"".format(rule[1], rule[2], rule[4]))
 
         else:
             click.echo("{} not currently supported".format(rule[3]))

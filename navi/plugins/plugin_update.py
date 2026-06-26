@@ -17,7 +17,7 @@ def parse_data(page_info):
     database = r"navi.db"
     plugin_conn = new_db_connection(database)
     plugin_conn.execute('pragma journal_mode=wal;')
-    plugin_conn.execute('pragma cashe_size=-1000000')
+    plugin_conn.execute('pragma cache_size=-1000000')
     plugin_conn.execute('pragma synchronous=OFF')
     with plugin_conn:
         try:
@@ -223,8 +223,8 @@ def parse_data(page_info):
                         exploit_list.append(" ")
 
                     try:
-                        threat_sources_last28 = plug_info['attributes']['vpr']['drivers']['cvss3_impact_score']
-                        exploit_list.append(threat_sources_last28)
+                        cvss3_impact_score = plug_info['attributes']['vpr']['drivers']['cvss3_impact_score']
+                        exploit_list.append(cvss3_impact_score)
                     except KeyError:
                         exploit_list.append(" ")
 
@@ -283,7 +283,7 @@ def plugin_export(size):
         total = 281470
         page_total = 29
 
-        for pages in range(1, int(page_total)):
+        for pages in range(1, int(page_total) + 1):
             print("going through page {}".format(pages))
             page_info = request_data('GET', '/plugins/plugin?size=10000&page={}'.format(pages))
             parse_data(page_info)

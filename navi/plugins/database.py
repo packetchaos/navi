@@ -52,6 +52,8 @@ def db_query(statement):
     except Error as e:
         click.echo("\nDB ERROR:")
         click.echo("The SQL statement: {}\nCreated the following error: {}\n".format(statement, e))
+        # Return an empty result so callers iterating the result don't crash on None
+        return []
 
 
 def db_query_json_file(table_name, chunk_size, output_dir, new_directory):
@@ -103,6 +105,7 @@ def db_query_json_file(table_name, chunk_size, output_dir, new_directory):
 
     except Error as e:
         click.echo("\nDB ERROR:")
+        click.echo(e)
 
 
 def get_last_update_id():
@@ -139,7 +142,7 @@ def insert_scan_data(conn, scan_data):
                                               scan_minutes, 
                                               round_trip_time) VALUES(?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, scan_data)
 
 
@@ -160,7 +163,7 @@ def insert_compliance(conn, compliance):
                                               solution, 
                                               status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, compliance)
 
 
@@ -169,7 +172,7 @@ def insert_zipper(conn, zipper):
                                           plugin_id,
                                           epss_value) VALUES(?,?)'''
     cur = conn.cursor()
-    cur.execute('pragma journal_mod=wal;')
+    cur.execute('pragma journal_mode=wal;')
     cur.execute(sql, zipper)
 
 

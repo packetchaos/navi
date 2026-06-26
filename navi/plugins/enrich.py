@@ -488,7 +488,7 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
         try:
             if output:
                 if regexp:
-                    plugin_data = db_query("SELECT distinct(asset_uuid) where plugin_id='{}' "
+                    plugin_data = db_query("SELECT distinct(asset_uuid) from vulns where plugin_id='{}' "
                                            "and output REGEXP '{}';".format(plugin, output))
                 else:
                     plugin_data = db_query("SELECT distinct(asset_uuid) from vulns "
@@ -671,9 +671,9 @@ def tag(c, v, d, plugin, name, group, output, port, scantime, file, cc, cv, scan
                 uuid_list.append(asset_uuid[0][0])
 
         if tone:
-            tone_tag_by_uuid(tag_list, c, v, d)
+            tone_tag_by_uuid(uuid_list, c, v, d)
         else:
-            tag_by_uuid(tag_list, c, v, d)
+            tag_by_uuid(uuid_list, c, v, d)
 
     if cv != '' and cc != '':
 

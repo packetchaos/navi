@@ -80,8 +80,8 @@ def return_tag_uuid(key, value):
             if str(tag_info[0]).lower() == str(key).lower():
                 if str(tag_info[1]).lower() == str(value).lower():
                     return str(tag_info[2])
-                else:
-                    return 'none'
+        # No tag matched both key and value
+        return 'none'
     except Exception as E:
         click.echo(E)
 

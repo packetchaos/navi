@@ -3,6 +3,7 @@ import click
 import gzip
 import shutil
 import csv
+import ast
 from .dbconfig import create_epss_table, new_db_connection, create_zipper_table
 from .database import insert_epss, drop_tables, db_query, insert_zipper
 
@@ -20,20 +21,20 @@ def zipper_epss_plugin():
             highest_cve = 0
             plugin_zipper_list.append(plugin[0])
             try:
-                for cve in (eval(plugin[1])):
+                for cve in ast.literal_eval(plugin[1]):
                     score = db_query("select epss_value from epss where cve='{}'".format(str(cve)))
                     if float(score[0][0]) >= highest_cve:
                         highest_cve = float(score[0][0])
                     else:
                         pass
                 plugin_zipper_list.append(highest_cve)
-            except SyntaxError:
+            except (SyntaxError, ValueError):
                 plugin_zipper_list.append("NO CVE")
             except IndexError:
                 plugin_zipper_list.append("NO CVE")
             try:
                 insert_zipper(zipper_conn, plugin_zipper_list)
-            except:
+            except Exception:
                 click.echo("\nYou need to update the vulns table to zipper epss data.\n")
 
 

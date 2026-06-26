@@ -29,7 +29,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.execute('pragma journal_mode=WAL;')
     vuln_conn.execute('pragma threads=16;')
     vuln_conn.execute('PRAGMA temp_store = MEMORY;')
-    vuln_conn.execute('pragma cashe_size=-2000000;')
+    vuln_conn.execute('pragma cache_size=-2000000;')
     vuln_conn.execute('PRAGMA mmap_size = 30000000000;')
     vuln_conn.execute('PRAGMA page_size = 4096;')
     vuln_conn.execute('pragma busy_timeout = 60000;')
@@ -422,7 +422,7 @@ def parse_data(chunk_data, chunk_number):
                     time.sleep(20)
                     insert_vulns(vuln_conn, vuln_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
             try:
                 insert_plugins(vuln_conn, plugins_master_list)
@@ -431,9 +431,9 @@ def parse_data(chunk_data, chunk_number):
                     click.echo("{}".format(e))
                     click.echo("Trying Once more")
                     time.sleep(25)
-                    insert_vulns(vuln_conn, vuln_master_list)
+                    insert_plugins(vuln_conn, plugins_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
             try:
                 insert_cpes(vuln_conn, cpes_master_list)
@@ -442,9 +442,9 @@ def parse_data(chunk_data, chunk_number):
                     click.echo("{}".format(e))
                     click.echo("Trying Once more")
                     time.sleep(30)
-                    insert_vulns(vuln_conn, vuln_master_list)
+                    insert_cpes(vuln_conn, cpes_master_list)
                 except Error as db_error:
-                    click.echo(db_error, chunk_number)
+                    click.echo("{} on Chunk {}".format(db_error, chunk_number))
                     pass
         except TypeError:
             click.echo("Your Export has no data.  It may have expired")
@@ -539,7 +539,7 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
         # loop to check status until finished
         while not_ready is True:
             # Pull the status, then pause 5 seconds and ask again.
-            if status['status'] == 'PROCESSING' or 'QUEUED':
+            if status['status'] == 'PROCESSING' or status['status'] == 'QUEUED':
                 time.sleep(2.5)
                 status = request_data('GET', '/vulns/export/' + ex_uuid + '/status')
                 # click.echo("Status : " + str(status["status"]))

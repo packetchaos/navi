@@ -52,10 +52,14 @@ def grab_keys():
         cur = conn.cursor()
         try:
             cur.execute("SELECT * from keys;")
-        except IndexError:
+        except Exception:
             click.echo("\nYou don't have any API keys!  Please enter your keys\n")
             exit()
         rows = cur.fetchall()
+        if not rows:
+            click.echo("\nYou don't have any API keys!  Please enter your keys\n")
+            exit()
+        access_key = secret_key = None
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
@@ -438,7 +442,7 @@ def create(c, v, d, method, method_text, option_one, option_text, option_two, op
     database_conn = new_db_connection(r"navi.db")
     with database_conn:
         today = datetime.now()
-        date_in_d = str(d + "Updated: {}".format(str(today)))
+        date_in_d = str((d or "") + "Updated: {}".format(str(today)))
         navi_tag_rule = [None, str(c), str(v), date_in_d, method, str(method_text), option_one, str(option_text), option_two, option_three, str(today), None]
 
         insert_rules(database_conn, navi_tag_rule)
@@ -801,8 +805,8 @@ def encrypt(name, password, new_name):
 
         if new_name is None:
             new_name = name
-            # Encrypt the file with a new name
-            pyAesCrypt.encryptFile("{}".format(name), "{}.aes".format(new_name), password, buffer_size)
+        # Encrypt the file (use the provided new name, or default to the original name)
+        pyAesCrypt.encryptFile("{}".format(name), "{}.aes".format(new_name), password, buffer_size)
 
         click.echo("\nYour file {} was encrypted\n\n".format(new_name))
     except ImportError:
@@ -873,7 +877,7 @@ def bytag(tag_string):
         tag_tuple = tag_string.split(':')
         cat = tag_tuple[0]
         val = tag_tuple[1]
-        if bytag != '':
+        if val != '':
 
             click.echo("\nI'm deleting all of the assets associated with your Tag\n")
             payload = {'query': {'field': "tag.{}".format(cat), 'operator': 'set-has', 'value': str(val)}}
@@ -1309,7 +1313,7 @@ def tag_center():
 @click.option("--days", default=60, help="Limit the amount of data being downloaded/reported")
 def was_reporter(days):
     a, s = grab_keys()
-    command = ("docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e {} "
+    command = ("docker run -d -p 5004:5004 -e \"access_key={}\" -e \"secret_key={}\" -e \"days={}\" "
                "--mount type=bind,source=$(pwd),target=/usr/src/app/data "
                "packetchaos/navi_was_reports").format(a, s, days)
     if click.confirm('This command downloads the packetchaos/navi_was_reports '
