@@ -6,6 +6,17 @@ in Cyber Exposure or Vulnerability Management.
 
 All documentation has been moved to the [Github wiki](https://github.com/packetchaos/navi/wiki) for more verbose documentation.
 
+# Emailing Reports
+
+Navi can email reports two ways.  If a [Resend](https://resend.com) API key is available
+(`RESEND_API_KEY` env var or `navi config resend`) it is used automatically - no mail server,
+port or mailbox password needed; the user only supplies the recipient.  Without a key, navi
+falls back to the classic SMTP path configured with `navi config smtp`.
+
+See [RESEND_SETUP.md](RESEND_SETUP.md) for the one-time Resend setup.
+
+    navi action mail --to someone@example.com --subject "Vuln Report" --file report.pdf
+
 # Common Issues
 
 ### My Docker container keeps getting "Killed"

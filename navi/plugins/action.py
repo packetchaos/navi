@@ -13,7 +13,7 @@ from .dbconfig import (create_keys_table, create_diff_table, create_assets_table
 from .dbconfig import create_rules_table
 from .database import new_db_connection, db_query, insert_rules
 from .api_wrapper import request_data, request_no_response, tenb_connection
-from .send_mail import send_attachment
+from .send_mail import send_attachment, send_report
 from collections import defaultdict
 from typing import Optional, Dict, Tuple
 from os import system as cmd
@@ -764,16 +764,16 @@ def push(command, target, file):
         click.echo("\nYou need to send a --command or a --file when using this command\n")
 
 
-@action.command(help="Mail yourself a Report")
+@action.command(help="Mail yourself a Report - uses Resend when a key is configured")
 @click.option("--message", default='', help="Email a custom message or use result of a navi command")
 @click.option("--to", default='', help="Email address to send to")
 @click.option("--subject", default='', help="Subject of the Email")
 @click.option("-v", is_flag=True, help="Display a copy of the message")
 @click.option("--file", default=None, help="The name of the file you want to attach to the email")
 def mail(message, to, subject, v, file):
+    # Transport is picked automatically: Resend if a key is available (env RESEND_API_KEY or
+    # 'navi config resend'), otherwise the classic SMTP path. Setup details in RESEND_SETUP.md
     try:
-        # grab SMTP information
-        server, port, from_email, password = grab_smtp()
         if to == '':
             to = input("Please enter the email you wish send this mail to: ")
         if subject == '':
@@ -785,11 +785,11 @@ def mail(message, to, subject, v, file):
             click.echo("Here is a copy of your email that was Sent")
             click.echo(message)
 
-        send_attachment(from_email, to, server, password, port, file, message, subject)
+        send_report(to, subject, message, filename=file)
 
     except Exception as E:
         click.echo("Your Email information may be incorrect")
-        click.echo("Run the 'navi config smtp' command to correct your information\n")
+        click.echo("Run the 'navi config resend' or 'navi config smtp' command to correct your information\n")
         click.echo(E)
 
 

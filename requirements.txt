@@ -11,3 +11,4 @@ IPy~=1.0
 Flask~=1.1.1
 setuptools~=40.8.0
 matplotlib~=3.2.1
+resend~=2.0

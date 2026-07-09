@@ -22,6 +22,7 @@ from .agent_to_db import download_agent_data
 from restfly import errors as resterrors
 from .th_tone_vulns import tone_findings_export
 from .plugin_update import plugin_export
+from .route_rules import load_route_rules, route_for_plugin
 
 tio = tenb_connection()
 
@@ -530,122 +531,60 @@ def display_routes(display_table):
 
 
 def group_by_plugins():
+    # Routes are derived in three layers, first match wins:
+    #   1. rules (defaults + the users navi_routes.json / 'navi config routes' imports)
+    #   2. the plugins CPE string - 'cpe:/a:apache:tomcat' -> 'Apache Tomcat' + vuln type
+    #   3. the plugin name with version junk stripped
+    # See route_rules.py for the layers and the navi_routes.json format
     click.echo("\nCreating a Vulnerability Routing Table called vuln-routes\n\n")
     database = r"navi.db"
     route_conn = new_db_connection(database)
     drop_tables(route_conn, 'vuln_route')
     create_vuln_route_table()
 
-    plugin_data = db_query("select name, plugin_id from plugins where severity !='info';")
+    rules, os_routes = load_route_rules()
+
+    plugin_data = db_query("select name, plugin_id, cpe from plugins where severity !='info';")
+
+    # One query for all instance totals instead of one query per plugin
+    click.echo("\nCounting vuln instances per plugin\n")
+    instance_counts = {}
+    for plugin_id, count in db_query("select plugin_id, count(*) from vulns group by plugin_id;"):
+        instance_counts[str(plugin_id)] = count
+
+    click.echo("\nOrganizing data\n")
+    grouped_plugins = {}
+    route_types = {}
+
+    for name, plugin_id, cpe in plugin_data:
+        route, vuln_type = route_for_plugin(name, cpe, rules, os_routes)
+
+        route_key = str(route).upper()
+
+        if route_key not in grouped_plugins:
+            grouped_plugins[route_key] = []
+            # remember the pretty name and type from the first plugin that made the route
+            route_types[route_key] = (route, vuln_type)
+
+        grouped_plugins[route_key].append(plugin_id)
 
     with route_conn:
         route_id = 0
-        grouped_plugins = {}
+        for route_key, plugin_ids in grouped_plugins.items():
+            route_name, vuln_type = route_types[route_key]
 
-        for name, plugin_id in plugin_data:
-            #print(name, plugin_id)
-            parts = name.split()
-            try:
-                clean_second_part = str(parts[1]).replace("<", " ")
-                first_part = parts[0].upper()
-                second_part = clean_second_part.upper()
-            except IndexError:
-                first_part = name
-                second_part = "Plugin: {}".format(plugin_id)
-            #print(first_part, second_part)
-            # Vuln Route Data Pipeline / Transform logic
-
-            if first_part.startswith("KB") or first_part.startswith("MS"):
-                key = "WINDOWS UPDATES"
-            elif any(char.isdigit() for char in second_part):
-                key=first_part
-            elif first_part.startswith("SECURITY"):
-                key = "Internet Explorer"
-            elif first_part.startswith("GIT") and second_part.startswith("FOR"):
-                key = "Git for Windows"
-            elif first_part.startswith(".SVN"):
-                key = "HTTP"
-            elif first_part.startswith("LIBCURL"):
-                key = "libcurl"
-            elif first_part.startswith("RED"):
-                key = "RHEL"
-            elif first_part.startswith("LIBREOFFICE"):
-                key = "LIBREOFFICE"
-            elif first_part.startswith("PHP"):
-                key = "PHP"
-            elif first_part.startswith("ULTRAVNC"):
-                key = "ULTRAVNC"
-            elif first_part.startswith("AIX"):
-                key = "AIX"
-            elif first_part.startswith("OLLAMA"):
-                key = "OLLAMA"
-            elif first_part.startswith("SSH") or first_part.startswith("OPENSSH"):
-                key = "SSH/TLS"
-            elif first_part.startswith("OPENJDK"):
-                key = "OpenJDK"
-            elif first_part.startswith("JENKINS"):
-                key = "Jenkins"
-            elif first_part == "DEBIAN":
-                key = "Debian"
-            elif "JIRA" in first_part or "JIRA" in second_part:
-                key = "Atlassian Jira"
-            elif first_part == "UBUNTU" or second_part == "UBUNTU":
-                key = "Ubuntu"
-            elif first_part.startswith("PYTHON") or second_part.startswith("PYTHON"):
-                key = "Python"
-            elif first_part.startswith("ESX") or second_part.startswith("ESX"):
-                key = "Vmware ESXI"
-            elif first_part.startswith("SSL") or first_part.startswith("TLS") or first_part.startswith("OPENSSL"):
-                key = "SSH/TLS"
-            elif len(parts) >= 1:
-                key = f"{first_part} {clean_second_part}"
-            else:
-                key = first_part
-
-            if str(key).upper() not in grouped_plugins:
-                grouped_plugins[str(key).upper()] = []
-
-            grouped_plugins[str(key).upper()].append(plugin_id)
-        list_of_oses = ["RHEL", "CENTOS", "APPLE"]
-
-        click.echo("\nGrabbing distinct OSes from the vulns table; this can take time\n")
-        # grab all the OSes detected to use as our base-line
-        oses = db_query("select distinct OSes from vulns;")
-        click.echo("\nOrganizing data\n")
-        for os in oses:
-            new_os = os[0]
-            try:
-                new_list = eval(new_os)
-            except Exception:
-                new_list = new_os
-            # OSes is a list, so the Distinct option in sqlite doesn't dedupe everything.
-            # Here I cycle through each item in the list and compare it to the current list before adding it.
-            for i in new_list:
-                if str(i).upper() not in list_of_oses:
-                    list_of_oses.append(str(i).upper())
-
-        for plugin_group, plugin_ids in grouped_plugins.items():
             total = 0
-            db_list = []
-            if str(plugin_group).upper() in str(list_of_oses):
-                vuln_type = "Operating System"
-            else:
-                vuln_type = "Application"
-
-            # Query to grab the total of each plugin IDs for instance total
             for plugin_inst in plugin_ids:
-                plugin_count = db_query("select count(*) from vulns where plugin_id='{}';".format(plugin_inst))
-                total += plugin_count[0][0]
+                total += instance_counts.get(str(plugin_inst), 0)
 
             route_id += 1
-            db_list.append(route_id)
-            db_list.append(plugin_group)
-            db_list.append(str(plugin_ids))
-            db_list.append(total)
-            db_list.append(str(vuln_type))
+            db_list = [route_id, route_name, str(plugin_ids), total, str(vuln_type)]
             insert_vuln_router(route_conn, db_list)
 
+    click.echo("\nCreated {} routes from {} plugins\n".format(route_id, len(plugin_data)))
     click.echo("\nFinished updating the vuln_route table. Use 'navi explore data route' to view it's context\n")
+    click.echo("Customize routes with a navi_routes.json file or 'navi config routes' - "
+               "see route_rules.py for the format\n")
 
 
 def optimize_now():
@@ -755,7 +694,7 @@ def search_for_path():
 
 
 @click.group(help="Configure permissions, scan-groups, users, user-groups, networks, "
-                  "sla, smtp, mail, keys and update the navi database")
+                  "sla, smtp, resend, routes, mail, keys and update the navi database")
 def config():
     pass
 
@@ -875,6 +814,106 @@ def smtp(server, port, email, password):
             cur = conn.cursor()
             cur.execute(sql, info)
         click.echo("\nYour smtp information was entered successfully\n\n")
+    except:
+        click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
+
+
+@config.command(help="Enter or Overwrite your Resend information - the default email transport. Get a free key at "
+                     "https://resend.com; See RESEND_SETUP.md")
+@click.option("--from_email", default="", help="Verified sender address ex: hounds@thehounds.ai (default: onboarding@resend.dev)")
+def resend(from_email):
+
+    # The key is taken via getpass so it never lands on the command line or in shell history
+    api_key = getpass.getpass("Enter your Resend API Key - ex: re_xxxx : ")
+
+    if from_email == "":
+        from_email = input("Enter your verified sender address or press Enter "
+                           "for onboarding@resend.dev : ")
+
+    if from_email == "":
+        from_email = "onboarding@resend.dev"
+
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        drop_tables(conn, 'resend')
+
+        create_resend_table = """CREATE TABLE IF NOT EXISTS resend (
+                                api_key text,
+                                from_email text
+                                );"""
+        create_table(conn, create_resend_table)
+
+        info = (api_key, from_email)
+
+        with conn:
+            sql = '''INSERT or IGNORE into resend(api_key, from_email) VALUES(?,?)'''
+            cur = conn.cursor()
+            cur.execute(sql, info)
+        click.echo("\nYour Resend information was entered successfully - key: ****{} "
+                   "sender: {}\n\n".format(str(api_key)[-4:], from_email))
+    except:
+        click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
+
+
+@config.command(help="Import custom route rules from a json file for vuln routing. "
+                     "Your rules are checked before the built-in ones when running "
+                     "'navi config update route'. See route_rules.py for the json format")
+@click.option("--file", required=True, help="Path to your routes json file ex: my_routes.json")
+def routes(file):
+    import re as regex_check
+    import json as json_check
+
+    try:
+        with open(file) as fobj:
+            rule_data = json_check.load(fobj)
+    except Exception as E:
+        click.echo("\nCould not read {} - is it valid json?\n".format(file))
+        click.echo(E)
+        return
+
+    rule_list = rule_data.get("rules", [])
+
+    if not rule_list:
+        click.echo("\nNo rules found in {} - expected a 'rules' list. "
+                   "See route_rules.py for the format\n".format(file))
+        return
+
+    # Validate every regex before we store anything
+    for rule in rule_list:
+        try:
+            regex_check.compile(rule["match"])
+            str(rule["route"])
+        except Exception as E:
+            click.echo("\nBad rule {} - each rule needs a valid 'match' regex "
+                       "and a 'route' name\n".format(rule))
+            click.echo(E)
+            return
+
+    try:
+        database = r"navi.db"
+        conn = new_db_connection(database)
+        drop_tables(conn, 'route_rules')
+
+        create_route_rules_table = """CREATE TABLE IF NOT EXISTS route_rules (
+                                rule_order integer,
+                                match text,
+                                route text,
+                                vuln_type text
+                                );"""
+        create_table(conn, create_route_rules_table)
+
+        with conn:
+            cur = conn.cursor()
+            rule_order = 0
+            for rule in rule_list:
+                rule_order += 1
+                sql = '''INSERT or IGNORE into route_rules(rule_order, match, route, vuln_type)
+                         VALUES(?,?,?,?)'''
+                cur.execute(sql, (rule_order, rule["match"], rule["route"], rule.get("type")))
+
+        click.echo("\n{} route rules imported. Run 'navi config update route' to "
+                   "rebuild the vuln_route table with them\n\n".format(rule_order))
     except:
         click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
 
