@@ -1,73 +1,208 @@
-# Navi - The Tenable Vulnerability Management Swiss Army Knife
-A command-line tool which leverages the Tenable.io API to automate common tasks
-in Cyber Exposure or Vulnerability Management.
+<h1 align="center">navi</h1>
+<p align="center"><b>A Deterministic Agentic Engine and CLI for Exposure Management.</b></p>
+<p align="center">
+Built on Tenable. Grounded in your data. Reproducible by design.
+</p>
 
-# Important Note
+<p align="center">
+<a href="https://github.com/packetchaos/navi/wiki">Wiki</a> ·
+<a href="https://deepwiki.com/packetchaos/navi">DeepWiki</a> ·
+<a href="PUSH.md">Remote Execution</a> ·
+<a href="RESEND_SETUP.md">Email Setup</a>
+</p>
 
-All documentation has been moved to the [Github wiki](https://github.com/packetchaos/navi/wiki) for more verbose documentation.
+<p align="center">
+<a href="https://deepwiki.com/packetchaos/navi"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+</p>
 
-# Emailing Reports
+---
 
-Navi can email reports two ways.  If a [Resend](https://resend.com) API key is available
-(`RESEND_API_KEY` env var or `navi config resend`) it is used automatically - no mail server,
-port or mailbox password needed; the user only supplies the recipient.  Without a key, navi
-falls back to the classic SMTP path configured with `navi config smtp`.
+navi turns your Tenable exposure data into something an AI agent — or an engineer at a
+terminal — can act on with confidence. It syncs Tenable Vulnerability Management, Tenable One,
+and Tenable WAS into a local, queryable database, exposes every capability as a real tool, and
+ships a pack of expert agents (**the Hounds**) that hunt specific classes of exposure. No
+dashboards to click through, no data left on the table, and — crucially — nothing made up.
 
-See [RESEND_SETUP.md](RESEND_SETUP.md) for the one-time Resend setup.
+## Why "deterministic agentic"?
 
-    navi action mail --to someone@example.com --subject "Vuln Report" --file report.pdf
+Most AI agents guess. They summarize, approximate, and occasionally invent an asset or a CVE
+that was never there. That's fine for a chat. It is unacceptable for security work, where a
+wrong answer means an unpatched host or a bad decision made with confidence.
 
-# Remote Command & File Push
+navi is a **Deterministic Agentic Engine**: every answer an agent gives and every action it
+takes is a real, reproducible tool call — against a local mirror of *your* Tenable data
+(`navi.db`) or the Tenable API directly. Ask the same question twice and you get the same
+answer. There is no hallucinated finding, no fabricated asset, no fuzzy summary standing in for
+ground truth.
 
-Navi can run a command on — or copy a file to — one or more Linux hosts over SSH with
-`navi action push`.  Store an SSH service account once with `navi config ssh` (a password
-and/or a private key via `--key`), then target a single IP, a comma-separated list, or a
-file of hosts with `--targets-file`.  Push reports the remote exit status for each host.
+The intelligence lives in the **orchestration** — deciding what to hunt, how to tag, when to
+scan, what to remediate. The **facts** always come from your data. That separation is the whole
+point: agentic flexibility on top of deterministic truth.
 
-See [PUSH.md](PUSH.md) for all flags and examples.
+## How it fits together
 
-    navi action push --target 10.0.0.1,10.0.0.2 --command "sudo systemctl restart nginx"
+```mermaid
+flowchart LR
+    T[Tenable VM / One / WAS] -->|sync| N[navi engine]
+    N <-->|SQL| DB[(navi.db)]
+    N -->|API writes| T
+    subgraph Agent side
+      C[Claude / any MCP client] --> M[navi-mcp server]
+      SK[Skills] -.guides.-> C
+      HO[The Hounds] -.playbooks.-> C
+    end
+    M -->|deterministic tool calls| N
+```
 
-# Common Issues
+navi is four things that reinforce each other:
 
-### My Docker container keeps getting "Killed"
-Navi uses threading, to speed up downloads; It pulls 50 asset chunks on 10 threads and since the vulnerabilities per asset
-fluctuate this can spike the memory above 2G.  If this happens increase your memeory to 4G for under 10,000 assets and 8Gb for larger asset counts..
+- **The engine (CLI).** `navi` pulls Tenable data into `navi.db`, a local SQLite mirror you can
+  query in milliseconds, and turns tagging, ACR calibration, scanning, exporting, and
+  remediation into single commands. This is the deterministic core everything else drives.
+- **The MCP server.** `navi-mcp` exposes the engine to any MCP-capable AI (Claude and others)
+  as typed tools, behind a write-gate so read operations are always safe and state-changing
+  actions require an explicit opt-in.
+- **The Skills.** Packaged best-practice playbooks that teach an agent *how to drive navi
+  well* — the right selectors, the safe patterns, the gotchas — so the model orchestrates
+  instead of improvises.
+- **The Hounds.** A pack of exposure-management agents, each trained on one kind of hunt —
+  known-exploited vulnerabilities, expiring certificates, attack paths, unsupported software,
+  and more — grounded in exact navi selectors rather than generic advice.
 
-[Directions for Mac](https://docs.docker.com/docker-for-mac/#memory)
+## The Hounds
 
-[Directions for Windows](https://docs.docker.com/docker-for-windows/#advanced)
- 
-### I keep getting DB locks
-Use the thread option to avoid DB locks by reducing it to 1. Increasing your RAM and running Navi on SSDs will speed help avoid DB locks.
+Each Hound is a focused exposure hunter with its own detection logic, tag scheme, and navi
+selectors. Run one by name, or **release the whole pack**.
 
-    navi config update full --threads 1
- 
-### What is my Navi Version
-Versions older than 5.1.36 do not have this feature.
+| Hound | Hunts for |
+|-------|-----------|
+| **Laelaps** | CISA KEV — known-exploited vulnerabilities |
+| **Certania** | Certificates — expiry, weak crypto, trust issues |
+| **Heimdall** | Post-quantum readiness |
+| **Fenrir** | Attack paths |
+| **Cerberus** | IoT / OT exposure |
+| **Pythia** | AI / ML inventory |
+| **Atlas** | Asset ownership and accountability |
+| **Mimir** | Software inventory |
+| **Charon** | End-of-life / unsupported software |
+| **Anubis** | ACR calibration |
+| **Chronos** | Scan health and coverage |
+| **Sirius** | Agent groups |
+| **Garmr** | Stale tag cleanup |
+| **Orthrus** | MITRE ATT&CK mapping |
+| **Argus** | Custom / homegrown apps |
+| **Argos** | Single-asset deep dive |
+| **Sphinx** | Environment overview ("On the Scent") |
+| **Covenant** | The AI Contract — guardrails for the pack |
 
-    navi explore info version
+## Quickstart (CLI)
 
-### Are my Keys inputted correctly?
-In different terminals it can be a challenge to copy the keys to navi since you can not be sure it copied correctly.  
+navi needs **Python 3.9+** (3.12 recommended) and a Tenable API key pair.
 
-Use the below commands to check your keys
-    
-    navi explore data query "select * from keys;"
+```bash
+# 1. Install
+pip install navi-pro
 
-Alternatively, you could try entering your keys again using the '-clear' command to see what is being copied to the screen.
+# 2. Add your Tenable API keys (stored locally, never echoed)
+navi config keys --a <ACCESS_KEY> --s <SECRET_KEY>
 
-    navi config keys -clear
+# 3. First sync — pulls your Tenable data into navi.db.
+#    This is long-running on large tenants; run it on the CLI, not through MCP.
+navi config update full
+```
 
-### What is the biggest Tenable.io instance Navi has been tested on?
-Navi 8.2.1 was recently tested on a container with 1.5 Million assets and 160 million vulnerabilties.  
-It took 30 mins for Tenable VM to prepare the download and 60 mins to download and parse the data
- into navi.db which ended up being 80GB.  Plugin queries took 2secs.
+Then start exploring and acting:
 
- 6.2.3 and later improves query performance by a factor of 10 with the below changes.
- * Three indexes where added to reduce vuln query time
- * Exports were reduced to 50 from 500 assets to increase download time
- * Synchronous was turned off to speed up downloads
- * DB cache was increased to 10000 from 2000 default in SQLite
+```bash
+# See what navi sees
+navi explore info assets
+navi explore data query "select ip_address, fqdn from assets limit 10;"
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/packetchaos/navi)
+# Tag every asset with a CISA KEV finding
+navi enrich tag --cisa
+
+# Export risk by business segment (includes ACR + AES)
+navi export bytag
+
+# Calibrate criticality for your crown jewels
+navi enrich acr --tag "Tier:Production" --mod set --acr 9 --reason business
+```
+
+Prefer containers? A `Dockerfile` for the full **navi + navi-mcp** image lives under
+[`navi-mcp-suite/`](navi-mcp-suite/) — Ubuntu 24.04, Python 3.12, isolated venv, `navi.db` on a
+mounted volume.
+
+## Quickstart (MCP server)
+
+Give any MCP-capable AI safe, deterministic access to navi:
+
+```bash
+# Build the image (from the repo root)
+docker build -f navi-mcp-suite/Dockerfile -t navi-mcp:latest .
+
+# Store keys + do the first sync into a persistent volume
+docker run --rm -v navi-data:/data navi-mcp:latest navi config keys --a <ACCESS> --s <SECRET>
+docker run --rm -v navi-data:/data navi-mcp:latest navi config update full
+
+# Serve over HTTP on :8000
+docker run -d -p 8000:8000 -v navi-data:/data navi-mcp:latest
+```
+
+Key environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `NAVI_WORKDIR` | Where `navi.db` and CSV exports live (mount a volume). |
+| `NAVI_BIN` | Absolute path to the `navi` binary. |
+| `NAVI_SKILL_DIR` | Unpacked skills, so `navi://skill/...` resources resolve. |
+| `NAVI_MCP_ALLOW_WRITES` | `1` enables state-changing tools (tagging, ACR, scan, delete). |
+
+### The write-gate
+
+Reads are always safe. Anything that changes state is **double-guarded**: the server must be
+started with `NAVI_MCP_ALLOW_WRITES=1`, *and* each write call must pass `confirm=True`. The two
+most sensitive actions raise the bar further — emailing (`NAVI_EMAIL=1`) and remote command
+execution (`NAVI_REMOTE_CODE_EXECUTION=1`) each need their own dedicated flag on top of the
+write-gate. An agent can look all day; it can only *act* when you've explicitly let it.
+
+## Skills
+
+Skills are the connective tissue between an AI and the engine — they encode the correct way to
+use each part of navi so the model orchestrates expert workflows instead of guessing at flags.
+
+| Skill | Covers |
+|-------|--------|
+| `navi` | Router + natural-language index into everything below |
+| `navi-core` | Install, API keys, sync, `navi.db` schema, scale tuning |
+| `navi-mcp` | Conventions for driving navi through the MCP tools |
+| `navi-explore` | Querying and searching your data |
+| `navi-enrich` | Asset tagging (plugin, CVE, CPE, KEV, SQL, and more) |
+| `navi-acr` | Asset Criticality Rating calibration for Tenable One |
+| `navi-export` | CSV exports, including risk-by-tag with ACR + AES |
+| `navi-scan` | Create, launch, stop, and evaluate scans |
+| `navi-was` | Web Application Scanning (DAST) |
+| `navi-action` | Delete, rotate keys, encrypt, cancel exports |
+| `navi-mail` / `navi-remote-exec` | Emailing reports and remediation push (double-gated) |
+| `navi-troubleshooting` | Fixing sync errors, DB locks, empty results |
+| `the-hounds` | The playbook for the whole pack |
+
+## What navi works with
+
+Tenable Vulnerability Management (Tenable.io), Tenable One / Exposure Management, and Tenable WAS.
+navi is battle-tested at scale — it has ingested tenants with **1.5M+ assets and 160M+
+vulnerabilities** into `navi.db`, with plugin queries returning in seconds. FedRAMP tenants are
+supported via URL configuration.
+
+## Documentation
+
+- **[Wiki](https://github.com/packetchaos/navi/wiki)** — full command reference and guides
+- **[DeepWiki](https://deepwiki.com/packetchaos/navi)** — ask questions about the codebase
+- **[PUSH.md](PUSH.md)** — remote command & file execution over SSH
+- **[RESEND_SETUP.md](RESEND_SETUP.md)** — one-time email setup
+
+Troubleshooting (Docker memory, DB locks, key checks, scale tuning) now lives in the
+[Wiki](https://github.com/packetchaos/navi/wiki) so this page stays focused.
+
+## License
+
+navi is released under the **GNU GPL v3**. See [LICENSE](LICENSE).
