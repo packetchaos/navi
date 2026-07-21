@@ -15,7 +15,8 @@ except ImportError:
     pass
 
 
-def send_attachment(from_email, to_email, mail_server, password, port, filename, message, subject):
+def send_attachment(from_email, to_email, mail_server, password, port, filename, message, subject,
+                    html=None):
     try:
         server = smtplib.SMTP(mail_server, port)
         server.ehlo()
@@ -26,7 +27,17 @@ def send_attachment(from_email, to_email, mail_server, password, port, filename,
         msg2['Subject'] = subject
         msg2['From'] = from_email
         msg2['To'] = to_email
-        msg2.attach(MIMEText(message, 'plain'))
+
+        # When an html body is supplied, send a text/plain + text/html alternative so mail
+        # clients render the HTML page and non-HTML clients fall back to the plaintext message.
+        if html:
+            alternative = MIMEMultipart('alternative')
+            alternative.attach(MIMEText(message if message else
+                                        "This email contains an HTML body.", 'plain'))
+            alternative.attach(MIMEText(html, 'html'))
+            msg2.attach(alternative)
+        else:
+            msg2.attach(MIMEText(message, 'plain'))
 
         # If there is an attachment, add it to the email.
         if filename:
@@ -109,7 +120,8 @@ def grab_resend_from(from_email=None):
     return "onboarding@resend.dev"
 
 
-def send_attachment_resend(to_email, subject, message, filename=None, api_key=None, from_email=None):
+def send_attachment_resend(to_email, subject, message, filename=None, api_key=None, from_email=None,
+                           html=None):
     # Send an email via the Resend python library - no smtp server, port or mailbox password needed.
     # The key comes from an arg, the RESEND_API_KEY env var, or 'navi config resend' - never the command line.
     if not resend:
@@ -134,8 +146,15 @@ def send_attachment_resend(to_email, subject, message, filename=None, api_key=No
         "from": sender,
         "to": [to_email],
         "subject": subject,
-        "text": message if message else "Report attached - sent by navi"
     }
+
+    # Resend renders the 'html' field as the email body. Always include a 'text' fallback
+    # so clients that can't display HTML still show something readable.
+    if html:
+        params["html"] = html
+        params["text"] = message if message else "This email contains an HTML body."
+    else:
+        params["text"] = message if message else "Report attached - sent by navi"
 
     # If there is an attachment, base64 encode it and add it to the email.
     if filename:
@@ -159,14 +178,15 @@ def send_attachment_resend(to_email, subject, message, filename=None, api_key=No
 
 
 def send_report(to_email, subject, message, filename=None, api_key=None, from_email=None,
-                smtp_info=None):
+                smtp_info=None, html=None):
     # Single entry point for mailing reports - The Hounds and 'navi action mail' call this.
     # If a Resend key is available (arg, env or config) use Resend; otherwise fall back to SMTP.
+    # Pass html to render an HTML page in the email body (text stays as the plaintext fallback).
     key = grab_resend_key(api_key)
 
     if key:
         send_attachment_resend(to_email, subject, message, filename=filename,
-                               api_key=key, from_email=from_email)
+                               api_key=key, from_email=from_email, html=html)
         return
 
     # No Resend key - legacy SMTP path, untouched behavior
@@ -175,7 +195,8 @@ def send_report(to_email, subject, message, filename=None, api_key=None, from_em
 
     if smtp_info:
         server, port, smtp_from, password = smtp_info
-        send_attachment(smtp_from, to_email, server, password, port, filename, message, subject)
+        send_attachment(smtp_from, to_email, server, password, port, filename, message, subject,
+                        html=html)
     else:
         click.echo("\nNo email transport is configured yet - the recipient is the only thing you"
                    "\nneed to supply once an operator does the one-time setup."

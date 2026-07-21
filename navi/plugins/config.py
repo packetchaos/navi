@@ -918,10 +918,13 @@ def routes(file):
         click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
 
 
-@config.command(help="Enter a ssh service account User Name and Password")
-@click.option("--username", prompt=True, help="Provide your Access Key")
-@click.option("--password", prompt=True, hide_input=True, help="Provide your Secret Key")
-def ssh(username, password):
+@config.command(help="Enter a ssh service account User Name, Password and/or private key path")
+@click.option("--username", prompt=True, help="SSH service account user name")
+@click.option("--password", prompt=True, hide_input=True, default="", show_default=False,
+              help="SSH password (press enter to leave blank when using a private key)")
+@click.option("--key", "key_file", default="",
+              help="Path to a private key file for key-based auth (leave blank to use the password)")
+def ssh(username, password, key_file):
     try:
         database = r"navi.db"
         conn = new_db_connection(database)
@@ -929,15 +932,19 @@ def ssh(username, password):
 
         create_passwords_table()
 
-        ssh_dict = (username, password)
+        # Store an empty key as NULL so push can treat 'no key' uniformly.
+        ssh_dict = (username, password, key_file if key_file else None)
         conn = new_db_connection(database)
 
         with conn:
-            sql = '''INSERT or IGNORE into ssh(username, password) VALUES(?,?)'''
+            sql = '''INSERT or IGNORE into ssh(username, password, key_file) VALUES(?,?,?)'''
             cur = conn.cursor()
             cur.execute(sql, ssh_dict)
 
-        click.echo("\nYour username and password was entered successfully\n\n")
+        if key_file:
+            click.echo("\nYour SSH username, password and key path were entered successfully\n\n")
+        else:
+            click.echo("\nYour SSH username and password were entered successfully\n\n")
     except:
         click.echo("\nThere seems to be a db error. Check your inputs and try again or delete the navi.db\n\n")
 

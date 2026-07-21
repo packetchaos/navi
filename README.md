@@ -17,6 +17,17 @@ See [RESEND_SETUP.md](RESEND_SETUP.md) for the one-time Resend setup.
 
     navi action mail --to someone@example.com --subject "Vuln Report" --file report.pdf
 
+# Remote Command & File Push
+
+Navi can run a command on — or copy a file to — one or more Linux hosts over SSH with
+`navi action push`.  Store an SSH service account once with `navi config ssh` (a password
+and/or a private key via `--key`), then target a single IP, a comma-separated list, or a
+file of hosts with `--targets-file`.  Push reports the remote exit status for each host.
+
+See [PUSH.md](PUSH.md) for all flags and examples.
+
+    navi action push --target 10.0.0.1,10.0.0.2 --command "sudo systemctl restart nginx"
+
 # Common Issues
 
 ### My Docker container keeps getting "Killed"

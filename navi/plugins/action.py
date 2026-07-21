@@ -106,65 +106,297 @@ def send_command(shell, command, quick):
 
     response = shell.before
     click.echo()
-    print(response.decode('utf-8'))
+    # decode defensively - remote output may contain non-UTF-8 bytes (locale, binary, colour codes)
+    print(response.decode('utf-8', errors='replace'))
     click.echo()
 
 
-def connect(conn_user, host, password, command):
+# Sentinel we append to every pushed command so we can read the remote exit status back.
+NAVI_EXIT_SENTINEL = "NAVI_EXIT"
+
+
+def parse_targets(target):
+    # Split a --target value into an ordered, de-duplicated list of hosts.
+    # Accepts a single IP or a comma-separated list ("10.0.0.1, 10.0.0.2").
+    seen = set()
+    hosts = []
+    for piece in (target or "").split(','):
+        host = piece.strip()
+        if host and host not in seen:
+            seen.add(host)
+            hosts.append(host)
+    return hosts
+
+
+def clean_output_and_exit_code(raw):
+    # Pull the exit code out of the sentinel line and strip every sentinel-bearing
+    # line (the echoed command and its "NAVI_EXIT:<n>" output) from the display text.
+    exit_code = None
+    match = re.search(NAVI_EXIT_SENTINEL + r":(\d+)", raw)
+    if match:
+        exit_code = int(match.group(1))
+
+    cleaned = "\n".join(line for line in raw.splitlines()
+                        if NAVI_EXIT_SENTINEL not in line).strip("\r\n")
+    return cleaned, exit_code
+
+
+def build_remote_command(command, add_sentinel=True):
+    # Returns (effective_command, needs_sudo).
+    # When the command uses sudo we switch it to 'sudo -S -p ""' so sudo reads the password
+    # from stdin and prints no prompt - this avoids waiting on a prompt that never matches the
+    # shell PROMPT (the old code blocked for the full timeout) and never sends the password as a
+    # bare shell command line when sudo doesn't actually ask for it.
+    needs_sudo = re.search(r"\bsudo\b", command) is not None
+    effective = re.sub(r"\bsudo\b", "sudo -S -p ''", command, count=1) if needs_sudo else command
+    # Append the exit-status sentinel; '$?' reflects the exit code of the pushed command.
+    # Reboot commands skip this - the session dies before the echo could ever run.
+    if add_sentinel:
+        effective = "{} ; echo {}:$?".format(effective, NAVI_EXIT_SENTINEL)
+    return effective, needs_sudo
+
+
+def looks_like_reboot(command):
+    # Commands that tear down the SSH session on purpose. For these, the connection dropping
+    # right after we send the command is the success signal - there is no exit status to read.
+    return re.search(r"\b(reboot|init\s+6|halt|poweroff)\b", command) is not None \
+        or re.search(r"\bshutdown\b\s+-r", command) is not None
+
+
+def push_result(ok, exit_code=None, note="", retryable=False):
+    # Uniform per-host result so push() can print, summarise and log the same shape.
+    # 'retryable' is True ONLY for transport failures that happened before the remote command
+    # ran (e.g. the SSH login failed), so a retry cannot double-apply a non-idempotent command.
+    return {"ok": bool(ok), "exit_code": exit_code, "note": note, "retryable": bool(retryable)}
+
+
+# Backoff defaults for --retries. base is the first delay; each attempt doubles it up to the cap.
+RETRY_FACTOR = 2
+RETRY_MAX_DELAY = 60
+
+
+def retry_delay(attempt, base, factor=RETRY_FACTOR, max_delay=RETRY_MAX_DELAY):
+    # Exponential backoff for retry number 'attempt' (1-based): base, base*factor, ... capped.
+    return min(base * (factor ** (attempt - 1)), max_delay)
+
+
+def run_with_retry(operation, retries, base, host, sleeper=None):
+    # Run 'operation' (a zero-arg callable returning a push_result dict), retrying ONLY when the
+    # result is not ok AND flagged retryable (a pre-execution transport failure). Records the
+    # number of attempts on the returned result. With retries=0 this calls once and returns.
+    sleep = sleeper if sleeper is not None else time.sleep
+    attempt = 0
+    while True:
+        result = operation()
+        if result.get("ok") or not result.get("retryable") or attempt >= retries:
+            result["attempts"] = attempt + 1
+            return result
+        attempt += 1
+        delay = retry_delay(attempt, base)
+        click.echo("  ... transient failure on {} - retry {}/{} in {}s".format(
+            host, attempt, retries, delay))
+        sleep(delay)
+
+
+def wait_for_host(host, conn_user, password, key_file, max_wait, interval=15, sleeper=None):
+    # Poll SSH until the host answers again (used after a reboot). Returns True if it came back
+    # within max_wait seconds. 'sleeper' is injectable so tests don't actually sleep.
+    sleep = sleeper if sleeper is not None else time.sleep
+    waited = 0
+    # Give the box a moment to actually start going down before the first probe.
+    sleep(interval)
+    waited += interval
+    while waited <= max_wait:
+        try:
+            probe = pxssh.pxssh()
+            probe.login(host, conn_user, password, ssh_key=key_file, login_timeout=10)
+            probe.logout()
+            return True
+        except Exception:
+            sleep(interval)
+            waited += interval
+    return False
+
+
+def log_result(log_path, action, host, result, detail):
+    # Append one tab-separated row per host to the run log. Best-effort: a logging failure
+    # must never abort the push run.
+    if not log_path:
+        return
     try:
+        new_file = not os.path.exists(log_path)
+        with open(log_path, "a") as handle:
+            if new_file:
+                handle.write("timestamp\thost\taction\tresult\texit_code\tattempts\tdetail\n")
+            handle.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
+                datetime.now().isoformat(timespec="seconds"),
+                host, action,
+                "OK" if result.get("ok") else "FAIL",
+                "" if result.get("exit_code") is None else result.get("exit_code"),
+                result.get("attempts", 1),
+                detail))
+    except Exception as E:
+        click.echo("  [!] could not write to log '{}': {}".format(log_path, E))
 
-        if "sudo" in command:
-            conn = pxssh.pxssh()
-            conn.login(host, conn_user, password)
-            conn.sendline(command)
-            conn.prompt()
-            conn.sendline(password)
-            conn.prompt()
 
-            raw = conn.before
-            print(raw.decode('utf-8'))
-            conn.logout()
-        else:
-            conn = pxssh.pxssh()
-            conn.login(host, conn_user, password)
-            conn.sendline(command)
-            conn.prompt()
-            raw = conn.before
-            print(raw.decode('utf-8'))
-            conn.logout()
+def grab_ssh_credentials():
+    # Returns (username, password, key_file) or None.
+    # Tries the current 3-column schema first, then falls back to the older 2-column ssh
+    # table so navi.db files created before key auth still work without a re-config.
+    try:
+        rows = db_query("select username, password, key_file from ssh;")
+        if rows:
+            return rows[0][0], rows[0][1], rows[0][2]
+    except Exception:
+        pass
+    try:
+        rows = db_query("select username, password from ssh;")
+        if rows:
+            return rows[0][0], rows[0][1], None
+    except Exception:
+        pass
+    return None
+
+
+def read_targets_file(path):
+    # One target per line; blank lines and '#' comments (including inline) are ignored.
+    # Each line may itself be a comma-separated list - de-duplication happens in parse_targets.
+    lines = []
+    with open(path) as handle:
+        for line in handle:
+            line = line.split('#', 1)[0].strip()
+            if line:
+                lines.append(line)
+    return lines
+
+
+def connect(conn_user, host, password, command, key_file=None, timeout=300,
+            wait_online=0, wait_interval=15, sleeper=None):
+    # Run a command on a single host. Returns a push_result dict.
+    is_reboot = looks_like_reboot(command)
+    effective, needs_sudo = build_remote_command(command, add_sentinel=not is_reboot)
+
+    # Phase 1 - establish the connection. A failure here means the command NEVER ran, so it is
+    # safe to retry (retryable=True). Once we are past this point the remote command executes,
+    # and a later failure must NOT be retried - we can't know if a non-idempotent command
+    # partially applied.
+    try:
+        conn = pxssh.pxssh()
+        # ssh_key=None behaves exactly like a normal password login; a path adds ssh -i <key>.
+        conn.login(host, conn_user, password, ssh_key=key_file)
     except pxssh.ExceptionPxssh as e:
-        print(e)
+        click.echo("  [!] {}: connection failed: {}".format(host, e))
+        return push_result(False, note="connect failed: {}".format(e), retryable=True)
+
+    # Phase 2 - the connection is up; the command now runs. Failures below are not retryable.
+    try:
+        conn.sendline(effective)
+        if needs_sudo:
+            # Consumed by 'sudo -S' on stdin; not echoed, so it never appears in the output.
+            conn.sendline(password)
+
+        if is_reboot:
+            # The reboot tears down the session - the connection dropping is the success signal,
+            # so we wait briefly for EOF rather than for a shell prompt that will never return.
+            try:
+                conn.expect(pexpect.EOF, timeout=min(timeout, 60))
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
+            click.echo("  [OK] {}: reboot issued".format(host))
+
+            if wait_online:
+                click.echo("  ... waiting up to {}s for {} to come back online".format(
+                    wait_online, host))
+                back = wait_for_host(host, conn_user, password, key_file, wait_online,
+                                     interval=wait_interval, sleeper=sleeper)
+                if back:
+                    click.echo("  [OK] {}: back online".format(host))
+                    return push_result(True, note="rebooted; back online")
+                click.echo("  [FAIL] {}: did not come back within {}s".format(host, wait_online))
+                return push_result(False, note="rebooted; did not return in time")
+            return push_result(True, note="reboot issued")
+
+        matched = conn.prompt(timeout=timeout)
+        raw = conn.before.decode('utf-8', errors='replace')
+        conn.logout()
+
+        if not matched:
+            click.echo("  [!] {}: timed out waiting for the command to finish".format(host))
+
+        output, exit_code = clean_output_and_exit_code(raw)
+        if output:
+            click.echo(output)
+
+        if exit_code is None:
+            click.echo("  [?] {}: command ran but the exit status could not be read".format(host))
+            return push_result(False, exit_code=None, note="no exit status")
+        if exit_code == 0:
+            click.echo("  [OK] {}: exit 0".format(host))
+            return push_result(True, exit_code=0)
+        click.echo("  [FAIL] {}: exit {}".format(host, exit_code))
+        return push_result(False, exit_code=exit_code)
+    except pxssh.ExceptionPxssh as e:
+        click.echo("  [!] {}: {}".format(host, e))
+        return push_result(False, note=str(e))
 
 
-def scp(scp_user, host, password, filename):
+def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300):
+    # Copy a local file to 'dest' on a single host. Returns a push_result dict.
     ssh_new_key_string = 'Are you sure you want to continue connecting'
-    scp_login_string = 'scp {} {}@{}:/'.format(filename, scp_user, host)
+    remote = "{}@{}:{}".format(scp_user, host, dest)
 
     try:
-        shell = pexpect.spawn(scp_login_string, timeout=300)
+        # Pass args as a list so filenames/paths with spaces or shell metacharacters are safe
+        # (no shell word-splitting or injection through the interpolated command string).
+        # With a key, prepend '-i <key>' and no password prompt is expected - the transfer
+        # can go straight to EOF, which the expect lists below now handle.
+        args = (['-i', key_file] if key_file else []) + [filename, remote]
+        shell = pexpect.spawn('scp', args, timeout=timeout)
 
-        return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[P|p]assword:'])
+        return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[Pp]assword:', pexpect.EOF])
 
         if return_code == 0:
-            print("error connecting")
-            exit()
+            # Couldn't even connect - the copy never started, so this is safe to retry.
+            click.echo("  [!] {}: error connecting (timed out)".format(host))
+            return push_result(False, note="scp connect timeout", retryable=True)
 
         if return_code == 1:
             shell.sendline('yes')
-            second_return_code = shell.expect([pexpect.TIMEOUT, '[P|p]assword:'])
+            second_return_code = shell.expect([pexpect.TIMEOUT, '[Pp]assword:', pexpect.EOF])
 
             if second_return_code == 0:
-                print("error connecting")
-                return
+                click.echo("  [!] {}: error connecting after accepting host key (timed out)".format(host))
+                return push_result(False, note="scp connect timeout after host-key accept",
+                                   retryable=True)
+            # second_return_code 1 -> password prompt; 2 -> EOF (key auth finished, nothing to send)
+            if second_return_code == 1:
+                shell.sendline(password)
+                shell.expect(pexpect.EOF)
 
-        shell.sendline(password)
-        shell.expect(pexpect.EOF)
-        response = shell.before
-        print(response.decode('utf-8'))
-        print()
+        elif return_code == 2:
+            # Password prompt on first contact (known host, password auth).
+            shell.sendline(password)
+            shell.expect(pexpect.EOF)
+        # return_code 3 -> EOF already (key auth, no prompt) - nothing to send.
+
+        response = shell.before.decode('utf-8', errors='replace')
+        if response.strip():
+            click.echo(response.strip())
+
+        shell.close()
+        if shell.exitstatus == 0:
+            click.echo("  [OK] {}: '{}' copied to {}".format(host, os.path.basename(filename), dest))
+            return push_result(True, exit_code=0)
+        click.echo("  [FAIL] {}: scp exited {}".format(host, shell.exitstatus))
+        return push_result(False, exit_code=shell.exitstatus, note="scp failed")
     except (KeyError, IndexError, TypeError):
-        print("\nThis Feature requires pexpect installed.  "
-              "You're system doesn't allow for pexpect.spawn or pexpect isn't installed\n")
+        click.echo("\nThis feature requires pexpect. Your system doesn't allow pexpect.spawn "
+                   "or pexpect isn't installed.\n")
+        return push_result(False, note="pexpect unavailable")
 
 
 class Excel:
@@ -740,28 +972,130 @@ def display():
         exit()
 
 
-@action.command(help="Push a command to a linux target")
+@action.command(help="Push a command or file to one or more Linux targets over SSH")
 @click.option('--command', default=None, help="Command you want to run in double-quotes")
-@click.option('--target', required=True, help="Target IP receiving the command")
-@click.option('--file', default=None, help="Push a file to a target")
-def push(command, target, file):
-    if command or file:
-        try:
-            credentials = db_query("select username, password from ssh;")
-            users = credentials[0][0]
-            password = credentials[0][1]
-
-            if file:
-                scp(users, target, password, file)
-            else:
-                connect(users, target, password, command)
-
-        except Exception as E:
-            click.echo("\nPlease use the 'navi config ssh' command to enter your ssh credentials\n"
-                       "\nIf you have, then this host may not be a Linux machine or your Credentials are not working\n"
-                       "\nHere is the Error: {}\n".format(E))
-    else:
+@click.option('--target', default=None,
+              help="Target IP - a single IP or a comma-separated list (10.0.0.1,10.0.0.2)")
+@click.option('--targets-file', 'targets_file', default=None,
+              help="Path to a file with one target per line (# comments and blank lines ignored)")
+@click.option('--file', default=None, help="Local file to push to the target(s)")
+@click.option('--dest', default='~/', show_default=True,
+              help="Remote destination path for --file (the SSH user's home by default)")
+@click.option('--run-after', 'run_after', default=None,
+              help="Command to run on each target after --file is copied (copy-then-run)")
+@click.option('--key', 'key_file', default=None,
+              help="Path to an SSH private key for key-based auth (overrides the stored password)")
+@click.option('--timeout', default=300, show_default=True, type=int,
+              help="Seconds to wait for a command/copy to finish (raise it for big updates)")
+@click.option('--wait-online', 'wait_online', default=0, type=int,
+              help="After a reboot, wait up to N seconds for the host to come back (0 = don't wait)")
+@click.option('--wait-interval', 'wait_interval', default=15, show_default=True, type=int,
+              help="Seconds between reconnection probes while --wait-online is polling")
+@click.option('--log', 'log_path', default=None,
+              help="Append per-host results (timestamp, host, action, result, exit code) to this file")
+@click.option('--retries', default=0, show_default=True, type=int,
+              help="Retry a host on a transport failure (SSH couldn't connect) up to N times. "
+                   "Only pre-execution failures are retried - a command that ran and failed is not.")
+@click.option('--retry-base', 'retry_base', default=5, show_default=True, type=int,
+              help="First retry delay in seconds; it doubles each attempt up to 60s")
+def push(command, target, targets_file, file, dest, run_after, key_file, timeout,
+         wait_online, wait_interval, log_path, retries, retry_base):
+    # Guard the inputs before touching any host.
+    if not command and not file:
         click.echo("\nYou need to send a --command or a --file when using this command\n")
+        return
+
+    if command and file:
+        click.echo("\nSend either --command or --file, not both.\n")
+        return
+
+    if run_after and not file:
+        click.echo("\n--run-after only applies with --file (copy a file, then run a command).\n")
+        return
+
+    if not target and not targets_file:
+        click.echo("\nYou need to supply --target and/or --targets-file.\n")
+        return
+
+    if pexpect == 0 or pxssh == 0:
+        click.echo("\nnavi push needs the pexpect/pxssh libraries, which aren't available on "
+                   "this system.\n")
+        return
+
+    # Resolve SSH credentials once and reuse them across every target.
+    creds = grab_ssh_credentials()
+    if not creds:
+        click.echo("\nPlease use the 'navi config ssh' command to enter your ssh credentials.\n")
+        return
+    users, password, stored_key = creds
+    # An explicit --key overrides whatever was stored via 'navi config ssh'.
+    key_file = key_file or stored_key
+
+    # Collect targets from --target and/or --targets-file, then de-duplicate together.
+    raw_sources = []
+    if target:
+        raw_sources.append(target)
+    if targets_file:
+        try:
+            raw_sources.extend(read_targets_file(targets_file))
+        except Exception as E:
+            click.echo("\nCould not read --targets-file '{}': {}\n".format(targets_file, E))
+            return
+
+    targets = parse_targets(",".join(raw_sources))
+    if not targets:
+        click.echo("\nNo valid targets found in --target / --targets-file.\n")
+        return
+
+    succeeded = 0
+    failed = 0
+    for host in targets:
+        # Audit line so it's always clear what ran where.
+        if file:
+            click.echo("\n>> Pushing file '{}' to {}:{}".format(os.path.basename(file), host, dest))
+        else:
+            click.echo("\n>> Running on {}: {}".format(host, command))
+
+        try:
+            if file:
+                result = run_with_retry(
+                    lambda: scp(users, host, password, file, dest, key_file=key_file,
+                                timeout=timeout),
+                    retries, retry_base, host)
+                log_result(log_path, "copy", host, result,
+                           "{} -> {}".format(os.path.basename(file), dest))
+                # copy-then-run: only run the follow-up command if the copy succeeded.
+                if result.get("ok") and run_after:
+                    click.echo("  >> Running on {}: {}".format(host, run_after))
+                    result = run_with_retry(
+                        lambda: connect(users, host, password, run_after, key_file=key_file,
+                                        timeout=timeout, wait_online=wait_online,
+                                        wait_interval=wait_interval),
+                        retries, retry_base, host)
+                    log_result(log_path, "run-after", host, result, run_after)
+            else:
+                result = run_with_retry(
+                    lambda: connect(users, host, password, command, key_file=key_file,
+                                    timeout=timeout, wait_online=wait_online,
+                                    wait_interval=wait_interval),
+                    retries, retry_base, host)
+                log_result(log_path, "command", host, result, command)
+        except Exception as E:
+            # Isolate failures so one bad host doesn't abort the rest of the run.
+            click.echo("  [!] {}: unexpected error: {}".format(host, E))
+            result = push_result(False, note=str(E))
+            log_result(log_path, "file" if file else "command", host, result, command or file)
+
+        if result.get("ok"):
+            succeeded += 1
+        else:
+            failed += 1
+
+    if len(targets) > 1:
+        click.echo("\nDone. {} succeeded, {} failed, {} total.".format(
+            succeeded, failed, len(targets)))
+    if log_path:
+        click.echo("Run log written to {}".format(log_path))
 
 
 @action.command(help="Mail yourself a Report - uses Resend when a key is configured")
@@ -770,7 +1104,9 @@ def push(command, target, file):
 @click.option("--subject", default='', help="Subject of the Email")
 @click.option("-v", is_flag=True, help="Display a copy of the message")
 @click.option("--file", default=None, help="The name of the file you want to attach to the email")
-def mail(message, to, subject, v, file):
+@click.option("--html", "html_file", default=None,
+              help="Path to an HTML file to render as the email body (--message stays the plaintext fallback)")
+def mail(message, to, subject, v, file, html_file):
     # Transport is picked automatically: Resend if a key is available (env RESEND_API_KEY or
     # 'navi config resend'), otherwise the classic SMTP path. Setup details in RESEND_SETUP.md
     try:
@@ -781,11 +1117,22 @@ def mail(message, to, subject, v, file):
 
         subject += " - Emailed by navi"
 
+        # Read the HTML page so it can be rendered in the email body instead of attached.
+        html_body = None
+        if html_file:
+            try:
+                with open(html_file, "r", encoding="utf-8") as html_fh:
+                    html_body = html_fh.read()
+            except Exception as html_error:
+                click.echo("Could not read the HTML file you supplied with --html")
+                click.echo(html_error)
+                return
+
         if v:
             click.echo("Here is a copy of your email that was Sent")
-            click.echo(message)
+            click.echo(html_body if html_body else message)
 
-        send_report(to, subject, message, filename=file)
+        send_report(to, subject, message, filename=file, html=html_body)
 
     except Exception as E:
         click.echo("Your Email information may be incorrect")

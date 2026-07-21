@@ -565,7 +565,8 @@ def create_passwords_table():
     ssh_conn = new_db_connection(database)
     ssh_table = """CREATE TABLE IF NOT EXISTS ssh (
                             username text,
-                            password text
+                            password text,
+                            key_file text
                             );"""
     create_table(ssh_conn, ssh_table)
     ssh_conn.close()
