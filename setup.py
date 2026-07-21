@@ -16,13 +16,13 @@ setup(
     author="Casey Reid",
     author_email="itprofguru@gmail.com",
     url="https://github.com/packetchaos/Navi",
-    license="GNUv3",
+    license="MIT",
     keywords='tenable tenableVM navi tio, lumin, navi pro, tvm cli, tenable VM cli, automation, '
              'vulnerability management',
     packages=find_packages(exclude=['docs', 'tests']),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     install_requires=[

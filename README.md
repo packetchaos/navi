@@ -148,14 +148,35 @@ docker run --rm -v navi-data:/data navi-mcp:latest navi config update full
 docker run -d -p 8000:8000 -v navi-data:/data navi-mcp:latest
 ```
 
-Key environment variables:
+### Environment variables
+
+**Core runtime** — where the server finds navi and its data:
 
 | Variable | Purpose |
 |----------|---------|
 | `NAVI_WORKDIR` | Where `navi.db` and CSV exports live (mount a volume). |
 | `NAVI_BIN` | Absolute path to the `navi` binary. |
 | `NAVI_SKILL_DIR` | Unpacked skills, so `navi://skill/...` resources resolve. |
-| `NAVI_MCP_ALLOW_WRITES` | `1` enables state-changing tools (tagging, ACR, scan, delete). |
+
+**Capability gates** — every one defaults to *off*; set to `1` to unlock the tools it guards:
+
+| Variable | Unlocks |
+|----------|---------|
+| `NAVI_MCP_ALLOW_WRITES` | State-changing tools at all (tagging, ACR, scan, delete). Required before any gate below has effect. |
+| `NAVI_EMAIL` | Emailing reports/files (`navi_action_mail`). Second gate on top of writes. |
+| `NAVI_REMOTE_CODE_EXECUTION` | Remote command & file push over SSH (`navi_action_push`). Second gate on top of writes. |
+
+**Integration keys** — for the agent and delivery layers:
+
+| Variable | Purpose |
+|----------|---------|
+| `ANTHROPIC_API_KEY` | Powers the Claude-driven orchestration layer that runs the Hounds and natural-language workflows. |
+| `RESEND_API_KEY` | [Resend](https://resend.com) key for emailing reports without an SMTP server (see [RESEND_SETUP.md](RESEND_SETUP.md)). |
+| `HOUNDS_FROM` | Verified sender address for emailed reports. |
+
+> Tenable API keys are **not** environment variables — set them once into the mounted volume
+> with `navi config keys --a <ACCESS> --s <SECRET>` so they live in `navi.db`, never in the
+> process environment or an image layer.
 
 ### The write-gate
 
@@ -205,4 +226,4 @@ Troubleshooting (Docker memory, DB locks, key checks, scale tuning) now lives in
 
 ## License
 
-navi is released under the **GNU GPL v3**. See [LICENSE](LICENSE).
+navi is released under the **MIT License**. See [LICENSE](LICENSE).
