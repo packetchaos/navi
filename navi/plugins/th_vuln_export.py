@@ -262,9 +262,8 @@ def parse_data(chunk_data, chunk_number):
                     exploit_list.append(" ")
 
                 try:
-                    special_url = ("https://cloud.tenable.com/tio/app.html#/"
-                                   "vulnerability-management/dashboard/assets/asset-details/"
-                                   "{}/vulns/vulnerability-details/{}/details").format(asset_uuid, plugin_id)
+                    special_url = ("https://cloud.tenable.com/vm/#/explore/findings/host-vulnerabilities/"
+                                   "finding-details/{}?detailsTab=details&ffs=eyJmaWx0ZXJzIjp7ImFuZCI6W3siaWQiOiJsYXN0X3NlZW4iLCJvcGVyYXRvciI6Imd0Iiwib3BlcmF0b3JWYXJpYXRpb24iOiJkdXJhdGlvbiIsInZhbHVlIjoiLVAzMEQifSx7ImlkIjoicmlza19tb2RpZmllZCIsIm9wZXJhdG9yIjoibmVxIiwidmFsdWUiOlsiQUNDRVBURUQiXX0seyJpZCI6InNldmVyaXR5Iiwib3BlcmF0b3IiOiJlcSIsInZhbHVlIjpbMSwyLDMsNF19LHsiaWQiOiJzdGF0ZSIsIm9wZXJhdG9yIjoiZXEiLCJ2YWx1ZSI6WyJBQ1RJVkUiLCJSRVNVUkZBQ0VEIiwiTkVXIl19XX0sInRyZWUiOnsiaG9zdF9ieV92cHIiOnRydWUsImhvc3RfYnlfc2V2ZXJpdHkiOmZhbHNlLCJob3N0X2J5X3N0YXRlIjpmYWxzZSwiaG9zdCI6dHJ1ZSwid2ViYXBwX2J5X3ZwciI6dHJ1ZSwid2ViYXBwX2J5X3NldmVyaXR5IjpmYWxzZSwid2ViYXBwX2J5X3N0YXRlIjpmYWxzZSwid2ViYXBwIjpmYWxzZSwiYXNtX2J5X3R5cGUiOnRydWUsImFzbSI6ZmFsc2V9LCJmaW5kaW5nVHlwZSI6Imhvc3QiLCJncm91cGluZyI6Im5vbmUiLCJpbXBsaWNpdEZpbHRlciI6Imhvc3RfdnByX2NyaXRpY2FsIn0%3D".format(finding_id))
                     vuln_list.append(special_url)
                 except AttributeError:
                     special_url = None
