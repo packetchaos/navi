@@ -1363,7 +1363,11 @@ def update():
 @click.option('--severity', multiple=True, default=["critical", "high", "medium", "low", "info"],
               type=click.Choice(["critical", "high", "medium", "low", "info"]),
               help='Isolate your update to a particular finding severity')
-def full(threads, days, c, v, state, severity):
+@click.option('--since', default=None, type=click.INT,
+              help="Download vulns with state changes after this unix timestamp; overrides --days for the vuln export")
+@click.option('--updated_at', default=None, type=click.INT,
+              help="Download assets updated after this unix timestamp; overrides --days for the asset export")
+def full(threads, days, c, v, state, severity, since, updated_at):
     if threads:
         threads_check(threads)
 
@@ -1371,12 +1375,12 @@ def full(threads, days, c, v, state, severity):
 
     if days is None:
         vuln_export(30, exid, threads, c, v, list(state), list(severity),
-                    operator="gte", vpr_score=None, plugins=None)
-        asset_export(90, exid, threads, c, v)
+                    operator="gte", vpr_score=None, plugins=None, since=since)
+        asset_export(90, exid, threads, c, v, updated_at=updated_at)
     else:
         vuln_export(days, exid, threads, c, v, list(state), list(severity),
-                    operator="gte", vpr_score=None, plugins=None)
-        asset_export(days, exid, threads, c, v)
+                    operator="gte", vpr_score=None, plugins=None, since=since)
+        asset_export(days, exid, threads, c, v, updated_at=updated_at)
 
 
 @update.command(help="Update the Asset Table")
@@ -1386,14 +1390,16 @@ def full(threads, days, c, v, state, severity):
               help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--c', default=None, help="Isolate your update by a tag using the provided category")
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
-def assets(threads, days, exid, c, v):
+@click.option('--updated_at', default=None, type=click.INT,
+              help="Download assets updated after this unix timestamp; overrides --days")
+def assets(threads, days, exid, c, v, updated_at):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    asset_export(days, exid, threads, c, v)
+    asset_export(days, exid, threads, c, v, updated_at=updated_at)
 
 
 @update.command(help="Create and Update the Agent table for more advanced Agent use-cases")
@@ -1421,14 +1427,17 @@ def agents():
               help="VPR operator")
 @click.option("--plugin_id", multiple=True, type=click.INT, default=None,
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")
-def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id):
+@click.option('--since', default=None, type=click.INT,
+              help="Download vulns with state changes after this unix timestamp; overrides --days")
+def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id, since):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
-    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id))
+    vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id),
+                since=since)
 
 
 @update.command(help="Update the Compliance data")

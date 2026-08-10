@@ -453,7 +453,7 @@ def parse_data(chunk_data, chunk_number):
     vuln_conn.close()
 
 
-def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator, plugins):
+def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_score, operator, plugins, since=None):
     start = time.time()
 
     database = r"navi.db"
@@ -463,55 +463,28 @@ def vuln_export(days, ex_uuid, threads, category, value, state, severity, vpr_sc
     # Set URLS for threading
     urls = []
 
-    day = 86400
-    new_limit = day * int(days)
-    day_limit = time.time() - new_limit
-
-    if category is None:
-        if plugins:
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                      "severity": severity,
-                                                      "plugin_id": plugins}}
-        elif vpr_score:
-            # VPR Score
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                      "severity": severity,
-                                                      "vpr_score": {operator: vpr_score}}}
-        else:
-            # no plugins, No vpr score
-            pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                      "severity": severity}}
+    # Build the filter set. If a 'since' unix timestamp was provided, use the
+    # API's 'since' filter (state changes since the timestamp) instead of the
+    # days-derived 'last_found' filter.
+    if since is not None:
+        click.echo("\nUsing 'since' filter with unix timestamp: {}".format(int(since)))
+        filters = {"since": int(since), "state": state, "severity": severity}
     else:
-        if value is None:
-            if plugins:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                          "severity": severity,
-                                                          "plugin_id": plugins}}
-            elif vpr_score:
-                # VPR Score
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                          "severity": severity,
-                                                          "vpr_score": {operator: vpr_score}}}
-            else:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                          "state": state, "severity": severity}}
-        else:
-            if plugins:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                          "severity": severity,
-                                                          "plugin_id": plugins,
-                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
-            elif vpr_score:
-                # VPR Score
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit), "state": state,
-                                                          "severity": severity,
-                                                          "vpr_score": {operator: vpr_score},
-                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
+        day = 86400
+        new_limit = day * int(days)
+        day_limit = time.time() - new_limit
+        filters = {"last_found": int(day_limit), "state": state, "severity": severity}
 
-            else:
-                pay_load = {"num_assets": 50, "filters": {'last_found': int(day_limit),
-                                                          "state": state, "severity": severity,
-                                                          "tag.{}".format(category): "[\"{}\"]".format(value)}}
+    if plugins:
+        filters["plugin_id"] = plugins
+    elif vpr_score:
+        # VPR Score
+        filters["vpr_score"] = {operator: vpr_score}
+
+    if category is not None and value is not None:
+        filters["tag.{}".format(category)] = "[\"{}\"]".format(value)
+
+    pay_load = {"num_assets": 50, "filters": filters}
 
     try:
 

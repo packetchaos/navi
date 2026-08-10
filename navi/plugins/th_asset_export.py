@@ -223,7 +223,7 @@ def parse_data(chunk_data):
     asset_conn.close()
 
 
-def asset_export(days, ex_uuid, threads, category, value):
+def asset_export(days, ex_uuid, threads, category, value, updated_at=None):
     start = time.time()
 
     # Crete a new connection to our database
@@ -234,18 +234,23 @@ def asset_export(days, ex_uuid, threads, category, value):
     # Set URLS for threading
     urls = []
 
-    # Set the payload to the maximum number of assets to be pulled at once
-    day = 86400
-    new_limit = day * int(days)
-    day_limit = time.time() - new_limit
-    if category is None:
-        pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
+    # Set the payload to the maximum number of assets to be pulled at once.
+    # If an 'updated_at' unix timestamp was provided, use the API's
+    # 'updated_at' filter (assets updated after the timestamp) instead of the
+    # days-derived 'last_assessed' filter.
+    if updated_at is not None:
+        click.echo("\nUsing 'updated_at' filter with unix timestamp: {}".format(int(updated_at)))
+        filters = {"updated_at": int(updated_at)}
     else:
-        if value is None:
-            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit)}}
-        else:
-            pay_load = {"chunk_size": 1000, "filters": {"last_assessed": int(day_limit),
-                                                        "tag.{}".format(category): value}}
+        day = 86400
+        new_limit = day * int(days)
+        day_limit = time.time() - new_limit
+        filters = {"last_assessed": int(day_limit)}
+
+    if category is not None and value is not None:
+        filters["tag.{}".format(category)] = value
+
+    pay_load = {"chunk_size": 1000, "filters": filters}
     try:
 
         if ex_uuid == '0':
