@@ -100,6 +100,67 @@ def threads_check(threads):
             exit()
 
 
+def rebuild_tables(tables):
+    """
+    Support for the '-rebuild' flag on 'navi config update full/assets/vulns'.
+
+    Warns the user that the requested table(s) are about to be wiped, confirms the
+    action, then DROPs each table and re-creates it using the matching
+    create_table function from dbconfig.  Only the local navi.db is affected;
+    nothing in Tenable Vulnerability Management is changed.
+    """
+    table_map = {"assets": create_assets_table, "vulns": create_vulns_table}
+
+    table_string = " and ".join(tables)
+
+    click.echo("\n" + "*" * 80)
+    click.echo("***  -rebuild REQUESTED : THIS IS DESTRUCTIVE  ***")
+    click.echo("*" * 80)
+    click.echo("\nThe -rebuild flag DROPs the '{}' table(s) in your local navi.db and re-creates "
+               "them from scratch.".format(table_string))
+    click.echo("Every asset and/or vulnerability record currently in the database will be WIPED so "
+               "that this update starts fresh.")
+    click.echo("\nThis only affects your local navi.db - no data in Tenable Vulnerability Management "
+               "is changed.\n")
+
+    if not click.confirm("Drop the {} table(s) and start fresh?".format(table_string), default=False):
+        click.echo("\nRebuild cancelled - your existing data was left alone.\n")
+        raise click.Abort()
+
+    database = r"navi.db"
+    rebuild_conn = new_db_connection(database)
+
+    for table in tables:
+        click.echo("Dropping the {} table...".format(table))
+        drop_tables(rebuild_conn, table)
+
+    rebuild_conn.close()
+
+    for table in tables:
+        click.echo("Creating a new {} table...".format(table))
+        table_map[table]()
+
+    click.echo("\nRebuild complete - downloading into an empty {} table(s).\n".format(table_string))
+
+
+def rebuild_reminder(tables):
+    """
+    Displayed after a '-rebuild' update finishes.  The certs, software, vuln_route
+    and vuln_paths tables are all derived from asset/vuln data, so they are stale
+    once the source tables have been rebuilt.
+    """
+    click.echo("\n" + "*" * 80)
+    click.echo("***  REBUILD COMPLETE  ***")
+    click.echo("*" * 80)
+    click.echo("\nYour {} table(s) were rebuilt from scratch.  The tables below are derived from your "
+               "asset and vulnerability data and are now stale.".format(" and ".join(tables)))
+    click.echo("Rebuild them with the following commands:\n")
+    click.echo("    navi config certificates      - rebuild the certs table")
+    click.echo("    navi config software          - rebuild the software table")
+    click.echo("    navi config update route      - rebuild the vuln_route table (routes)")
+    click.echo("    navi config update paths      - rebuild the vuln_paths table (paths)\n")
+
+
 def get_scanner_id(scanner_name):
     try:
         # Receive name, convert to lower-case, then look up the scanner's ID
@@ -1351,7 +1412,7 @@ def update():
     pass
 
 
-@update.command(help="Perform a full update (30d Vulns / 90d Assets); Delete the current Database")
+@update.command(help="Perform a full update (30d Vulns / 90d Assets)")
 @click.option('--threads', default=10,
               help="Control the threads to speed up or slow down downloads - (1-20)")
 @click.option('--days', default=None, help="Limit the download to X # of days")
@@ -1367,11 +1428,16 @@ def update():
               help="Download vulns with state changes after this unix timestamp; overrides --days for the vuln export")
 @click.option('--updated_at', default=None, type=click.INT,
               help="Download assets updated after this unix timestamp; overrides --days for the asset export")
-def full(threads, days, c, v, state, severity, since, updated_at):
+@click.option("-rebuild", is_flag=True,
+              help="DESTRUCTIVE: Drop the assets and vulns tables, re-create them, then start fresh")
+def full(threads, days, c, v, state, severity, since, updated_at, rebuild):
     if threads:
         threads_check(threads)
 
     exid = '0'
+
+    if rebuild:
+        rebuild_tables(["assets", "vulns"])
 
     if days is None:
         vuln_export(30, exid, threads, c, v, list(state), list(severity),
@@ -1381,6 +1447,9 @@ def full(threads, days, c, v, state, severity, since, updated_at):
         vuln_export(days, exid, threads, c, v, list(state), list(severity),
                     operator="gte", vpr_score=None, plugins=None, since=since)
         asset_export(days, exid, threads, c, v, updated_at=updated_at)
+
+    if rebuild:
+        rebuild_reminder(["assets", "vulns"])
 
 
 @update.command(help="Update the Asset Table")
@@ -1392,14 +1461,22 @@ def full(threads, days, c, v, state, severity, since, updated_at):
 @click.option('--v', default=None, help="Isolate your update by a tag using the provided value")
 @click.option('--updated_at', default=None, type=click.INT,
               help="Download assets updated after this unix timestamp; overrides --days")
-def assets(threads, days, exid, c, v, updated_at):
+@click.option("-rebuild", is_flag=True,
+              help="DESTRUCTIVE: Drop the assets table, re-create it, then start fresh")
+def assets(threads, days, exid, c, v, updated_at, rebuild):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
+    if rebuild:
+        rebuild_tables(["assets"])
+
     asset_export(days, exid, threads, c, v, updated_at=updated_at)
+
+    if rebuild:
+        rebuild_reminder(["assets"])
 
 
 @update.command(help="Create and Update the Agent table for more advanced Agent use-cases")
@@ -1429,15 +1506,23 @@ def agents():
               help="Plugin ID(s) that you want downloaded. Use multiple values for multiple plugins")
 @click.option('--since', default=None, type=click.INT,
               help="Download vulns with state changes after this unix timestamp; overrides --days")
-def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id, since):
+@click.option("-rebuild", is_flag=True,
+              help="DESTRUCTIVE: Drop the vulns table, re-create it, then start fresh")
+def vulns(threads, days, exid, c, v, state, severity, vpr_score, operator, plugin_id, since, rebuild):
     if threads:
         threads_check(threads)
 
     if exid == ' ':
         exid = '0'
 
+    if rebuild:
+        rebuild_tables(["vulns"])
+
     vuln_export(days, exid, threads, c, v, list(state), list(severity), vpr_score, operator, list(plugin_id),
                 since=since)
+
+    if rebuild:
+        rebuild_reminder(["vulns"])
 
 
 @update.command(help="Update the Compliance data")
