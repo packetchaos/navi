@@ -1,11 +1,13 @@
 import csv
 import time
 from .api_wrapper import tenb_connection
+from .export_utils import csv_path
 
 tio = tenb_connection()
 
 
-def agent_group_export(group):
+def agent_group_export(group, name="agent_group_data"):
+    path = csv_path(name)
     try:
         for group_info in tio.agent_groups.list():
             group_name = group_info['name']
@@ -13,7 +15,7 @@ def agent_group_export(group):
             if group_name == group:
                 group_id = group_info['id']
 
-                with open('agent_group_data.csv', mode='w', encoding='utf-8', newline="") as csv_file:
+                with open(path, mode='w', encoding='utf-8', newline="") as csv_file:
                     agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
                     header_list = ["Agent Name", "IP Address", "Platform", "Last connected", "Last scanned", "Status",
@@ -54,4 +56,4 @@ def agent_group_export(group):
                         agent_writer.writerow([name, ip, platform, connect_time, scanned_time, status, plugin_feed])
     except AttributeError:
         print("\nCheck your permissions or your API keys\n")
-    return
+    return path

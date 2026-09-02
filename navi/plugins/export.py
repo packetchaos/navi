@@ -1,5 +1,6 @@
 import click
 import csv
+import sys
 import textwrap
 from .database import db_query
 from .query_export import query_export
@@ -7,8 +8,52 @@ from .agent_group_export import agent_group_export
 from .user_export import user_export
 from .query_export_32K import export_query
 from .api_wrapper import request_xml
+from .export_utils import csv_path
 from .agent_to_db import download_agent_data
 from restfly import errors as resterrors
+
+
+# ---------------------------------------------------------------------------
+# Output file naming - one convention for every `navi export` subcommand.
+#
+#   --file   the output file name.  The '.csv' extension is optional; the
+#            writer normalizes it (see export_utils.csv_path).
+#
+# Older per-command spellings ('--filename' on `agents`, '--name' on `parsed`)
+# are kept as hidden aliases so existing scripts keep working.  They print a
+# deprecation notice and are scheduled for removal in navi 9.0.
+# ---------------------------------------------------------------------------
+
+
+def output_file(default):
+    """The standard --file option, applied to every export subcommand."""
+    return click.option('--file', 'file', default=default, show_default=True,
+                        help="Output file name; the '.csv' extension is optional")
+
+
+def output_file_with_alias(default, flag):
+    """--file plus a hidden, deprecated spelling.  Resolve with resolve_file()."""
+    def decorator(command):
+        command = click.option(flag, 'file_alias', default=None, hidden=True,
+                               help="Deprecated alias for --file")(command)
+        command = click.option('--file', 'file', default=None,
+                               help="Output file name; the '.csv' extension is "
+                                    "optional  [default: {}]".format(default))(command)
+        return command
+    return decorator
+
+
+def resolve_file(file, file_alias, flag, default):
+    """Precedence: --file  >  deprecated alias  >  the command default."""
+    if file_alias is not None:
+        click.echo("\nNOTE: '{}' is deprecated and will be removed in navi 9.0; "
+                   "use '--file' instead.".format(flag))
+        if file is not None:
+            click.echo("Both '{}' and '--file' were supplied; "
+                       "using '--file'.\n".format(flag))
+            return file
+        return file_alias
+    return file if file is not None else default
 
 
 @click.group(help="Export tenable VM Data")
@@ -17,26 +62,24 @@ def export():
 
 
 @export.command(help="Export All Asset data in the Navi Database to a CSV")
-@click.option('--file', default="asset_data", help="Name of the file excluding 'csv'")
+@output_file("asset_data")
 def assets(file):
-    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
     asset_query = "select * from assets;"
     query_export(asset_query, file)
 
 
 @export.command(help="Export All Agent data into a CSV")
-@click.option('--filename', default="agent_data", help="Name of the file excluding 'csv'")
-def agents(filename):
+@output_file_with_alias("agent_data", '--filename')
+def agents(file, file_alias):
+    name = resolve_file(file, file_alias, '--filename', "agent_data")
     download_agent_data()
-    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(filename))
     agent_query = "select * from agents;"
-    query_export(agent_query, filename)
+    query_export(agent_query, name)
 
 
 @export.command(help="Export Licensed Assets into a CSV")
-@click.option('--file', default="licensed_data", help="Name of the file excluding 'csv'")
+@output_file("licensed_data")
 def licensed(file):
-    click.echo("\nExporting your data now. Saving {}.csv now...\n".format(file))
     licensed_query = ("SELECT ip_address, fqdn, uuid, last_licensed_scan_date "
                       "from assets where last_licensed_scan_date != ' ';")
     query_export(licensed_query, file)
@@ -44,16 +87,15 @@ def licensed(file):
 
 @export.command(help="Export All assets of a given network")
 @click.argument('network_uuid')
-@click.option('--file', default="network_data", help="Name of the file excluding 'csv'")
+@output_file("network_data")
 def network(network_uuid, file):
-    click.echo("\nExporting your data now. Saving {}.csv now...".format(file))
     network_query = "SELECT * from assets where network=='{}';".format(network_uuid)
     query_export(network_query, file)
 
 
 @export.command(help='Export assets or vulns by a query')
 @click.argument('statement')
-@click.option('--file', default="query_data", help="Name of the file excluding 'csv'")
+@output_file("query_data")
 @click.option('-fix', is_flag=True, help="Fix for Vuln Outputs with over 32K chars")
 def query(statement, file, fix):
     if fix:
@@ -64,16 +106,18 @@ def query(statement, file, fix):
 
 @export.command(help='Export Agents by Group name')
 @click.argument('group_name')
-def group(group_name):
-    click.echo("\nExporting your data now.  Saving agent_group_data.csv now...")
-    agent_group_export(group_name)
+@output_file("agent_group_data")
+def group(group_name, file):
+    click.echo("\nExporting agents in group '{}'...".format(group_name))
+    written = agent_group_export(group_name, file)
+    click.echo("\nWrote {}\n".format(written))
 
 
 @export.command(help="Export All assets by tag; Include ACR and AES into a CSV")
-@click.option('--c', default=None, required=True, help="Export bytag with the following Category name")
-@click.option('--v', default=None, required=True, help="Export bytag with the Tag Value; "
+@click.option('--c', required=True, help="Export bytag with the following Category name")
+@click.option('--v', required=True, help="Export bytag with the Tag Value; "
                                                        "requires --c and Category Name")
-@click.option('--file', default="bytag", help="Name of the file excluding 'csv'")
+@output_file("bytag")
 def bytag(c, v, file):
     tag_assets = ("SELECT assets.*, tags.asset_uuid FROM assets JOIN tags ON assets.uuid = tags.asset_uuid "
                   "WHERE tags.tag_key='" + c + "' AND tags.tag_value='" + v + "';")
@@ -82,17 +126,20 @@ def bytag(c, v, file):
 
 
 @export.command(help="Export User and Role information into a CSV")
-def users():
-    click.echo("\nExporting User Data now. Saving user-summary.csv now...\n")
-    user_export()
+@output_file("user_data")
+def users(file):
+    click.echo("\nExporting User Data now...")
+    written = user_export(file)
+    click.echo("\nWrote {}\n".format(written))
 
 
 @export.command(help="Export Compliance information into a CSV")
-@click.option('--name', default=None, help="Exact name of the Audit file to be exported.  "
-                                           "Use 'navi display audits' to "
-                                           "get the right name")
+@click.option('--name', default=None, help="FILTER: exact name of the Audit file to be "
+                                           "exported.  Use 'navi display audits' to "
+                                           "get the right name.  (This filters the export; "
+                                           "use --file to name the output.)")
 @click.option('--uuid', default=None, help="UUID of the Asset for your export")
-@click.option('--file', default="compliance_data.csv", help="Name of the file excluding '.csv'")
+@output_file("compliance_data")
 def compliance(name, uuid, file):
     click.echo("\nExporting your requested Compliance data into a CSV\n")
     try:
@@ -122,13 +169,14 @@ def compliance(name, uuid, file):
 
 
 @export.command(help="Export All Vulnerability data in the Navi Database to a CSV")
-@click.option('--file', default="vuln_data", help="Name of the file excluding '.csv'")
+@output_file("vuln_data")
 @click.option('--c', default=None, help="Export by tag with the following Category name")
 @click.option('--v', default=None, help="Export by tag with the Tag Value; requires --c and Category Name")
 @click.option('--severity', type=click.Choice(['critical', 'high', 'medium', 'low', 'info'],
                                               case_sensitive=False), multiple=True, help="Export vulns by severity")
 @click.option('--plugin', default=None, help="Export vulns by plugin ID")
-@click.option('--name', default=None, help="Export vulns with text or REGEX in the plugin name")
+@click.option('--name', default=None, help="FILTER: export vulns with text or REGEX in the "
+                                           "plugin name.  Use --file to name the output.")
 @click.option('--output', default='', help="Export vulns with text or REGEX in the plugin output")
 @click.option('--cve', default='', help="Export vulns by CVE ID")
 @click.option('--xrefs', default=None, help="Export vulns by Cross References like 'CISA'")
@@ -354,31 +402,54 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
                                    "vulns.plugin_id = plugins.plugin_id left join zipper on"
                                    "plugins.plugin_id = zipper.plugin_id where vulns.cves LIKE '%{}%';".format(cve))
             else:
-                if click.confirm('You didn\'t make a selection...Use "--help" to see all options.\n'
-                                 'Do you want to Export all vulns?\n'):
+                all_vulns = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
+                             "left join plugins on vulns.plugin_id = plugins.plugin_id "
+                             "left join zipper on plugins.plugin_id = zipper.plugin_id;")
 
-                    asset_query = ("select vulns.*, plugins.*, zipper.epss_value from vulns "
-                                   "left join plugins on vulns.plugin_id = plugins.plugin_id "
-                                   "left join zipper on plugins.plugin_id = zipper.plugin_id;")
+                if not sys.stdin.isatty():
+                    # Non-interactive caller (pipe, cron, navi-mcp): there is
+                    # nobody to answer the prompt, so "no filters" means
+                    # "export everything" instead of aborting.
+                    asset_query = all_vulns
+                else:
+                    try:
+                        answered = click.confirm(
+                            'You didn\'t make a selection...Use "--help" to see all options.\n'
+                            'Do you want to Export all vulns?\n')
+                    except click.Abort:
+                        # isatty() can still report a terminal when stdin is
+                        # inherited but unreadable (notably a Windows
+                        # subprocess). Click raises Abort on EOF but returns
+                        # False on an explicit "n", so Abort specifically means
+                        # "nobody could answer" -- not "the user declined".
+                        answered = True
+                    if answered:
+                        asset_query = all_vulns
 
-        click.echo("\nExporting your data now; with the following query:\n{}\n "
-                   "Saving {}.csv now...\n".format(asset_query, file))
+        click.echo("\nExporting your data now; with the following query:\n{}\n".format(asset_query))
         query_export(asset_query, file)
     except UnboundLocalError:
         exit()
 
 
 @export.command(help="Export Vulnerabilities that have failed")
-def failures():
-    click.echo("\nExporting ALl vulnerabilities that failed your SLA\n This requires you run 'navi update fixed'")
-    query_export("select * from fixed where pass_fail=='Fail' and state !='FIXED';", "sla_backlog")
+@output_file("sla_backlog")
+def failures(file):
+    click.echo("\nExporting All vulnerabilities that failed your SLA\n This requires you run 'navi update fixed'")
+    query_export("select * from fixed where pass_fail=='Fail' and state !='FIXED';", file)
 
 
-@export.command(help="Export parsed plugins")
-@click.option('-user_names', is_flag=True, help="Export Users by parsing the 45478 plugin")
-@click.option('--name', default='parsed_plugin_data')
-def parsed(name, user_names):
-    with open('{}.csv'.format(name), mode='w', encoding='utf-8', newline="") as csv_file:
+
+def parsed(file, file_alias, user_names):
+    name = resolve_file(file, file_alias, '--name', "parsed_plugin_data")
+
+    if not user_names:
+        click.echo("\nNothing to parse.  Use '-user_names' to parse the 45478 "
+                   "plugin for local user accounts.\n")
+        return
+
+    path = csv_path(name)
+    with open(path, mode='w', encoding='utf-8', newline="") as csv_file:
         agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
         header = ['Asset_UUID', "User Found"]
         agent_writer.writerow(header)
@@ -409,80 +480,30 @@ def parsed(name, user_names):
 
                             agent_writer.writerow(user_list)
 
+    click.echo("\nWrote {}\n".format(path))
+
 
 @export.command(help="Export policies for a migration")
-@click.option('--pid', default=None, help="Policy ID to be exported. Use 'navi display policies' for IDs")
-def policy(pid):
-    def write_file(blob):
-        with open("{}.nessus".format(pid), 'w') as file:
-            file.write(blob)
+@click.option('--pid', required=True,
+              help="Policy ID to be exported. Use 'navi display policies' for IDs")
+@click.option('--file', 'file', default=None,
+              help="Output file name; the '.nessus' extension is optional  "
+                   "[default: the policy ID]")
+def policy(pid, file):
+    # Policies come back as .nessus rather than CSV, but the naming contract
+    # is the same: caller gives a name, the writer owns the extension.
+    path = csv_path(file if file else pid, extension="nessus")
     policy_data = request_xml('GET', '/policies/{}/export'.format(pid))
-    write_file(str(policy_data))
-
-
-@export.command(help="Pull out asset CVE data from each plugin into a nice CSV for CVE to CVE comparison")
-@click.argument('uuid')
-def compare(uuid):
-    data = db_query("select plugin_id, plugin_name, cvss_base_score, cvss3_base_score, cves, severity, score, "
-                    "first_found, last_found from vulns where asset_uuid='{}' and cves !=' ';".format(uuid))
-
-    with open('cve_data_{}.csv'.format(uuid), mode='w', encoding='utf-8', newline="") as csv_file:
-        agent_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
-
-        header_list = ["Plugin ID", "Plugin Name", "CVE", "CVSS", "CVSS3", "VPR Score", "EPSS Score", "Severity",
-                       "First Found", "Last_Found", "Instances"]
-
-        agent_writer.writerow(header_list)
-
-        master_list = []
-        click.echo("\n{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format("Plugin ID", "Plugin Name", "CVE",
-                                                                             "CVSS", "CVSS3", "VPR", "EPSS", "Severity",
-                                                                             "instances"))
-        click.echo("-" * 150)
-        for plugin in data:
-            plugin_id = plugin[0]
-            plugin_name = str(plugin[1])
-            cvss = str(plugin[2])
-            cvss3 = str(plugin[3])
-
-            try:
-                cve_list = eval(plugin[4])
-            except SyntaxError:
-                cve_list = ["NO-CVE"]
-
-            severity = plugin[5]
-            vpr = str(plugin[6])
-            first_found = str(plugin[7])
-            last_found = str(plugin[8])
-
-            for cve in cve_list:
-                epss_data = 'N/A'
-                if cve not in master_list:
-                    # Count total instances
-                    instances = db_query("select count(*) from vulns where cves LIKE '%" + cve + "%';")
-
-                    master_list.append(cve)
-                    try:
-                        epss_data_raw = db_query("select epss_value from epss where cve='{}'".format(cve))
-                        epss_data = str(epss_data_raw[0][0])
-                    except IndexError:
-                        pass
-                    click.echo("{:10} {:75} {:16} {:6} {:6} {:6} {:7} {:10} {}".format(plugin_id,
-                                                                                       textwrap.shorten(plugin_name,
-                                                                                                        width=65), cve,
-                                                                                       cvss, cvss3, vpr, epss_data,
-                                                                                       severity, instances[0][0]))
-
-                    csv_update_list = [plugin_id, plugin_name, cve, cvss, cvss3, vpr, epss_data, severity,
-                                       first_found, last_found, instances[0][0]]
-                    agent_writer.writerow(csv_update_list)
-
-    click.echo("\nYou're export: cve_compare_{}.csv is finished\n".format(uuid))
-
+    with open(path, 'w') as policy_file:
+        policy_file.write(str(policy_data))
+    click.echo("\nWrote {}\n".format(path))
 
 @export.command(help="Export vulnerabilities by route ID")
 @click.argument('route_id')
-def route(route_id):
+@click.option('--file', 'file', default=None,
+              help="Output file name; the '.csv' extension is optional  "
+                   "[default: route_<route_id>]")
+def route(route_id, file):
     route_info = db_query("select plugin_list from vuln_route where route_id='{}'".format(route_id))
 
     work = str(route_info[0][0]).replace("[", "(").replace("]", ")")
@@ -492,4 +513,4 @@ def route(route_id):
                       "left join zipper on plugins.plugin_id = zipper.plugin_id where "
                       "vulns.plugin_id in {} and vulns.severity !='info';".format(work))
 
-    export_query(vulns_to_route, "route_{}".format(route_id))
+    export_query(vulns_to_route, file if file else "route_{}".format(route_id))

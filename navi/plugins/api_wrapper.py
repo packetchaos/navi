@@ -8,7 +8,7 @@ import time
 
 
 def navi_version():
-    return "navi-8.7.14"
+    return "navi-8.6.1"
 
 
 def tenb_connection():
@@ -19,15 +19,9 @@ def tenb_connection():
             cur = conn.cursor()
             cur.execute("SELECT * from keys;")
             rows = cur.fetchall()
-            access_key = secret_key = None
             for row in rows:
                 access_key = row[0]
                 secret_key = row[1]
-
-            # No keys stored yet (e.g. brand new install) - return gracefully so the
-            # CLI can still load and the user can add keys.
-            if access_key is None:
-                return None
 
             # Check for custom URL
             try:
@@ -186,11 +180,6 @@ def request_data(method, url_mod, **kwargs):
             click.echo("Data error. Retrying")
             continue
 
-    # All retries exhausted (or a non-returning status was hit) - signal failure
-    # explicitly so callers can guard against a None response.
-    click.echo("\nNo data returned after retries.\n")
-    return None
-
 
 def request_xml(method, url_mod, **kwargs):
     def grab_xml_headers():
@@ -225,7 +214,7 @@ def request_xml(method, url_mod, **kwargs):
         payload = None
 
     # Retry the download three times
-    for x in range(1, 4):
+    for x in range(1, 3):
         # Small pause between retries
         time.sleep(2.5)
         try:

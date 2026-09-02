@@ -8,21 +8,21 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='navi-pro',
-    version="8.7.14",
+    name='navi pro',
+    version="8.6.1",
     description="A command-line interface to Tenable's Products",
     long_description=long_description,
     long_description_content_type='text/markdown',
     author="Casey Reid",
     author_email="itprofguru@gmail.com",
     url="https://github.com/packetchaos/Navi",
-    license="MIT",
+    license="GNUv3",
     keywords='tenable tenableVM navi tio, lumin, navi pro, tvm cli, tenable VM cli, automation, '
              'vulnerability management',
     packages=find_packages(exclude=['docs', 'tests']),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
     install_requires=[
@@ -37,9 +37,7 @@ setup(
         'typing-extensions>=4.0.1',
         'pandas>=1.1.5',
         'numpy>=1.19.5',
-        'xlrd>=2.0.1',
-	    'restfly>=1.5.1',
-        'resend>=2.0.0'
+        'xlrd>=2.0.1'
     ],
     python_requires='>=3.9',
     extras_require={

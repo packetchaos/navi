@@ -1,14 +1,17 @@
 import csv
 from .api_wrapper import request_data
+from .export_utils import csv_path
 
 
-def user_export():
+def user_export(name="user_data"):
     user_data = request_data("GET", "/users")
 
     # for some reason if a name isn't given a key isn't created.
     header_list = ["Name", "User Name", "UUID", "permissions", "Total Failed Attempts"]
 
-    with open('user_data.csv', mode='w', encoding='utf-8', newline="") as csv_file:
+    path = csv_path(name)
+
+    with open(path, mode='w', encoding='utf-8', newline="") as csv_file:
         user_writer = csv.writer(csv_file, delimiter=',', quotechar='"')
 
         # write our Header information first
@@ -37,3 +40,5 @@ def user_export():
             user_list.append(fail)
 
             user_writer.writerow(user_list)
+
+    return path

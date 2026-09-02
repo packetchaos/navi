@@ -1566,11 +1566,11 @@ def software():
 
 
 @config.command(help="Create or delete exclusions")
-@click.option('--name', default=None, required=True, help="The name of your exclusion")
+@click.option('--name', required=True, help="The name of your exclusion")
 @click.option('--members', default=None, help="The members of your exclusion, IPs or subnets")
-@click.option('--start', default=None, required=True,
+@click.option('--start', required=True,
               help="The start time of the exclusion - YYYY-MM-DD HH:MM")
-@click.option('--end', default=None, required=True,
+@click.option('--end', required=True,
               help="The end time of the exclusion - YYYY-MM-DD HH:MM")
 @click.option('--freq', multiple=False, required=True, default=["DAILY"],
               type=click.Choice(["ONETIME", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"]),
@@ -1621,7 +1621,7 @@ def exclude(name, members, start, end, freq, day, c, v):
 
 
 @agent.command(help="Create a new Agent Group")
-@click.option("--name", default=None, required=True,
+@click.option("--name", required=True,
               help="The name of the new Agent Group you want to create")
 @click.option("--scanner", default=1, help="Add Agent Group to a specific scanner")
 def create(name, scanner):
@@ -1637,8 +1637,8 @@ def create(name, scanner):
 
 
 @agent.command(help="Add an agent to a Group")
-@click.option("--aid", default=None, required=True, help="The agent ID of the agent you want to add ")
-@click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
+@click.option("--aid", required=True, help="The agent ID of the agent you want to add ")
+@click.option("--gid", required=True, help="The Group ID you want to add the agent(s) to.")
 @click.option("--file", default=None, required=False, help="CSV with UUIDs as the first column.")
 def add(aid, gid, file):
     try:
@@ -1673,7 +1673,7 @@ def add(aid, gid, file):
 
 @agent.command(help="Remove an Agent from a Agent Group")
 @click.option("--aid", default=None, required=False, help="The agent ID of the agent you want to remove ")
-@click.option("--gid", default=None, required=True, help="The Group ID you want to add the agent(s) to.")
+@click.option("--gid", required=True, help="The Group ID you want to add the agent(s) to.")
 @click.option("-remove_all", is_flag=True, help="remove all agents from the specific group")
 def remove(aid, gid, remove_all):
     try:
@@ -1692,7 +1692,7 @@ def remove(aid, gid, remove_all):
 
 
 @agent.command(help="Unlink an by Agent ID")
-@click.option("--aid", default=None, required=True, help="The Agent ID of the agent you want to unlink")
+@click.option("--aid", required=True, help="The Agent ID of the agent you want to unlink")
 def unlink(aid):
     try:
         tio.agents.unlink(aid)

@@ -275,34 +275,6 @@ def download_tag_remove(scanid, new_hist, c, v, d):
         click.echo("The scan used is archived, canceled, imported or aborted. Your Tag was not created.")
 
 
-def organize_aws_keys(aws_ec2):
-    aws_tags = {}  # Dictionary of Tag key/Value pairs
-    aws_keys = {}  # Dictionary of Values/List of Instance Ids
-    for tags in aws_ec2['Tags']:
-        if tags['ResourceType'] == 'instance':
-            aws_key = tags['Key']
-            aws_value = tags['Value']
-            resource_id = tags['ResourceId']
-
-            # Tenable IO Requires a Key and a Value; AWS does not.  In this case we just use the key as both
-            if aws_value == '':
-                aws_value = aws_key
-
-            # Creates a new value dict if one doesn't exist, adds to the value list if one does.
-            try:
-                aws_keys[aws_value].append(resource_id)
-            except KeyError:
-                aws_keys[aws_value] = [resource_id]
-
-            # creates a key dict if one doesn't exist, adds the value dict if one does
-            if aws_key not in aws_tags:
-                aws_tags[aws_key] = {aws_value: aws_keys[aws_value]}
-            else:
-                aws_tags[aws_key].update({aws_value: aws_keys[aws_value]})
-
-    return aws_tags
-
-
 def get_attribute_uuid(name):
     attr_data = request_data('GET', '/api/v3/assets/attributes')
     uuid = 0
@@ -349,51 +321,13 @@ def recast(name, query, description, expires_at, new_severity, action):
     insert_time = insert_time_end - start
     print(insert_time)
 
-    #db_query_json_file(table_name="recast",
-                       #output_dir="/Users/creid/Documents/Code/navi_docker_containers/navi_services/Navi_tag_center/2123-1231-2122",
-                       #chunk_size=10,
-                       #new_directory="/Users/creid/Documents/Code/navi_docker_containers/navi_services/Navi_tag_center/2123-1231-2122")
-
+    
 '''
 
 
-@enrich.command(help="Migrate AWS Tags to TVM tags by Instance ID")
-@click.option("--region", default="", required=True, help="AWS Region")
-@click.option("--a", default="", required=True, help="Access Key")
-@click.option("--s", default="", required=True, help="Secret Key")
-def migrate(region, a, s):
-    import boto3
-    if not a or not s or not region:
-        click.echo("You need a region, access key and secret Key")
-        exit()
-    # Authentication
-    ec2client = boto3.client('ec2', region_name=region, aws_access_key_id=a, aws_secret_access_key=s)
-
-    # Grab All the tags in the Account
-    aws_ec2 = ec2client.describe_tags()
-
-    # Send the data to get organized into a neat dictionary of Lists
-    aws_organized_tags = organize_aws_keys(aws_ec2)
-
-    # Grab the Key, value and the new list out of the dict to send to the tagging function
-    for key, value in aws_organized_tags.items():
-        for z, w in value.items():
-            uuid_list = []
-            for instance in w:
-                # Look up the UUID of the asset
-                db = db_query("select uuid from assets where aws_id='{}';".format(instance))
-                for record in db:
-                    uuid_list.append(record[0])
-            description = "AWS Tag by Navi"
-
-            print("Creating a Tag named - {} : {} - with the following ids {}".format(key, z, w))
-
-            tag_by_uuid(uuid_list, key, z, description)
-
-
 @enrich.command(help="Create a Tag Category/Value Pair")
-@click.option('--c', default=None, required=True, help="Create a Tag with the following Category name")
-@click.option('--v', default=None, required=True,
+@click.option('--c', required=True, help="Create a Tag with the following Category name")
+@click.option('--v', required=True,
               help="Create a Tag Value; requires --c and Category Name or UUID")
 @click.option('--d', default='This Tag was created/updated by navi', help="Description for your Tag")
 @click.option('--cve', default='', help="Tag based on a CVE ID")
@@ -1037,8 +971,8 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
 @click.option('--score', default='', help='Set the ACR score')
 @click.option('--mod', required=True, type=click.Choice(['set', 'inc', 'dec'], case_sensitive=True),
               multiple=False, help="Increases/Decreases or Sets the ACR value")
-@click.option('--c', default=None, required=True,  help="Tag Category to use")
-@click.option('--v', default=None, required=True, help="Tag Value to use")
+@click.option('--c', required=True,  help="Tag Category to use")
+@click.option('--v', required=True, help="Tag Value to use")
 @click.option('--note', default="navi Generated", help="Enter a Note to your ACR update")
 @click.option('-business', '-b', is_flag=True, help="Add Business Critical To ACR Change Reason(s)")
 @click.option('-compliance', '-c', is_flag=True, help="Add Compliance To ACR Change Reason(s)")
