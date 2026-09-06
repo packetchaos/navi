@@ -6,7 +6,7 @@ remote exit status, and keeps going if a single host fails.
 
 > This is remote code execution. Only point it at hosts you are authorized to administer.
 
-## One-time credential setup
+## One-time credential setup[PUSH.md](PUSH.md)
 
 Store an SSH service account once with `navi config ssh`. You can use a password, a private key,
 or both:

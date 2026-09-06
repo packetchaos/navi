@@ -432,7 +432,7 @@ def vulns(file, severity, c, v, plugin, output, regexp, name, cve, xrefs):
         exit()
 
 
-@export.command(help="Export Vulnerabilities that have failed")
+@export.command(help="Export Vulnerabilities that have failed an SLA")
 @output_file("sla_backlog")
 def failures(file):
     click.echo("\nExporting All vulnerabilities that failed your SLA\n This requires you run 'navi update fixed'")
