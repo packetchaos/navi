@@ -103,7 +103,15 @@ venv.bak/
 # mypy
 .mypy_cache/
 /navi/plugins/navi.db
-/navi/plugins/navi.db
+# navi.db holds API keys and the SSH/SMTP passwords - never commit it, wherever it lands
+navi.db
+navi.db-wal
+navi.db-shm
+# downloads navi writes to the current directory
+epss_scores-*.csv
+epss_scores-*.csv.gz
+*-export.json
+_to_delete/
 /test.py
 /navi/test.py
 /Testing.py

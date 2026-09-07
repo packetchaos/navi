@@ -43,7 +43,7 @@ def request_new_data(day, month, year):
     # URL structure https://epss.cyentia.com/epss_scores-YYYY-MM-DD.csv.gz
     epss_url = "https://epss.cyentia.com/epss_scores-{}-{}-{}.csv.gz".format(year, month, day)
 
-    epss_data = requests.request('GET', epss_url)
+    epss_data = requests.request('GET', epss_url, timeout=(10, 300))
 
     click.echo("\nDownloading {} from {}\n".format(epss_data_name, epss_url))
     with open("{}.gz".format(epss_data_name), 'wb') as zfile:
@@ -77,6 +77,13 @@ def update_navi_with_epss(day, month, year, filename):
             with epss_conn:
 
                 for row in reader:
+                    # Only accept numeric scores - this column is later used in arithmetic and
+                    # must never be interpreted as anything else.
+                    try:
+                        float(row[1])
+                        float(row[2])
+                    except (ValueError, IndexError):
+                        continue
                     new_list = [str(row[0]), str(row[1]), str(row[2])]
                     insert_epss(epss_conn, new_list)
 

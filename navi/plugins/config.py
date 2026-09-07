@@ -17,7 +17,7 @@ from .dbconfig import (create_keys_table, create_diff_table, create_assets_table
 from .database import (new_db_connection, create_table, drop_tables, db_query, insert_software, insert_vuln_router,
                        insert_certificates, insert_vuln_paths)
 from .fixed_export import calculate_sla, reset_sla, print_sla
-from .api_wrapper import request_data, tenb_connection, request_no_response
+from .api_wrapper import request_data, tenb_connection, request_no_response, grab_url
 from .agent_to_db import download_agent_data
 from restfly import errors as resterrors
 from .th_tone_vulns import tone_findings_export
@@ -32,9 +32,9 @@ def parse_22869(soft_dict):
     for data in software_data:
         asset_uuid = data[1]
         for pkg in str(data[0]).splitlines():
-            pkg_name = str(pkg.split("|"))
-            if "packages installed" not in pkg_name:
-                string_list = str(eval(pkg_name)[0]).split()
+            # pkg.split("|")[0] is the package column - read it directly
+            if "packages installed" not in pkg:
+                string_list = str(pkg.split("|")[0]).split()
                 try:
                     if len(string_list[0]) == 2:
                         new_name = "{}-{}".format(string_list[1], string_list[2])
@@ -62,8 +62,7 @@ def parse_20811(soft_dict):
         # "installed", so nothing is added to soft_dict. Left as-is intentionally; a
         # naive change to str(data[0]).splitlines() would alter the inner parsing.
         for pkg in data:
-            new_string = str(pkg).splitlines()
-            my_list = eval(str(new_string))
+            my_list = str(pkg).splitlines()
             for item in my_list:
                 if "The following software" not in item:
                     if "installed" in item:
@@ -81,8 +80,7 @@ def parse_83991(soft_dict):
     software_data = db_query("select output, asset_uuid from vulns where plugin_id='83991'")
     for host in software_data:
         for pkg in host:
-            pkg_string = str(pkg).splitlines()
-            new_list = eval(str(pkg_string))
+            new_list = str(pkg).splitlines()
             for item in new_list[:-1]:
                 if "  Location" not in item:
                     if "Error" not in item:
@@ -710,7 +708,8 @@ def search_for_path():
     with path_conn:
         path_id = 0
         for plugin_text in search_outputs_for_paths:
-            for plugin_instance in eval(str(plugin_text)):
+            # plugin_text is the sqlite row tuple - iterate it directly (no need to round-trip it through its repr)
+            for plugin_instance in plugin_text:
 
                 # search the plugin text for the path pattern
                 matches = re.findall(pattern, plugin_instance)
@@ -792,8 +791,10 @@ def network():
 
 @config.command(help="Enter or Reset your Keys")
 @click.option("-clear", is_flag=True, help="Display Keys in Clear Text for confirmation")
-@click.option("--access_key", "--a", default="", help="Provide your Access Key")
-@click.option("--secret_key", "--s", default="", help="Provide your Secret Key")
+@click.option("--access_key", "--a", default="", envvar="NAVI_ACCESS_KEY",
+              help="Provide your Access Key (or set NAVI_ACCESS_KEY; prompted for if omitted)")
+@click.option("--secret_key", "--s", default="", envvar="NAVI_SECRET_KEY",
+              help="Provide your Secret Key (or set NAVI_SECRET_KEY; prompted for if omitted)")
 def keys(clear, access_key, secret_key):
     try:
         # create all Tables when keys are added.
@@ -822,14 +823,18 @@ def keys(clear, access_key, secret_key):
         conn = new_db_connection(database)
 
         with conn:
-            sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
             cur = conn.cursor()
+            # "Reset" means reset: previous key pairs are removed rather than accumulating
+            # on disk (every reader used the last row anyway).
+            cur.execute('DELETE from keys')
+            sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
             cur.execute(sql, key_dict)
 
         click.echo("\nYour keys were entered successfully")
-    except:
+        click.echo("They will be sent to: {}\n".format(grab_url()))
+    except Exception as E:
         click.echo("\nThe keys are obtained from TVm and are two strings. "
-                   "If you continue to get this error delete the 'navi.db'\n\n")
+                   "If you continue to get this error delete the 'navi.db'\n{}\n".format(E))
 
 
 @config.command(help="Optimize the Database for Large environments")
@@ -1166,12 +1171,16 @@ def scan_group(name):
 
 
 @user.command(help="Add a User to tenable VM - User will be enabled if already exists")
-@click.option("--username", "--u", default='', required=True, help="Username")
-@click.option("--password", "--p", default='', required=True, help="Users password")
-@click.option("--permission", "--m", default='', required=True, help="Users Permission: (16,24,32,40,64)")
-@click.option("--name", "--n", default='', required=True, help="Users Name")
-@click.option("--email", "--e", default='', required=True, help="Users email")
+@click.option("--username", "--u", required=True, help="Username")
+@click.option("--password", "--p", default=None,
+              help="Users password - prompted for (hidden) if omitted, so it stays out of shell history")
+@click.option("--permission", "--m", required=True, help="Users Permission: (16,24,32,40,64)")
+@click.option("--name", "--n", required=True, help="Users Name")
+@click.option("--email", "--e", required=True, help="Users email")
 def add(username, password, permission, name, email):
+    if password is None:
+        password = click.prompt("Password for {}".format(username), hide_input=True,
+                                confirmation_prompt=True)
     if len(password) < 11:
         click.echo("Password must be 12 chars, 1 Upper, 1 lower and 1 Special Char")
         exit()
@@ -1381,7 +1390,24 @@ def migrate():
 
 @config.command(help="Change the Base URL for Navi")
 @click.argument('new_url')
-def url(new_url):
+@click.option('--allow-non-tenable', 'allow_non_tenable', is_flag=True,
+              help="Permit a host outside tenable.com (a proxy you control, for example)")
+def url(new_url, allow_non_tenable):
+    # Every request carries the API keys in a header, so the base URL decides who receives
+    # them. Insist on https and, unless told otherwise, on a Tenable host.
+    from urllib.parse import urlsplit
+    parts = urlsplit(new_url.strip())
+    if parts.scheme != "https" or not parts.netloc:
+        click.echo("\nThe URL must start with https:// (your API keys travel in every request). "
+                   "Example: https://fedcloud.tenable.com\n")
+        return
+    host = parts.hostname or ""
+    if not (host == "tenable.com" or host.endswith(".tenable.com")) and not allow_non_tenable:
+        click.echo("\n{} is not a tenable.com host. If that is really where your API keys should go, "
+                   "re-run with --allow-non-tenable.\n".format(host))
+        return
+    new_url = "https://{}".format(parts.netloc) + (parts.path.rstrip("/") if parts.path else "")
+
     database = r"navi.db"
     conn = new_db_connection(database)
     drop_tables(conn, 'url')
@@ -1852,4 +1878,4 @@ def tone(exid, a, f, threads):
     if a:
         tone_export(exid, threads=threads)
     if f:
-        tone_findings_export(ex_uuid=exid, threads=threads)
+        tone_findings_export(ex_uuid=exid, threads=threads)

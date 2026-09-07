@@ -6,9 +6,13 @@ from .database import new_db_connection
 from tenable.io import TenableIO
 import time
 
+# (connect, read) timeout for every request navi makes. Without one, a stalled server
+# hangs the CLI - and the navi-mcp server wrapping it - forever.
+REQUEST_TIMEOUT = (10, 300)
+
 
 def navi_version():
-    return "navi-8.7.1"
+    return "navi-8.8.1"
 
 
 def tenb_connection():
@@ -64,6 +68,9 @@ def grab_headers():
             click.echo("\nYou don't have any API keys!  Please enter your keys\n")
             exit()
         rows = cur.fetchall()
+        if not rows:
+            click.echo("\nYou don't have any API keys!  Please run 'navi config keys'\n")
+            exit()
         for row in rows:
             access_key = row[0]
             secret_key = row[1]
@@ -89,7 +96,8 @@ def request_no_response(method, url_mod, **kwargs):
         payload = None
 
     try:
-        r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload, verify=True)
+        r = requests.request(method, url + url_mod, headers=grab_headers(), params=params, json=payload,
+                             verify=True, timeout=REQUEST_TIMEOUT)
         if r.status_code == 200:
             click.echo("Success!\n")
         elif r.status_code == 204:
@@ -130,7 +138,8 @@ def request_data(method, url_mod, **kwargs):
         time.sleep(2.5)
         try:
             r = requests.request(method, url + url_mod, headers=grab_headers(),
-                                 params=params, json=payload, verify=True)
+                                 params=params, json=payload, verify=True,
+                                 timeout=REQUEST_TIMEOUT)
             if r.status_code == 200:
                 return r.json()
 
@@ -219,7 +228,8 @@ def request_xml(method, url_mod, **kwargs):
         time.sleep(2.5)
         try:
             r = requests.request(method, url + url_mod, headers=grab_xml_headers(),
-                                 params=params, json=payload, verify=True)
+                                 params=params, json=payload, verify=True,
+                                 timeout=REQUEST_TIMEOUT)
             if r.status_code == 200:
                 return r.text
 

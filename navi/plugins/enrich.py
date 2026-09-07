@@ -1,3 +1,5 @@
+import ast
+import json
 import click
 import time
 import csv
@@ -59,7 +61,8 @@ def tag_by_tag(c, v, d, cv, cc, match):
                                 pprint.pprint(current_rule_set)
                                 print()
 
-                                new_dict = eval(current_rule_set['filters']['asset'])
+                                # The API returns the filter as a JSON string - parse it as JSON, not as Python
+                                new_dict = json.loads(current_rule_set['filters']['asset'])
                                 print(new_dict['and'])
                                 rules_list = []
 
@@ -73,7 +76,7 @@ def tag_by_tag(c, v, d, cv, cc, match):
 
 
                                 # Turn the string into a dictionary
-                                rule_set_dict = eval(filter_string)
+                                rule_set_dict = json.loads(filter_string)
 
                                 print(rule_set_dict)
 
@@ -902,15 +905,17 @@ def tagrule(c, v, filter, action, value, d, multi, any, file):
         try:
             click.echo("creating a new tag with the following list {}".format(multi))
             filter_list = []
-            for os in eval(multi):
+            # --multi is a Python literal typed by the operator: parse it as data, not code
+            multi_filters = ast.literal_eval(multi)
+            for os in multi_filters:
                 temp_dict = {"field": os[0], "operator": os[1], "value": os[2]}
                 filter_list.append(temp_dict)
                 # issue with tenable VM API - Or turns in to a string value seperated by a comma
                 # issue with tenable VM API - appends " when you add * so *centos* becomes "*centos*"
             if any:
-                tio.tags.create(c, v, filters=eval(multi), filter_type="or", description=d)
+                tio.tags.create(c, v, filters=multi_filters, filter_type="or", description=d)
             else:
-                tio.tags.create(c, v, filters=eval(multi), description=d)
+                tio.tags.create(c, v, filters=multi_filters, description=d)
         except TypeError:
             click.echo("\nCheck your API Keys or permissions\n")
 

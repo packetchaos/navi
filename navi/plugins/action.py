@@ -1,8 +1,9 @@
 import click
 import os
 import re
-import random
+import secrets
 import time
+import ipaddress
 from datetime import datetime
 import string
 import pandas as pd
@@ -10,13 +11,11 @@ import numpy as np
 from .dbconfig import (create_keys_table, create_diff_table, create_assets_table, create_vulns_table,
                        create_compliance_table, create_plugins_table, create_agents_table, create_sla_table,
                        create_cpes_table)
-from .dbconfig import create_rules_table
-from .database import new_db_connection, db_query, insert_rules
+from .database import new_db_connection, db_query
 from .api_wrapper import request_data, request_no_response, tenb_connection
 from .send_mail import send_attachment, send_report
 from collections import defaultdict
 from typing import Optional, Dict, Tuple
-from os import system as cmd
 from .error_msg import error_msg
 from restfly import errors as resterrors
 from .tone_tag_helper import grab_tone_asset_list, tone_remove_tag
@@ -114,6 +113,36 @@ def send_command(shell, command, quick):
 # Sentinel we append to every pushed command so we can read the remote exit status back.
 NAVI_EXIT_SENTINEL = "NAVI_EXIT"
 
+# Prompt text we ask sudo to print. We only send the stored password when this exact prompt
+# shows up - never blindly - so it can't end up on the remote command line (see connect()).
+NAVI_SUDO_PROMPT = "NAVI_SUDO_PROMPT:"
+
+# OpenSSH StrictHostKeyChecking policy for every ssh/scp navi spawns.
+#   accept-new : record an unknown host on first contact, REFUSE a host whose key has changed
+#   yes        : refuse unknown hosts too (pre-seed known_hosts, or run once with accept-new)
+# The old behaviour (answer 'yes' to every prompt, ignore changed keys) let anyone on the path
+# collect the service-account password, so it is gone.
+HOST_KEY_POLICY_DEFAULT = "accept-new"
+HOST_KEY_POLICY_STRICT = "yes"
+
+# A push target must be a plain IP address or DNS hostname. ssh treats anything else as an
+# argument, and an option such as -oProxyCommand=... runs a shell on the machine running navi
+# before any login happens. Targets can come from a shared --targets-file or from the navi-mcp
+# tool, so validate them rather than trusting them.
+_HOSTNAME_RE = re.compile(
+    r"^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+    r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\.?$")
+
+
+def valid_target(host):
+    # True if 'host' is an IPv4/IPv6 address or a syntactically valid hostname.
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        pass
+    return bool(_HOSTNAME_RE.match(host))
+
 
 def parse_targets(target):
     # Split a --target value into an ordered, de-duplicated list of hosts.
@@ -128,6 +157,11 @@ def parse_targets(target):
     return hosts
 
 
+def invalid_targets(hosts):
+    # The subset of 'hosts' that fail valid_target(), in order.
+    return [h for h in hosts if not valid_target(h)]
+
+
 def clean_output_and_exit_code(raw):
     # Pull the exit code out of the sentinel line and strip every sentinel-bearing
     # line (the echoed command and its "NAVI_EXIT:<n>" output) from the display text.
@@ -136,19 +170,32 @@ def clean_output_and_exit_code(raw):
     if match:
         exit_code = int(match.group(1))
 
-    cleaned = "\n".join(line for line in raw.splitlines()
+    # The sudo prompt marker is noise too - it only exists so connect() can spot the prompt.
+    cleaned = "\n".join(line.replace(NAVI_SUDO_PROMPT, "") for line in raw.splitlines()
                         if NAVI_EXIT_SENTINEL not in line).strip("\r\n")
     return cleaned, exit_code
 
 
+def sudo_prompt_argument():
+    # The -p value as typed on the remote command line. The shell glues the two quoted halves
+    # back into NAVI_SUDO_PROMPT, but the *echoed* command line contains the split form - so
+    # expect()ing the joined marker can only match sudo's real prompt, never the echo.
+    head, tail = NAVI_SUDO_PROMPT[:9], NAVI_SUDO_PROMPT[9:]
+    return "'{}''{}'".format(head, tail)
+
+
 def build_remote_command(command, add_sentinel=True):
     # Returns (effective_command, needs_sudo).
-    # When the command uses sudo we switch it to 'sudo -S -p ""' so sudo reads the password
-    # from stdin and prints no prompt - this avoids waiting on a prompt that never matches the
-    # shell PROMPT (the old code blocked for the full timeout) and never sends the password as a
-    # bare shell command line when sudo doesn't actually ask for it.
+    # When the command uses sudo we switch it to 'sudo -k -p <marker>': -p makes sudo print a
+    # marker we can expect() on, and -k drops any cached timestamp so the prompt is
+    # deterministic (it appears unless NOPASSWD applies). sudo reads the password from the tty
+    # with echo off, so it never lands in the captured output. connect() sends the password
+    # ONLY after seeing the marker. The previous version sent it unconditionally, and whenever
+    # sudo didn't ask, the login shell ran the password as the next command - echoing it into
+    # the output, ~/.bash_history and syslog on every target.
     needs_sudo = re.search(r"\bsudo\b", command) is not None
-    effective = re.sub(r"\bsudo\b", "sudo -S -p ''", command, count=1) if needs_sudo else command
+    effective = (re.sub(r"\bsudo\b", "sudo -k -p {}".format(sudo_prompt_argument()), command, count=1)
+                 if needs_sudo else command)
     # Append the exit-status sentinel; '$?' reflects the exit code of the pushed command.
     # Reboot commands skip this - the session dies before the echo could ever run.
     if add_sentinel:
@@ -198,7 +245,48 @@ def run_with_retry(operation, retries, base, host, sleeper=None):
         sleep(delay)
 
 
-def wait_for_host(host, conn_user, password, key_file, max_wait, interval=15, sleeper=None):
+def ssh_session(host_key_policy=HOST_KEY_POLICY_DEFAULT):
+    # Every pxssh session navi opens goes through here so the host-key policy is never forgotten.
+    return pxssh.pxssh(options={"StrictHostKeyChecking": host_key_policy})
+
+
+def explain_ssh_failure(host, conn_user, key_file=None, host_key_policy=HOST_KEY_POLICY_DEFAULT):
+    # pxssh runs ssh with -q, so when the connection fails all we get back is "Could not
+    # establish connection to host". Re-run one non-interactive probe (no password is ever
+    # offered - BatchMode) and hand the operator ssh's real reason: a changed host key, a
+    # refused connection, a bad key file, an unknown host under --strict-host-keys, etc.
+    import subprocess
+    args = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+            "-o", "StrictHostKeyChecking={}".format(host_key_policy),
+            "-o", "PasswordAuthentication=no", "-l", conn_user]
+    if key_file:
+        args += ["-i", key_file]
+    args += ["--", host, "true"]
+    try:
+        probe = subprocess.run(args, capture_output=True, text=True, timeout=20)
+    except Exception:
+        return ""
+    text = probe.stderr or ""
+    if "REMOTE HOST IDENTIFICATION HAS CHANGED" in text or "Host key verification failed" in text:
+        if "No " in text and "host key is known" in text:
+            return ("host key is not in known_hosts and --strict-host-keys is set - "
+                    "add it deliberately, or run once without --strict-host-keys")
+        return ("HOST KEY CHANGED since navi last connected to this address - possible "
+                "impersonation or a rebuilt host. Verify the host, then run "
+                "ssh-keygen -R {} to clear the old key".format(host))
+    if "Permission denied" in text:
+        # BatchMode refuses password auth, so this is expected when password auth is in
+        # use - it just means the transport and host key are fine.
+        return ""
+    for line in reversed([l.strip() for l in text.splitlines() if l.strip()]):
+        if line.lower().startswith("warning:"):
+            continue
+        return line[:200]
+    return ""
+
+
+def wait_for_host(host, conn_user, password, key_file, max_wait, interval=15, sleeper=None,
+                  host_key_policy=HOST_KEY_POLICY_DEFAULT):
     # Poll SSH until the host answers again (used after a reboot). Returns True if it came back
     # within max_wait seconds. 'sleeper' is injectable so tests don't actually sleep.
     sleep = sleeper if sleeper is not None else time.sleep
@@ -208,7 +296,7 @@ def wait_for_host(host, conn_user, password, key_file, max_wait, interval=15, sl
     waited += interval
     while waited <= max_wait:
         try:
-            probe = pxssh.pxssh()
+            probe = ssh_session(host_key_policy)
             probe.login(host, conn_user, password, ssh_key=key_file, login_timeout=10)
             probe.logout()
             return True
@@ -271,7 +359,8 @@ def read_targets_file(path):
 
 
 def connect(conn_user, host, password, command, key_file=None, timeout=300,
-            wait_online=0, wait_interval=15, sleeper=None):
+            wait_online=0, wait_interval=15, sleeper=None,
+            host_key_policy=HOST_KEY_POLICY_DEFAULT):
     # Run a command on a single host. Returns a push_result dict.
     is_reboot = looks_like_reboot(command)
     effective, needs_sudo = build_remote_command(command, add_sentinel=not is_reboot)
@@ -281,19 +370,40 @@ def connect(conn_user, host, password, command, key_file=None, timeout=300,
     # and a later failure must NOT be retried - we can't know if a non-idempotent command
     # partially applied.
     try:
-        conn = pxssh.pxssh()
+        conn = ssh_session(host_key_policy)
         # ssh_key=None behaves exactly like a normal password login; a path adds ssh -i <key>.
         conn.login(host, conn_user, password, ssh_key=key_file)
     except pxssh.ExceptionPxssh as e:
-        click.echo("  [!] {}: connection failed: {}".format(host, e))
-        return push_result(False, note="connect failed: {}".format(e), retryable=True)
+        reason = str(e)
+        detail = explain_ssh_failure(host, conn_user, key_file, host_key_policy)
+        if detail:
+            reason = "{} ({})".format(reason, detail)
+        click.echo("  [!] {}: connection failed: {}".format(host, reason))
+        # A host-key failure is a security stop, not a transient - never retry through it.
+        retryable = "HOST KEY" not in detail and "known_hosts" not in detail
+        return push_result(False, note="connect failed: {}".format(reason), retryable=retryable)
 
     # Phase 2 - the connection is up; the command now runs. Failures below are not retryable.
     try:
         conn.sendline(effective)
+        matched = True
+        raw = None
         if needs_sudo:
-            # Consumed by 'sudo -S' on stdin; not echoed, so it never appears in the output.
-            conn.sendline(password)
+            # Answer sudo only if it actually asks. With NOPASSWD (or a command that never
+            # reaches sudo) the shell prompt comes back first and the password is never sent.
+            idx = conn.expect([NAVI_SUDO_PROMPT, conn.PROMPT, pexpect.EOF, pexpect.TIMEOUT],
+                              timeout=timeout)
+            if idx == 0:
+                conn.sendline(password)
+            elif idx == 1:
+                # The command already finished without a password prompt.
+                raw = conn.before.decode('utf-8', errors='replace')
+            elif idx == 2 and not is_reboot:
+                click.echo("  [!] {}: connection closed before the command finished".format(host))
+                return push_result(False, note="connection closed")
+            elif idx == 3:
+                matched = False
+                raw = conn.before.decode('utf-8', errors='replace')
 
         if is_reboot:
             # The reboot tears down the session - the connection dropping is the success signal,
@@ -312,7 +422,8 @@ def connect(conn_user, host, password, command, key_file=None, timeout=300,
                 click.echo("  ... waiting up to {}s for {} to come back online".format(
                     wait_online, host))
                 back = wait_for_host(host, conn_user, password, key_file, wait_online,
-                                     interval=wait_interval, sleeper=sleeper)
+                                     interval=wait_interval, sleeper=sleeper,
+                                     host_key_policy=host_key_policy)
                 if back:
                     click.echo("  [OK] {}: back online".format(host))
                     return push_result(True, note="rebooted; back online")
@@ -320,13 +431,18 @@ def connect(conn_user, host, password, command, key_file=None, timeout=300,
                 return push_result(False, note="rebooted; did not return in time")
             return push_result(True, note="reboot issued")
 
-        matched = conn.prompt(timeout=timeout)
-        raw = conn.before.decode('utf-8', errors='replace')
+        if raw is None:
+            matched = conn.prompt(timeout=timeout)
+            raw = conn.before.decode('utf-8', errors='replace')
         conn.logout()
 
         if not matched:
             click.echo("  [!] {}: timed out waiting for the command to finish".format(host))
 
+        # Belt and braces: whatever the remote side echoed, the password never reaches stdout
+        # (or, under navi-mcp, the model transcript).
+        if password:
+            raw = raw.replace(password, "********")
         output, exit_code = clean_output_and_exit_code(raw)
         if output:
             click.echo(output)
@@ -344,7 +460,8 @@ def connect(conn_user, host, password, command, key_file=None, timeout=300,
         return push_result(False, note=str(e))
 
 
-def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300):
+def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300,
+        host_key_policy=HOST_KEY_POLICY_DEFAULT):
     # Copy a local file to 'dest' on a single host. Returns a push_result dict.
     ssh_new_key_string = 'Are you sure you want to continue connecting'
     remote = "{}@{}:{}".format(scp_user, host, dest)
@@ -354,7 +471,10 @@ def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300):
         # (no shell word-splitting or injection through the interpolated command string).
         # With a key, prepend '-i <key>' and no password prompt is expected - the transfer
         # can go straight to EOF, which the expect lists below now handle.
-        args = (['-i', key_file] if key_file else []) + [filename, remote]
+        # The host-key policy is passed explicitly so scp never asks and we never say 'yes'.
+        # '--' ends option parsing so a hostile filename/target can't be read as an scp flag.
+        args = (['-o', 'StrictHostKeyChecking={}'.format(host_key_policy)]
+                + (['-i', key_file] if key_file else []) + ['--', filename, remote])
         shell = pexpect.spawn('scp', args, timeout=timeout)
 
         return_code = shell.expect([pexpect.TIMEOUT, ssh_new_key_string, '[Pp]assword:', pexpect.EOF])
@@ -365,17 +485,11 @@ def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300):
             return push_result(False, note="scp connect timeout", retryable=True)
 
         if return_code == 1:
-            shell.sendline('yes')
-            second_return_code = shell.expect([pexpect.TIMEOUT, '[Pp]assword:', pexpect.EOF])
-
-            if second_return_code == 0:
-                click.echo("  [!] {}: error connecting after accepting host key (timed out)".format(host))
-                return push_result(False, note="scp connect timeout after host-key accept",
-                                   retryable=True)
-            # second_return_code 1 -> password prompt; 2 -> EOF (key auth finished, nothing to send)
-            if second_return_code == 1:
-                shell.sendline(password)
-                shell.expect(pexpect.EOF)
+            # Can't happen with the policy above; if it does, refuse rather than accept blindly.
+            shell.sendline('no')
+            shell.expect(pexpect.EOF)
+            click.echo("  [!] {}: host key is not known - refusing to connect".format(host))
+            return push_result(False, note="unknown host key")
 
         elif return_code == 2:
             # Password prompt on first contact (known host, password auth).
@@ -384,6 +498,8 @@ def scp(scp_user, host, password, filename, dest, key_file=None, timeout=300):
         # return_code 3 -> EOF already (key auth, no prompt) - nothing to send.
 
         response = shell.before.decode('utf-8', errors='replace')
+        if password:
+            response = response.replace(password, "********")
         if response.strip():
             click.echo(response.strip())
 
@@ -434,7 +550,7 @@ def strip_whitespace(value):
 def generate_password(length=PASSWORD_LENGTH):
     special_chars = '~!@#$%^&*()-_+='
     password_chars = string.digits + string.ascii_letters + special_chars
-    return "".join(random.choices(password_chars, k=length))
+    return "".join(secrets.choice(password_chars) for _ in range(length))
 
 
 def insert_password(user):
@@ -609,7 +725,9 @@ def rotate(userid, db):
     # 2337235
 
     rotating_keys = request_data("PUT", "/users/{}/keys".format(userid))
-    click.echo(rotating_keys)
+    if not rotating_keys:
+        click.echo("\nKey rotation failed - no keys were returned (check the user id and your permissions)\n")
+        return
 
     if db:
         # Create all the tables on key rotation
@@ -631,8 +749,10 @@ def rotate(userid, db):
         conn = new_db_connection(database)
 
         with conn:
-            sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
             cur = conn.cursor()
+            # The old pair is dead the moment the API rotates it - don't leave it on disk.
+            cur.execute('DELETE from keys')
+            sql = '''INSERT or IGNORE into keys(access_key, secret_key) VALUES(?,?)'''
             cur.execute(sql, key_dict)
 
         click.echo("\nYour Keys have been rotated and are now enter into the navi.db\n")
@@ -668,8 +788,12 @@ def rotate(userid, db):
                    "Only pre-execution failures are retried - a command that ran and failed is not.")
 @click.option('--retry-base', 'retry_base', default=5, show_default=True, type=int,
               help="First retry delay in seconds; it doubles each attempt up to 60s")
+@click.option('--strict-host-keys', 'strict_host_keys', is_flag=True,
+              help="Refuse hosts not already in known_hosts (default: accept a NEW host on first "
+                   "contact, but always refuse a host whose key has CHANGED)")
 def push(command, target, targets_file, file, dest, run_after, key_file, timeout,
-         wait_online, wait_interval, log_path, retries, retry_base):
+         wait_online, wait_interval, log_path, retries, retry_base, strict_host_keys):
+    host_key_policy = HOST_KEY_POLICY_STRICT if strict_host_keys else HOST_KEY_POLICY_DEFAULT
     # Guard the inputs before touching any host.
     if not command and not file:
         click.echo("\nYou need to send a --command or a --file when using this command\n")
@@ -688,8 +812,14 @@ def push(command, target, targets_file, file, dest, run_after, key_file, timeout
         return
 
     if pexpect == 0 or pxssh == 0:
-        click.echo("\nnavi push needs the pexpect/pxssh libraries, which aren't available on "
-                   "this system.\n")
+        import sys as _sys
+        if _sys.platform == "win32":
+            click.echo("\nnavi push drives ssh through a pseudo-terminal (pexpect), which does not "
+                       "exist on Windows. Run navi from WSL, a Linux/macOS host, or the navi "
+                       "Docker image to use push.\n")
+        else:
+            click.echo("\nnavi push needs the pexpect/pxssh libraries, which aren't available on "
+                       "this system (pip install pexpect).\n")
         return
 
     # Resolve SSH credentials once and reuse them across every target.
@@ -717,6 +847,15 @@ def push(command, target, targets_file, file, dest, run_after, key_file, timeout
         click.echo("\nNo valid targets found in --target / --targets-file.\n")
         return
 
+    # Refuse the whole run if any target isn't a plain IP/hostname - see valid_target().
+    bad = invalid_targets(targets)
+    if bad:
+        click.echo("\nRefusing to run: these targets are not IP addresses or hostnames:")
+        for entry in bad:
+            click.echo("  {!r}".format(entry))
+        click.echo("Check --target / --targets-file for stray options, quotes or whitespace.\n")
+        return
+
     succeeded = 0
     failed = 0
     for host in targets:
@@ -730,7 +869,7 @@ def push(command, target, targets_file, file, dest, run_after, key_file, timeout
             if file:
                 result = run_with_retry(
                     lambda: scp(users, host, password, file, dest, key_file=key_file,
-                                timeout=timeout),
+                                timeout=timeout, host_key_policy=host_key_policy),
                     retries, retry_base, host)
                 log_result(log_path, "copy", host, result,
                            "{} -> {}".format(os.path.basename(file), dest))
@@ -740,14 +879,16 @@ def push(command, target, targets_file, file, dest, run_after, key_file, timeout
                     result = run_with_retry(
                         lambda: connect(users, host, password, run_after, key_file=key_file,
                                         timeout=timeout, wait_online=wait_online,
-                                        wait_interval=wait_interval),
+                                        wait_interval=wait_interval,
+                                        host_key_policy=host_key_policy),
                         retries, retry_base, host)
                     log_result(log_path, "run-after", host, result, run_after)
             else:
                 result = run_with_retry(
                     lambda: connect(users, host, password, command, key_file=key_file,
                                     timeout=timeout, wait_online=wait_online,
-                                    wait_interval=wait_interval),
+                                    wait_interval=wait_interval,
+                                    host_key_policy=host_key_policy),
                     retries, retry_base, host)
                 log_result(log_path, "command", host, result, command)
         except Exception as E:
@@ -787,6 +928,11 @@ def mail(message, to, subject, v, file, html_file):
 
         subject += " - Emailed by navi"
 
+        # navi.db holds the API keys and the SSH/SMTP passwords - never let it be mailed.
+        if file and os.path.basename(file).lower().startswith("navi.db"):
+            click.echo("\nRefusing to attach {} - it contains your credentials.\n".format(file))
+            return
+
         # Read the HTML page so it can be rendered in the email body instead of attached.
         html_body = None
         if html_file:
@@ -810,20 +956,31 @@ def mail(message, to, subject, v, file, html_file):
         click.echo(E)
 
 
-@action.command(help="Encrypt an file for save transfer")
+@action.command(help="Encrypt a file for safe transfer")
 @click.option("--name", required=True, help="Name of file you want to encrypt")
 @click.option("--new_name", default=None, help="The new name of the file. (Optional)")
-@click.option("--password", required=True, help="Password you want to encrypt your file with")
-def encrypt(name, password, new_name):
+@click.option("--password", default=None, envvar="NAVI_FILE_PASSWORD",
+              help="Password to encrypt with. Prompted for if omitted; NAVI_FILE_PASSWORD is "
+                   "also honoured so it never has to sit in shell history or a process list")
+@click.option("--force", is_flag=True, help="Overwrite the output file if it already exists")
+def encrypt(name, password, new_name, force):
     try:
         import pyAesCrypt
         # Set buffer size
         buffer_size = 128 * 1024  # 128 KB
 
+        if not password:
+            password = click.prompt("Password to encrypt with", hide_input=True,
+                                    confirmation_prompt=True)
+
         if new_name is None:
             new_name = name
+        output = "{}.aes".format(new_name)
+        if os.path.exists(output) and not force:
+            click.echo("\n{} already exists - use --force to overwrite it\n".format(output))
+            return
         # Encrypt the file (use the provided new name, or default to the original name)
-        pyAesCrypt.encryptFile("{}".format(name), "{}.aes".format(new_name), password, buffer_size)
+        pyAesCrypt.encryptFile("{}".format(name), output, password, buffer_size)
 
         click.echo("\nYour file {} was encrypted\n\n".format(new_name))
     except ImportError:
@@ -836,28 +993,40 @@ def encrypt(name, password, new_name):
 @action.command(help="Decrypt a File encrypted by Navi")
 @click.option("--name", required=True, help="Name of file you want to decrypt")
 @click.option("--new_name", default=None, help="The new name of the file. (Optional)")
-@click.option("--password", required=True, help="Password you want to decrypt your file with")
-def decrypt(name, password, new_name):
+@click.option("--password", default=None, envvar="NAVI_FILE_PASSWORD",
+              help="Password the file was encrypted with. Prompted for if omitted; "
+                   "NAVI_FILE_PASSWORD is also honoured")
+@click.option("--force", is_flag=True, help="Overwrite the output file if it already exists")
+def decrypt(name, password, new_name, force):
     try:
         import pyAesCrypt
         # Set buffer size
         buffer_size = 128 * 1024  # 128 KB
-        remove_aes_from_name = name[:-4]
-        if new_name is None:
-            # If no name is given, remove '.aes' from the name
-            remove_aes_from_name = name[:-4]
-        else:
-            # Use the customer given name
-            remove_aes_from_name = new_name
 
-        # Encrypt the file
-        pyAesCrypt.decryptFile("{}".format(name), "{}".format(remove_aes_from_name), password, buffer_size)
+        if not password:
+            password = click.prompt("Password", hide_input=True)
+
+        if new_name is not None:
+            # Use the customer given name
+            output = new_name
+        elif name.endswith(".aes"):
+            # If no name is given, remove '.aes' from the name
+            output = name[:-4]
+        else:
+            click.echo("\n{} doesn't end in .aes - tell me where to write it with --new_name\n".format(name))
+            return
+
+        if os.path.exists(output) and not force:
+            click.echo("\n{} already exists - use --force to overwrite it\n".format(output))
+            return
+
+        pyAesCrypt.decryptFile("{}".format(name), output, password, buffer_size)
 
     except ImportError:
         click.echo("\nYou need to install pyAesCrypt to use this feature\n")
         exit()
     except ValueError:
-        click.echo("\nWrong Password of the file is corrupted\n\n")
+        click.echo("\nWrong Password or the file is corrupted\n\n")
 
 
 @action.command(help="Choose your export type --> assets: '-a' or vulns: '-v' with the corresponding UUID")
@@ -889,12 +1058,22 @@ def table(tbl):
 
 @delete.command(help="Delete assets by Tag: tag_category:tag_value - Example - OS:Linux")
 @click.argument('tag_string')
-def bytag(tag_string):
+@click.option('-y', '--yes', is_flag=True, help="Skip the confirmation prompt")
+def bytag(tag_string, yes):
     if ":" in tag_string:
-        tag_tuple = tag_string.split(':')
-        cat = tag_tuple[0]
-        val = tag_tuple[1]
+        # Split on the FIRST colon only - tag values can contain ':' themselves
+        # ('Owner:team:web' is category 'Owner', value 'team:web', not value 'team').
+        cat, val = tag_string.split(':', 1)
         if val != '':
+            # Show what is about to go before deleting it - this is irreversible.
+            count = db_query("select count(distinct asset_uuid) from tags "
+                             "where tag_key=? and tag_value=?;", (cat, val))
+            known = count[0][0] if count else "an unknown number of"
+            click.echo("\nThis deletes every asset tagged {}:{} ({} assets in navi.db) from "
+                       "Tenable VM. It cannot be undone.".format(cat, val, known))
+            if not yes and not click.confirm("Continue?", default=False):
+                click.echo("Aborted.\n")
+                return
 
             click.echo("\nI'm deleting all of the assets associated with your Tag\n")
             payload = {'query': {'field': "tag.{}".format(cat), 'operator': 'set-has', 'value': str(val)}}

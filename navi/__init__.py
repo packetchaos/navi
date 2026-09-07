@@ -1,1 +1,1 @@
-__version__: str = "navi-8.7.1"
+__version__: str = "navi-8.8.1"

@@ -30,7 +30,9 @@ def create_table(conn, table_information):
         click.echo(e)
 
 
-def db_query(statement):
+def db_query(statement, params=None):
+    # 'params' is an optional tuple bound to '?' placeholders so callers can keep user-supplied
+    # values out of the SQL text. Existing callers that pass a fully formatted statement still work.
     try:
         database = r"navi.db"
         query_conn = new_db_connection(database)
@@ -43,7 +45,7 @@ def db_query(statement):
             cur.execute('pragma threads=16;')
             cur.execute('PRAGMA temp_store = MEMORY;')
             cur.execute('PRAGMA max_page_count = 2147483646;')
-            cur.execute(statement)
+            cur.execute(statement, tuple(params) if params else ())
 
             data = cur.fetchall()
 

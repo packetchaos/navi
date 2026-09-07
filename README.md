@@ -103,8 +103,9 @@ navi needs **Python 3.9+** (3.12 recommended) and a Tenable API key pair.
 # 1. Install
 pip install navi-pro
 
-# 2. Add your Tenable API keys (stored locally, never echoed)
-navi config keys --a <ACCESS_KEY> --s <SECRET_KEY>
+# 2. Add your Tenable API keys - you are prompted for them (hidden input), so they never
+#    land in your shell history. For automation, set NAVI_ACCESS_KEY / NAVI_SECRET_KEY instead.
+navi config keys
 
 # 3. First sync — pulls your Tenable data into navi.db.
 #    This is long-running on large tenants; run it on the CLI, not through MCP.
@@ -141,7 +142,7 @@ Give any MCP-capable AI safe, deterministic access to navi:
 docker build -f navi-mcp-suite/Dockerfile -t navi-mcp:latest .
 
 # Store keys + do the first sync into a persistent volume
-docker run --rm -v navi-data:/data navi-mcp:latest navi config keys --a <ACCESS> --s <SECRET>
+docker run --rm -it -v navi-data:/data navi-mcp:latest navi config keys   # prompts for the keys
 docker run --rm -v navi-data:/data navi-mcp:latest navi config update full
 
 # Serve over HTTP on :8000
@@ -174,9 +175,9 @@ docker run -d -p 8000:8000 -v navi-data:/data navi-mcp:latest
 | `RESEND_API_KEY` | [Resend](https://resend.com) key for emailing reports without an SMTP server (see [RESEND_SETUP.md](RESEND_SETUP.md)). |
 | `HOUNDS_FROM` | Verified sender address for emailed reports. |
 
-> Tenable API keys are **not** environment variables — set them once into the mounted volume
-> with `navi config keys --a <ACCESS> --s <SECRET>` so they live in `navi.db`, never in the
-> process environment or an image layer.
+> Tenable API keys are **not** environment variables at runtime — set them once into the mounted
+> volume with `navi config keys` (it prompts; `NAVI_ACCESS_KEY` / `NAVI_SECRET_KEY` are read only
+> by that one command) so they live in `navi.db`, never in the process environment or an image layer.
 
 ### The write-gate
 

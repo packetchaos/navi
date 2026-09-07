@@ -1,5 +1,5 @@
 import click
-from .api_wrapper import request_data, tenb_connection, grab_headers
+from .api_wrapper import request_data, tenb_connection, grab_headers, grab_url
 import time
 import uuid
 import csv
@@ -289,12 +289,15 @@ def export(scanid):
 def upload(filename):
     try:
         import requests
-        url = "https://cloud.tenable.com/api/v3/was/import"
+        # Honour the configured base URL - a FedRAMP tenant's keys must never be sent to the
+        # commercial cloud. Drop the JSON content-type so requests can set the multipart one.
+        url = grab_url() + "/api/v3/was/import"
+        headers = {k: v for k, v in grab_headers().items() if k.lower() != "content-type"}
 
         with open("{}".format(filename), "rb") as upload_file:
             files = {"Filedata": ("{}".format(filename), upload_file, "application/json")}
 
-            response = requests.post(url, files=files, headers=grab_headers())
+            response = requests.post(url, files=files, headers=headers, timeout=(10, 300))
 
         click.echo("\nUploading your scan {} now\n{}\n".format(filename, response))
     except Exception as E:

@@ -1,3 +1,4 @@
+import ast
 import time
 import arrow
 from .api_wrapper import tenb_connection, navi_version, request_data
@@ -1167,7 +1168,7 @@ def plugin_by_ip(ipaddr, plugin_id):
             if plug[4] != ' ':
                 click.echo("\nCross References\n")
                 click.echo("-" * 80)
-                for xref in eval(plug[4]):
+                for xref in ast.literal_eval(plug[4]):
                     click.echo("Type: {}".format(xref['type']))
                     click.echo("ID: {}".format(xref['id']))
                     click.echo()
@@ -1184,7 +1185,7 @@ def plugin_by_ip(ipaddr, plugin_id):
                 total = 0
                 epss_list = []
                 try:
-                    for cve_id in eval(plug[1]):
+                    for cve_id in ast.literal_eval(plug[1]):
                         database = r"navi.db"
                         conn = new_db_connection(database)
                         with conn:
@@ -1192,8 +1193,9 @@ def plugin_by_ip(ipaddr, plugin_id):
 
                             cur.execute("select epss_value from epss where cve='{}'".format(cve_id))
                             epss_value = cur.fetchall()
-                            epss_list.append(eval(epss_value[0][0]))
-                            total += eval(epss_value[0][0])
+                            # EPSS scores come from a downloaded CSV - treat them as numbers only
+                            epss_list.append(float(epss_value[0][0]))
+                            total += float(epss_value[0][0])
 
                     average = total/len(epss_list)
                     top = max(epss_list)
@@ -1285,7 +1287,7 @@ def cves_by_uuid(cve_uuid):
                 total = 0
                 epss_list = []
 
-                for cve_id in eval(cves):
+                for cve_id in ast.literal_eval(cves):
                     database = r"navi.db"
                     conn = new_db_connection(database)
                     with conn:
@@ -1293,8 +1295,8 @@ def cves_by_uuid(cve_uuid):
 
                         cur.execute("select epss_value from epss where cve='{}'".format(cve_id))
                         epss_value = cur.fetchall()
-                        epss_list.append(eval(epss_value[0][0]))
-                        total += eval(epss_value[0][0])
+                        epss_list.append(float(epss_value[0][0]))
+                        total += float(epss_value[0][0])
 
                 average = total/len(epss_list)
                 top = max(epss_list)
@@ -1936,9 +1938,9 @@ def software(missing, stats, greater_than, less_than):
                 click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
                 click.echo('-' * 150)
                 for wares in all_data:
-                    length = len(eval(wares[0]))
+                    length = len(ast.literal_eval(wares[0]))
                     if int(length) >= int(greater_than):
-                        click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
+                        click.echo("{:125} {}".format(wares[1], len(ast.literal_eval(wares[0]))))
             except IndexError:
                 click.echo("\nRun navi config software generate\n Or check your input\n")
             click.echo()
@@ -1952,9 +1954,9 @@ def software(missing, stats, greater_than, less_than):
                 click.echo("{:125} {}".format("\nSoftware Package Name", "Install Count"))
                 click.echo('-' * 150)
                 for wares in all_data:
-                    length = len(eval(wares[0]))
+                    length = len(ast.literal_eval(wares[0]))
                     if int(length) <= int(less_than):
-                        click.echo("{:125} {}".format(wares[1], len(eval(wares[0]))))
+                        click.echo("{:125} {}".format(wares[1], len(ast.literal_eval(wares[0]))))
             except IndexError:
                 click.echo("\nRun navi update software Generate\n Or check your input\n")
             click.echo()

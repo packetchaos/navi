@@ -440,6 +440,9 @@ def failures(file):
 
 
 
+@export.command(help="Export parsed plugins")
+@click.option('-user_names', is_flag=True, help="Export Users by parsing the 45478 plugin")
+@output_file_with_alias("parsed_plugin_data", '--name')
 def parsed(file, file_alias, user_names):
     name = resolve_file(file, file_alias, '--name', "parsed_plugin_data")
 
@@ -457,8 +460,7 @@ def parsed(file, file_alias, user_names):
         if user_names:
             raw_data = db_query("select asset_uuid, output from vulns where plugin_id='45478'")
 
-            # pprint.pprint(eval(str(raw_data))[1][1])
-            plugin_data = eval(str(raw_data))
+            plugin_data = raw_data
 
             for asset in plugin_data:
                 # remove the +users in the beginning of the string

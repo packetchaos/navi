@@ -1,4 +1,5 @@
 import os
+import ssl
 import base64
 import click
 import smtplib
@@ -18,9 +19,13 @@ except ImportError:
 def send_attachment(from_email, to_email, mail_server, password, port, filename, message, subject,
                     html=None):
     try:
-        server = smtplib.SMTP(mail_server, port)
+        # Verify the server's certificate on STARTTLS (the default context checks the chain
+        # and the hostname); without it anyone on the path could collect the mailbox
+        # password and the report. The timeout stops a dead server hanging the CLI.
+        server = smtplib.SMTP(mail_server, port, timeout=30)
         server.ehlo()
-        server.starttls()
+        server.starttls(context=ssl.create_default_context())
+        server.ehlo()
         server.login(from_email, password)
 
         msg2 = MIMEMultipart()
@@ -51,7 +56,8 @@ def send_attachment(from_email, to_email, mail_server, password, port, filename,
             # encode into base64
             encoders.encode_base64(p)
 
-            p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+            # Only the file's name goes in the header - not the operator's local path.
+            p.add_header('Content-Disposition', 'attachment', filename=os.path.basename(filename))
 
             # attach the instance 'p' to instance 'msg'
             msg2.attach(p)
