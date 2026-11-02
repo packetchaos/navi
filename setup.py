@@ -8,7 +8,7 @@ with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='navi pro',
+    name='navi-pro',
     version="8.8.2",
     description="A command-line interface to Tenable's Products",
     long_description=long_description,
