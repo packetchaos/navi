@@ -12,7 +12,7 @@ REQUEST_TIMEOUT = (10, 300)
 
 
 def navi_version():
-    return "navi-8.8.1"
+    return "navi-8.8.2"
 
 
 def tenb_connection():
