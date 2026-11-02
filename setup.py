@@ -27,6 +27,7 @@ setup(
     ],
     install_requires=[
         'Click>=7.0',
+        'restfly<=1.5.1',
         'requests>=2.31',
         'flask>=2.3.2',
         'IPy>=1.0',
